@@ -310,12 +310,13 @@ public class AbstractClient {
     protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
-        boolean success = true;
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
             return parseResponse(remoteResponse);
         } catch (Throwable ex) {
-            success = false;
+            String requestId = getRequestId(request);
+            LOGGER.error("request failure, requestId:{}.", requestId);
+
             if (ex instanceof IOException) {
                 throw (IOException) ex;
             } else if (ex instanceof YopClientException) {
@@ -324,14 +325,6 @@ public class AbstractClient {
                 throw new YopClientException("unable to execute request.", ex);
             }
         } finally {
-            String requestId = getRequestId(request);
-            if (success) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("request success, requestId:{}.", requestId);
-                }
-            } else {
-                LOGGER.error("request failure, requestId:{}.", requestId);
-            }
             if (null != remoteResponse && isJsonResponse(remoteResponse)) {
                 HttpClientUtils.closeQuietly(remoteResponse);
             }
@@ -462,8 +455,6 @@ public class AbstractClient {
     }
 
     protected static String richRequest(String methodOrUri, YopRequest request) {
-        request.setParam(YopConstants.VERSION, StringUtils.substringBefore(StringUtils.substringAfter(methodOrUri, "/v"), "/"));
-        request.setParam(YopConstants.METHOD, methodOrUri);
         return GATE_WAY_ROUTER.route(methodOrUri, request) + methodOrUri;
     }
 

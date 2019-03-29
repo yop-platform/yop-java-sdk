@@ -30,8 +30,6 @@ public class JacksonJsonMarshallerTest {
 //        s.parallel().forEach(j ->  {
 //            YopRequest request = new YopRequest(null, "8451VK46H9k50ZWF7mD1sMLR8ka2x0z8j72sJS708RWZ93uP4uR8b55r8Xn2",
 //                    "https://open.yeepay.com/yop-center");
-//            request.setEncrypt(true);
-//            request.setSignRet(true);
 ////			Map<String, Object> paramMap = JSON.parseObject("{\"requestId\":\"1447818443457103gsYp0926032\",\"customerNo\":\"10000446816\",\"merchantNo\":\"10012624945\"}");
 ////			Iterator<Entry<String, Object>> iter = paramMap.entrySet().iterator();
 ////			while (iter.hasNext()) {
@@ -85,15 +83,11 @@ public class JacksonJsonMarshallerTest {
 //            request.addParam("customerNo", "10000446816");
 //            request.addParam("merchantNo", "10012624945");
 
-//            request.setEncrypt(true);
-//            request.setSignRet(true);
-
 //            String response = YopClient.post("/rest/v1.0/merchant/queryPayOrder", request).toString();
 
             YopRequest request = new YopRequest("TestAppKey002","Zj4xyBkgjd");
             request.setSignAlg("SHA1");
 //            request.setSignAlg("MD5");//具体看api签名算法而定
-            //request.setEncrypt(true);
             String notifyRule = "fundauth_MOBILE_IFVerify111";//通知规则
             List recipients = new ArrayList();//接收人
             recipients.add(0, "18511620061");

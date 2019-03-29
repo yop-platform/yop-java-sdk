@@ -439,8 +439,6 @@ public class LocalDemo {
     @Test
     public void testPayPlusRemitQuery() throws IOException {
         YopRequest request = new YopRequest();
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
 //        request.addParam("trxRequestNo","111");
         request.addParam("remitRequestNo", "Remit1534859751218");
