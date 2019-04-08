@@ -315,7 +315,7 @@ public class AbstractClient {
             return parseResponse(remoteResponse);
         } catch (Throwable ex) {
             String requestId = getRequestId(request);
-            LOGGER.error("request failure, requestId:{}.", requestId);
+            LOGGER.error("request failure, requestId:" + requestId, ex);
 
             if (ex instanceof IOException) {
                 throw (IOException) ex;
@@ -325,9 +325,7 @@ public class AbstractClient {
                 throw new YopClientException("unable to execute request.", ex);
             }
         } finally {
-            if (null != remoteResponse && isJsonResponse(remoteResponse)) {
-                HttpClientUtils.closeQuietly(remoteResponse);
-            }
+            HttpClientUtils.closeQuietly(remoteResponse);
         }
     }
 
