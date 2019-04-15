@@ -3,6 +3,7 @@ package com.yeepay.g3.sdk.yop.utils;
 import com.google.common.base.Charsets;
 import com.yeepay.g3.sdk.yop.encrypt.*;
 import com.yeepay.g3.sdk.yop.exception.VerifySignFailedException;
+import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.PrivateKey;
@@ -53,16 +54,15 @@ public final class DigitalEnvelopeUtils {
         byte[] encryptedRandomKey = RSA.encrypt(randomKey, publicKey);
         String encryptedRandomKeyToBase64 = Encodes.encodeUrlSafeBase64(encryptedRandomKey);
 
-        StringBuilder cipherText = new StringBuilder();
-        cipherText.append(encryptedRandomKeyToBase64);
-        cipherText.append(SEPERATOR);
-        cipherText.append(encryptedDataToBase64);
-        cipherText.append(SEPERATOR);
-        cipherText.append(symmetricEncryptAlg.getValue());
-        cipherText.append(SEPERATOR);
-        cipherText.append(digestAlg.getValue());
         //把密文和签名进行打包
-        digitalEnvelopeDTO.setCipherText(cipherText.toString());
+        String cipherText = encryptedRandomKeyToBase64 +
+                SEPERATOR +
+                encryptedDataToBase64 +
+                SEPERATOR +
+                symmetricEncryptAlg.getValue() +
+                SEPERATOR +
+                digestAlg.getValue();
+        digitalEnvelopeDTO.setCipherText(cipherText);
         return digitalEnvelopeDTO;
     }
 
@@ -79,7 +79,7 @@ public final class DigitalEnvelopeUtils {
         //分解参数
         String[] args = source.split("\\" + SEPERATOR);
         if (args.length != 4) {
-            throw new RuntimeException("source invalid : " + source);
+            throw new YopClientException("source invalid : " + source);
         }
         String encryptedRandomKeyToBase64 = args[0];
         String encryptedDataToBase64 = args[1];
@@ -132,12 +132,10 @@ public final class DigitalEnvelopeUtils {
         byte[] sign = RSA.sign(data, privateKey, digestAlg);
         String signToBase64 = Encodes.encodeUrlSafeBase64(sign);
 
-        StringBuilder cipherText = new StringBuilder();
-        cipherText.append(signToBase64);
-        cipherText.append(SEPERATOR);
-        cipherText.append(digestAlg.getValue());
         //把密文和签名进行打包
-        return cipherText.toString();
+        return signToBase64 +
+                SEPERATOR +
+                digestAlg.getValue();
     }
 
     public static void verify0(DigitalSignatureDTO digitalSignatureDTO, PublicKey publicKey) {
@@ -145,7 +143,7 @@ public final class DigitalEnvelopeUtils {
         //分解参数
         String[] args = signature.split("\\" + SEPERATOR);
         if (args.length != 2) {
-            throw new RuntimeException("signature invalid : " + signature);
+            throw new YopClientException("signature invalid : " + signature);
         }
         String signToBase64 = args[0];
         DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[1]);

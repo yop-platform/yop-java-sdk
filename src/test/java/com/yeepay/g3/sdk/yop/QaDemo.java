@@ -29,7 +29,7 @@ public class QaDemo {
     @Before
     public void setUp() throws Exception {
         TrustAllHttpsCertificates.setTrue();
-        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_qa_docker.json");
+        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_qa.json");
     }
 
     @Test

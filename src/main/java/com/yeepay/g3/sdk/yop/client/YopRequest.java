@@ -32,7 +32,7 @@ public class YopRequest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopRequest.class);
 
-    private String signAlg = YopConstants.ALG_SHA1;
+    private String signAlg = YopConstants.ALG_SHA256;
 
     private Multimap<String, String> paramMap = ArrayListMultimap.create();
 
@@ -95,7 +95,6 @@ public class YopRequest {
 
     private void init() {
         headers.put(Headers.YOP_SDK_VERSION, YopConstants.CLIENT_VERSION);
-        headers.put(Headers.YOP_SDK_LANGS, YopConstants.CLIENT_LANGS);
         headers.put(Headers.USER_AGENT, YopConstants.USER_AGENT);
         headers.put(Headers.YOP_APP_KEY, this.appSdkConfig.getAppKey());
     }

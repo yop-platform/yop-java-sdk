@@ -46,7 +46,7 @@ public class YopClient extends AbstractClient {
         CheckUtils.checkApiUri(apiUri);
         String contentUrl = richRequest(apiUri, request);
         normalize(request);
-        sign(request);
+        sign(apiUri, request);
 
         HttpUriRequest httpPost = buildFormHttpRequest(request, contentUrl, HttpMethodName.POST);
         YopResponse response = fetchContentByApacheHttpClient(httpPost);
@@ -65,7 +65,7 @@ public class YopClient extends AbstractClient {
         CheckUtils.checkApiUri(apiUri);
         String contentUrl = richRequest(apiUri, request);
         normalize(request);
-        sign(request);
+        sign(apiUri, request);
 
         HttpUriRequest httpGet = buildFormHttpRequest(request, contentUrl, HttpMethodName.GET);
         YopResponse response = fetchContentByApacheHttpClient(httpGet);
@@ -84,7 +84,7 @@ public class YopClient extends AbstractClient {
         CheckUtils.checkApiUri(apiUri);
         String contentUrl = richRequest(apiUri, request);
         normalize(request);
-        sign(request);
+        sign(apiUri, request);
 
         Pair<HttpUriRequest, List<CheckedInputStream>> pair = buildMultiFormRequest(request, contentUrl);
         YopResponse response = fetchContentByApacheHttpClient(pair.getLeft());
@@ -98,11 +98,12 @@ public class YopClient extends AbstractClient {
     /**
      * 适用于 AES 签名方式
      *
+     * @param apiUri
      * @param request
      * @param forSignature
      * @return
      */
-    public static String getCanonicalQueryString(YopRequest request, boolean forSignature) {
+    public static String getCanonicalQueryString(String apiUri, YopRequest request, boolean forSignature) {
         Multimap<String, String> parameters = request.getParams();
         if (parameters.isEmpty()) {
             return "";
@@ -120,6 +121,8 @@ public class YopClient extends AbstractClient {
             signParams.put(key, StringUtils.join(list, ","));
 
         }
+        signParams.put("method", apiUri);
+        signParams.put("v", StringUtils.substringBefore(StringUtils.substringAfter(apiUri, "/v"), "/"));
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : signParams.entrySet()) {
             sb.append(entry.getKey()).append(StringUtils.trim(entry.getValue()));
@@ -139,11 +142,11 @@ public class YopClient extends AbstractClient {
         request.addHeader(Headers.YOP_DATE, timestamp);
     }
 
-    private static void sign(YopRequest request) {
+    private static void sign(String apiUri, YopRequest request) {
         if (request.getHeaders().containsKey("Authorization")) {
             return;
         }
-        String canonicalQueryString = getCanonicalQueryString(request, true);
+        String canonicalQueryString = getCanonicalQueryString(apiUri, request, true);
 
         String secret = request.getAesSecretKey();
         String algName = request.getSignAlg();

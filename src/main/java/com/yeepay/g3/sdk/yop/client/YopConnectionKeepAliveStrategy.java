@@ -5,14 +5,11 @@
 
 package com.yeepay.g3.sdk.yop.client;
 
-import org.apache.http.HeaderElement;
-import org.apache.http.HeaderElementIterator;
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.annotation.Contract;
 import org.apache.http.annotation.ThreadingBehavior;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
-import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.Args;
@@ -30,17 +27,13 @@ import org.apache.http.util.Args;
 @Contract(threading = ThreadingBehavior.IMMUTABLE)
 public class YopConnectionKeepAliveStrategy implements ConnectionKeepAliveStrategy {
 
-    public static final DefaultConnectionKeepAliveStrategy INSTANCE = new DefaultConnectionKeepAliveStrategy();
-
     @Override
     public long getKeepAliveDuration(final HttpResponse response, final HttpContext context) {
         Args.notNull(response, "HTTP response");
-        final HeaderElementIterator it = new BasicHeaderElementIterator(
-                response.headerIterator(HTTP.CONN_KEEP_ALIVE));
-        while (it.hasNext()) {
-            final HeaderElement he = it.nextElement();
-            final String param = he.getName();
-            final String value = he.getValue();
+        final Header[] headers = response.getHeaders(HTTP.CONN_KEEP_ALIVE);
+        if (null != headers && headers.length > 0) {
+            final String param = headers[0].getName();
+            final String value = headers[0].getValue();
             if (value != null && param.equalsIgnoreCase("timeout")) {
                 try {
                     return Long.parseLong(value) * 1000;
