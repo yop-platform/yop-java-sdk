@@ -30,7 +30,6 @@ public class Auth2Test {
     public void testSendSmsProduct() throws Exception {
         YopRequest request = new YopRequest("test","/MXzsRgoE8zDG+DACb/o1Q==");
         request.setSignAlg("SHA1");//具体看api签名算法而定
-        request.setEncrypt(true);
         request.addParam("bankCardNumber", "6217211602000141798");
         request.addParam("idCardNumber", "500228199109175071");
         request.addParam("name", "廖海军");

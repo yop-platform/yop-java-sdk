@@ -1,7 +1,6 @@
 package com.yeepay.g3.sdk.yop.http;
 
 import com.google.common.collect.Maps;
-import com.yeepay.g3.sdk.yop.utils.DateUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -37,32 +35,6 @@ public class YopHttpResponse {
             return null;
         }
         return header.getValue();
-    }
-
-    public long getHeaderAsLong(String name) {
-        String value = this.getHeader(name);
-        if (value == null) {
-            return -1;
-        }
-        try {
-            return Long.valueOf(value);
-        } catch (Exception e) {
-            logger.warn("Invalid " + name + ":" + value, e);
-            return -1;
-        }
-    }
-
-    public Date getHeaderAsRfc822Date(String name) {
-        String value = this.getHeader(name);
-        if (value == null) {
-            return null;
-        }
-        try {
-            return DateUtils.parseRFC822Date(value);
-        } catch (Exception e) {
-            logger.warn("Invalid " + name + ":" + value, e);
-            return null;
-        }
     }
 
     public InputStream getContent() {

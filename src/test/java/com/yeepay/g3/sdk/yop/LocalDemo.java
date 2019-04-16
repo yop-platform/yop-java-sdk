@@ -50,9 +50,9 @@ public class LocalDemo {
     public static void setUp() throws Exception {
         System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_local.json");
 //        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_dev.json");
-//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_qa_docker.json");
+//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_qa.json");
 //        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_pro.json");
-//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_pro_docker.json");
+//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_10000470992.json");
 //        System.setProperty("yop.sdk.trust.all.certs", "true");
     }
 
@@ -412,6 +412,7 @@ public class LocalDemo {
     @Test
     public void testConstraintViolationException() throws Exception {
         YopRequest request = new YopRequest();
+        request.setSignAlg("SHA1");
         request.addParam("requestFlowId", "test123456");//请求流水标识
         request.addParam("name", "张文康");
         request.addParam("idCardNumber", "czr+7xY");
@@ -424,7 +425,6 @@ public class LocalDemo {
     @Test
     public void testYeepayBizException() throws IOException {
         YopRequest request = new YopRequest();
-        request.setSignAlg("SHA-256");
 
         request.addParam("grant_type", "password0");//请求流水标识
         request.addParam("client_id", "appKey");
@@ -439,8 +439,6 @@ public class LocalDemo {
     @Test
     public void testPayPlusRemitQuery() throws IOException {
         YopRequest request = new YopRequest();
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
 //        request.addParam("trxRequestNo","111");
         request.addParam("remitRequestNo", "Remit1534859751218");

@@ -46,11 +46,11 @@ public class YopRsaClient extends AbstractClient {
     private static final String EXPIRED_SECONDS = "1800";
 
     static {
-        defaultHeadersToSign.add(Headers.HOST.toLowerCase());
-        defaultHeadersToSign.add(Headers.CONTENT_LENGTH.toLowerCase());
-        defaultHeadersToSign.add(Headers.CONTENT_TYPE.toLowerCase());
-        defaultHeadersToSign.add(Headers.CONTENT_MD5.toLowerCase());
-        defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA.toLowerCase());
+//        defaultHeadersToSign.add(Headers.HOST.toLowerCase());
+//        defaultHeadersToSign.add(Headers.CONTENT_LENGTH.toLowerCase());
+//        defaultHeadersToSign.add(Headers.CONTENT_TYPE.toLowerCase());
+//        defaultHeadersToSign.add(Headers.CONTENT_MD5.toLowerCase());
+//        defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA.toLowerCase());
     }
 
     public static YopResponse get(String apiUri, YopRequest request) throws IOException {
@@ -107,19 +107,13 @@ public class YopRsaClient extends AbstractClient {
 //        authorization  yop-auth-v2/openSmsApi/2016-02-25T08:57:48Z/1800/host/a57365cb4bf6cd83c91dfae214c1404aa0cc74f2ade95f121530fcb9c91f3c9d
 
         Map<String, String> headers = request.getHeaders();
-        if (!headers.containsKey(Headers.YOP_REQUEST_ID)) {
-            headers.put(Headers.YOP_REQUEST_ID, getUUID());
-            headers.put(Headers.YOP_SESSION_ID, SESSION_ID);
-        }
-        headers.put(Headers.YOP_DATE, timestamp);
-        String authString = InternalConfig.PROTOCOL_VERSION + "/" + appKey + "/" + timestamp + "/" + EXPIRED_SECONDS;
+        headers.put(Headers.YOP_SESSION_ID, SESSION_ID);
+        headers.put(Headers.YOP_REQUEST_ID, getUUID());
 
         Set<String> headersToSignSet = new HashSet<String>();
         headersToSignSet.add(Headers.YOP_REQUEST_ID);
-        headersToSignSet.add(Headers.YOP_DATE);
 
-        headers.put(Headers.YOP_APP_KEY, appKey);
-        headersToSignSet.add(Headers.YOP_APP_KEY);
+        String authString = InternalConfig.PROTOCOL_VERSION + "/" + appKey + "/" + timestamp + "/" + EXPIRED_SECONDS;
 
         // Formatting the URL with signing protocol.
         String canonicalURI = HttpUtils.getCanonicalURIPath(apiUri);
@@ -206,9 +200,9 @@ public class YopRsaClient extends AbstractClient {
         for (Map.Entry<String, String> entry : headers.entrySet()) {
             String key = entry.getKey();
             if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-                if ((headersToSign == null && isDefaultHeaderToSign(key))
-                        || (headersToSign != null && headersToSign.contains(key.toLowerCase())
-                        && !Headers.AUTHORIZATION.equalsIgnoreCase(key))) {
+                if ((headersToSign != null && headersToSign.contains(key.toLowerCase())
+                        && !Headers.AUTHORIZATION.equalsIgnoreCase(key))
+                        || (headersToSign == null && isDefaultHeaderToSign(key))) {
                     ret.put(key, entry.getValue());
                 }
             }
