@@ -109,7 +109,6 @@ public class YopRsaClient extends AbstractClient {
         Map<String, String> headers = request.getHeaders();
         headers.put(Headers.YOP_SESSION_ID, SESSION_ID);
         headers.put(Headers.YOP_REQUEST_ID, getUUID());
-        headers.put(Headers.YOP_APP_KEY, appKey);
 
         Set<String> headersToSignSet = new HashSet<String>();
         headersToSignSet.add(Headers.YOP_REQUEST_ID);

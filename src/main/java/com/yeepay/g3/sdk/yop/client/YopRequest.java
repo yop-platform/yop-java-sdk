@@ -99,6 +99,11 @@ public class YopRequest {
         headers.put(Headers.YOP_APP_KEY, this.appSdkConfig.getAppKey());
     }
 
+    public YopRequest setSubCustomerId(String subCustomerId) {
+        headers.put(Headers.YOP_SUB_CUSTOMER_ID, subCustomerId);
+        return this;
+    }
+
     public YopRequest setParam(String paramName, Object paramValue) {
         removeParam(paramName);
         addParam(paramName, paramValue, false);

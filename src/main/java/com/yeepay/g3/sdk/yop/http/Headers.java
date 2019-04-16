@@ -65,6 +65,7 @@ public interface Headers {
     String YOP_COPY_SOURCE_IF_MATCH = "x-yop-copy-source-if-match";
 
     String YOP_APP_KEY = "x-yop-appkey";
+    String YOP_SUB_CUSTOMER_ID = "x-yop-sub-customer-id";
 
     String YOP_DATE = "x-yop-date";
 
