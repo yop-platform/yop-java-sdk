@@ -104,25 +104,27 @@ public class YopClient extends AbstractClient {
      * @return
      */
     public static String getCanonicalQueryString(String apiUri, YopRequest request, boolean forSignature) {
-        Multimap<String, String> parameters = request.getParams();
-        if (parameters.isEmpty()) {
-            return "";
-        }
-        Map<String, String> signParams = new TreeMap<String, String>();
-        for (Map.Entry<String, Collection<String>> entry : parameters.asMap().entrySet()) {
-            if (forSignature &&
-                    (Headers.AUTHORIZATION.equalsIgnoreCase(entry.getKey()) || request.getIgnoreSignParams().contains(entry.getKey()))) {
-                continue;
-            }
-            String key = entry.getKey();
-            checkNotNull(key, "parameter key should not be null");
-            List<String> list = new ArrayList<String>(entry.getValue());
-            Collections.sort(list);
-            signParams.put(key, StringUtils.join(list, ","));
+        request.addParam("ts", String.valueOf(System.currentTimeMillis()));
 
+        Map<String, String> signParams = new TreeMap<String, String>();
+        Multimap<String, String> parameters = request.getParams();
+        if (!parameters.isEmpty()) {
+            for (Map.Entry<String, Collection<String>> entry : parameters.asMap().entrySet()) {
+                if (forSignature &&
+                        (Headers.AUTHORIZATION.equalsIgnoreCase(entry.getKey()) || request.getIgnoreSignParams().contains(entry.getKey()))) {
+                    continue;
+                }
+                String key = entry.getKey();
+                checkNotNull(key, "parameter key should not be null");
+                List<String> list = new ArrayList<String>(entry.getValue());
+                Collections.sort(list);
+                signParams.put(key, StringUtils.join(list, ","));
+            }
         }
+
         signParams.put("method", apiUri);
         signParams.put("v", StringUtils.substringBefore(StringUtils.substringAfter(apiUri, "/v"), "/"));
+
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> entry : signParams.entrySet()) {
             sb.append(entry.getKey()).append(StringUtils.trim(entry.getValue()));
@@ -162,7 +164,7 @@ public class YopClient extends AbstractClient {
 //        request.getParams().put("sign", signature);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("========\ncanonicalQueryString:" + canonicalQueryString
-                    + "\nmd5(secret):" + Digests.digest2Hex(secret, "md5")
+                    + "\nsha1(secret):" + Digests.digest2Hex(secret, "sha1")
                     + "\nsignature:" + signature);
         }
     }
