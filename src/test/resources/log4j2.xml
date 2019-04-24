@@ -12,13 +12,20 @@
             <!--<PatternLayout pattern="%d %-5p %c [%t] - %Y%n"/>-->
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss,SSS} - %C{3} -%-4r [%t] %-5p %x - %msg%n%throwable"/>
         </Console>
+
+        <RandomAccessFile name="RandomAccessFile" fileName="async.log" immediateFlush="false" append="true">
+            <PatternLayout>
+                <Pattern>%d %p %c{1.} [%t] %m %ex%n</Pattern>
+            </PatternLayout>
+        </RandomAccessFile>
     </Appenders>
 
     <Loggers>
-        <Logger name="com.yeepay.g3.sdk.yop" level="DEBUG"/>
+        <Logger name="com.yeepay.g3.sdk.yop" level="INFO"/>
         <Logger name="org.hibernate.type" level="ERROR"/>
-        <Logger name="org.apache" level="INFO"/>
         <Logger name="org.springframework" level="ERROR"/>
+
+        <!--        <Logger name="org.apache" level="DEBUG"/>-->
 
         <Logger name="org.jgroups" level="WARN"/>
         <Logger name="org.jboss.axis" level="INFO"/>
@@ -27,11 +34,11 @@
         <Logger name="org.apache.commons.httpclient" level="ERROR"/>
         <Logger name="com.alibaba.dubbo" level="WARN"/>
         <Logger name="com.yeepay.g3.utils" level="WARN"/>
-        <Logger name="DALCompenent" level="WARN"/>
-        <Logger name="com.yeepay.g3.athena" level="OFF"/>
+
         <Root level="WARN"><!-- 缺省日志级别，如果package有定制级别，则按package的定制级别走，即使package级别更低 -->
-            <AppenderRef ref="STDOUT"/>
             <!--<AppenderRef ref="fluent-app"/>-->
+            <!--            <AppenderRef ref="STDOUT"/>-->
+            <AppenderRef ref="RandomAccessFile"/>
         </Root>
     </Loggers>
 </Configuration>

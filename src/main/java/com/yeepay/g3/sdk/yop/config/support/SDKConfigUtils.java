@@ -2,6 +2,7 @@ package com.yeepay.g3.sdk.yop.config.support;
 
 import com.yeepay.g3.sdk.yop.YopServiceException;
 import com.yeepay.g3.sdk.yop.config.SDKConfig;
+import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.utils.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -30,9 +31,8 @@ public final class SDKConfigUtils {
         try {
             fis = ConfigUtils.getInputStream(configFile);
             config = JsonUtils.loadFrom(fis, SDKConfig.class);
-        } catch (Exception ex) {
-            LOGGER.error("Errors occurred when loading SDKConfig, filePath:" + configFile, ex);
-            throw new YopServiceException(ex, "Errors occurred when loading SDKConfig.");
+        } catch (Exception e) {
+            throw new YopClientException("Errors occurred when loading SDKConfig.", e);
         } finally {
             if (null != fis) {
                 try {

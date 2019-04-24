@@ -33,4 +33,9 @@ public class YopClientException extends RuntimeException {
         super(message, cause);
     }
 
+    @Override
+    public Throwable fillInStackTrace() {
+        return this;
+    }
+
 }

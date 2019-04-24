@@ -444,17 +444,8 @@ SDK已提供工具类方法`YopMarshallerUtils.parse`支持json解析，具体�
 ###4.4. 验签
 请求是必须做签名验证的，SDK&YOP自动完成
 
-响应结果也可签名，通过`request.setSignRet(true)`指定（默认不做结果签名），YopResponse自动验签
-
 某些API指使用非SHA1签名算法，请求对象需明确指定，示例：`request.setSignAlg("SHA");`
 
-
-###4.5. 加解密
-某些API参数使用明文参数有安全风险，如支付接口可能需要传信用卡CVV码，这些信息明确要求不能明文传输，为此需要对请求进行加密
-
-SDK中，通过`request.setEncrypt(true)`指定此请求需加密，当前支持AES及Blowfish加解密算法，开放应用调用使用AES、商户身份调用使用Blowfish
-
-请求加密则响应默认加密，YopResponse自动解密、验签、反序列化
 
 ###5. 沙箱
 沙箱网关是为了提高接入效率而提供的专门部署环境，开启沙箱模式以后，所有的请求都将发送到沙箱网关（不会发生实际业务调用），方便联调。

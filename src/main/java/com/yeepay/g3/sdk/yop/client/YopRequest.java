@@ -32,9 +32,7 @@ public class YopRequest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopRequest.class);
 
-    private String locale = "zh_CN";
-
-    private String signAlg = YopConstants.ALG_SHA1;
+    private String signAlg = YopConstants.ALG_SHA256;
 
     private Multimap<String, String> paramMap = ArrayListMultimap.create();
 
@@ -97,11 +95,13 @@ public class YopRequest {
 
     private void init() {
         headers.put(Headers.YOP_SDK_VERSION, YopConstants.CLIENT_VERSION);
-        headers.put(Headers.YOP_SDK_LANGS, YopConstants.CLIENT_LANGS);
         headers.put(Headers.USER_AGENT, YopConstants.USER_AGENT);
-        paramMap.put(YopConstants.APP_KEY, this.appSdkConfig.getAppKey());
-        paramMap.put(YopConstants.LOCALE, locale);
-        paramMap.put(YopConstants.TIMESTAMP, String.valueOf(System.currentTimeMillis()));
+        headers.put(Headers.YOP_APP_KEY, this.appSdkConfig.getAppKey());
+    }
+
+    public YopRequest setSubCustomerId(String subCustomerId) {
+        headers.put(Headers.YOP_SUB_CUSTOMER_ID, subCustomerId);
+        return this;
     }
 
     public YopRequest setParam(String paramName, Object paramValue) {
@@ -235,47 +235,22 @@ public class YopRequest {
         return ignoreSignParams;
     }
 
-    public void setLocale(String locale) {
-        this.locale = locale;
-        paramMap.put(YopConstants.LOCALE, this.locale);
-    }
-
-    public String getLocale() {
-        return locale;
-    }
-
+    @Deprecated
     public String getSignAlg() {
         return signAlg;
     }
 
+    @Deprecated
     public void setSignAlg(String signAlg) {
         this.signAlg = signAlg;
     }
 
-    /**
-     * 该设置已无效，不再加密，安全传输由https保证
-     *
-     * @param encrypt
-     */
     @Deprecated
-    public void setEncrypt(boolean encrypt) {
-
-    }
-
-    /**
-     * 该设置已无效，签名是必须的
-     *
-     * @param signRet
-     */
-    @Deprecated
-    public void setSignRet(boolean signRet) {
-
-    }
-
     public String getSecretKey() {
         return secretKey;
     }
 
+    @Deprecated
     public String getAesSecretKey() {
         return secretKey == null ? appSdkConfig.getAesSecretKey() : secretKey;
     }

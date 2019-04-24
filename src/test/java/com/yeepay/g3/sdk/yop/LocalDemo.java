@@ -50,9 +50,9 @@ public class LocalDemo {
     public static void setUp() throws Exception {
         System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_local.json");
 //        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_dev.json");
-//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_qa_docker.json");
+//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_qa.json");
 //        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_pro.json");
-//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_pro_docker.json");
+//        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_10000470992.json");
 //        System.setProperty("yop.sdk.trust.all.certs", "true");
     }
 
@@ -104,9 +104,9 @@ public class LocalDemo {
         request.addParam("request_system", "YOP");//请求流水标识
         request.addParam("name", "谌猛浩");
         request.addParam("id_card_number", "411122199102218257");
-        request.addFile("id_card_file", "src/test/resources/log4j.xml");
+        request.addFile("id_card_file", "src/test/resources/log4j2.xml");
 
-        YopResponse response = YopClient.upload("/yos/v1.0/test123/auth2/auth-id-card", request);
+        YopResponse response = YopClient.upload("/rest/v1.0/file/upload", request);
         AssertUtils.assertYopResponse(response);
         Assert.assertNotNull(response.getHeaders().get(Headers.YOP_HASH_CRC64ECMA));
     }
@@ -115,13 +115,13 @@ public class LocalDemo {
     public void testRSAYosFileUpload() throws Exception {
         YopRequest request = new YopRequest();
         request.setSignAlg("SHA256");
-        request.addParam("request_flow_id", "test123456");//请求流水标识
-        request.addParam("request_system", "YOP");//请求流水标识
-        request.addParam("name", "谌猛浩");
-        request.addParam("id_card_number", "411122199102218257");
-        request.addFile("id_card_file", "src/test/resources/log4j.xml");
+//        request.addParam("request_flow_id", "test123456");//请求流水标识
+//        request.addParam("request_system", "YOP");//请求流水标识
+//        request.addParam("name", "谌猛浩");
+//        request.addParam("id_card_number", "411122199102218257");
+        request.addFile("id_card_file", "src/test/resources/log4j2.xml");
 
-        YopResponse response = YopClient3.uploadRsa("/yos/v1.0/test123/auth2/auth-id-card", request);
+        YopResponse response = YopClient.upload("/yos/v1.0/test123/auth2/auth-id-card", request);
         AssertUtils.assertYopResponse(response);
         Assert.assertNotNull(response.getHeaders().get(Headers.YOP_HASH_CRC64ECMA));
     }
@@ -187,11 +187,10 @@ public class LocalDemo {
     }
 
     @Test(timeout = 30000)
-    public void testUpLoadFileOld() throws IOException, URISyntaxException {
+    public void testUpLoadFileOld() throws IOException {
         YopRequest request = new YopRequest(APP_KEYS[0], APP_SECRETS[0]);
         request.addParam("fileType", "IMAGE");
-//        request.addParam("_file", "file:/Users/xxx/1.png");
-        request.addParam("_file", "src/test/resources/log4j.xml");
+        request.addFile("_file", "src/test/resources/log4j2.xml");
 
         YopResponse response = YopClient.upload("/rest/v1.0/file/upload", request);
         AssertUtils.assertYopResponse(response);
@@ -199,10 +198,9 @@ public class LocalDemo {
     }
 
     @Test(timeout = 30000)
-    public void testUpLoadFileNew1() throws IOException, URISyntaxException {
+    public void testUpLoadFileNew1() throws IOException {
         YopRequest request = new YopRequest(APP_KEYS[0], APP_SECRETS[0]);
         request.addParam("fileType", "IMAGE");
-
         request.addFile("src/test/resources/log4j.xml");
 
         YopResponse response = YopClient.upload("/rest/v1.0/file/upload", request);
@@ -211,11 +209,10 @@ public class LocalDemo {
     }
 
     @Test(timeout = 30000)
-    public void testUpLoadFileNew2() throws IOException, URISyntaxException {
+    public void testUpLoadFileNew2() throws IOException {
         YopRequest request = new YopRequest(APP_KEYS[0], APP_SECRETS[0]);
         request.addParam("fileType", "IMAGE");
-
-        request.addFile(new File("src/test/resources/log4j.xml"));
+        request.addFile(new File("src/test/resources/log4j2.xml"));
 
         YopResponse response = YopClient.upload("/rest/v1.0/file/upload", request);
         AssertUtils.assertYopResponse(response);
@@ -412,6 +409,7 @@ public class LocalDemo {
     @Test
     public void testConstraintViolationException() throws Exception {
         YopRequest request = new YopRequest();
+        request.setSignAlg("SHA1");
         request.addParam("requestFlowId", "test123456");//请求流水标识
         request.addParam("name", "张文康");
         request.addParam("idCardNumber", "czr+7xY");
@@ -424,7 +422,6 @@ public class LocalDemo {
     @Test
     public void testYeepayBizException() throws IOException {
         YopRequest request = new YopRequest();
-        request.setSignAlg("SHA-256");
 
         request.addParam("grant_type", "password0");//请求流水标识
         request.addParam("client_id", "appKey");
@@ -439,8 +436,6 @@ public class LocalDemo {
     @Test
     public void testPayPlusRemitQuery() throws IOException {
         YopRequest request = new YopRequest();
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
 //        request.addParam("trxRequestNo","111");
         request.addParam("remitRequestNo", "Remit1534859751218");

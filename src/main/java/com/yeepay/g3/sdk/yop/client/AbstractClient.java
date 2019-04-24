@@ -41,7 +41,6 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -49,6 +48,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +118,7 @@ public class AbstractClient {
                 .setSSLSocketFactory(InternalConfig.TRUST_ALL_CERTS ? getTrustedAllSSLConnectionSocketFactory() : null)
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
-                .evictIdleConnections(5000, TimeUnit.MILLISECONDS)
+                .evictIdleConnections(30, TimeUnit.SECONDS)
                 .setRetryHandler(new YopHttpRequestRetryHandler())
                 .setKeepAliveStrategy(new YopConnectionKeepAliveStrategy())
                 .build();
@@ -200,8 +200,11 @@ public class AbstractClient {
             requestBuilder.addHeader(entry.getKey(), entry.getValue());
         }
         try {
-            for (Map.Entry<String, String> entry : request.getParams().entries()) {
-                requestBuilder.addParameter(entry.getKey(), URLEncoder.encode(entry.getValue(), YopConstants.ENCODING));
+            for (Map.Entry<String, Collection<String>> entry : request.getParams().asMap().entrySet()) {
+                String paramKey = entry.getKey();
+                for (String value : entry.getValue()) {
+                    requestBuilder.addParameter(paramKey, URLEncoder.encode(value, YopConstants.ENCODING));
+                }
             }
         } catch (IOException ex) {
             throw new YopClientException("unable to create http request.", ex);
@@ -225,8 +228,11 @@ public class AbstractClient {
         TreeMap<String, CheckedInputStream> checkedInputStreams = null;
         try {
             if (!request.hasFiles()) {
-                for (Map.Entry<String, String> entry : request.getParams().entries()) {
-                    requestBuilder.addParameter(entry.getKey(), URLEncoder.encode(entry.getValue(), YopConstants.ENCODING));
+                for (Map.Entry<String, Collection<String>> entry : request.getParams().asMap().entrySet()) {
+                    String paramKey = entry.getKey();
+                    for (String value : entry.getValue()) {
+                        requestBuilder.addParameter(paramKey, URLEncoder.encode(value, YopConstants.ENCODING));
+                    }
                 }
             } else {
                 checkedInputStreams = Maps.newTreeMap();
@@ -306,16 +312,16 @@ public class AbstractClient {
                 new CRC64()));
     }
 
-
     protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
-        boolean success = true;
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
             return parseResponse(remoteResponse);
         } catch (Throwable ex) {
-            success = false;
+            String requestId = getRequestId(request);
+            LOGGER.error("request failure, requestId:" + requestId, ex);
+
             if (ex instanceof IOException) {
                 throw (IOException) ex;
             } else if (ex instanceof YopClientException) {
@@ -324,17 +330,7 @@ public class AbstractClient {
                 throw new YopClientException("unable to execute request.", ex);
             }
         } finally {
-            String requestId = getRequestId(request);
-            if (success) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("request success, requestId:{}.", requestId);
-                }
-            } else {
-                LOGGER.error("request failure, requestId:{}.", requestId);
-            }
-            if (null != remoteResponse && isJsonResponse(remoteResponse)) {
-                HttpClientUtils.closeQuietly(remoteResponse);
-            }
+            HttpClientUtils.closeQuietly(remoteResponse);
         }
     }
 
@@ -397,7 +393,7 @@ public class AbstractClient {
         }
         DigitalSignatureDTO signatureRequest = new DigitalSignatureDTO();
         signatureRequest.setSignature(signature);
-        signatureRequest.setPlainText(content.replaceAll("[ \t\n]", ""));
+        signatureRequest.setPlainText(StringUtils.replaceAll(content, "[ \t\n]", ""));
         signatureRequest.setCertType(CertTypeEnum.RSA2048);
         signatureRequest.setDigestAlg(DigestAlgEnum.SHA256);
         DigitalEnvelopeUtils.verify(signatureRequest, InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048));
@@ -462,8 +458,6 @@ public class AbstractClient {
     }
 
     protected static String richRequest(String methodOrUri, YopRequest request) {
-        request.setParam(YopConstants.VERSION, StringUtils.substringBefore(StringUtils.substringAfter(methodOrUri, "/v"), "/"));
-        request.setParam(YopConstants.METHOD, methodOrUri);
         return GATE_WAY_ROUTER.route(methodOrUri, request) + methodOrUri;
     }
 

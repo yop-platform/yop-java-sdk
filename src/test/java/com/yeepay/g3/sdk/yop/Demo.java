@@ -38,8 +38,6 @@ public class Demo {
     @Test
     public void testIdCard() throws Exception {
         YopRequest request = new YopRequest(null, "0/ZoyfKku0tunPunw7dbfA==");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
         request.addParam("appKey", "jinkela2");
         request.addParam("requestFlowId", "test123456");//请求流水标识
@@ -54,8 +52,6 @@ public class Demo {
     @Test
     public void testQueryMemberAccount() throws Exception {
         YopRequest request = new YopRequest(null, "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.addParam("customerNo", "10040011444");
         request.addParam("requestId", "0");
         request.addParam("platformUserNo", "1234567890123456789012345673333");
@@ -67,8 +63,6 @@ public class Demo {
     @Test
     public void v() throws IOException {
         YopRequest request = new YopRequest(null, "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.addParam("customerNo", "10040011444");
         request.addParam("merchantNo", "10040028626");
 //        request.addParam("platformUserNo", "12345678901234567890123456789012");
@@ -80,8 +74,6 @@ public class Demo {
     @Test
     public void testEnterprise() throws Exception {
         YopRequest request = new YopRequest("yop-boss", "QFdODaBYBiVuLpP+sbyH+g==");
-        request.setEncrypt(false);
-        request.setSignRet(true);
         request.addParam("appKey", "yop-boss");//这个写YOP就可以了
 //        request.addParam("requestSystem", "YOP");//这个写YOP就可以了
         request.addParam("corpName", "青海韩都忆餐饮管理有限公司");//企业名称
@@ -97,8 +89,6 @@ public class Demo {
     @Test
     public void testName1() throws Exception {
         YopRequest request = new YopRequest(null, "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.addParam("customerNo", "10040011444");
         request.addParam("requestId", "YOP-SDK-" + System.currentTimeMillis());
 //		request.addParam("platformUserNo","YOP-USERNO-" + System.currentTimeMillis());
@@ -112,8 +102,6 @@ public class Demo {
     @Test
     public void testName2() throws Exception {
         YopRequest request = new YopRequest(null, "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.addParam("customerNo", "10040011444");
         request.addParam("requestId", "YOP-SDK-" + System.currentTimeMillis());
         request.addParam("platformUserNo", "20150623143151652niuniu");
@@ -132,8 +120,6 @@ public class Demo {
     @Test
     public void test1() throws IOException {
         YopRequest request = new YopRequest(null, "s5KI8r0920SQ339oVlFE6eWJ0yk019SD7015nw39iaXJp10856z0C1d7JV5l");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.addParam("customerNo", "10011830665");
         request.addParam("customernumber", "10012544672");
         request.addParam("requestid", System.currentTimeMillis());
@@ -151,7 +137,6 @@ public class Demo {
         YopRequest request = new YopRequest("TestAppKey002", "TestAppSecret002");
         // request.setSignAlg("SHA1");
         request.setSignAlg("MD5");//具体看api签名算法而定
-        //request.setEncrypt(true);
         String notifyRule = "fundauth_MOBILE_IFVerify";//通知规则
         List recipients = new ArrayList();//接收人
         recipients.add(0, "18253166342");
@@ -171,7 +156,6 @@ public class Demo {
     public void testSendSmsQa() throws IOException {
         YopRequest request = new YopRequest("openSmsApi", "1234554321");
         request.setSignAlg("MD5");//具体看api签名算法而定
-        //request.setEncrypt(true);
         String notifyRule = "商户结算短信通知";//通知规则
         List recipients = new ArrayList();//接收人
         recipients.add(0, "18253166342");
@@ -215,8 +199,6 @@ public class Demo {
     @Test
     public void testValidate() throws IOException {
         YopRequest request = new YopRequest(null, "cGB2CeC3YmwSWGoVz0kAvQ==");
-        request.setEncrypt(false);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
         request.addParam("appKey", "yop-boss");
         request.addParam("not_null", "10011830665");
@@ -238,8 +220,6 @@ public class Demo {
     @Test
     public void testWhiteList() throws Exception {
         YopRequest request = new YopRequest(null, "cGB2CeC3YmwSWGoVz0kAvQ==");
-        request.setEncrypt(false);
-        request.setSignRet(true);
         request.addParam("appKey", "yop-boss");
         request.setSignAlg("sha-256");
         request.addParam("requestFlowId", "test123456");//请求流水标识
@@ -264,8 +244,6 @@ public class Demo {
 //        YopRequest request = new YopRequest(null, "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a");
 //        YopRequest request = new YopRequest(null,
 //                "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a");
-                    request.setEncrypt(true);
-                    request.setSignRet(true);
 //        request.setSignAlg("SHA1");
 //        request.addParam("customerNo", "10040011444");
                     request.addParam("appKey", "yop-boss");
@@ -293,8 +271,6 @@ public class Demo {
 ////        YopRequest request = new YopRequest(null,
 ////                "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a",
 ////                "http://localhost:8064/yop-center");
-//        request.setEncrypt(true);
-//        request.setSignRet(true);
 ////        request.setSignAlg("SHA1");
 ////        request.addParam("customerNo", "10040011444");
 //        request.addParam("appKey", "yop-boss");
@@ -321,8 +297,6 @@ public class Demo {
 //        YopRequest request = new YopRequest(null,
 //                "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a",
 //                "http://localhost:8064/yop-center");
-        request.setEncrypt(true);
-        request.setSignRet(true);
 //        request.setSignAlg("SHA1");
 //        request.addParam("customerNo", "10040011444");
         request.addParam("appKey", "yop-boss");
@@ -346,8 +320,6 @@ public class Demo {
 //        YopRequest request = new YopRequest(null,
 //                "8intulgnqibv77f1t8q9j0hhlkiy6ei6c82sknv63vib3zhgyzl8uif9ky7a",
 //                "http://localhost:8064/yop-center");
-        request.setEncrypt(true);
-        request.setSignRet(true);
 //        request.setSignAlg("SHA1");
 //        request.addParam("customerNo", "10040011444");
         request.addParam("appKey", "yop-boss");
@@ -365,8 +337,6 @@ public class Demo {
     @Test
     public void testKong() throws Exception {
         YopRequest request = new YopRequest(null, "cGB2CeC3YmwSWGoVz0kAvQ==");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("SHA-256");
         request.addParam("appKey", "yop-boss");
         request.addParam("idCardNumber", "370982199101186691");
@@ -381,8 +351,6 @@ public class Demo {
     @Test
     public void testKong2() throws Exception {
         YopRequest request = new YopRequest(null, "cGB2CeC3YmwSWGoVz0kAvQ==");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("SHA-256");
         request.addParam("appKey", "yop-boss");
 //        request.addParam("idCardNumber", "370982199101186691");
@@ -400,8 +368,6 @@ public class Demo {
     @Test
     public void testXue() throws IOException {
         YopRequest request = new YopRequest(null, "0owN80Vs39386sSSi7B76wa7497P41gZ3G4b8971V8R8sc6lS7ns4FA2846T");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
         request.addParam("customerNo", "10040020578");
         request.addParam("merchantno", "10040020578");
@@ -415,8 +381,6 @@ public class Demo {
     public void testLihui() throws IOException {
 //        YopRequest request = new YopRequest("B112345678901237",
 //                "nUXQx0Mt0aSKvR0uNOp6kg==");
-//        request.setEncrypt(true);
-//        request.setSignRet(true);
 //        request.setSignAlg("sha-256");
 //        request.addParam("accountingType", "TRADE");
 //        request.addParam("ppMerchantNo", "B112345678901237");
@@ -426,8 +390,6 @@ public class Demo {
 //        System.out.println(response.toString());
 
         YopRequest request = new YopRequest("B112345678901237", "nUXQx0Mt0aSKvR0uNOp6kg==");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
         request.addParam("ppMerchantNo", "B112345678901237");
         request.addParam("trxRequestNo", "trx1472193269370");
@@ -439,8 +401,6 @@ public class Demo {
     @Test
     public void testHanfan() throws IOException {
         YopRequest request = new YopRequest("B112345678901239", "Vmt/sFQgWbJ6b4uKWLlFGw==");
-        request.setEncrypt(true);
-        request.setSignRet(true);
         request.setSignAlg("sha-256");
         request.addParam("merchantNo", "B112345678901239");
         System.out.println(request.toQueryString());
@@ -454,8 +414,6 @@ public class Demo {
         //商户入网请求接口依赖外部系统：yop
         //http://open.yeepay.com:8064/yop-center  http://open.yeepay.com:18064/yop-center
         //https://open.yeepay.com/yop-center     yop-生产环境
-        request.setEncrypt(true);//请求加密
-        request.setSignRet(true);//
 
         request.addParam("bizSystem", "QFT");//入网业务方
         request.addParam("customerNo", "10012442799");//10012442799  平台商商编

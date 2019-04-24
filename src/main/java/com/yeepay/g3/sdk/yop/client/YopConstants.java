@@ -30,7 +30,7 @@ public class YopConstants {
                 .replace(' ', '_');
     }
 
-    public static final String CLIENT_VERSION = "3.2.9";
+    public static final String CLIENT_VERSION = "3.2.5-RC1";
     public static final String CLIENT_LANGS = "java";
 
     public static String USER_AGENT;
@@ -80,7 +80,7 @@ public class YopConstants {
     public static final String ALG_AES = "AES";
     public static final String ALG_SHA = "SHA";
     public static final String ALG_SHA1 = "SHA1";
-
+    public static final String ALG_SHA256 = "SHA256";
 
     public static final String DEFAULT_SERVER_ROOT = "https://openapi.yeepay.com/yop-center";
 

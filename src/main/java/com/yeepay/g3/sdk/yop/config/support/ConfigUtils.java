@@ -91,7 +91,7 @@ public final class ConfigUtils {
      *
      * @param dir 路径
      * @return 文件全路径集合
-     * @throws IOException io异常
+     * @throws IOException        io异常
      * @throws URISyntaxException uri异常
      */
     public static List<String> listFiles(String dir) throws IOException, URISyntaxException {
@@ -125,6 +125,9 @@ public final class ConfigUtils {
             fis = new FileInputStream(StringUtils.substring(location, 6));
         } else {
             fis = getResourceAsStream(location);
+        }
+        if (null == fis) {
+            throw new FileNotFoundException(location);
         }
         return fis;
     }
