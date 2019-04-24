@@ -41,6 +41,8 @@ public class AppSdkConfig implements Serializable {
 
     private PrivateKey defaultIsvPrivateKey;
 
+    private String encryptKey;
+
     private HttpClientConfig httpClientConfig;
 
     private Map<CertTypeEnum, PublicKey> yopPublicKeys;
@@ -124,6 +126,19 @@ public class AppSdkConfig implements Serializable {
 
     public void setDefaultYopPublicKey(PublicKey defaultYopPublicKey) {
         this.defaultYopPublicKey = defaultYopPublicKey;
+    }
+
+    public String getEncryptKey() {
+        return encryptKey;
+    }
+
+    public void setEncryptKey(String encryptKey) {
+        this.encryptKey = encryptKey;
+    }
+
+    public AppSdkConfig withEncryptKey(String encryptKey) {
+        this.encryptKey = encryptKey;
+        return this;
     }
 
     public PrivateKey getDefaultIsvPrivateKey() {
@@ -234,6 +249,7 @@ public class AppSdkConfig implements Serializable {
                     .withServerRoot(StringUtils.defaultIfBlank(sdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT))
                     .withYosServerRot(StringUtils.defaultIfBlank(sdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT))
                     .withSandboxServerRoot(StringUtils.defaultIfBlank(sdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT))
+                    .withEncryptKey(sdkConfig.getEncryptKey())
                     .withHttpClientConfig(sdkConfig.getHttpClient())
                     .withProxy(sdkConfig.getProxy())
                     .withMode(sdkConfig.getMode())

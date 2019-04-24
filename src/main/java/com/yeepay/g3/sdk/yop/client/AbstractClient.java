@@ -8,17 +8,18 @@ import com.yeepay.g3.sdk.yop.config.AppSdkConfig;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProvider;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
-import com.yeepay.g3.sdk.yop.encrypt.CertTypeEnum;
+import com.yeepay.g3.sdk.yop.encrypt.AESEncrypter;
 import com.yeepay.g3.sdk.yop.encrypt.DigestAlgEnum;
-import com.yeepay.g3.sdk.yop.encrypt.DigitalSignatureDTO;
+import com.yeepay.g3.sdk.yop.encrypt.RSA;
 import com.yeepay.g3.sdk.yop.error.YopError;
+import com.yeepay.g3.sdk.yop.exception.VerifySignFailedException;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.http.HttpMethodName;
 import com.yeepay.g3.sdk.yop.http.YopHttpResponse;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
-import com.yeepay.g3.sdk.yop.utils.DigitalEnvelopeUtils;
+import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
 import com.yeepay.g3.sdk.yop.utils.FileUtils;
 import com.yeepay.g3.sdk.yop.utils.InternalConfig;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
@@ -56,11 +57,14 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CheckedInputStream;
+
+import static com.yeepay.g3.sdk.yop.utils.CharacterConstants.EMPTY;
 
 public class AbstractClient {
 
@@ -313,11 +317,16 @@ public class AbstractClient {
     }
 
     protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request) throws IOException {
+        return fetchContentByApacheHttpClient(request, ResponseConfig.NONE_OPERATION_CONFIG);
+    }
+
+
+    protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
-            return parseResponse(remoteResponse);
+            return parseResponse(remoteResponse, responseConfig);
         } catch (Throwable ex) {
             String requestId = getRequestId(request);
             LOGGER.error("request failure, requestId:" + requestId, ex);
@@ -338,7 +347,7 @@ public class AbstractClient {
         return request.getFirstHeader(Headers.YOP_REQUEST_ID).getValue();
     }
 
-    protected static YopResponse parseResponse(CloseableHttpResponse response) throws IOException {
+    protected static YopResponse parseResponse(CloseableHttpResponse response, ResponseConfig responseConfig) throws IOException {
         YopHttpResponse httpResponse = new YopHttpResponse(response);
         Header yopViaHeader = response.getFirstHeader(Headers.YOP_VIA);
         if (yopViaHeader != null && StringUtils.equals(yopViaHeader.getValue(), YopConstants.SANDBOX_GATEWAY_VIA)) {
@@ -354,7 +363,10 @@ public class AbstractClient {
             if (httpResponse.getContent() != null) {
                 if (isJsonResponse(response)) {
                     String content = IOUtils.toString(httpResponse.getContent(), YopConstants.ENCODING);
-                    verifySignature(content, httpResponse.getHeader(Headers.YOP_CONTENT_SHA256));
+                    if (responseConfig != ResponseConfig.NONE_OPERATION_CONFIG) {
+                        verifySignature(content, httpResponse.getHeader(Headers.YOP_SIGN), responseConfig.getYopPublicKey());
+                        content = decryptResponse(content, responseConfig);
+                    }
                     JacksonJsonMarshaller.load(content, yopResponse);
                     if (yopResponse.getStringResult() != null) {
                         yopResponse.setResult(JacksonJsonMarshaller.unmarshal(yopResponse.getStringResult(), Object.class));
@@ -367,7 +379,10 @@ public class AbstractClient {
         } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
             if (httpResponse.getContent() != null) {
                 String content = IOUtils.toString(httpResponse.getContent(), YopConstants.ENCODING);
-                verifySignature(content, httpResponse.getHeader(Headers.YOP_CONTENT_SHA256));
+                if (responseConfig != ResponseConfig.NONE_OPERATION_CONFIG) {
+                    verifySignature(content, httpResponse.getHeader(Headers.YOP_SIGN), responseConfig.getYopPublicKey());
+                    content = decryptResponse(content, responseConfig);
+                }
                 YopResponse yopResponse = new YopResponse();
                 handleHeaders(yopResponse, response);
                 yopResponse.setState("FAILURE");
@@ -387,16 +402,23 @@ public class AbstractClient {
         throw new YopClientException("unexpected httpStatusCode:" + httpResponse.getStatusCode());
     }
 
-    private static void verifySignature(String content, String signature) {
+    private static String decryptResponse(String content, ResponseConfig response) {
+        //只有需要解密而且网关确实返回密文的情况下才解密（某些情况下即使请求加密，网关也无法正常对结果加密）
+        if (response.isNeedDecrypt() && !StringUtils.startsWith(content, CharacterConstants.LEFT_BRACE)) {
+            return AESEncrypter.decrypt(content, response.getDecryptKey());
+        }
+        return content;
+    }
+
+    private static void verifySignature(String content, String signature, PublicKey yopPublicKey) {
         if (StringUtils.isEmpty(signature)) {
             return;
         }
-        DigitalSignatureDTO signatureRequest = new DigitalSignatureDTO();
-        signatureRequest.setSignature(signature);
-        signatureRequest.setPlainText(StringUtils.replaceAll(content, "[ \t\n]", ""));
-        signatureRequest.setCertType(CertTypeEnum.RSA2048);
-        signatureRequest.setDigestAlg(DigestAlgEnum.SHA256);
-        DigitalEnvelopeUtils.verify(signatureRequest, InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048));
+        //本版本sdk摘要算法只有sha256
+        content = content.replaceAll("[ \t\n]", EMPTY);
+        if (!RSA.verifySign(content, signature, yopPublicKey, DigestAlgEnum.SHA256)) {
+            throw new VerifySignFailedException("response sign verify failure");
+        }
     }
 
     private static boolean isJsonResponse(CloseableHttpResponse response) {

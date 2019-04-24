@@ -23,9 +23,6 @@ public class AESEncrypter {
     public static byte[] encrypt(byte[] data, byte[] key) {
         Assert.notNull(data, "data");
         Assert.notNull(key, "key");
-        if (key.length != 16) {
-            throw new RuntimeException("Invalid AES key length (must be 16 bytes)");
-        }
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, YopConstants.ALG_AES);
             byte[] enCodeFormat = secretKey.getEncoded();
@@ -41,10 +38,6 @@ public class AESEncrypter {
     public static byte[] decrypt(byte[] data, byte[] key) {
         Assert.notNull(data, "data");
         Assert.notNull(key, "key");
-        if (key.length != 16) {
-            throw new RuntimeException(
-                    "Invalid AES key length (must be 16 bytes)");
-        }
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, YopConstants.ALG_AES);
             byte[] enCodeFormat = secretKey.getEncoded();
