@@ -25,6 +25,7 @@ import com.yeepay.g3.sdk.yop.utils.InternalConfig;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -404,7 +405,7 @@ public class AbstractClient {
 
     private static String decryptResponse(String content, ResponseConfig response) {
         //只有需要解密而且网关确实返回密文的情况下才解密（某些情况下即使请求加密，网关也无法正常对结果加密）
-        if (response.isNeedDecrypt() && !StringUtils.startsWith(content, CharacterConstants.LEFT_BRACE)) {
+        if (BooleanUtils.isTrue(response.isNeedDecrypt()) && !StringUtils.startsWith(content, CharacterConstants.LEFT_BRACE)) {
             return AESEncrypter.decrypt(content, response.getDecryptKey());
         }
         return content;

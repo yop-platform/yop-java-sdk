@@ -8,8 +8,10 @@ import com.yeepay.g3.sdk.yop.client.YopConstants;
 import com.yeepay.g3.sdk.yop.utils.Assert;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
 
 /**
  * AES加解密工具类
@@ -20,16 +22,25 @@ import java.io.UnsupportedEncodingException;
  */
 public class AESEncrypter {
 
+    private static final String AES_ALG = "AES";
+
+    /**
+     * AES算法
+     */
+    private static final String AES_CBC_PCK_ALG = "AES/CBC/PKCS5Padding";
+
+    private static final byte[] AES_IV = initIv(AES_CBC_PCK_ALG);
+
     public static byte[] encrypt(byte[] data, byte[] key) {
         Assert.notNull(data, "data");
         Assert.notNull(key, "key");
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(key, YopConstants.ALG_AES);
-            byte[] enCodeFormat = secretKey.getEncoded();
-            SecretKeySpec seckey = new SecretKeySpec(enCodeFormat, YopConstants.ALG_AES);
-            Cipher cipher = Cipher.getInstance(YopConstants.ALG_AES);// 创建密码器
-            cipher.init(Cipher.ENCRYPT_MODE, seckey);// 初始化
-            return cipher.doFinal(data); // 加密
+            Cipher cipher = Cipher.getInstance(AES_CBC_PCK_ALG);
+            IvParameterSpec iv = new IvParameterSpec(AES_IV);
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key,
+                    AES_ALG), iv);
+
+            return cipher.doFinal(data);
         } catch (Exception e) {
             throw new RuntimeException("encrypt fail!", e);
         }
@@ -39,12 +50,11 @@ public class AESEncrypter {
         Assert.notNull(data, "data");
         Assert.notNull(key, "key");
         try {
-            SecretKeySpec secretKey = new SecretKeySpec(key, YopConstants.ALG_AES);
-            byte[] enCodeFormat = secretKey.getEncoded();
-            SecretKeySpec seckey = new SecretKeySpec(enCodeFormat, YopConstants.ALG_AES);
-            Cipher cipher = Cipher.getInstance(YopConstants.ALG_AES);// 创建密码器
-            cipher.init(Cipher.DECRYPT_MODE, seckey);// 初始化
-            return cipher.doFinal(data); // 加密
+            Cipher cipher = Cipher.getInstance(AES_CBC_PCK_ALG);
+            IvParameterSpec iv = new IvParameterSpec(initIv(AES_CBC_PCK_ALG));
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key,
+                    AES_ALG), iv);
+            return cipher.doFinal(data);
         } catch (Exception e) {
             throw new RuntimeException("decrypt fail!", e);
         }
@@ -68,6 +78,34 @@ public class AESEncrypter {
             return new String(valueByte, YopConstants.ENCODING);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("decrypt fail!", e);
+        }
+    }
+
+    /**
+     * 初始向量的方法, 全部为0. 这里的写法适合于其它算法,针对AES算法的话,IV值一定是128位的(16字节).
+     *
+     * @param fullAlg
+     * @return
+     * @throws GeneralSecurityException
+     */
+    private static byte[] initIv(String fullAlg) {
+
+        try {
+            Cipher cipher = Cipher.getInstance(fullAlg);
+            int blockSize = cipher.getBlockSize();
+            byte[] iv = new byte[blockSize];
+            for (int i = 0; i < blockSize; ++i) {
+                iv[i] = 0;
+            }
+            return iv;
+        } catch (Exception e) {
+
+            int blockSize = 16;
+            byte[] iv = new byte[blockSize];
+            for (int i = 0; i < blockSize; ++i) {
+                iv[i] = 0;
+            }
+            return iv;
         }
     }
 }

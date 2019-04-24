@@ -25,7 +25,7 @@ public class ResponseConfig {
     /**
      * 是否需要解密
      */
-    private boolean needDecrypt;
+    private Boolean needDecrypt;
 
     /**
      * 解密密钥
@@ -45,15 +45,15 @@ public class ResponseConfig {
         return this;
     }
 
-    public boolean isNeedDecrypt() {
+    public Boolean isNeedDecrypt() {
         return needDecrypt;
     }
 
-    public void setNeedDecrypt(boolean needDecrypt) {
+    public void setNeedDecrypt(Boolean needDecrypt) {
         this.needDecrypt = needDecrypt;
     }
 
-    public ResponseConfig withNeedEncrypt(boolean needEncrypt) {
+    public ResponseConfig withNeedEncrypt(Boolean needEncrypt) {
         this.needDecrypt = needEncrypt;
         return this;
     }
