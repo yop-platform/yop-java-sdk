@@ -271,6 +271,8 @@ public class LocalDemo {
         request.addParam("requestFlowId", "test-" + System.currentTimeMillis() + RandomStringUtils.randomNumeric(3));//请求流水标识
         request.addParam("requestIdentification", "unit test");//请求者标识
 
+        request.setNeedEncrypt(true);
+
         YopResponse response = YopClient3.postRsa("/rest/v3.0/auth/enterprise", request);
         AssertUtils.assertYopResponse(response);
     }

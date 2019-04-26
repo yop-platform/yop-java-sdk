@@ -50,7 +50,7 @@ public class YopClient extends AbstractClient {
 
         HttpUriRequest httpPost = buildFormHttpRequest(request, contentUrl, HttpMethodName.POST);
         YopResponse response = fetchContentByApacheHttpClient(httpPost);
-        handleResult(request, response);
+        handleResult(response);
         return response;
     }
 
@@ -69,7 +69,7 @@ public class YopClient extends AbstractClient {
 
         HttpUriRequest httpGet = buildFormHttpRequest(request, contentUrl, HttpMethodName.GET);
         YopResponse response = fetchContentByApacheHttpClient(httpGet);
-        handleResult(request, response);
+        handleResult(response);
         return response;
     }
 
@@ -88,7 +88,7 @@ public class YopClient extends AbstractClient {
 
         Pair<HttpUriRequest, List<CheckedInputStream>> pair = buildMultiFormRequest(request, contentUrl);
         YopResponse response = fetchContentByApacheHttpClient(pair.getLeft());
-        handleResult(request, response);
+        handleResult(response);
         if (pair.getRight() != null) {
             checkFileIntegrity(response, CRC64Utils.getCRC64(pair.getRight()));
         }
@@ -169,7 +169,7 @@ public class YopClient extends AbstractClient {
         }
     }
 
-    private static void handleResult(YopRequest request, YopResponse response) {
+    private static void handleResult(YopResponse response) {
         String stringResult = response.getStringResult();
         if (StringUtils.isNotBlank(stringResult)) {
             response.setResult(JacksonJsonMarshaller.unmarshal(stringResult, Object.class));
