@@ -123,7 +123,7 @@ public class AbstractClient {
                 .setSSLSocketFactory(InternalConfig.TRUST_ALL_CERTS ? getTrustedAllSSLConnectionSocketFactory() : null)
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
-                .evictIdleConnections(30, TimeUnit.SECONDS)
+                .evictIdleConnections(15, TimeUnit.SECONDS)
                 .setRetryHandler(new YopHttpRequestRetryHandler())
                 .setKeepAliveStrategy(new YopConnectionKeepAliveStrategy())
                 .build();
