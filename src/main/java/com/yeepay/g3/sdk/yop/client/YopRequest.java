@@ -52,6 +52,16 @@ public class YopRequest {
      */
     private final String secretKey;
 
+    /**
+     * 请求是否需要加密
+     */
+    private Boolean needEncrypt;
+
+    /**
+     * 加密密钥
+     */
+    private String encryptKey;
+
     public YopRequest() {
         this.appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getDefaultConfig();
         if (this.appSdkConfig == null) {
@@ -253,6 +263,22 @@ public class YopRequest {
     @Deprecated
     public String getAesSecretKey() {
         return secretKey == null ? appSdkConfig.getAesSecretKey() : secretKey;
+    }
+
+    public Boolean isNeedEncrypt() {
+        return needEncrypt;
+    }
+
+    public void setNeedEncrypt(Boolean needEncrypt) {
+        this.needEncrypt = needEncrypt;
+    }
+
+    public String getEncryptKey() {
+        return encryptKey;
+    }
+
+    public void setEncryptKey(String encryptKey) {
+        this.encryptKey = encryptKey;
     }
 
     public AppSdkConfig getAppSdkConfig() {

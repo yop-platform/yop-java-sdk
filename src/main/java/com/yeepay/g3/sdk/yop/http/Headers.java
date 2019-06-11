@@ -91,4 +91,14 @@ public interface Headers {
 
     String YOP_VIA = "x-yop-via";
 
+    /**
+     * 加密类型
+     */
+    String YOP_ENCRYPT_TYPE = "x-yop-encrypt-type";
+
+    /**
+     * 签名
+     */
+    String YOP_SIGN = "x-yop-sign";
+
 }

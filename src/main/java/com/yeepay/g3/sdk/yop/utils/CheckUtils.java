@@ -2,8 +2,10 @@ package com.yeepay.g3.sdk.yop.utils;
 
 import com.yeepay.g3.sdk.yop.client.YopConstants;
 import com.yeepay.g3.sdk.yop.config.SDKConfig;
+import com.yeepay.g3.sdk.yop.encrypt.Base64;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.exception.config.IllegalConfigFormtException;
+import com.yeepay.g3.sdk.yop.exception.config.IllegalConfigLengthException;
 import com.yeepay.g3.sdk.yop.exception.config.MissingConfigException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -50,6 +52,12 @@ public class CheckUtils {
                 new URL(sdkConfig.getSandboxServerRoot());
             } catch (MalformedURLException e) {
                 throw new IllegalConfigFormtException("sandboxServerRoot", "sandboxServerRoot is illegal");
+            }
+        }
+        if (StringUtils.isNotEmpty(sdkConfig.getEncryptKey())) {
+            byte[] decoded = Base64.decode(sdkConfig.getEncryptKey().getBytes());
+            if (decoded.length != 16 && decoded.length != 32) {
+                throw new IllegalConfigLengthException("encryptKey", "encryptKey is illegal");
             }
         }
     }

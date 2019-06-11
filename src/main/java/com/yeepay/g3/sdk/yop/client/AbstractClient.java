@@ -8,22 +8,25 @@ import com.yeepay.g3.sdk.yop.config.AppSdkConfig;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProvider;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
-import com.yeepay.g3.sdk.yop.encrypt.CertTypeEnum;
+import com.yeepay.g3.sdk.yop.encrypt.AESEncrypter;
 import com.yeepay.g3.sdk.yop.encrypt.DigestAlgEnum;
-import com.yeepay.g3.sdk.yop.encrypt.DigitalSignatureDTO;
+import com.yeepay.g3.sdk.yop.encrypt.RSA;
 import com.yeepay.g3.sdk.yop.error.YopError;
+import com.yeepay.g3.sdk.yop.exception.VerifySignFailedException;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.http.HttpMethodName;
 import com.yeepay.g3.sdk.yop.http.YopHttpResponse;
+import com.yeepay.g3.sdk.yop.model.DownloadInputStream;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
-import com.yeepay.g3.sdk.yop.utils.DigitalEnvelopeUtils;
+import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
 import com.yeepay.g3.sdk.yop.utils.FileUtils;
 import com.yeepay.g3.sdk.yop.utils.InternalConfig;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -56,11 +59,14 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CheckedInputStream;
+
+import static com.yeepay.g3.sdk.yop.utils.CharacterConstants.EMPTY;
 
 public class AbstractClient {
 
@@ -118,7 +124,7 @@ public class AbstractClient {
                 .setSSLSocketFactory(InternalConfig.TRUST_ALL_CERTS ? getTrustedAllSSLConnectionSocketFactory() : null)
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
-                .evictIdleConnections(30, TimeUnit.SECONDS)
+                .evictIdleConnections(15, TimeUnit.SECONDS)
                 .setRetryHandler(new YopHttpRequestRetryHandler())
                 .setKeepAliveStrategy(new YopConnectionKeepAliveStrategy())
                 .build();
@@ -313,15 +319,21 @@ public class AbstractClient {
     }
 
     protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request) throws IOException {
+        return fetchContentByApacheHttpClient(request, ResponseConfig.NONE_OPERATION_CONFIG);
+    }
+
+
+    protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
+        Throwable exception = null;
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
-            return parseResponse(remoteResponse);
+            return parseResponse(remoteResponse, responseConfig);
         } catch (Throwable ex) {
             String requestId = getRequestId(request);
             LOGGER.error("request failure, requestId:" + requestId, ex);
-
+            exception = ex;
             if (ex instanceof IOException) {
                 throw (IOException) ex;
             } else if (ex instanceof YopClientException) {
@@ -330,7 +342,9 @@ public class AbstractClient {
                 throw new YopClientException("unable to execute request.", ex);
             }
         } finally {
-            HttpClientUtils.closeQuietly(remoteResponse);
+            if (exception != null || (remoteResponse != null && isJsonResponse(remoteResponse))) {
+                HttpClientUtils.closeQuietly(remoteResponse);
+            }
         }
     }
 
@@ -338,65 +352,78 @@ public class AbstractClient {
         return request.getFirstHeader(Headers.YOP_REQUEST_ID).getValue();
     }
 
-    protected static YopResponse parseResponse(CloseableHttpResponse response) throws IOException {
-        YopHttpResponse httpResponse = new YopHttpResponse(response);
-        Header yopViaHeader = response.getFirstHeader(Headers.YOP_VIA);
+    protected static YopResponse parseResponse(CloseableHttpResponse httpResponse, ResponseConfig responseConfig) throws IOException {
+        YopHttpResponse response = new YopHttpResponse(httpResponse);
+        Header yopViaHeader = httpResponse.getFirstHeader(Headers.YOP_VIA);
         if (yopViaHeader != null && StringUtils.equals(yopViaHeader.getValue(), YopConstants.SANDBOX_GATEWAY_VIA)) {
             LOGGER.info("response from sandbox-gateway");
         }
-        int statusCode = httpResponse.getStatusCode();
+        int statusCode = response.getStatusCode();
         if (statusCode / 100 == HttpStatus.SC_OK / 100 && statusCode != HttpStatus.SC_NO_CONTENT) {
             //not a error
-            YopResponse yopResponse = new YopResponse();
-            handleHeaders(yopResponse, response);
-            yopResponse.setState("SUCCESS");
-            yopResponse.setRequestId(httpResponse.getHeader(Headers.YOP_REQUEST_ID));
-            if (httpResponse.getContent() != null) {
-                if (isJsonResponse(response)) {
-                    String content = IOUtils.toString(httpResponse.getContent(), YopConstants.ENCODING);
-                    verifySignature(content, httpResponse.getHeader(Headers.YOP_CONTENT_SHA256));
-                    JacksonJsonMarshaller.load(content, yopResponse);
-                    if (yopResponse.getStringResult() != null) {
-                        yopResponse.setResult(JacksonJsonMarshaller.unmarshal(yopResponse.getStringResult(), Object.class));
+            YopResponse result = new YopResponse();
+            handleHeaders(result, httpResponse);
+            result.setState("SUCCESS");
+            result.setRequestId(response.getHeader(Headers.YOP_REQUEST_ID));
+            if (response.getContent() != null) {
+                if (isJsonResponse(httpResponse)) {
+                    String content = IOUtils.toString(response.getContent(), YopConstants.ENCODING);
+                    if (responseConfig != ResponseConfig.NONE_OPERATION_CONFIG) {
+                        verifySignature(content, response.getHeader(Headers.YOP_SIGN), responseConfig.getYopPublicKey());
+                        content = decryptResponse(content, responseConfig);
+                    }
+                    JacksonJsonMarshaller.load(content, result);
+                    if (result.getStringResult() != null) {
+                        result.setResult(JacksonJsonMarshaller.unmarshal(result.getStringResult(), Object.class));
                     }
                 } else {
-                    yopResponse.setResult(response.getEntity().getContent());
+                    result.setResult(new DownloadInputStream(response.getContent(), httpResponse));
                 }
             }
-            return yopResponse;
+            return result;
         } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
-            if (httpResponse.getContent() != null) {
-                String content = IOUtils.toString(httpResponse.getContent(), YopConstants.ENCODING);
-                verifySignature(content, httpResponse.getHeader(Headers.YOP_CONTENT_SHA256));
-                YopResponse yopResponse = new YopResponse();
-                handleHeaders(yopResponse, response);
-                yopResponse.setState("FAILURE");
+            if (response.getContent() != null) {
+                String content = IOUtils.toString(response.getContent(), YopConstants.ENCODING);
+                if (responseConfig != ResponseConfig.NONE_OPERATION_CONFIG) {
+                    verifySignature(content, response.getHeader(Headers.YOP_SIGN), responseConfig.getYopPublicKey());
+                    content = decryptResponse(content, responseConfig);
+                }
+                YopResponse result = new YopResponse();
+                handleHeaders(result, httpResponse);
+                result.setState("FAILURE");
                 YopErrorResponse errorResponse = JacksonJsonMarshaller.unmarshal(content, YopErrorResponse.class);
-                yopResponse.setRequestId(errorResponse.getRequestId());
-                yopResponse.setError(YopError.Builder.anYopError()
+                result.setRequestId(errorResponse.getRequestId());
+                result.setError(YopError.Builder.anYopError()
                         .withCode(errorResponse.getCode())
                         .withSubCode(errorResponse.getSubCode())
                         .withMessage(errorResponse.getMessage())
                         .withSubMessage(errorResponse.getSubMessage())
                         .build());
-                return yopResponse;
+                return result;
             } else {
-                throw new YopClientException("empty result with httpStatusCode:" + httpResponse.getStatusCode());
+                throw new YopClientException("empty result with httpStatusCode:" + response.getStatusCode());
             }
         }
-        throw new YopClientException("unexpected httpStatusCode:" + httpResponse.getStatusCode());
+        throw new YopClientException("unexpected httpStatusCode:" + response.getStatusCode());
     }
 
-    private static void verifySignature(String content, String signature) {
+    private static String decryptResponse(String content, ResponseConfig response) {
+        //只有需要解密而且网关确实返回密文的情况下才解密（某些情况下即使请求加密，网关也无法正常对结果加密）
+        if (BooleanUtils.isTrue(response.isNeedDecrypt()) && !StringUtils.startsWith(content, CharacterConstants.LEFT_BRACE)) {
+            return AESEncrypter.decrypt(content, response.getDecryptKey());
+        }
+        return content;
+    }
+
+    private static void verifySignature(String content, String signature, PublicKey yopPublicKey) {
         if (StringUtils.isEmpty(signature)) {
             return;
         }
-        DigitalSignatureDTO signatureRequest = new DigitalSignatureDTO();
-        signatureRequest.setSignature(signature);
-        signatureRequest.setPlainText(StringUtils.replaceAll(content, "[ \t\n]", ""));
-        signatureRequest.setCertType(CertTypeEnum.RSA2048);
-        signatureRequest.setDigestAlg(DigestAlgEnum.SHA256);
-        DigitalEnvelopeUtils.verify(signatureRequest, InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048));
+        //本版本sdk摘要算法只有sha256
+        content = content.replaceAll("[ \t\n]", EMPTY);
+        if (!RSA.verifySign(content, signature, yopPublicKey, DigestAlgEnum.SHA256)) {
+            throw new VerifySignFailedException("response sign verify failure");
+        }
     }
 
     private static boolean isJsonResponse(CloseableHttpResponse response) {

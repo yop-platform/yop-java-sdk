@@ -41,7 +41,7 @@ public class YopConnectionKeepAliveStrategy implements ConnectionKeepAliveStrate
                 }
             }
         }
-        return 60 * 1000;
+        return 30 * 1000;
     }
 
 }

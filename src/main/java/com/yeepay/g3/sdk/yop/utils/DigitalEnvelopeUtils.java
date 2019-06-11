@@ -118,11 +118,6 @@ public final class DigitalEnvelopeUtils {
         return digitalSignatureDTO;
     }
 
-    public static DigitalSignatureDTO verify(DigitalSignatureDTO digitalSignatureDTO, PublicKey publicKey) {
-        verify0(digitalSignatureDTO, publicKey);
-        return digitalSignatureDTO;
-    }
-
     public static String sign0(DigitalSignatureDTO digitalSignatureDTO, PrivateKey privateKey) {
         String source = digitalSignatureDTO.getPlainText();
         byte[] data = source.getBytes(Charsets.UTF_8);
@@ -136,24 +131,6 @@ public final class DigitalEnvelopeUtils {
         return signToBase64 +
                 SEPERATOR +
                 digestAlg.getValue();
-    }
-
-    public static void verify0(DigitalSignatureDTO digitalSignatureDTO, PublicKey publicKey) {
-        String signature = digitalSignatureDTO.getSignature();
-        //分解参数
-        String[] args = signature.split("\\" + SEPERATOR);
-        if (args.length != 2) {
-            throw new YopClientException("signature invalid : " + signature);
-        }
-        String signToBase64 = args[0];
-        DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[1]);
-        digitalSignatureDTO.setDigestAlg(digestAlg);
-
-        //验证签名
-        boolean verifySign = RSA.verifySign(digitalSignatureDTO.getPlainText(), signToBase64, publicKey, digestAlg);
-        if (!verifySign) {
-            throw new VerifySignFailedException("verifySign fail!");
-        }
     }
 
 }

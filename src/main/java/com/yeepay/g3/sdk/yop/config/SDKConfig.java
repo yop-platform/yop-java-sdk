@@ -42,6 +42,9 @@ public final class SDKConfig implements Serializable {
     @JsonProperty("isv_private_key")
     private CertConfig[] isvPrivateKey;
 
+    @JsonProperty("encrypt_key")
+    private String encryptKey;
+
     @Deprecated
     @JsonProperty("connect_timeout")
     private Integer connectTimeout;
@@ -117,6 +120,14 @@ public final class SDKConfig implements Serializable {
 
     public void setIsvPrivateKey(CertConfig[] isvPrivateKey) {
         this.isvPrivateKey = isvPrivateKey;
+    }
+
+    public String getEncryptKey() {
+        return encryptKey;
+    }
+
+    public void setEncryptKey(String encryptKey) {
+        this.encryptKey = encryptKey;
     }
 
     public Integer getConnectTimeout() {
