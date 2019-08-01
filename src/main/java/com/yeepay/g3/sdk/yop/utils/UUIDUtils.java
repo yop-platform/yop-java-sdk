@@ -81,7 +81,7 @@ public final class UUIDUtils {
             b[i + 8] = (byte) (lsb >>> (8 * (7 - i)) & 0xff);
         }
 
-        return Base64.encodeBase64String(b);
+        return Base64.encodeBase64URLSafeString(b);
     }
 
 }
