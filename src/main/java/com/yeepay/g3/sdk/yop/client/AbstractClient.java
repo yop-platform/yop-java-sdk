@@ -23,6 +23,7 @@ import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
 import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
 import com.yeepay.g3.sdk.yop.utils.FileUtils;
 import com.yeepay.g3.sdk.yop.utils.InternalConfig;
+import com.yeepay.g3.sdk.yop.utils.UUIDUtils;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
 import org.apache.commons.io.IOUtils;
@@ -489,7 +490,7 @@ public class AbstractClient {
     }
 
     protected static String getUUID() {
-        return UUID.randomUUID().toString();
+        return UUIDUtils.compressV4UUID();
     }
 
 }
