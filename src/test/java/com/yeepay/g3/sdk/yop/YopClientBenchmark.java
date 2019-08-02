@@ -2,13 +2,12 @@ package com.yeepay.g3.sdk.yop;
 
 import com.yeepay.g3.core.yop.utils.test.benchmark.BenchmarkTask;
 import com.yeepay.g3.core.yop.utils.test.benchmark.ConcurrentBenchmark;
+import com.yeepay.g3.sdk.yop.client.YopClient;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
-import com.yeepay.g3.sdk.yop.client.YopRsaClient;
+import com.yeepay.g3.sdk.yop.client.YopResponse;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * title: <br>
@@ -24,8 +23,8 @@ public class YopClientBenchmark extends ConcurrentBenchmark {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopClientBenchmark.class);
 
-    private static final int DEFAULT_THREAD_COUNT = 1;
-    private static final long DEFAULT_TOTAL_COUNT = 1;
+    private static final int DEFAULT_THREAD_COUNT = 40;
+    private static final long DEFAULT_TOTAL_COUNT = 10000;
 
     public YopClientBenchmark(int defaultThreadCount, long defaultTotalCount) {
         super(defaultThreadCount, defaultTotalCount);
@@ -33,7 +32,7 @@ public class YopClientBenchmark extends ConcurrentBenchmark {
 
     public static void main(String[] args) throws Exception {
 //        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_local.json");
-        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_lele.json");
+        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_pro.json");
 //        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_dev.json");
 
         AppSdkConfigProviderRegistry.getProvider().getDefaultConfig();
@@ -46,12 +45,18 @@ public class YopClientBenchmark extends ConcurrentBenchmark {
         @Override
         protected void execute(int requestSequence) {
             try {
+//                YopRequest request = new YopRequest();
+//                request.addParam("username", "siqi");
+//                request.addParam("password", "qisi");
+//                YopRsaClient.post("/rest/v1.0/router/open-pay-report/query", request);
+
                 YopRequest request = new YopRequest();
-                request.addParam("username", "siqi");
-                request.addParam("password", "qisi");
-                YopRsaClient.post("/rest/v1.0/router/open-pay-report/query", request);
-            } catch (IOException e) {
-                e.printStackTrace();
+                request.addParam("trxRequestNo", "111");
+                request.addParam("remitRequestNo", "Remit1534859751218");
+                YopResponse response = YopClient.post("/rest/v1.0/insordering-interface/car-insordering-interface/create-policy", request);
+//                Thread.sleep(2500);
+            } catch (Exception e) {
+                LOGGER.error("", e);
             }
         }
     }

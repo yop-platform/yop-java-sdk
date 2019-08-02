@@ -5,7 +5,8 @@
 
 package com.yeepay.g3.sdk.yop.utils;
 
-import java.util.Base64;
+import org.apache.commons.codec.binary.Base64;
+
 import java.util.Random;
 
 /**
@@ -80,7 +81,7 @@ public final class UUIDUtils {
             b[i + 8] = (byte) (lsb >>> (8 * (7 - i)) & 0xff);
         }
 
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
+        return Base64.encodeBase64URLSafeString(b);
     }
 
 }
