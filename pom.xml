@@ -5,7 +5,7 @@
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.2.15</version>
+    <version>3.2.17</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
 
@@ -379,7 +379,7 @@
                 <shaded.classifier.name>jdk18</shaded.classifier.name>
 
                 <commons-lang3.version>3.6</commons-lang3.version>
-                <fasterxml.jackson.version>2.8.9</fasterxml.jackson.version>
+                <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
             </properties>
         </profile>
         <profile>
@@ -395,7 +395,7 @@
                 <shaded.classifier.name>jdk17</shaded.classifier.name>
 
                 <commons-lang3.version>3.5</commons-lang3.version>
-                <fasterxml.jackson.version>2.7.9</fasterxml.jackson.version>
+                <fasterxml.jackson.version>2.8.11</fasterxml.jackson.version>
             </properties>
         </profile>
         <profile>
@@ -411,7 +411,7 @@
                 <shaded.classifier.name>jdk16</shaded.classifier.name>
 
                 <commons-lang3.version>3.5</commons-lang3.version>
-                <fasterxml.jackson.version>2.7.9</fasterxml.jackson.version>
+                <fasterxml.jackson.version>2.8.11</fasterxml.jackson.version>
             </properties>
         </profile>
     </profiles>
