@@ -30,4 +30,9 @@ public class CRC64Utils {
         }
         return StringUtils.join(crc64s, "/");
     }
+
+    public static String getCRC64(CheckedInputStream inputStream) {
+        String crc64 = UnsignedLong.fromLongBits(inputStream.getChecksum().getValue()).toString();
+        return crc64;
+    }
 }

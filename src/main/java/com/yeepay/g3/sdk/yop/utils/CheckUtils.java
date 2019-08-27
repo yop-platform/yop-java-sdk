@@ -9,8 +9,11 @@ import com.yeepay.g3.sdk.yop.exception.config.IllegalConfigLengthException;
 import com.yeepay.g3.sdk.yop.exception.config.MissingConfigException;
 import org.apache.commons.lang3.StringUtils;
 
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * title: 校验工具<br/>
@@ -73,6 +76,26 @@ public class CheckUtils {
         }
         if (!StringUtils.startsWithAny(apiUri, YopConstants.API_URI_PREFIX)) {
             throw new YopClientException("apiUri is illegal");
+        }
+    }
+
+    public static void notNull(Object obj, String message) {
+        if (obj == null) {
+            throw new IllegalArgumentException(message + " must be specified");
+        }
+    }
+
+    public static void notEmpty(Object obj, String message) {
+        if (obj == null) {
+            throw new IllegalArgumentException(message + " must be specified");
+        } else if (obj instanceof String && obj.toString().trim().length() == 0) {
+            throw new IllegalArgumentException(message + " must be specified");
+        } else if (obj.getClass().isArray() && Array.getLength(obj) == 0) {
+            throw new IllegalArgumentException(message + " must be specified");
+        } else if (obj instanceof Collection && ((Collection)obj).isEmpty()) {
+            throw new IllegalArgumentException(message + " must be specified");
+        } else if (obj instanceof Map && ((Map)obj).isEmpty()) {
+            throw new IllegalArgumentException(message + " must be specified");
         }
     }
 

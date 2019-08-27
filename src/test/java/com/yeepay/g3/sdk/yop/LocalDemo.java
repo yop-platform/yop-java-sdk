@@ -1,23 +1,23 @@
 package com.yeepay.g3.sdk.yop;
 
-import com.yeepay.g3.sdk.yop.client.YopClient;
-import com.yeepay.g3.sdk.yop.client.YopClient3;
-import com.yeepay.g3.sdk.yop.client.YopRequest;
-import com.yeepay.g3.sdk.yop.client.YopResponse;
+import com.yeepay.g3.sdk.yop.client.*;
+import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.hbird.HbirdLoginToken;
 import com.yeepay.g3.sdk.yop.http.Headers;
+import com.yeepay.g3.sdk.yop.model.PartETag;
 import com.yeepay.g3.sdk.yop.utils.mapper.JsonMapper;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -40,6 +40,8 @@ import static org.junit.Assert.assertNotNull;
  * @since 15/7/8 10:23
  */
 public class LocalDemo {
+
+    protected static final Logger LOGGER = LoggerFactory.getLogger(LocalDemo.class);
 
     private static final JsonMapper JSON_MAPPER = JsonMapper.nonDefaultMapper();
 
@@ -319,12 +321,12 @@ public class LocalDemo {
         assertTrue(StringUtils.endsWith((String) ((HashMap) (((ArrayList) ((HashMap) response.getResult()).get("files")).get(0))).get("fileName"), ".xml"));
     }
 
-    @Test(timeout = 30000)
+    @Test
     public void testRsaUploadFileNew1() throws IOException {
         YopRequest request = new YopRequest();
         request.addParam("fileType", "IMAGE");
 
-        request.addFile("src/test/resources/log4j.xml");
+        request.addFile("src/test/resources/log4j2.xml");
 
         YopResponse response = YopClient3.uploadRsa("/rest/v1.0/file/upload", request);
         AssertUtils.assertYopResponse(response);
@@ -521,6 +523,149 @@ public class LocalDemo {
 //        String str = new String(bytes);
 
         System.out.println(IOUtils.toString(response.getFile()));
+    }
+
+    String apiUri = "/yos/v1.0/file/multipart/upload";
+    String bizCode = "testBizCode";
+    String bucket = "yop-file-upload-api";
+    String key = "multipart-yop-boss-1566897556443-42rZYlU5QpSmZ5TWAL2C5g.bin";
+    String uploadId = "2~c4DZmYePnPQnl-CuzY6WKO6Dqjni3dp";
+
+    @Test
+    public void testInitMultipartUpload() throws Exception {
+        InitiateMultipartUploadRequest req = new InitiateMultipartUploadRequest();
+        req.setApiUri(apiUri);
+        req.setBizCode(bizCode);
+        req.setFileName("产品培训－易宝开放平台.pdf");
+        YopResponse response = YopRsaClient.initMultipartUpload(req);
+        AssertUtils.assertYopResponse(response);
+    }
+
+    @Test
+    public void testUploadPart() throws Exception {
+        List<PartETag> partETags = new ArrayList<PartETag>();
+        //Object file = new File("src/test/resources/log4j2.xml");//2175字节
+        //Object file = new URL("https://www.baidu.com/img/bd_logo1.png").openStream();//7787字节
+        Object file = new File("/Users/yp-tc-m-7042/Downloads/产品培训－易宝开放平台.pdf");//5.6M
+        //Object file = new File("/Users/yp-tc-m-7042/Downloads/node-v10.15.3.pkg");//16.6M
+        //Object file = new File("/Users/yp-tc-m-7042/Downloads/robo3t-1.3.1-darwin-x86_64-7419c40.dmg");//26.4M
+        InputStream inputStream = null;
+        ByteArrayInputStream bais = null;
+        long totalRead = 0L;
+        try {
+            //遍历分片上传
+            for (int i = 0; ; i++) {
+                UploadPartRequest req = new UploadPartRequest();
+                req.setApiUri(apiUri);
+                long startPos = i * YopConstants.FILE_MULTIPART_PART_SIZE;
+                Pair<Boolean, InputStream> pair = YopRsaClient.getInputStreamPair(file);
+                Boolean skipFlag = pair.getLeft();
+                inputStream = pair.getRight();
+                if (skipFlag) {
+                    //跳过已经上传的分片
+                    inputStream.skip(startPos);
+                }
+                int partSize = (int) YopConstants.FILE_MULTIPART_PART_SIZE;
+                byte[] bytes = new byte[partSize];
+                int offset;
+                int readed = 0;
+                for (offset = 0; offset < partSize && (readed = inputStream.read(bytes, offset, partSize - offset)) != -1; offset += readed) {
+
+                }
+                if (offset <= 0 && readed == -1) {
+                    break;
+                }
+                totalRead = totalRead + offset;
+                if (totalRead > YopConstants.FILE_MULTIPART_UPLOAD_SIZE) {
+                    throw new YopClientException("one file should not be more than 25M.");
+                }
+                bais = new ByteArrayInputStream(bytes, 0, offset);
+                req.setFile(bais);
+                //设置分片号。每一个上传的分片都有一个分片号
+                req.setUploadId(uploadId);
+                req.setPartNumber(i + 1);
+                req.setPartSize(offset);
+                req.setBucket(bucket);
+                req.setKey(key);
+                YopResponse response = YopRsaClient.uploadPart(req);
+                AssertUtils.assertYopResponse(response);
+                Assert.assertNotNull(response.getHeaders().get(Headers.YOP_HASH_CRC64ECMA));
+                //每次上传分片之后，返回结果会包含一个PartETag。PartETag将被保存到partETags中。
+                partETags.add(new PartETag(i + 1, response.getHeaders().get(Headers.ETAG)));
+            }
+            System.out.println(partETags);
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (bais != null) {
+                    bais.close();
+                }
+            } catch (IOException ioEx) {
+                LOGGER.error("upload file exception occurred when close is", ioEx);
+            }
+        }
+    }
+
+    @Test
+    public void testCompleteMultipartUpload() throws Exception {
+        CompleteMultipartUploadRequest req = new CompleteMultipartUploadRequest();
+        req.setApiUri(apiUri);
+        req.setUploadId(uploadId);
+        req.setBucket(bucket);
+        req.setKey(key);
+        List<PartETag> partETags = new ArrayList<PartETag>();
+        partETags.add(new PartETag(1, "0361c7d565465107c701c9ca2f12dafc"));
+        partETags.add(new PartETag(2, "489e91619e84a9f3e4f445e48cafbb6a"));
+        req.setParts(partETags);
+        YopResponse response = YopRsaClient.completeMultipartUpload(req);
+        AssertUtils.assertYopResponse(response);
+    }
+
+    @Test
+    public void testAbortMultipartUpload() throws Exception {
+        AbortMultipartUploadRequest req = new AbortMultipartUploadRequest();
+        req.setApiUri(apiUri);
+        req.setUploadId(uploadId);
+        req.setBucket(bucket);
+        req.setKey(key);
+        YopResponse response = YopRsaClient.abortMultipartUpload(req);
+        AssertUtils.assertYopResponse(response);
+    }
+
+    @Test
+    public void testUploadSmallFile() throws Exception {
+        UploadFileRequest req = new UploadFileRequest();
+        req.setApiUri(apiUri);
+        req.setBizCode(bizCode);
+        req.setUploadFlag(YopConstants.MULTIPART_UPLOAD_FLAG_1);
+        req.setFile("src/test/resources/log4j2.xml");
+        //req.setFile(new File("src/test/resources/log4j2.xml"));
+        //req.setFile(new FileInputStream(new File("src/test/resources/log4j2.xml")));
+        //req.setFile(new URL("https://www.baidu.com/img/bd_logo1.png").openStream());
+        //req.setFile(new FileInputStream(new File("/Users/yp-tc-m-7042/Downloads/产品培训－易宝开放平台.pdf")));
+        //req.setFile(new FileInputStream(new File("/Users/yp-tc-m-7042/Downloads/robo3t-1.3.1-darwin-x86_64-7419c40.dmg")));
+        //req.setFileName("log4j2.png");
+        YopResponse response = YopRsaClient.multipartUpload(req);
+        AssertUtils.assertYopResponse(response);
+        Assert.assertNotNull(response.getHeaders().get(Headers.YOP_HASH_CRC64ECMA));
+    }
+
+    @Test
+    public void testMultipartUpload() throws Exception {
+        UploadFileRequest req = new UploadFileRequest();
+        req.setApiUri(apiUri);
+        req.setBizCode(bizCode);
+        req.setUploadFlag(YopConstants.MULTIPART_UPLOAD_FLAG_2);
+        //req.setFile(new FileInputStream(new File("src/test/resources/log4j2.xml")));//2175字节
+        //req.setFile(new URL("https://www.baidu.com/img/bd_logo1.png").openStream());//7787字节
+        //req.setFile(new FileInputStream(new File("/Users/yp-tc-m-7042/Downloads/产品培训－易宝开放平台.pdf")));//5.6M
+        //req.setFile(new FileInputStream(new File("/Users/yp-tc-m-7042/Downloads/node.pkg")));//16.6M
+        //req.setFileName("node-v10.15.3.pkg");
+        req.setFile(new FileInputStream(new File("/Users/yp-tc-m-7042/Downloads/robo3t-1.3.1-darwin-x86_64-7419c40.dmg"))); //26.4M
+        YopResponse response = YopRsaClient.multipartUpload(req);
+        AssertUtils.assertYopResponse(response);
     }
 
 }

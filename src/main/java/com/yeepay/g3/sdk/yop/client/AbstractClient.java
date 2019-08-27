@@ -20,10 +20,7 @@ import com.yeepay.g3.sdk.yop.http.YopHttpResponse;
 import com.yeepay.g3.sdk.yop.model.DownloadInputStream;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
-import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
-import com.yeepay.g3.sdk.yop.utils.FileUtils;
-import com.yeepay.g3.sdk.yop.utils.InternalConfig;
-import com.yeepay.g3.sdk.yop.utils.UUIDUtils;
+import com.yeepay.g3.sdk.yop.utils.*;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
 import org.apache.commons.io.IOUtils;
@@ -47,6 +44,8 @@ import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -199,6 +198,10 @@ public class AbstractClient {
             requestBuilder = RequestBuilder.post();
         } else if (HttpMethodName.GET == httpMethod) {
             requestBuilder = RequestBuilder.get();
+        } else if (HttpMethodName.DELETE == httpMethod) {
+            requestBuilder = RequestBuilder.delete();
+        } else if (HttpMethodName.PUT == httpMethod) {
+            requestBuilder = RequestBuilder.put();
         } else {
             throw new YopClientException("unsupported http method");
         }
@@ -216,6 +219,28 @@ public class AbstractClient {
         } catch (IOException ex) {
             throw new YopClientException("unable to create http request.", ex);
         }
+        return requestBuilder.build();
+    }
+
+    /**
+     * 构建普通jsonHttp请求
+     *
+     * @param request    yop请求
+     * @param contentUrl 请求地址
+     * @param httpMethod http方法
+     * @return http请求
+     * @throws IOException io异常
+     */
+    protected static HttpUriRequest buildJsonHttpRequest(YopRequest request, String contentUrl, HttpMethodName httpMethod, String jsonString) {
+        RequestBuilder requestBuilder = RequestBuilder.post();
+        requestBuilder.setUri(contentUrl);
+        for (Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
+            requestBuilder.addHeader(entry.getKey(), entry.getValue());
+        }
+        StringEntity entity = new StringEntity(jsonString, YopConstants.ENCODING);
+        entity.setContentEncoding(YopConstants.ENCODING);
+        entity.setContentType(ContentType.APPLICATION_JSON.getMimeType());
+        requestBuilder.setEntity(entity);
         return requestBuilder.build();
     }
 
@@ -261,6 +286,35 @@ public class AbstractClient {
         HttpUriRequest httpPost = requestBuilder.build();
         List<CheckedInputStream> inputStreamList = checkedInputStreams == null ? null : new ArrayList<CheckedInputStream>(checkedInputStreams.values());
         return new ImmutablePair<HttpUriRequest, List<CheckedInputStream>>(httpPost, inputStreamList);
+    }
+
+    /**
+     * 构建buildMultiPartUploadRequest
+     *
+     * @param request    yop请求
+     * @param contentUrl 请求地址
+     * @param file       文件或流
+     * @param partSize   每块大小
+     * @return key为http请求，value为checkInputStream
+     * @throws IOException io异常
+     */
+    protected static Pair<HttpUriRequest, CheckedInputStream> buildMultiPartUploadRequest(YopRequest request, String contentUrl, Object file, long partSize) {
+        RequestBuilder requestBuilder = RequestBuilder.put().setUri(contentUrl);
+        for (Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
+            requestBuilder.addHeader(entry.getKey(), entry.getValue());
+        }
+        CheckedInputStream checkedInputStream = null;
+        try {
+            Pair<String, CheckedInputStream> checkedInputStreamPair = wrapToCheckInputStream(file);
+            checkedInputStream = checkedInputStreamPair.getRight();
+            InputStreamEntity reqEntity = new InputStreamEntity(checkedInputStream, partSize);
+            reqEntity.setContentType(ContentType.DEFAULT_BINARY.getMimeType());
+            requestBuilder.setEntity(reqEntity);
+        } catch (IOException ex) {
+            throw new YopClientException("unable to create http request.", ex);
+        }
+        HttpUriRequest httpPost = requestBuilder.build();
+        return new ImmutablePair<HttpUriRequest, CheckedInputStream>(httpPost, checkedInputStream);
     }
 
     /**
@@ -442,6 +496,9 @@ public class AbstractClient {
         while (headerIterator.hasNext()) {
             Header header = headerIterator.nextHeader();
             if (StringUtils.startsWith(header.getName(), Headers.YOP_PREFIX)) {
+                yopResponse.addHeader(header.getName(), header.getValue());
+            }
+            if (StringUtils.equals(header.getName(), Headers.ETAG)) {
                 yopResponse.addHeader(header.getName(), header.getValue());
             }
         }
