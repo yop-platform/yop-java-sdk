@@ -468,7 +468,7 @@ public class YopRsaClient extends AbstractClient {
         request.addParam(YopConstants.MULTIPART_BIZ_CODE, req.getBizCode());
         // 商户直接请求小文件上传
         if (StringUtils.equals(YopConstants.MULTIPART_UPLOAD_FLAG_1, req.getUploadFlag())) {
-            return readSmallFile(request, req);
+            return callSmallFileUpload(request, req);
         } else {
             // 商户请求非小文件上传
             //filePropertiesPair left : true-读取之前可以拿到文件流大小 false-读取之前拿不到文件流大小 right : 文件流大小
@@ -524,7 +524,7 @@ public class YopRsaClient extends AbstractClient {
         }
     }
 
-    private static YopResponse readSmallFile(YopRequest request, UploadFileRequest req) throws IOException {
+    private static YopResponse callSmallFileUpload(YopRequest request, UploadFileRequest req) throws IOException {
         InputStream is = null;
         ByteArrayInputStream bais = null;
         try {
@@ -624,11 +624,15 @@ public class YopRsaClient extends AbstractClient {
                 YopResponse uploadYopResponse = internalUploadPart(apiUri, uploadYopRequest, bais, offset);
                 LOGGER.debug("multipart upload part,res : " + uploadYopResponse.toString());
                 if (!uploadYopResponse.isSuccess()) {
-                    return uploadYopResponse;
+                    //分块上传某块失败后，调用取消接口，避免留存无用废片
+                    return callAbortMultipartUpload(request, req, uploadId, bucket, key);
                 }
                 //每次上传分片之后，返回结果会包含一个PartETag。PartETag将被保存到partETags中。
                 partETags.add(new PartETag(i + 1, uploadYopResponse.getHeaders().get(Headers.ETAG)));
             }
+        } catch (Throwable ex) {
+            LOGGER.error("multipart upload file error ", ex);
+            return callAbortMultipartUpload(request, req, uploadId, bucket, key);
         } finally {
             closeStream(is, bais);
         }
@@ -645,6 +649,20 @@ public class YopRsaClient extends AbstractClient {
         YopResponse completeYopResponse = internalCompleteMultipartUpload(apiUri, completeYopRequest, reqBody);
         LOGGER.debug("multipart upload complete,res : " + completeYopResponse.toString());
         return completeYopResponse;
+    }
+
+    private static YopResponse callAbortMultipartUpload(YopRequest request, UploadFileRequest req, String uploadId, String bucket, String key) throws IOException {
+        YopRequest abortYopRequest = getYopRequest(req.getAppKey(), req.getSecretKey(), req.getNeedEncrypt(), req.getEncryptKey());
+        abortYopRequest.addParam(YopConstants.MULTIPART_UPLOAD_ID, uploadId);
+        abortYopRequest.addParam(YopConstants.MULTIPART_BUCKET, bucket);
+        abortYopRequest.addParam(YopConstants.MULTIPART_KEY, key);
+        YopResponse abortYopResponse = internalAbortMultipartUpload(req.getApiUri(), abortYopRequest);
+        if (abortYopResponse.isSuccess()) {//取消成功，返回上传文件失败
+            abortYopResponse.setState("FAILURE");
+            abortYopResponse.setError(getFileUploadError());
+            return abortYopResponse;
+        }
+        return abortYopResponse;//取消失败，直接返回错误信息
     }
 
     /**

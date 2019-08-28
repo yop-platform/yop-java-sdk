@@ -88,6 +88,9 @@ public class AbstractClient {
 
     private static final YopError FILE_CHECK_ERROR;
 
+    private static final YopError FILE_UPLOAD_ERROR;
+
+
     static {
         initApacheHttpClient();
         FILE_CHECK_ERROR = new YopError();
@@ -95,6 +98,12 @@ public class AbstractClient {
         FILE_CHECK_ERROR.setMessage("业务处理失败");
         FILE_CHECK_ERROR.setSubCode("isv.scene.filestore.put.crc-failed");
         FILE_CHECK_ERROR.setSubMessage("文件上传crc校验失败");
+
+        FILE_UPLOAD_ERROR = new YopError();
+        FILE_UPLOAD_ERROR.setCode("40044");
+        FILE_UPLOAD_ERROR.setMessage("业务处理失败");
+        FILE_UPLOAD_ERROR.setSubCode("isv.scene.filestore.put.failed");
+        FILE_UPLOAD_ERROR.setSubMessage("文件上传失败");
 
         AppSdkConfigProvider sdkConfigProvider = AppSdkConfigProviderRegistry.getProvider();
         AppSdkConfig appSdkConfig = sdkConfigProvider.getDefaultConfig() == null ? BackUpAppSdkConfigManager.getBackUpConfig()
@@ -517,6 +526,10 @@ public class AbstractClient {
 
     public static YopError getFileCheckError() {
         return FILE_CHECK_ERROR;
+    }
+
+    public static YopError getFileUploadError() {
+        return FILE_UPLOAD_ERROR;
     }
 
     /**
