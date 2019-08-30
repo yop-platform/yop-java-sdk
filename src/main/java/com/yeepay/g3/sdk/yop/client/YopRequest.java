@@ -125,6 +125,19 @@ public class YopRequest {
         return this;
     }
 
+    public YopRequest addNullParam(String paramName) {
+        addNullParam(paramName, false);
+        return this;
+    }
+
+    public YopRequest addNullParam(String paramName, boolean ignoreSign) {
+        Assert.hasText(paramName, "参数名不能为空");
+        paramMap.put(paramName, "");
+        if (ignoreSign) {
+            ignoreSignParams.add(paramName);
+        }
+        return this;
+    }
     /**
      * 添加参数
      *
