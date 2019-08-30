@@ -30,7 +30,7 @@ public class YopConstants {
                 .replace(' ', '_');
     }
 
-    public static final String CLIENT_VERSION = "3.2.17";
+    public static final String CLIENT_VERSION = "3.2.19";
     public static final String CLIENT_LANGS = "java";
 
     public static String USER_AGENT;
@@ -91,6 +91,28 @@ public class YopConstants {
     public static final String[] API_URI_PREFIX = {"/rest/v", "/yos/v"};
 
     public static final String SANDBOX_GATEWAY_VIA = "sandbox";
+
+    public static final String MULTIPART_UPLOAD_ID = "uploadId";
+
+    public static final String MULTIPART_PART_NUMBER = "partNumber";
+
+    public static final String MULTIPART_BUCKET = "bucket";
+
+    public static final String MULTIPART_KEY = "key";
+
+    public static final String MULTIPART_BIZ_CODE = "bizCode";
+
+    public static final String MULTIPART_UPLOADS = "uploads";
+
+    public static final String MULTIPART_FILE_NAME = "fileName";
+
+    public static final String MULTIPART_UPLOAD_FLAG_1 = "1";//文件上传标志 1-小文件上传（小于5M） 2-非小文件上传(大于5M或不知文件大小)
+
+    public static final String MULTIPART_UPLOAD_FLAG_2 = "2";//文件上传标志 1-小文件上传（小于5M） 2-非小文件上传(大于5M或不知文件大小)
+
+    public static final long FILE_MULTIPART_PART_SIZE = 5 * 1024 * 1024;//分块上传 每块大小为5M
+
+    public static final long FILE_MULTIPART_UPLOAD_SIZE = 25 * 1024 * 1024;//分块上传 超过25M分块
 
     /**
      * 判断是否为保护参数

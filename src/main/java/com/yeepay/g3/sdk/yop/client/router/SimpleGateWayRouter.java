@@ -50,7 +50,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
         } else {
             String apiGroup = extractApiGroupFromApiUri(apiUri);
             if (independentApiGroups.contains(apiGroup)) {
-                boolean isYosRequest = isYosRequest(request);
+                boolean isYosRequest = isYosRequest(apiUri, request);
                 URL serverRootURL = isYosRequest ? space.getYosServerRootURL() : space.getServerRootURL();
                 URL independentServerRootURL;
                 try {
@@ -61,14 +61,23 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 }
                 serverRoot = independentServerRootURL.toString();
             } else {
-                serverRoot = isYosRequest(request) ? space.getYosServerRoot() : space.getServerRoot();
+                serverRoot = isYosRequest(apiUri, request) ? space.getYosServerRoot() : space.getServerRoot();
             }
         }
         return serverRoot;
     }
 
-    private boolean isYosRequest(YopRequest request) {
-        return MapUtils.isNotEmpty(request.getMultipartFiles());
+    private boolean isYosRequest(String apiUri, YopRequest request) {
+        boolean isYosRequest = false;
+        if (MapUtils.isNotEmpty(request.getMultipartFiles())) {
+            isYosRequest = true;
+            return isYosRequest;
+        }
+        if (StringUtils.startsWith(apiUri, "/yos")) {
+            isYosRequest = true;
+            return isYosRequest;
+        }
+        return isYosRequest;
     }
 
     private String extractApiGroupFromApiUri(String apiUri) {
