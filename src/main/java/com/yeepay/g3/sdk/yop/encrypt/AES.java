@@ -1,9 +1,14 @@
 package com.yeepay.g3.sdk.yop.encrypt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 /**
  * title: <br>
@@ -16,6 +21,8 @@ import java.security.NoSuchAlgorithmException;
  * @since 16/11/24 下午2:35
  */
 public class AES implements SymmetricEncryption {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AES.class);
 
     private static final String NAME = "AES";
 
@@ -46,7 +53,7 @@ public class AES implements SymmetricEncryption {
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, NAME);
             byte[] enCodeFormat = secretKey.getEncoded();
-            Cipher cipher = Cipher.getInstance(NAME, AES_PROVIDER);// 创建密码器
+            Cipher cipher = getCipher();// 创建密码器
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(enCodeFormat, NAME));// 初始化
             return cipher.doFinal(plainText);
         } catch (Exception e) {
@@ -59,11 +66,22 @@ public class AES implements SymmetricEncryption {
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, NAME);
             byte[] enCodeFormat = secretKey.getEncoded();
-            Cipher cipher = Cipher.getInstance(NAME, AES_PROVIDER);// 创建密码器
+            Cipher cipher = getCipher();// 创建密码器
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(enCodeFormat, NAME));// 初始化
             return cipher.doFinal(cipherText);
         } catch (Exception e) {
             throw new RuntimeException("decrypt fail!", e);
+        }
+    }
+
+    private Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
+        try {
+            return Cipher.getInstance(NAME, AES_PROVIDER);
+        } catch (NoSuchProviderException e) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No such provider:" + AES_PROVIDER);
+            }
+            return Cipher.getInstance(NAME);
         }
     }
 }
