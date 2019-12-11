@@ -1,14 +1,10 @@
 package com.yeepay.g3.sdk.yop.encrypt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
 /**
  * title: <br>
@@ -22,15 +18,7 @@ import java.security.NoSuchProviderException;
  */
 public class AES implements SymmetricEncryption {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AES.class);
-
     private static final String NAME = "AES";
-
-    private static final String AES_PROVIDER;
-
-    static {
-        AES_PROVIDER = System.getProperty("yop.aes.provider", "SunJCE");
-    }
 
     @Override
     public byte[] generateRandomKey() {
@@ -75,13 +63,6 @@ public class AES implements SymmetricEncryption {
     }
 
     private Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
-        try {
-            return Cipher.getInstance(NAME, AES_PROVIDER);
-        } catch (NoSuchProviderException e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("No such provider:" + AES_PROVIDER);
-            }
-            return Cipher.getInstance(NAME);
-        }
+        return Cipher.getInstance(NAME);
     }
 }
