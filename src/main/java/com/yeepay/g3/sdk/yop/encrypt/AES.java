@@ -2,6 +2,7 @@ package com.yeepay.g3.sdk.yop.encrypt;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.NoSuchAlgorithmException;
 
@@ -18,12 +19,6 @@ import java.security.NoSuchAlgorithmException;
 public class AES implements SymmetricEncryption {
 
     private static final String NAME = "AES";
-
-    private static final String AES_PROVIDER;
-
-    static {
-        AES_PROVIDER = System.getProperty("yop.aes.provider", "SunJCE");
-    }
 
     @Override
     public byte[] generateRandomKey() {
@@ -46,7 +41,7 @@ public class AES implements SymmetricEncryption {
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, NAME);
             byte[] enCodeFormat = secretKey.getEncoded();
-            Cipher cipher = Cipher.getInstance(NAME, AES_PROVIDER);// 创建密码器
+            Cipher cipher = getCipher();// 创建密码器
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(enCodeFormat, NAME));// 初始化
             return cipher.doFinal(plainText);
         } catch (Exception e) {
@@ -59,11 +54,15 @@ public class AES implements SymmetricEncryption {
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, NAME);
             byte[] enCodeFormat = secretKey.getEncoded();
-            Cipher cipher = Cipher.getInstance(NAME, AES_PROVIDER);// 创建密码器
+            Cipher cipher = getCipher();// 创建密码器
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(enCodeFormat, NAME));// 初始化
             return cipher.doFinal(cipherText);
         } catch (Exception e) {
             throw new RuntimeException("decrypt fail!", e);
         }
+    }
+
+    private Cipher getCipher() throws NoSuchPaddingException, NoSuchAlgorithmException {
+        return Cipher.getInstance(NAME);
     }
 }

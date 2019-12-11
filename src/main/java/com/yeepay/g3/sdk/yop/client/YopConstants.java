@@ -30,7 +30,7 @@ public class YopConstants {
                 .replace(' ', '_');
     }
 
-    public static final String CLIENT_VERSION = "3.2.19";
+    public static final String CLIENT_VERSION = "3.2.21";
     public static final String CLIENT_LANGS = "java";
 
     public static String USER_AGENT;
