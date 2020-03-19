@@ -1,6 +1,7 @@
-
 | 版本 |变更内容  |
 | --- | --- |
+| 3.2.23 | 升级jackson防止远程执行漏洞 |
+| 3.2.21 | 废弃自定义的AesProvider系统参数，IbmJCE与SunJCE都遵循jce1.2.1规范，这里使用是兼容的，因此只要添加应用程序的JVM参数 -DamCryptoDescriptor.provider=IBMJCE -DamKeyGenDescriptor.provider=IBMJCE|
 | 3.2.19 | 支持大文件上传|
 | 3.2.17 | 升级jackson到2.9.9|
 | 3.2.15 | 优化长链接|
