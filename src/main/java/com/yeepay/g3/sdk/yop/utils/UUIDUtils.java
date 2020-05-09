@@ -7,8 +7,6 @@ package com.yeepay.g3.sdk.yop.utils;
 
 import org.apache.commons.codec.binary.Base64;
 
-import java.util.Random;
-
 /**
  * title: UUID Ext<br>
  * description: 在生成的时候就不包括连接符<br>
@@ -20,8 +18,6 @@ import java.util.Random;
  * @since 2019/1/2 4:41 PM
  */
 public final class UUIDUtils {
-
-    private static Random ng = RandomUtils.threadLocalRandom();
 
     private static String digits(long val, int digits) {
         long hi = 1L << (digits * 4);
@@ -35,7 +31,7 @@ public final class UUIDUtils {
      */
     public static String randomV4UUID() {
         byte[] randomBytes = new byte[16];
-        ng.nextBytes(randomBytes);
+        RandomUtils.threadLocalRandom().nextBytes(randomBytes);
         randomBytes[6] &= 0x0f;  /* clear version        */
         randomBytes[6] |= 0x40;  /* set to version 4     */
         randomBytes[8] &= 0x3f;  /* clear variant        */
@@ -62,7 +58,7 @@ public final class UUIDUtils {
      */
     public static String compressV4UUID() {
         byte[] randomBytes = new byte[16];
-        ng.nextBytes(randomBytes);
+        RandomUtils.threadLocalRandom().nextBytes(randomBytes);
         randomBytes[6] &= 0x0f;  /* clear version        */
         randomBytes[6] |= 0x40;  /* set to version 4     */
         randomBytes[8] &= 0x3f;  /* clear variant        */

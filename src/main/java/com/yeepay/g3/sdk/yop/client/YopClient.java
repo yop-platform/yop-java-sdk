@@ -140,7 +140,7 @@ public class YopClient extends AbstractClient {
             request.addHeader(Headers.YOP_REQUEST_ID, getUUID());
         }
 
-        String timestamp = DateUtils.formatCompressedIso8601Timestamp(System.currentTimeMillis());
+        String timestamp = DateUtils.formatAlternateIso8601Date(new Date());
         request.addHeader(Headers.YOP_DATE, timestamp);
     }
 
