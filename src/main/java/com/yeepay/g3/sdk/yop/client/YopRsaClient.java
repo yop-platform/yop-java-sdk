@@ -149,7 +149,7 @@ public class YopRsaClient extends AbstractClient {
 
     private static void sign(String apiUri, YopRequest request, HttpMethodName httpMethod) {
         String appKey = request.getAppSdkConfig().getAppKey();
-        String timestamp = DateUtils.formatCompressedIso8601Timestamp(System.currentTimeMillis());
+        String timestamp = DateUtils.formatAlternateIso8601Date(new Date());
 
 //        authorization  yop-auth-v2/openSmsApi/2016-02-25T08:57:48Z/1800/host/a57365cb4bf6cd83c91dfae214c1404aa0cc74f2ade95f121530fcb9c91f3c9d
 

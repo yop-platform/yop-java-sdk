@@ -68,7 +68,7 @@ public final class ConfigUtils {
                 try {
                     char[] password = certConfig.getPassword().toCharArray();
                     KeyStore keystore = KeyStore.getInstance("PKCS12");
-                    keystore.load(ConfigUtils.class.getResourceAsStream(certConfig.getValue()), password);
+                    keystore.load(getInputStream(certConfig.getValue()), password);
 
                     Enumeration aliases = keystore.aliases();
                     String keyAlias = "";
@@ -95,8 +95,7 @@ public final class ConfigUtils {
      * @throws URISyntaxException uri异常
      */
     public static List<String> listFiles(String dir) throws IOException, URISyntaxException {
-        URL url = StringUtils.startsWith(dir, "file://") ? new URL(dir) :
-                ConfigUtils.getContextClassLoader().getResource(dir);
+        URL url = StringUtils.startsWith(dir, "file://") ? new URL(dir) : getResource(dir);
         if (url == null) {
             return Collections.emptyList();
         } else if (StringUtils.equals(url.getProtocol(), "file")) {
@@ -130,6 +129,14 @@ public final class ConfigUtils {
             throw new FileNotFoundException(location);
         }
         return fis;
+    }
+
+    public static URL getResource(String resource) {
+        if (StringUtils.startsWith(resource, "/")) {
+            resource = StringUtils.substring(resource, 1);
+        }
+        final URL url = getContextClassLoader().getResource(resource);
+        return url == null ? ConfigUtils.class.getResource("/" + resource) : url;
     }
 
     public static InputStream getResourceAsStream(String resource) {

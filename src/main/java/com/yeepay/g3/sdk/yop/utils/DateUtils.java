@@ -1,27 +1,28 @@
 package com.yeepay.g3.sdk.yop.utils;
 
-import com.yeepay.g3.sdk.yop.utils.time.CachingDateFormatter;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
+import java.util.Date;
 
 public final class DateUtils {
 
-    private DateUtils() {
-        // do nothing
-    }
+    /**
+     * Alternate ISO 8601 format without fractional seconds
+     */
+    private static final DateTimeFormatter ALTERNATE_ISO8601_DATE_FORMAT =
+            ISODateTimeFormat.dateTimeNoMillis().withZone(DateTimeZone.UTC);
 
     /**
-     * This is another ISO 8601 format that's used in clock skew error response
+     * Formats the specified date as an ISO 8601 string.
+     *
+     * @param date The date to format.
+     * @return The ISO 8601 string representing the specified date.
      */
-    private static final CachingDateFormatter iso8601DateFormat = new CachingDateFormatter("yyyyMMdd'T'HHmmss'Z'");
-
-    /**
-     * Returns a string representation of the given date time in
-     * yyyyMMdd'T'HHmmss'Z' format. The date returned is in the UTC zone.
-     * <p>
-     * For example, given a time "1416863450581", this method returns
-     * "20141124T211050Z"
-     */
-    public static String formatCompressedIso8601Timestamp(long timeMilli) {
-        return iso8601DateFormat.format(timeMilli);
+    public static String formatAlternateIso8601Date(Date date) {
+        return ALTERNATE_ISO8601_DATE_FORMAT.print(new DateTime(date));
     }
 
 }
