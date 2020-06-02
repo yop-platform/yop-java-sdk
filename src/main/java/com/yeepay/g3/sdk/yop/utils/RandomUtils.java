@@ -47,11 +47,15 @@ public final class RandomUtils {
         }
     }
 
+    public static Random getRandom() {
+        return ThreadLocalRandom.current();
+    }
+
     /**
      * 返回0到Intger.MAX_VALUE的随机Int, 使用ThreadLocalRandom.
      */
     public static int nextInt() {
-        return nextInt(ThreadLocalRandom.current());
+        return nextInt(getRandom());
     }
 
     /**
@@ -72,7 +76,7 @@ public final class RandomUtils {
      * 返回0到max的随机Int, 使用ThreadLocalRandom.
      */
     public static int nextInt(int max) {
-        return nextInt(ThreadLocalRandom.current(), max);
+        return nextInt(getRandom(), max);
     }
 
     /**
@@ -86,7 +90,7 @@ public final class RandomUtils {
      * 返回min到max的随机Int, 使用ThreadLocalRandom.
      */
     public static int nextInt(int min, int max) {
-        return nextInt(ThreadLocalRandom.current(), min, max);
+        return nextInt(getRandom(), min, max);
     }
 
     /**

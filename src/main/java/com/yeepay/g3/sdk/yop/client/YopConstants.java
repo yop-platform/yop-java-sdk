@@ -76,9 +76,6 @@ public class YopConstants {
     public static final String[] PROTECTED_KEY = {APP_KEY, VERSION, SIGN, METHOD, FORMAT, LOCALE,
             SESSION_ID, CUSTOMER_NO, ENCRYPT, SIGN_RETURN, TIMESTAMP};
 
-    public static final String ALG_MD5 = "MD5";
-    public static final String ALG_AES = "AES";
-    public static final String ALG_SHA = "SHA";
     public static final String ALG_SHA1 = "SHA1";
     public static final String ALG_SHA256 = "SHA256";
 
