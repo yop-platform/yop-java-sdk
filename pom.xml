@@ -5,7 +5,7 @@
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.2.25</version>
+    <version>3.2.27</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
 
@@ -81,7 +81,6 @@
             <version>2.5</version>
         </dependency>
 
-
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -96,7 +95,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
+            <version>1.7.30</version>
         </dependency>
 
         <!-- test start -->
@@ -105,18 +104,6 @@
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.yeepay.g3.cloud.yop</groupId>
-            <artifactId>yop-utils</artifactId>
-            <version>1.5.13</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.yeepay.g3.utils</groupId>
-                    <artifactId>yeepay-utils-common</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!-- test end -->
     </dependencies>
@@ -379,7 +366,7 @@
                 <shaded.classifier.name>jdk18</shaded.classifier.name>
 
                 <commons-lang3.version>3.6</commons-lang3.version>
-                <fasterxml.jackson.version>2.10.2</fasterxml.jackson.version>
+                <fasterxml.jackson.version>2.11.1</fasterxml.jackson.version>
             </properties>
         </profile>
         <profile>
@@ -395,7 +382,7 @@
                 <shaded.classifier.name>jdk17</shaded.classifier.name>
 
                 <commons-lang3.version>3.5</commons-lang3.version>
-                <fasterxml.jackson.version>2.10.2</fasterxml.jackson.version>
+                <fasterxml.jackson.version>2.11.1</fasterxml.jackson.version>
             </properties>
         </profile>
         <profile>
