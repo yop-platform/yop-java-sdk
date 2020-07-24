@@ -10,7 +10,5 @@ build:
      - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases
      - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases -Dclassifier=yeepay
      - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases -Dclassifier=jdk18
-     - mvn clean install deploy -DskipTests=true -Dmaven.test.skip=true -Ddbinit.skip -Pjdk17
-     - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases -Dclassifier=jdk17-yeepay
   only:
      - web
