@@ -25,6 +25,8 @@ public class YopError {
 
     private String subMessage;
 
+    private String docUrl;
+
     private String solution;
 
     public String getCode() {
@@ -67,6 +69,14 @@ public class YopError {
         this.solution = solution;
     }
 
+    public String getDocUrl() {
+        return docUrl;
+    }
+
+    public void setDocUrl(String docUrl) {
+        this.docUrl = docUrl;
+    }
+
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
@@ -77,6 +87,7 @@ public class YopError {
         private String subCode;
         private String message;
         private String subMessage;
+        private String docUrl;
         private String solution;
 
         private Builder() {
@@ -106,6 +117,11 @@ public class YopError {
             return this;
         }
 
+        public Builder withDocUrl(String docUrl) {
+            this.docUrl = docUrl;
+            return this;
+        }
+
         public Builder withSolution(String solution) {
             this.solution = solution;
             return this;
@@ -117,6 +133,7 @@ public class YopError {
             yopError.setSubCode(subCode);
             yopError.setMessage(message);
             yopError.setSubMessage(subMessage);
+            yopError.setDocUrl(docUrl);
             yopError.setSolution(solution);
             return yopError;
         }
