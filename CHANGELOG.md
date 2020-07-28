@@ -1,5 +1,7 @@
 | 版本 |变更内容  |
 | --- | --- |
+| 3.3.1 | YopError中支持docUrl,忽略未配置参数 | 
+| 3.2.27 | 排除log4j等依赖，升级jackson 2.11.1 | 
 | 3.2.25 | 修复p12密钥读取bug，请求时间格式变更为ALTERNATE_ISO8601(UTC) | 
 | 3.2.23 | 升级jackson防止远程执行漏洞 |
 | 3.2.21 | 废弃自定义的AesProvider系统参数，IbmJCE与SunJCE都遵循jce1.2.1规范，这里使用是兼容的，因此只要添加应用程序的JVM参数 -DamCryptoDescriptor.provider=IBMJCE -DamKeyGenDescriptor.provider=IBMJCE|

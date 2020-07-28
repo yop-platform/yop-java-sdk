@@ -24,6 +24,8 @@ public class YopErrorResponse {
      */
     private String subMessage;
 
+    private String docUrl;
+
     public String getRequestId() {
         return this.requestId;
     }
@@ -82,5 +84,13 @@ public class YopErrorResponse {
 
     public void setSubMessage(String subMessage) {
         this.subMessage = subMessage;
+    }
+
+    public String getDocUrl() {
+        return docUrl;
+    }
+
+    public void setDocUrl(String docUrl) {
+        this.docUrl = docUrl;
     }
 }

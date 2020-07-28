@@ -7,10 +7,9 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -23,7 +22,7 @@ import java.util.Map;
  */
 public class JsonMapper {
 
-    private static final Log LOGGER = LogFactory.getLog(JsonMapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JsonMapper.class);
 
     protected ObjectMapper mapper;
 
@@ -170,15 +169,6 @@ public class JsonMapper {
     public void enableEnumUseToString() {
         mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
         mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
-    }
-
-    /**
-     * 支持使用Jaxb的Annotation，使得POJO上的annotation不用与Jackson耦合
-     * 默认会先查找jaxb的annotation，如果找不到再找jackson的
-     */
-    public void enableJaxbAnnotation() {
-        JaxbAnnotationModule module = new JaxbAnnotationModule();
-        mapper.registerModule(module);
     }
 
     /**

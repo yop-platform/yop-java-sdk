@@ -462,6 +462,7 @@ public class AbstractClient {
                         .withSubCode(errorResponse.getSubCode())
                         .withMessage(errorResponse.getMessage())
                         .withSubMessage(errorResponse.getSubMessage())
+                        .withDocUrl(errorResponse.getDocUrl())
                         .build());
                 return result;
             } else {

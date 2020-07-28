@@ -33,6 +33,7 @@ public class JacksonJsonMarshaller {
         objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
         objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
         objectMapper.setSerializationInclusion(Include.NON_EMPTY);
         objectMapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector());

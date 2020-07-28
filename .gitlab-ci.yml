@@ -1,0 +1,14 @@
+include: http://gitlab.yeepay.com/ci-build/build-runner/raw/master/build-template.yml
+variables:
+  PACKAGETYPE: 'jar'
+  #mvnArgs: '-Prls,!snp,integration,!local -Ddbinit.skip -Dmaven.test.skip=true'
+
+build:
+  stage: maven build && docker image
+  script:
+     - mvn clean install deploy -DskipTests=true -Dmaven.test.skip=true -Ddbinit.skip -P!test
+     - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases
+     - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases -Dclassifier=yeepay
+     - mvn deploy:deploy-file -Dversion=$RELEASE_VERSION -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-${RELEASE_VERSION}.jar -DpomFile=pom.xml -Durl=http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/ -DrepositoryId=YeepayReleases -Dclassifier=jdk18
+  only:
+     - web
