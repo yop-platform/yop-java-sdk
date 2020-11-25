@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.4</version>
+    <version>3.3.6</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -24,7 +24,7 @@
         <jackson.version>2.11.2</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
         <junit-version>4.12</junit-version>
-        <org.springframework>5.3.0-RC2</org.springframework>
+        <org.springframework>5.3.1</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <tika-core.version>1.18</tika-core.version>
@@ -230,6 +230,13 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>2.9.1</version>
+                        <configuration>
+                            <aggregate>true</aggregate>
+                            <charset>UTF-8</charset>
+                            <encoding>UTF-8</encoding>
+                            <docencoding>UTF-8</docencoding>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -252,6 +259,13 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <!-- 这个configuration必须配置，用于gpg非交互式密码输入 -->
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
                     </plugin>
                     <!--Compiler-->
                     <plugin>
@@ -273,6 +287,25 @@
                         <artifactId>maven-release-plugin</artifactId>
                         <version>2.5.1</version>
                     </plugin>
+
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.7</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>sonatype-nexus-staging</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>commons-codec</groupId>
+                                <artifactId>commons-codec</artifactId>
+                                <version>${commons-codec.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
                 </plugins>
             </build>
 
@@ -290,7 +323,7 @@
 <!--                <repository>-->
 <!--                    <id>github</id>-->
 <!--                    <name>GitHub OWNER Apache Maven Packages</name>-->
-<!--                    <url>https://maven.pkg.github.com/yop-platform/yop-java-sdk</url>-->
+<!--                    <url>https://maven.pkg.github.com/yop-platforBase64m/yop-java-sdk</url>-->
 <!--                </repository>-->
             </distributionManagement>
         </profile>
