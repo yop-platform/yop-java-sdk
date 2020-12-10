@@ -198,7 +198,7 @@ public class YopClient extends AbstractClient {
 
         //如果加密，解密
         if (doEncryption) {
-            encryption = AESEncrypter.decrypt(encryption, key);
+            encryption = AESEncrypter.decryptWithDefaultImpl(encryption, key);
         }
 
         //签名是必须的...
