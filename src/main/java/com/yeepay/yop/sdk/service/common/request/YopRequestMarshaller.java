@@ -44,6 +44,12 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
         }
         internalRequest.setResourcePath(request.getApiUri());
         internalRequest.setHttpMethod(HttpMethodName.valueOf(request.getHttpMethod().toUpperCase()));
+        Map<String, String> customerHeaders = request.getRequestConfig().getCustomRequestHeaders();
+        if (customerHeaders != null) {
+            for (String key : customerHeaders.keySet()) {
+                internalRequest.addHeader(key, customerHeaders.get(key));
+            }
+        }
         internalRequest.addHeader(Headers.YOP_REQUEST_ID, UUID.randomUUID().toString());
 
         if (!request.getParameters().isEmpty()) {
