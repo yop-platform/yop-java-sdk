@@ -10,6 +10,7 @@ import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
@@ -218,7 +219,19 @@ public class YopHttpClient {
         ConnectionSocketFactory socketFactory = PlainConnectionSocketFactory.getSocketFactory();
         LayeredConnectionSocketFactory sslSocketFactory;
         try {
-            SSLContext s = SSLContext.getInstance("TLSv1.2");
+            String javaVersion = System.getProperty("java.version");
+            String tlsVersion = null;
+            if (StringUtils.startsWith(javaVersion, "1.8") || StringUtils.startsWith(javaVersion, "1.7")) {
+                tlsVersion = "TLSv1.2";
+            } else if (StringUtils.startsWith(javaVersion, "1.6")) {
+                tlsVersion = "TLSv1.1";
+            }
+            SSLContext s;
+            if (StringUtils.isNotEmpty(tlsVersion)) {
+                s = SSLContext.getInstance(tlsVersion);
+            } else {
+                s = SSLContext.getDefault();
+            }
             // 初始化SSLContext实例
             s.init(null, null, null);
             sslSocketFactory = new SSLConnectionSocketFactory(s,
