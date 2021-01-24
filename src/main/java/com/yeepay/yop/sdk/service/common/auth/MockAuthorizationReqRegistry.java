@@ -24,5 +24,6 @@ public class MockAuthorizationReqRegistry implements AuthorizationReqRegistry {
     @Override
     public AuthorizationReq getAuthorizationReq(String operationId) {
         return AuthorizationReqSupport.getAuthorizationReq("YOP-RSA2048-SHA256");
+        //return AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3");
     }
 }

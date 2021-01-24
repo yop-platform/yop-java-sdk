@@ -2,7 +2,7 @@ package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
+import com.yeepay.yop.sdk.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -29,7 +29,7 @@ public class HttpResponseHandleContext implements Serializable {
 
     private final Request originRequest;
 
-    private final Signer signer;
+    private final YopSigner signer;
 
     private final SignOptions signOptions;
 
@@ -57,7 +57,7 @@ public class HttpResponseHandleContext implements Serializable {
         return originRequest;
     }
 
-    public Signer getSigner() {
+    public YopSigner getSigner() {
         return signer;
     }
 

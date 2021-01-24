@@ -1,13 +1,15 @@
 package com.yeepay.yop.sdk.security;
 
 import com.google.common.base.Charsets;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.rsa.RSA;
+import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
@@ -95,9 +97,10 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, String credentialType) {
-        YopRSACredentials yopCredentials = (YopRSACredentials) YopCredentialsProviderRegistry.getProvider()
+        YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
                 .getCredentials(appKey, credentialType);
-        PrivateKey privateKey = yopCredentials.getPrivateKey();
+        PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
+        PrivateKey privateKey = RSAKeyUtils.string2PrivateKey(pkiCredentialsItem.getPrivateKey());
         return decrypt(cipherText, privateKey);
     }
 

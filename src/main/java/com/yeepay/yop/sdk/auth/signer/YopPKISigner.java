@@ -1,3 +1,7 @@
+/*
+ * Copyright: Copyright (c)2011
+ * Company: 易宝支付(YeePay)
+ */
 package com.yeepay.yop.sdk.auth.signer;
 
 import com.google.common.base.Joiner;
@@ -6,20 +10,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
-import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
@@ -28,30 +27,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.security.*;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: Rsa签名器<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
- * @author menghao.chen
+ * @author yunmei.wu
  * @version 1.0.0
- * @since 17/12/1 16:37
+ * @since 2021/1/18 3:25 下午
  */
-public class RsaSigner implements Signer {
+public class YopPKISigner implements YopSigner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RsaSigner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
 
     private static final ThreadLocal<MessageDigest> SHA256_MESSAGE_DIGEST;
 
     private static final String YOP_AUTH_VERSION = "yop-auth-v3";
-
-    private static final String SEPARATOR = "$";
 
     private static final Set<String> defaultHeadersToSign = Sets.newHashSet();
     private static final Joiner headerJoiner = Joiner.on('\n');
@@ -87,10 +86,10 @@ public class RsaSigner implements Signer {
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;
         }
-        if (!(credentials instanceof YopRSACredentials)) {
+        PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentials.getCredential();
+        if (!(credentials instanceof YopPKICredentials)) {
             throw new YopClientException("UnSupported credentials type:" + credentials.getClass().getSimpleName());
         }
-        YopRSACredentials rsaCredentials = (YopRSACredentials) credentials;
         //TODO 校验rsaCredentials长度
         String accessKeyId = credentials.getAppKey();
 
@@ -116,10 +115,7 @@ public class RsaSigner implements Signer {
         String canonicalURI = this.getCanonicalURIPath(apiUri);
         String canonicalRequest = authString + "\n" + request.getHttpMethod() + "\n" + canonicalURI + "\n" +
                 canonicalQueryString + "\n" + canonicalHeader;
-
-        // Signing the canonical request using key with sha-256 algorithm.
-        String signature = this.computeSignature(canonicalRequest, rsaCredentials.getPrivateKey(), options.getDigestAlg());
-
+        String signature = getSignProcess(pkiCredentialsItem.getCertType()).sign(canonicalRequest, pkiCredentialsItem);
         String authorizationHeader = options.getProtocolPrefix() + " " + authString + "/" + signedHeaders + "/" + signature;
 
         LOGGER.debug("CanonicalRequest:{}\tAuthorization:{}", canonicalRequest.replace("\n", "[\\n]"),
@@ -127,15 +123,6 @@ public class RsaSigner implements Signer {
 
         request.addHeader(Headers.AUTHORIZATION, authorizationHeader);
 
-    }
-
-    @Override
-    public void checkSignature(YopHttpResponse httpResponse, String signature, PublicKey publicKey, SignOptions options) {
-        String content = httpResponse.readContent();
-        content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!RSA.verifySign(content, signature, publicKey, options.getDigestAlg())) {
-            throw new VerifySignFailedException("response sign verify failure");
-        }
     }
 
     private String getCanonicalQueryString(Request<? extends BaseRequest> request) {
@@ -241,10 +228,6 @@ public class RsaSigner implements Signer {
         Collections.sort(headerStrings);
 
         return headerJoiner.join(headerStrings);
-    }
-
-    private String computeSignature(String content, PrivateKey signingKey, DigestAlgEnum digestAlg) {
-        return RSA.sign(content, signingKey, digestAlg) + SEPARATOR + digestAlg.getValue();
     }
 
     /**

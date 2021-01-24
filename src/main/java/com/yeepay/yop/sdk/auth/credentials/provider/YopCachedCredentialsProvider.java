@@ -30,6 +30,7 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
         this.configCache = initCache(expire, timeUnit);
     }
 
+
     @Override
     public YopCredentials getCredentials(String appKey, String credentialType) {
         try {

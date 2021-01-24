@@ -10,7 +10,7 @@ package com.yeepay.yop.sdk.auth.credentials;
  * @version 1.0.0
  * @since 18/4/3 19:26
  */
-public class YopCredentialsWithoutSign implements YopCredentials {
+public class YopCredentialsWithoutSign implements YopCredentials<String> {
 
     private final String appKey;
 
@@ -20,11 +20,16 @@ public class YopCredentialsWithoutSign implements YopCredentials {
 
     @Override
     public String getAppKey() {
+        return this.appKey;
+    }
+
+    @Override
+    public String getCredential() {
         return appKey;
     }
 
     @Override
-    public String getSecretKey() {
+    public String getEncryptKey() {
         return null;
     }
 }

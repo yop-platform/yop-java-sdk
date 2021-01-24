@@ -1,13 +1,13 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.auth.SignerSupport;
 import com.yeepay.yop.sdk.auth.cipher.DefaultEncryptor;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
+import com.yeepay.yop.sdk.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
@@ -86,7 +86,7 @@ public class ClientHandlerImpl implements ClientHandler {
         } else {
             YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
-                    .withSigner(SignerSupport.getSigner(authorizationReq.getSignerType()))
+                    .withSigner(YopSignerFactory.getSigner(authorizationReq.getSignerType()))
                     .withSignOptions(authorizationReq.getSignOptions())
                     .withYopPublicKey(yopSdkConfig.loadYopPublicKey(authorizationReq.getCredentialType()));
 
@@ -106,8 +106,8 @@ public class ClientHandlerImpl implements ClientHandler {
 
             RequestConfig requestConfig = executionParams.getInput().getRequestConfig();
             if (requestConfig != null && BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
-                if (credential instanceof YopRSACredentials) {
-                    builder.withEncryptor(new DefaultEncryptor((YopRSACredentials) credential));
+                if (credential instanceof YopPKICredentials) {
+                    builder.withEncryptor(new DefaultEncryptor((YopPKICredentials) credential));
                 } else {
                     throw new YopClientException("securityReq does't support encryption");
                 }
@@ -117,6 +117,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
+        //获取商户自定义的安全需求
         String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
         if (StringUtils.isNotEmpty(customSecurityReq)) {
             AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);

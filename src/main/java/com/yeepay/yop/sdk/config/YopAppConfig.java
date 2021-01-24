@@ -7,7 +7,6 @@ import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.io.Serializable;
-import java.security.PrivateKey;
 import java.util.Map;
 
 /**
@@ -30,7 +29,7 @@ public class YopAppConfig implements Serializable {
 
     private String encryptKey;
 
-    private Map<CertTypeEnum, PrivateKey> isvPrivateKeys;
+    private Map<CertTypeEnum, String> isvPrivateKeys;
 
     public String getAppKey() {
         return appKey;
@@ -78,7 +77,7 @@ public class YopAppConfig implements Serializable {
         }
     }
 
-    public PrivateKey loadPrivateKey(CertTypeEnum certType) {
+    public String loadPrivateKey(CertTypeEnum certType) {
         return this.isvPrivateKeys.get(certType);
     }
 

@@ -53,4 +53,8 @@ public class RSAKeyUtils {
         }
     }
 
+    public static String key2String(Key key) {
+        return Encodes.encodeBase64(key.getEncoded());
+    }
+
 }

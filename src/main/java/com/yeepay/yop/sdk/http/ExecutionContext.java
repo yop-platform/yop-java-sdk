@@ -3,14 +3,14 @@ package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.auth.signer.YopSigner;
 
 import java.security.PublicKey;
 
 public class ExecutionContext {
 
-    private final Signer signer;
+    private final YopSigner signer;
 
     private final SignOptions signOptions;
 
@@ -20,7 +20,7 @@ public class ExecutionContext {
 
     private final PublicKey yopPublicKey;
 
-    private ExecutionContext(Signer signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials, PublicKey yopPublicKey) {
+    private ExecutionContext(YopSigner signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials, PublicKey yopPublicKey) {
         this.signer = signer;
         this.signOptions = signOptions;
         this.encryptor = encryptor;
@@ -28,7 +28,7 @@ public class ExecutionContext {
         this.yopPublicKey = yopPublicKey;
     }
 
-    public Signer getSigner() {
+    public YopSigner getSigner() {
         return signer;
     }
 
@@ -49,7 +49,7 @@ public class ExecutionContext {
     }
 
     public static final class Builder {
-        private Signer signer;
+        private YopSigner signer;
         private SignOptions signOptions;
         private Encryptor encryptor;
         private YopCredentials yopCredentials;
@@ -63,7 +63,7 @@ public class ExecutionContext {
             return new Builder();
         }
 
-        public Builder withSigner(Signer signer) {
+        public Builder withSigner(YopSigner signer) {
             this.signer = signer;
             return this;
         }

@@ -10,7 +10,8 @@ import java.util.Map;
 
 public enum DigestAlgEnum {
     SHA256("SHA256", "sha-256摘要"),
-    SHA512("SHA512", "sha-512摘要");
+    SHA512("SHA512", "sha-512摘要"),
+    SM3("SM3", "SM3摘要算法");
 
     private static final Map<String, DigestAlgEnum> VALUE_MAP = new HashMap();
     private final String value;
