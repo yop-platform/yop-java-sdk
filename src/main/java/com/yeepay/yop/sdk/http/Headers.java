@@ -64,6 +64,8 @@ public interface Headers {
 
     String YOP_CONTENT_SHA256 = "x-yop-content-sha256";
 
+    String YOP_CONTENT_SM3 = "x-yop-content-sm3";
+
     /**
      * 签名
      */

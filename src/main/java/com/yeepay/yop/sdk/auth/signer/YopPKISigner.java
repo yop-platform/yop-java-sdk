@@ -19,6 +19,7 @@ import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
@@ -48,7 +49,7 @@ public class YopPKISigner implements YopSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
 
-    private static final ThreadLocal<MessageDigest> SHA256_MESSAGE_DIGEST;
+    private static final ThreadLocal<Map<DigestAlgEnum, MessageDigest>> MESSAGE_DIGEST;
 
     private static final String YOP_AUTH_VERSION = "yop-auth-v3";
 
@@ -66,11 +67,14 @@ public class YopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
 
-        SHA256_MESSAGE_DIGEST = new ThreadLocal<MessageDigest>() {
+        MESSAGE_DIGEST = new ThreadLocal<Map<DigestAlgEnum, MessageDigest>>() {
             @Override
-            protected MessageDigest initialValue() {
+            protected Map<DigestAlgEnum, MessageDigest> initialValue() {
                 try {
-                    return MessageDigest.getInstance("SHA-256");
+                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = new HashMap<>(3);
+                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3"));
+                    messageDigestMap.put(DigestAlgEnum.SHA256, MessageDigest.getInstance("SHA-256"));
+                    return messageDigestMap;
                 } catch (NoSuchAlgorithmException e) {
                     throw new YopClientException(
                             "Unable to get SHA256 Function"
@@ -95,9 +99,9 @@ public class YopPKISigner implements YopSigner {
 
         request.addHeader(Headers.HOST, HttpUtils.generateHostHeader(request.getEndpoint()));
         Date timestamp = new Date();
-
-        String contentSha256 = calculateContentHash(request);
-        request.addHeader(Headers.YOP_CONTENT_SHA256, contentSha256);
+        DigestAlgEnum digestAlg = options.getDigestAlg();
+        String contentHash = calculateContentHash(request, digestAlg);
+        request.addHeader(getHeader(digestAlg), contentHash);
         // Formatting the query string with signing protocol.
         String canonicalQueryString = getCanonicalQueryString(request);
         // Sorted the headers should be signed from the request.
@@ -132,17 +136,24 @@ public class YopPKISigner implements YopSigner {
         return HttpUtils.getCanonicalQueryString(request.getParameters(), true);
     }
 
-    //TODO 请求重试时需要重新计算吗？
-    private String calculateContentHash(Request<? extends BaseRequest> request) {
-        RestartableInputStream payloadStream = getBinaryRequestPayloadStream(request);
-        String contentSha256 = Encodes.encodeHex(hash(payloadStream));
-        payloadStream.restart();
-        return contentSha256;
+    private String getHeader(DigestAlgEnum digestAlgEnum) {
+        if (DigestAlgEnum.SM3 == digestAlgEnum) {
+            return Headers.YOP_CONTENT_SM3;
+        }
+        return Headers.YOP_CONTENT_SHA256;
     }
 
-    private byte[] hash(InputStream input) {
+    //TODO 请求重试时需要重新计算吗？
+    private String calculateContentHash(Request<? extends BaseRequest> request, DigestAlgEnum digestAlg) {
+        RestartableInputStream payloadStream = getBinaryRequestPayloadStream(request);
+        String contentHash = Encodes.encodeHex(hash(payloadStream, digestAlg));
+        payloadStream.restart();
+        return contentHash;
+    }
+
+    private byte[] hash(InputStream input, DigestAlgEnum digestAlg) {
         try {
-            MessageDigest md = getMessageDigestInstance();
+            MessageDigest md = getMessageDigestInstance(digestAlg);
             DigestInputStream digestInputStream = new DigestInputStream(
                     input, md);
             byte[] buffer = new byte[1024];
@@ -235,8 +246,8 @@ public class YopPKISigner implements YopSigner {
      *
      * @return 摘要
      */
-    private static MessageDigest getMessageDigestInstance() {
-        MessageDigest messageDigest = SHA256_MESSAGE_DIGEST.get();
+    private static MessageDigest getMessageDigestInstance(DigestAlgEnum digestAlg) {
+        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
         messageDigest.reset();
         return messageDigest;
     }
