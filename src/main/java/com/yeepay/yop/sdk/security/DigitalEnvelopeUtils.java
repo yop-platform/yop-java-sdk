@@ -49,15 +49,15 @@ public class DigitalEnvelopeUtils {
         SymmetricEncryptAlgEnum symmetricEncryptAlg = SymmetricEncryptAlgEnum.parse(args[2]);
         DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[3]);
 
-        Encryption encryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
-
-        //用私钥对随机密钥进行解密
-        byte[] randomKey = RSA.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey);
-
         Encryption unsymmetricEncryption = UnsymmetricEncryptionFactory.getUnsymmetricEncryption(digestAlg);
 
+        //用私钥对随机密钥进行解密
+        byte[] randomKey = unsymmetricEncryption.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey.getEncoded());
+
+        Encryption encryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
+
         //解密得到源数据
-        byte[] encryptedData = unsymmetricEncryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
+        byte[] encryptedData = encryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
 
         //分解参数
         String data = new String(encryptedData, Charsets.UTF_8);
