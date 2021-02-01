@@ -11,6 +11,8 @@ import org.bouncycastle.asn1.gm.GMNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.*;
 import org.bouncycastle.crypto.signers.SM2Signer;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
@@ -273,6 +275,63 @@ public class Sm2Utils {
         signer.init(false, param);
         signer.update(srcData, 0, srcData.length);
         return signer.verifySignature(sign);
+    }
+
+    /**
+     * @param pubKey  公钥
+     * @param srcData 原文
+     * @return 默认输出C1C3C2顺序的密文。C1为65字节第1字节为压缩标识，这里固定为0x04，后面64字节为xy分量各32字节。C3为32字节。C2长度与原文一致。
+     * @throws InvalidCipherTextException
+     */
+    public static byte[] encrypt(BCECPublicKey pubKey, byte[] srcData) throws InvalidCipherTextException {
+        ECParameterSpec parameterSpec = pubKey.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                parameterSpec.getN(), parameterSpec.getH());
+        ECPublicKeyParameters pubKeyParameters = new ECPublicKeyParameters(pubKey.getQ(), domainParameters);
+        return encrypt(SM2Engine.Mode.C1C3C2, pubKeyParameters, srcData);
+    }
+
+    /**
+     * @param mode             指定密文结构，旧标准的为C1C2C3，新的[《SM2密码算法使用规范》 GM/T 0009-2012]标准为C1C3C2
+     * @param pubKeyParameters 公钥
+     * @param srcData          原文
+     * @return 根据mode不同，输出的密文C1C2C3排列顺序不同。C1为65字节第1字节为压缩标识，这里固定为0x04，后面64字节为xy分量各32字节。C3为32字节。C2长度与原文一致。
+     * @throws InvalidCipherTextException
+     */
+    public static byte[] encrypt(SM2Engine.Mode mode, ECPublicKeyParameters pubKeyParameters, byte[] srcData)
+            throws InvalidCipherTextException {
+        SM2Engine engine = new SM2Engine(mode);
+        ParametersWithRandom pwr = new ParametersWithRandom(pubKeyParameters, new SecureRandom());
+        engine.init(true, pwr);
+        return engine.processBlock(srcData, 0, srcData.length);
+    }
+
+    /**
+     * @param priKey    私钥
+     * @param sm2Cipher 默认输入C1C3C2顺序的密文。C1为65字节第1字节为压缩标识，这里固定为0x04，后面64字节为xy分量各32字节。C3为32字节。C2长度与原文一致。
+     * @return 原文。SM2解密返回了数据则一定是原文，因为SM2自带校验，如果密文被篡改或者密钥对不上，都是会直接报异常的。
+     * @throws InvalidCipherTextException
+     */
+    public static byte[] decrypt(BCECPrivateKey priKey, byte[] sm2Cipher) throws InvalidCipherTextException {
+        ECParameterSpec parameterSpec = priKey.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                parameterSpec.getN(), parameterSpec.getH());
+        ECPrivateKeyParameters priKeyParameters = new ECPrivateKeyParameters(priKey.getD(), domainParameters);
+        return decrypt(SM2Engine.Mode.C1C3C2, priKeyParameters, sm2Cipher);
+    }
+
+    /**
+     * @param mode             指定密文结构，旧标准的为C1C2C3，新的[《SM2密码算法使用规范》 GM/T 0009-2012]标准为C1C3C2
+     * @param priKeyParameters 私钥
+     * @param sm2Cipher        根据mode不同，需要输入的密文C1C2C3排列顺序不同。C1为65字节第1字节为压缩标识，这里固定为0x04，后面64字节为xy分量各32字节。C3为32字节。C2长度与原文一致。
+     * @return 原文。SM2解密返回了数据则一定是原文，因为SM2自带校验，如果密文被篡改或者密钥对不上，都是会直接报异常的。
+     * @throws InvalidCipherTextException
+     */
+    public static byte[] decrypt(SM2Engine.Mode mode, ECPrivateKeyParameters priKeyParameters, byte[] sm2Cipher)
+            throws InvalidCipherTextException {
+        SM2Engine engine = new SM2Engine(mode);
+        engine.init(false, priKeyParameters);
+        return engine.processBlock(sm2Cipher, 0, sm2Cipher.length);
     }
 
     /**

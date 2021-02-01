@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.security.aes;
 
-import com.yeepay.yop.sdk.security.SymmetricEncryption;
+import com.yeepay.yop.sdk.security.Encryption;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -17,7 +17,7 @@ import java.security.NoSuchAlgorithmException;
  * @version 1.0.0
  * @since 16/11/24 下午2:35
  */
-public class AES implements SymmetricEncryption {
+public class AES implements Encryption<byte[]> {
 
     private static final String NAME = "AES";
 
@@ -48,8 +48,8 @@ public class AES implements SymmetricEncryption {
         try {
             SecretKeySpec secretKey = new SecretKeySpec(key, NAME);
             byte[] enCodeFormat = secretKey.getEncoded();
-            Cipher cipher = Cipher.getInstance(NAME, AES_PROVIDER);// 创建密码器
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(enCodeFormat, NAME));// 初始化
+            Cipher cipher = Cipher.getInstance(NAME, AES_PROVIDER);
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(enCodeFormat, NAME));
             return cipher.doFinal(plainText);
         } catch (Exception e) {
             throw new RuntimeException("encrypt fail!", e);

@@ -49,13 +49,15 @@ public class DigitalEnvelopeUtils {
         SymmetricEncryptAlgEnum symmetricEncryptAlg = SymmetricEncryptAlgEnum.parse(args[2]);
         DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[3]);
 
-        SymmetricEncryption symmetricEncryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
+        Encryption encryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
 
         //用私钥对随机密钥进行解密
         byte[] randomKey = RSA.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey);
 
+        Encryption unsymmetricEncryption = UnsymmetricEncryptionFactory.getUnsymmetricEncryption(digestAlg);
+
         //解密得到源数据
-        byte[] encryptedData = symmetricEncryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
+        byte[] encryptedData = unsymmetricEncryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
 
         //分解参数
         String data = new String(encryptedData, Charsets.UTF_8);
@@ -64,7 +66,8 @@ public class DigitalEnvelopeUtils {
 
         //验证签名
         PublicKey publicKey = getYopPublicKey(CertTypeEnum.RSA2048);
-        boolean verifySign = RSA.verifySign(sourceData, signToBase64, publicKey, digestAlg);
+        Signer signer = SignerFactory.getSigner(digestAlg);
+        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(), Encodes.decodeBase64(signToBase64));
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
         }
