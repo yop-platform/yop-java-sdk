@@ -24,6 +24,7 @@ import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -66,6 +68,10 @@ public class YopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_APPKEY);
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
+
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
 
         MESSAGE_DIGEST = new ThreadLocal<Map<DigestAlgEnum, MessageDigest>>() {
             @Override
