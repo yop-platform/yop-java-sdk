@@ -8,8 +8,6 @@ import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -49,9 +47,9 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
     private PKICredentialsItem getCredentialItem(HttpResponseHandleContext context) {
         SignOptions signOptions = context.getSignOptions();
         if (SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix())) {
-            return new PKICredentialsItem(null, Sm2Utils.key2String(context.getYopPublicKey()), CertTypeEnum.SM2);
+            return new PKICredentialsItem(null, context.getYopPublicKey(), CertTypeEnum.SM2);
         } else {
-            return new PKICredentialsItem(null, RSAKeyUtils.key2String(context.getYopPublicKey()), CertTypeEnum.RSA2048);
+            return new PKICredentialsItem(null, context.getYopPublicKey(), CertTypeEnum.RSA2048);
         }
     }
 

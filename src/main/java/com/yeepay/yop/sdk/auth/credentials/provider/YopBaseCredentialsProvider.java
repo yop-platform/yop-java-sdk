@@ -10,9 +10,14 @@ import com.yeepay.yop.sdk.auth.credentials.YopAESCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
+import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.security.PrivateKey;
 
 /**
  * title: <br>
@@ -36,9 +41,20 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
         if (certType.isSymmetric()) {
             return new YopAESCredentials(appConfig.getAppKey(), null, appConfig.getAesSecretKey());
         } else {
-            PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(appConfig.loadPrivateKey(certType), null, certType);
+
+            PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(string2PrivateKey(appConfig.loadPrivateKey(certType), certType), null, certType);
             return new YopPKICredentials(appConfig.getAppKey(), null, pkiCredentialsItem);
         }
+    }
+
+    private PrivateKey string2PrivateKey(String privateKey, CertTypeEnum certType) {
+        if (CertTypeEnum.SM2 == certType) {
+            return Sm2Utils.string2PrivateKey(privateKey);
+        }
+        if (CertTypeEnum.RSA2048 == certType) {
+            return RSAKeyUtils.string2PrivateKey(privateKey);
+        }
+        throw new YopClientException("unsupported certType");
     }
 
 }

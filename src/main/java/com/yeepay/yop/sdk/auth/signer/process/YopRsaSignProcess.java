@@ -7,10 +7,6 @@ package com.yeepay.yop.sdk.auth.signer.process;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
-
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
 /**
  * title: <br/>
@@ -30,14 +26,12 @@ public class YopRsaSignProcess implements YopSignProcess {
 
     @Override
     public String sign(String content, PKICredentialsItem credentialsItem) {
-        PrivateKey privateKey = RSAKeyUtils.string2PrivateKey(credentialsItem.getPrivateKey());
-        return RSA.sign(content, privateKey, DIGEST_ALG) + SEPARATOR + DIGEST_ALG.getValue();
+        return RSA.sign(content, credentialsItem.getPrivateKey(), DIGEST_ALG) + SEPARATOR + DIGEST_ALG.getValue();
     }
 
     @Override
     public boolean verify(String content, String signature, PKICredentialsItem credentialsItem) {
-        PublicKey publicKey = RSAKeyUtils.string2PublicKey(credentialsItem.getPublicKey());
         String rawSignature = signature.split(SEPARATOR)[0];
-        return RSA.verifySign(content, rawSignature, publicKey, DIGEST_ALG);
+        return RSA.verifySign(content, rawSignature, credentialsItem.getPublicKey(), DIGEST_ALG);
     }
 }

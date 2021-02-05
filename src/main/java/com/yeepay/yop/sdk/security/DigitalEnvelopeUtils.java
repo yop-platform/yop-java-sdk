@@ -9,7 +9,6 @@ import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
@@ -103,8 +102,7 @@ public class DigitalEnvelopeUtils {
         YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
                 .getCredentials(appKey, credentialType);
         PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
-        PrivateKey privateKey = RSAKeyUtils.string2PrivateKey(pkiCredentialsItem.getPrivateKey());
-        return decrypt(cipherText, privateKey);
+        return decrypt(cipherText, pkiCredentialsItem.getPrivateKey());
     }
 
     /**

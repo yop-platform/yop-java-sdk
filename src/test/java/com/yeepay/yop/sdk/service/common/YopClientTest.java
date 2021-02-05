@@ -4,6 +4,7 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class YopClientTest {
 
         // 编码指定appkey和密钥
         //YopRSACredentials yopRSACredentials = new YopRSACredentials(appKey, priKey);
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(priKey, null, CertTypeEnum.RSA2048);
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(RSAKeyUtils.string2PrivateKey(priKey), null, CertTypeEnum.RSA2048);
         YopPKICredentials yopPKICredentials = new YopPKICredentials(appKey, null, pkiCredentialsItem);
         request.getRequestConfig().setCredentials(yopPKICredentials);
 

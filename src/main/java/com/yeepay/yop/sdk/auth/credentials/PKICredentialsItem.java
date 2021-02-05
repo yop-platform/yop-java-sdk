@@ -6,6 +6,9 @@ package com.yeepay.yop.sdk.auth.credentials;
 
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 /**
  * title: <br/>
  * description: <br/>
@@ -18,23 +21,23 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
  */
 public class PKICredentialsItem {
 
-    private String privateKey;
+    private PrivateKey privateKey;
 
-    private String publicKey;
+    private PublicKey publicKey;
 
     private CertTypeEnum certType;
 
-    public PKICredentialsItem(String privateKey, String publicKey, CertTypeEnum certType) {
+    public PKICredentialsItem(PrivateKey privateKey, PublicKey publicKey, CertTypeEnum certType) {
         this.privateKey = privateKey;
         this.publicKey = publicKey;
         this.certType = certType;
     }
 
-    public String getPrivateKey() {
+    public PrivateKey getPrivateKey() {
         return privateKey;
     }
 
-    public String getPublicKey() {
+    public PublicKey getPublicKey() {
         return publicKey;
     }
 
