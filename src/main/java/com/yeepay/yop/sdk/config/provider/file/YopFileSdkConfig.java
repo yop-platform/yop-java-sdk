@@ -54,6 +54,12 @@ public final class YopFileSdkConfig implements Serializable {
 
     private String region;
 
+    @JsonProperty("yop_cert_store")
+    private YopCertStore yopCertStore;
+
+    @JsonProperty("yop_encrypt_key")
+    private YopCertConfig[] yopEncryptKey;
+
     public String getAppKey() {
         return appKey;
     }
@@ -148,6 +154,22 @@ public final class YopFileSdkConfig implements Serializable {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public YopCertStore getYopCertStore() {
+        return yopCertStore;
+    }
+
+    public void setYopCertStore(YopCertStore yopCertStore) {
+        this.yopCertStore = yopCertStore;
+    }
+
+    public YopCertConfig[] getYopEncryptKey() {
+        return yopEncryptKey;
+    }
+
+    public void setYopEncryptKey(YopCertConfig[] yopEncryptKey) {
+        this.yopEncryptKey = yopEncryptKey;
     }
 
     @Override

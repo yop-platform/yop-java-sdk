@@ -66,6 +66,7 @@ public class Sm2CertUtils {
     public static boolean verifyCertificate(BCECPublicKey issuerPubKey, X509Certificate cert) {
         try {
             cert.verify(issuerPubKey, BouncyCastleProvider.PROVIDER_NAME);
+            cert.checkValidity();
         } catch (Exception ex) {
             return false;
         }

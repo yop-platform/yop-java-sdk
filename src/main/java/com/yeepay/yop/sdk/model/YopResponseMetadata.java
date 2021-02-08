@@ -41,6 +41,8 @@ public class YopResponseMetadata {
 
     private String location;
 
+    private String yopCertSerialNo;
+
     public String getYopRequestId() {
         return this.yopRequestId;
     }
@@ -177,6 +179,14 @@ public class YopResponseMetadata {
         this.transferEncoding = transferEncoding;
     }
 
+    public String getYopCertSerialNo() {
+        return yopCertSerialNo;
+    }
+
+    public void setYopCertSerialNo(String yopCertSerialNo) {
+        this.yopCertSerialNo = yopCertSerialNo;
+    }
+
     @Override
     public String toString() {
         return "YopResponseMetadata [\n  yopRequestId=" + yopRequestId
@@ -189,7 +199,9 @@ public class YopResponseMetadata {
                 + ", \n  contentRange=" + contentRange + ", \n  contentType="
                 + contentType + ", \n  date=" + date + ", \n  eTag=" + eTag
                 + ", \n  expires=" + expires + ", \n  lastModified=" + lastModified
-                + ", \n  server=" + server + ", \n  location=" + location + "]";
+                + ", \n  server=" + server + ", \n  location=" + location
+                + ", \n  yopCertSerialNo=" + yopCertSerialNo
+                + "]";
     }
 
 }

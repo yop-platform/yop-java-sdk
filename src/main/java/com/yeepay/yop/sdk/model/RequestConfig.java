@@ -37,6 +37,8 @@ public class RequestConfig {
 
     private Boolean needEncrypt;
 
+    private Boolean forceVerifySign;
+
     public String getAppKey() {
         return appKey;
     }
@@ -101,6 +103,14 @@ public class RequestConfig {
         this.needEncrypt = needEncrypt;
     }
 
+    public Boolean getForceVerifySign() {
+        return forceVerifySign;
+    }
+
+    public void setForceVerifySign(Boolean forceVerifySign) {
+        this.forceVerifySign = forceVerifySign;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -110,6 +120,7 @@ public class RequestConfig {
         private Integer requestTimeout;
         private Integer clientExecutionTimeout;
         private Boolean needEncrypt;
+        private Boolean forceVerifySign;
 
         private Builder() {
         }
@@ -158,6 +169,11 @@ public class RequestConfig {
             return this;
         }
 
+        public Builder withForceVerifySign(Boolean forceVerifySign) {
+            this.forceVerifySign = forceVerifySign;
+            return this;
+        }
+
         public RequestConfig build() {
             RequestConfig requestConfig = new RequestConfig();
             requestConfig.setAppKey(appKey);
@@ -168,6 +184,7 @@ public class RequestConfig {
             requestConfig.setRequestTimeout(requestTimeout);
             requestConfig.setClientExecutionTimeout(clientExecutionTimeout);
             requestConfig.setNeedEncrypt(needEncrypt);
+            requestConfig.setForceVerifySign(forceVerifySign);
             return requestConfig;
         }
     }

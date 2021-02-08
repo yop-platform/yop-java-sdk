@@ -17,6 +17,7 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.*;
@@ -37,6 +38,7 @@ public class Sm4Utils {
     public static final String ALGORITHM_NAME_ECB_NOPADDING = "SM4/ECB/NoPadding";
     public static final String ALGORITHM_NAME_CBC_PADDING = "SM4/CBC/PKCS5Padding";
     public static final String ALGORITHM_NAME_CBC_NOPADDING = "SM4/CBC/NoPadding";
+    public static final String ALGORITHM_NAME_GCM_NOPADDING = "SM4/GCM/NoPadding";
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -206,5 +208,15 @@ public class Sm4Utils {
         IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
         cipher.init(mode, sm4Key, ivParameterSpec);
         return cipher;
+    }
+
+    public static byte[] decrypt_GCM_NoPadding(byte[] key, String associatedData, String nonce, String ciphertext)
+            throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, ALGORITHM_NAME);
+        GCMParameterSpec spec = new GCMParameterSpec(DEFAULT_KEY_SIZE, nonce.getBytes());
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, spec);
+        cipher.updateAAD(associatedData.getBytes());
+        return cipher.doFinal(Encodes.decodeBase64(ciphertext));
     }
 }

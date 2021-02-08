@@ -11,8 +11,6 @@ import com.yeepay.yop.sdk.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
-import com.yeepay.yop.sdk.config.YopSdkConfig;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.ExecutionContext;
 import com.yeepay.yop.sdk.http.YopHttpClient;
@@ -36,8 +34,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ClientHandlerImpl implements ClientHandler {
 
-    private final YopSdkConfigProvider yopSdkConfigProvider;
-
     private final YopCredentialsProvider yopCredentialsProvider;
 
     private final AuthorizationReqRegistry authorizationReqRegistry;
@@ -47,7 +43,6 @@ public class ClientHandlerImpl implements ClientHandler {
     private final GateWayRouter gateWayRouter;
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
-        this.yopSdkConfigProvider = handlerParams.getClientParams().getYopSdkConfigProvider();
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
         ServerRootSpace serverRootSpace = new ServerRootSpace(handlerParams.getClientParams().getEndPoint(),
@@ -57,7 +52,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
-        YopHttpClient yopHttpClient = null;
+        YopHttpClient yopHttpClient;
         if (null == handlerParams) {
             yopHttpClient = YopHttpClientFactory.getDefaultClient();
         } else {
@@ -84,11 +79,9 @@ public class ClientHandlerImpl implements ClientHandler {
         if (authorizationReq == null) {
             throw new YopClientException("no authenticate req defined");
         } else {
-            YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
                     .withSigner(YopSignerFactory.getSigner(authorizationReq.getSignerType()))
-                    .withSignOptions(authorizationReq.getSignOptions())
-                    .withYopPublicKey(yopSdkConfig.loadYopPublicKey(authorizationReq.getCredentialType()));
+                    .withSignOptions(authorizationReq.getSignOptions());
 
             YopCredentials credential = executionParams.getInput().getRequestConfig().getCredentials();
             if (credential == null) {

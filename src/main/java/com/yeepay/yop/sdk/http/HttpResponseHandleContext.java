@@ -9,7 +9,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.PublicKey;
 
 /**
  * title: http返回处理上下文<br>
@@ -25,6 +24,8 @@ public class HttpResponseHandleContext implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    private final String appKey;
+
     private final YopHttpResponse response;
 
     private final Request originRequest;
@@ -33,20 +34,25 @@ public class HttpResponseHandleContext implements Serializable {
 
     private final SignOptions signOptions;
 
-    private final PublicKey yopPublicKey;
-
     private final Boolean needDecrypt;
 
     private final Encryptor encryptor;
 
+    private final Boolean forceVerifySign;
+
     public HttpResponseHandleContext(CloseableHttpResponse httpResponse, Request originRequest, RequestConfig requestConfig, ExecutionContext executionContext) throws IOException {
+        this.appKey = (String) originRequest.getHeaders().get(Headers.YOP_APPKEY);
         this.response = new YopHttpResponse(httpResponse);
         this.originRequest = originRequest;
         this.signer = executionContext.getSigner();
         this.signOptions = executionContext.getSignOptions();
-        this.yopPublicKey = executionContext.getYopPublicKey();
         this.needDecrypt = requestConfig.getNeedEncrypt();
         this.encryptor = executionContext.getEncryptor();
+        this.forceVerifySign = requestConfig.getForceVerifySign();
+    }
+
+    public String getAppKey() {
+        return appKey;
     }
 
     public YopHttpResponse getResponse() {
@@ -65,10 +71,6 @@ public class HttpResponseHandleContext implements Serializable {
         return signOptions;
     }
 
-    public PublicKey getYopPublicKey() {
-        return yopPublicKey;
-    }
-
     public Boolean isNeedDecrypt() {
         return needDecrypt;
     }
@@ -77,5 +79,7 @@ public class HttpResponseHandleContext implements Serializable {
         return encryptor;
     }
 
-
+    public Boolean isForceVerifySign() {
+        return forceVerifySign;
+    }
 }
