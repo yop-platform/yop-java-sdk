@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 
 import java.util.concurrent.TimeUnit;
 
@@ -33,16 +34,8 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
 
     @Override
     public YopCredentials getCredentials(String appKey, String credentialType) {
-        try {
-            YopAppConfig appConfig = configCache.get(appKey);
-            return buildCredentials(appConfig, credentialType);
-        } catch (CacheLoader.InvalidCacheLoadException ex) {
-            logger.warn("Null value was loaded when getting config for appKey:" + appKey);
-            return null;
-        } catch (Exception ex) {
-            logger.error("Unexpected exception occurred when getting config for appKey:" + appKey, ex);
-            return null;
-        }
+        final YopAppConfig appConfig = loadFromCache(appKey);
+        return null != appConfig ? buildCredentials(appConfig, credentialType) : null;
     }
 
     private LoadingCache<String, YopAppConfig> initCache(Long expire, TimeUnit timeUnit) {
@@ -73,4 +66,22 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
      */
     protected abstract YopAppConfig loadAppConfig(String appKey);
 
+    @Override
+    public YopCertConfig[] getYopEncryptKey(String appKey) {
+        final YopAppConfig appConfig = loadFromCache(appKey);
+        return null != appConfig ? appConfig.getYopEncryptKey() : null;
+    }
+
+    private YopAppConfig loadFromCache(String appKey) {
+        try {
+            YopAppConfig appConfig = configCache.get(appKey);
+            return appConfig;
+        } catch (CacheLoader.InvalidCacheLoadException ex) {
+            logger.warn("Null value was loaded when getting config for appKey:" + appKey);
+            return null;
+        } catch (Exception ex) {
+            logger.error("Unexpected exception occurred when getting config for appKey:" + appKey, ex);
+            return null;
+        }
+    }
 }

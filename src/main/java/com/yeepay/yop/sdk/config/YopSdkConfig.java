@@ -46,8 +46,6 @@ public final class YopSdkConfig implements Serializable {
 
     private YopCertStore yopCertStore;
 
-    private YopCertConfig[] yopEncryptKey;
-
     public String getServerRoot() {
         return serverRoot;
     }
@@ -125,14 +123,6 @@ public final class YopSdkConfig implements Serializable {
 
     public void setYopCertStore(YopCertStore yopCertStore) {
         this.yopCertStore = yopCertStore;
-    }
-
-    public YopCertConfig[] getYopEncryptKey() {
-        return yopEncryptKey;
-    }
-
-    public void setYopEncryptKey(YopCertConfig[] yopEncryptKey) {
-        this.yopEncryptKey = yopEncryptKey;
     }
 
     @Override

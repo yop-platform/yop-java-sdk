@@ -13,6 +13,8 @@ import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 
+import java.security.PublicKey;
+
 /**
  * title: 签名校验<br>
  * description: <br>
@@ -55,14 +57,14 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
 
     private PKICredentialsItem getCredentialItem(SignOptions signOptions, String appKey, String serialNo) {
         final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
-        if (null == yopPlatformCredentials) {
-            return null;
+        if (null != yopPlatformCredentials) {
+            CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
+            PublicKey publicKey = yopPlatformCredentials.getPublicKey(certType);
+            if (null != publicKey) {
+                return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(certType), certType);
+            }
         }
-        if (SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix())) {
-            return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(CertTypeEnum.SM2), CertTypeEnum.SM2);
-        } else {
-            return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(CertTypeEnum.RSA2048), CertTypeEnum.RSA2048);
-        }
+        return null;
     }
 
 }

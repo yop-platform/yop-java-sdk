@@ -23,6 +23,16 @@ public class EncryptCertificate implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    public EncryptCertificate() {
+    }
+
+    public EncryptCertificate(String algorithm, String nonce, String associatedData, String ciphertext) {
+        this.algorithm = algorithm;
+        this.nonce = nonce;
+        this.associatedData = associatedData;
+        this.ciphertext = ciphertext;
+    }
+
     private String algorithm;
 
     private String nonce;

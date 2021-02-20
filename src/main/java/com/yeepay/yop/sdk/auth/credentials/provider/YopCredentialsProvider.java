@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 
 /**
  * title: Interface for providing YOP credentials.<br>
@@ -30,5 +31,14 @@ public interface YopCredentialsProvider {
      * @return YOPCredentials which the caller can use to authorize an YOP request.
      */
     YopCredentials getCredentials(String appKey, String credentialType);
+
+    /**
+     * Returns symmetrical keys for using when decrypt yop certs from remote
+     * may be different by appKey
+     * may be not only one for retry
+     * @param appKey
+     * @return
+     */
+    YopCertConfig[] getYopEncryptKey(String appKey);
 
 }

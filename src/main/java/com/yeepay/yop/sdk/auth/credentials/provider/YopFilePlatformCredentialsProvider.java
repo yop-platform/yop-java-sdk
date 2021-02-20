@@ -18,7 +18,10 @@ import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import com.yeepay.yop.sdk.utils.*;
+import com.yeepay.yop.sdk.utils.Encodes;
+import com.yeepay.yop.sdk.utils.FileUtils;
+import com.yeepay.yop.sdk.utils.Sm2CertUtils;
+import com.yeepay.yop.sdk.utils.Sm4Utils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -27,7 +30,9 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -47,8 +52,8 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopFilePlatformCredentialsProvider.class);
 
-    private static final String CERT_DOWNLOAD_API_URI = "";
-    private static final String CERT_DOWNLOAD_API_METHOD = "POST";
+    private static final String CERT_DOWNLOAD_API_URI = "/rest/v1.0/yop/cert/platform";
+    private static final String CERT_DOWNLOAD_API_METHOD = "GET";
     private static X509Certificate cfcaRoot, yopInter;
     {
         try {
@@ -85,6 +90,8 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         YopSdkConfigProvider sdkConfigProvider = YopSdkConfigProviderRegistry.getProvider();
         final YopSdkConfig sdkConfig = sdkConfigProvider.getConfig();
 
+        YopCredentialsProvider yopCredentialsProvider = YopCredentialsProviderRegistry.getProvider();
+
         // 1.加载RSA公钥
         final PublicKey rsaPublicKey = sdkConfig.loadYopPublicKey(CertTypeEnum.RSA2048);
         if (null != rsaPublicKey) {
@@ -100,7 +107,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         loadAndVerifyFromLocal(yopCertStore, certMap);
 
         // 2.2远端加载
-        Map<String, X509Certificate> remoteCertMap = loadAndVerifyFromRemote(appKey, sdkConfig.getYopEncryptKey());
+        Map<String, X509Certificate> remoteCertMap = loadAndVerifyFromRemote(appKey, yopCredentialsProvider.getYopEncryptKey(appKey));
 
         // 2.3合并两端
         if (MapUtils.isNotEmpty(remoteCertMap)) {
@@ -233,7 +240,17 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         List<EncryptCertificate> encryptCerts = new ArrayList<>();
         List<Map> result = (List<Map>) response.getResult();
         if (CollectionUtils.isNotEmpty(result)) {
-            // todo 对接网关接口
+            for (Map map : result) {
+                String serialNo = (String) map.get("serialNo");
+                Map encryptCertificate = (Map) map.get("encryptCertificate");
+                if (null != encryptCertificate) {
+                    String algorithm = (String) encryptCertificate.get("algorithm");
+                    String nonce = (String) encryptCertificate.get("nonce");
+                    String associatedData = (String) encryptCertificate.get("associatedData");
+                    String cipherText = (String) encryptCertificate.get("cipherText");
+                    encryptCerts.add(new EncryptCertificate(algorithm, nonce, associatedData, cipherText));
+                }
+            }
         }
         return encryptCerts;
     }

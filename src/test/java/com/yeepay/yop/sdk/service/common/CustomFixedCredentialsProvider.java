@@ -36,6 +36,12 @@ public class CustomFixedCredentialsProvider extends YopFixedCredentialsProvider 
         YopCertConfig[] isvPrivateKeys = new YopCertConfig[1];
         isvPrivateKeys[0] = yopCertConfig;
         yopAppConfig.storeIsvPrivateKey(isvPrivateKeys);
+
+        YopCertConfig yopEncryptKey = new YopCertConfig();
+        yopEncryptKey.setCertType(CertTypeEnum.SM4);
+        yopEncryptKey.setStoreType(CertStoreType.STRING);
+        yopEncryptKey.setValue("c2c7000fe2f5649c0b0b3bf79c08f711");
+        yopAppConfig.setYopEncryptKey(new YopCertConfig[]{yopEncryptKey});
         return yopAppConfig;
     }
 
