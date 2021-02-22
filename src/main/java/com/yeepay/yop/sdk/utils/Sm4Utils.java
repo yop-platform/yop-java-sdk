@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.yeepay.yop.sdk.exception.YopClientException;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.engines.SM4Engine;
 import org.bouncycastle.crypto.macs.CBCBlockCipherMac;
@@ -214,9 +215,12 @@ public class Sm4Utils {
             throws GeneralSecurityException {
         Cipher cipher = Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME);
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, ALGORITHM_NAME);
-        GCMParameterSpec spec = new GCMParameterSpec(DEFAULT_KEY_SIZE, nonce.getBytes());
+        byte[] nonceBytes = null != nonce ? nonce.getBytes() : new byte[12];
+        GCMParameterSpec spec = new GCMParameterSpec(DEFAULT_KEY_SIZE, nonceBytes);
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, spec);
-        cipher.updateAAD(associatedData.getBytes());
+        if (StringUtils.isNotBlank(associatedData)) {
+            cipher.updateAAD(associatedData.getBytes());
+        }
         return cipher.doFinal(Encodes.decodeBase64(ciphertext));
     }
 }

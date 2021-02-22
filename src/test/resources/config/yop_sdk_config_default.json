@@ -14,7 +14,7 @@
   ],
   "yop_cert_store": {
     "enable":true,
-    "path":"/tmp/certs/"
+    "path":"/tmp/yop/certs"
   },
   "yop_encrypt_key": [{
     "store_type": "string",

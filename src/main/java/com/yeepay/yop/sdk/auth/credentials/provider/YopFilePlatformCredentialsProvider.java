@@ -27,6 +27,8 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.util.io.pem.PemObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,18 +54,19 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopFilePlatformCredentialsProvider.class);
 
-    private static final String CERT_DOWNLOAD_API_URI = "/rest/v1.0/yop/cert/platform";
+    private static final String CERT_DOWNLOAD_API_URI = "/rest/v1.0/yop/platform/certs";
     private static final String CERT_DOWNLOAD_API_METHOD = "GET";
+    private static final String CERT_DOWNLOAD_API_SECURITY = "YOP-SM2-SM3";
     private static X509Certificate cfcaRoot, yopInter;
     {
         try {
-            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/cfca_root.cer"));
+            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/cfca_root.pem"));
             try {
                 cfcaRoot.checkValidity();
             } catch (Exception e) {
                 throw new YopClientException("invalid cfca root cert");
             }
-            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/yop_inter.cer"));
+            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/yop_inter.pem"));
             if (!Sm2CertUtils.verifyCertificate((BCECPublicKey) cfcaRoot.getPublicKey(), yopInter)) {
                 throw new YopClientException("invalid yop inter cert");
             }
@@ -122,7 +125,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
             LOGGER.warn("no available sm2 cert from local and remote");
         }
 
-        // 4.保存文件 todo 异步
+        // 4.保存文件
         if (MapUtils.isNotEmpty(remoteCertMap)) {
             storeCerts(yopCertStore, remoteCertMap);
         }
@@ -138,6 +141,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
             }
             // 不强制验签
             request.getRequestConfig().setForceVerifySign(false);
+            request.getRequestConfig().setSecurityReq(CERT_DOWNLOAD_API_SECURITY);
             YopResponse response = yopClient.request(request);
 
             // 响应解析
@@ -181,14 +185,12 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
             if (yopCertStore.getEnable()) {
                 final File certStoreDir = new File(yopCertStore.getPath());
                 if (!certStoreDir.exists()) {
-                    certStoreDir.mkdir();
+                    certStoreDir.mkdirs();
                 }
-                // todo 对比内容, 中断时有写一半的情况？？
                 for (Map.Entry<String, X509Certificate> certificateEntry : plainCerts.entrySet()) {
-                    final File certFile = new File(certStoreDir, "yop_cert_" + certificateEntry.getKey() + ".cer");
-                    try (FileWriter fileWriter = new FileWriter(certFile)){
-                        fileWriter.write(Encodes.encodeBase64(certificateEntry.getValue().getEncoded()));
-                        fileWriter.flush();
+                    final File certFile = new File(certStoreDir, "yop_cert_" + certificateEntry.getKey() + ".pem");
+                    try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile))) {
+                        jcaPEMWriter.writeObject(new PemObject("CERTIFICATE", certificateEntry.getValue().getEncoded()));
                     }
                 }
             } else {
@@ -215,11 +217,11 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
     private X509Certificate decryptCert(EncryptCertificate encryptCert, YopCertConfig[] yopEncryptKey) {
         for (YopCertConfig yopCertkey : yopEncryptKey) {
-            if (yopCertkey.getCertType() == CertTypeEnum.SM2) {
+            if (yopCertkey.getCertType() == CertTypeEnum.SM4) {
                 byte[] certBytes = null;
                 final String certKeyHex = yopCertkey.getValue();
                 try {
-                    certBytes = Sm4Utils.decrypt_GCM_NoPadding(Encodes.decodeHex(certKeyHex),
+                    certBytes = Sm4Utils.decrypt_GCM_NoPadding(Encodes.decodeBase64(certKeyHex),
                             encryptCert.getAssociatedData(), encryptCert.getNonce(), encryptCert.getCiphertext());
                 } catch (Exception e) {
                     LOGGER.warn("fail to try decrypt cert, certKey:" + certKeyHex + ", cert:" + encryptCert + ", ex:", e);
@@ -231,6 +233,8 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
                         LOGGER.error("error to parse cert bytes, certKey:" + certKeyHex + ", cert:" + encryptCert + ", ex:", e);
                     }
                 }
+            } else {
+                LOGGER.warn("no available sm4 yop_encrypt_key found!");
             }
         }
         return null;
@@ -238,17 +242,20 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
     private List<EncryptCertificate> parseYopResponse(YopResponse response) {
         List<EncryptCertificate> encryptCerts = new ArrayList<>();
-        List<Map> result = (List<Map>) response.getResult();
-        if (CollectionUtils.isNotEmpty(result)) {
-            for (Map map : result) {
-                String serialNo = (String) map.get("serialNo");
-                Map encryptCertificate = (Map) map.get("encryptCertificate");
-                if (null != encryptCertificate) {
-                    String algorithm = (String) encryptCertificate.get("algorithm");
-                    String nonce = (String) encryptCertificate.get("nonce");
-                    String associatedData = (String) encryptCertificate.get("associatedData");
-                    String cipherText = (String) encryptCertificate.get("cipherText");
-                    encryptCerts.add(new EncryptCertificate(algorithm, nonce, associatedData, cipherText));
+        Map result = (Map) response.getResult();
+        if (MapUtils.isNotEmpty(result)) {
+            List<Map> data = (List<Map>) result.get("data");
+            if (CollectionUtils.isNotEmpty(data)) {
+                for (Map map : data) {
+                    String serialNo = (String) map.get("serialNo");
+                    Map encryptCertificate = (Map) map.get("encryptCertificate");
+                    if (null != encryptCertificate) {
+                        String algorithm = (String) encryptCertificate.get("algorithm");
+                        String nonce = (String) encryptCertificate.get("nonce");
+                        String associatedData = (String) encryptCertificate.get("associatedData");
+                        String cipherText = (String) encryptCertificate.get("cipherText");
+                        encryptCerts.add(new EncryptCertificate(algorithm, nonce, associatedData, cipherText));
+                    }
                 }
             }
         }
