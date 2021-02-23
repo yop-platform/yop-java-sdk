@@ -16,7 +16,7 @@
     "enable":true,
     "path":"/tmp/yop/certs"
   },
-  "yop_encrypt_key": [{
+  "isv_encrypt_key": [{
     "store_type": "string",
     "cert_type": "SM4",
     "value": "c2c7000fe2f5649c0b0b3bf79c08f711"

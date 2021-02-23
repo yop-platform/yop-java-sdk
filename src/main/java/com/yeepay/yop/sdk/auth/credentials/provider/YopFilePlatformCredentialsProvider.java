@@ -25,6 +25,7 @@ import com.yeepay.yop.sdk.utils.Sm4Utils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
@@ -110,7 +111,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         loadAndVerifyFromLocal(yopCertStore, certMap);
 
         // 2.2远端加载
-        Map<String, X509Certificate> remoteCertMap = loadAndVerifyFromRemote(appKey, yopCredentialsProvider.getYopEncryptKey(appKey));
+        Map<String, X509Certificate> remoteCertMap = loadAndVerifyFromRemote(appKey, yopCredentialsProvider.getIsvEncryptKey(appKey));
 
         // 2.3合并两端
         if (MapUtils.isNotEmpty(remoteCertMap)) {
@@ -131,7 +132,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         }
     }
 
-    private Map<String, X509Certificate> loadAndVerifyFromRemote(String appKey, YopCertConfig[] yopEncryptKey) {
+    private Map<String, X509Certificate> loadAndVerifyFromRemote(String appKey, YopCertConfig[] isvEncryptKey) {
         try {
             YopClient yopClient = YopClientBuilder.builder().build();
             YopRequest request = new YopRequest(CERT_DOWNLOAD_API_URI, CERT_DOWNLOAD_API_METHOD);
@@ -148,7 +149,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
             List<EncryptCertificate> encryptCerts = parseYopResponse(response);
 
             // 证书解密
-            return decryptCerts(encryptCerts, yopEncryptKey);
+            return decryptCerts(encryptCerts, isvEncryptKey);
         } catch (Exception e) {
             LOGGER.error("error when load sm2 cert from remote, ex:", e);
         }
@@ -156,7 +157,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
     }
 
     private void loadAndVerifyFromLocal(YopCertStore yopCertStore, Map<String, X509Certificate> certMap) {
-        if (StringUtils.isNotBlank(yopCertStore.getPath())) {
+        if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
             File certStoreDir = new File(yopCertStore.getPath());
             if (certStoreDir.exists() && certStoreDir.isDirectory()) {
                 File[] certFiles = certStoreDir.listFiles();
@@ -175,6 +176,8 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
                         }
                     }
                 }
+            } else {
+                LOGGER.warn("invalid path when load cert from local file, path:{}", yopCertStore.getPath());
             }
         }
 
@@ -201,11 +204,11 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         }
     }
 
-    private Map<String, X509Certificate> decryptCerts(List<EncryptCertificate> encryptCerts, YopCertConfig[] yopEncryptKey) {
+    private Map<String, X509Certificate> decryptCerts(List<EncryptCertificate> encryptCerts, YopCertConfig[] isvEncryptKey) {
         if (CollectionUtils.isNotEmpty(encryptCerts)) {
             Map<String, X509Certificate> certMap = Maps.newHashMapWithExpectedSize(encryptCerts.size());
             for (EncryptCertificate encryptCert : encryptCerts) {
-                X509Certificate decryptCert = decryptCert(encryptCert, yopEncryptKey);
+                X509Certificate decryptCert = decryptCert(encryptCert, isvEncryptKey);
                 if (null != decryptCert) {
                     certMap.put(decryptCert.getSerialNumber().toString(), decryptCert);
                 }
@@ -215,8 +218,8 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
         return null;
     }
 
-    private X509Certificate decryptCert(EncryptCertificate encryptCert, YopCertConfig[] yopEncryptKey) {
-        for (YopCertConfig yopCertkey : yopEncryptKey) {
+    private X509Certificate decryptCert(EncryptCertificate encryptCert, YopCertConfig[] isvEncryptKey) {
+        for (YopCertConfig yopCertkey : isvEncryptKey) {
             if (yopCertkey.getCertType() == CertTypeEnum.SM4) {
                 byte[] certBytes = null;
                 final String certKeyHex = yopCertkey.getValue();
@@ -234,7 +237,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
                     }
                 }
             } else {
-                LOGGER.warn("no available sm4 yop_encrypt_key found!");
+                LOGGER.warn("no available sm4 isv_encrypt_key found!");
             }
         }
         return null;

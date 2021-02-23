@@ -57,8 +57,8 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("yop_cert_store")
     private YopCertStore yopCertStore;
 
-    @JsonProperty("yop_encrypt_key")
-    private YopCertConfig[] yopEncryptKey;
+    @JsonProperty("isv_encrypt_key")
+    private YopCertConfig[] isvEncryptKey;
 
     public String getAppKey() {
         return appKey;
@@ -164,12 +164,12 @@ public final class YopFileSdkConfig implements Serializable {
         this.yopCertStore = yopCertStore;
     }
 
-    public YopCertConfig[] getYopEncryptKey() {
-        return yopEncryptKey;
+    public YopCertConfig[] getIsvEncryptKey() {
+        return isvEncryptKey;
     }
 
-    public void setYopEncryptKey(YopCertConfig[] yopEncryptKey) {
-        this.yopEncryptKey = yopEncryptKey;
+    public void setIsvEncryptKey(YopCertConfig[] isvEncryptKey) {
+        this.isvEncryptKey = isvEncryptKey;
     }
 
     @Override

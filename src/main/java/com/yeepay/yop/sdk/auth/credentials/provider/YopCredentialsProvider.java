@@ -39,6 +39,6 @@ public interface YopCredentialsProvider {
      * @param appKey
      * @return
      */
-    YopCertConfig[] getYopEncryptKey(String appKey);
+    YopCertConfig[] getIsvEncryptKey(String appKey);
 
 }

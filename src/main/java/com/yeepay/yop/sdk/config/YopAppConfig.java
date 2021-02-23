@@ -31,7 +31,7 @@ public class YopAppConfig implements Serializable {
 
     private Map<CertTypeEnum, String> isvPrivateKeys;
 
-    private YopCertConfig[] yopEncryptKey;
+    private YopCertConfig[] isvEncryptKey;
 
     public String getAppKey() {
         return appKey;
@@ -83,16 +83,16 @@ public class YopAppConfig implements Serializable {
         return this.isvPrivateKeys.get(certType);
     }
 
-    public YopCertConfig[] getYopEncryptKey() {
-        return yopEncryptKey;
+    public YopCertConfig[] getIsvEncryptKey() {
+        return isvEncryptKey;
     }
 
-    public void setYopEncryptKey(YopCertConfig[] yopEncryptKey) {
-        this.yopEncryptKey = yopEncryptKey;
+    public void setIsvEncryptKey(YopCertConfig[] isvEncryptKey) {
+        this.isvEncryptKey = isvEncryptKey;
     }
 
-    public YopAppConfig withYopEncryptKey(YopCertConfig[] yopEncryptKey) {
-        this.yopEncryptKey = yopEncryptKey;
+    public YopAppConfig withIsvEncryptKey(YopCertConfig[] isvEncryptKey) {
+        this.isvEncryptKey = isvEncryptKey;
         return this;
     }
 
@@ -116,7 +116,7 @@ public class YopAppConfig implements Serializable {
             YopAppConfig yopAppConfig = new YopAppConfig()
                     .withAppKey(yopFileSdkConfig.getAppKey())
                     .withEncryptKey(yopFileSdkConfig.getEncryptKey())
-                    .withYopEncryptKey(yopFileSdkConfig.getYopEncryptKey());
+                    .withIsvEncryptKey(yopFileSdkConfig.getIsvEncryptKey());
             if (yopFileSdkConfig.getIsvPrivateKey() != null && yopFileSdkConfig.getIsvPrivateKey().length >= 1) {
                 yopAppConfig.storeIsvPrivateKey(yopFileSdkConfig.getIsvPrivateKey());
             }

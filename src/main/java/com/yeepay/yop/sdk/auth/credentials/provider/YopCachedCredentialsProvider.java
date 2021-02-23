@@ -67,9 +67,9 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
     protected abstract YopAppConfig loadAppConfig(String appKey);
 
     @Override
-    public YopCertConfig[] getYopEncryptKey(String appKey) {
+    public YopCertConfig[] getIsvEncryptKey(String appKey) {
         final YopAppConfig appConfig = loadFromCache(appKey);
-        return null != appConfig ? appConfig.getYopEncryptKey() : null;
+        return null != appConfig ? appConfig.getIsvEncryptKey() : null;
     }
 
     private YopAppConfig loadFromCache(String appKey) {
