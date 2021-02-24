@@ -215,7 +215,7 @@ public class Sm4Utils {
             throws GeneralSecurityException {
         Cipher cipher = Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME);
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, ALGORITHM_NAME);
-        byte[] nonceBytes = null != nonce ? nonce.getBytes() : new byte[12];
+        byte[] nonceBytes = null != nonce ? Encodes.decodeBase64(nonce) : new byte[12];
         GCMParameterSpec spec = new GCMParameterSpec(DEFAULT_KEY_SIZE, nonceBytes);
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, spec);
         if (StringUtils.isNotBlank(associatedData)) {

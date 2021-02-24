@@ -250,7 +250,6 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
             List<Map> data = (List<Map>) result.get("data");
             if (CollectionUtils.isNotEmpty(data)) {
                 for (Map map : data) {
-                    String serialNo = (String) map.get("serialNo");
                     Map encryptCertificate = (Map) map.get("encryptCertificate");
                     if (null != encryptCertificate) {
                         String algorithm = (String) encryptCertificate.get("algorithm");
