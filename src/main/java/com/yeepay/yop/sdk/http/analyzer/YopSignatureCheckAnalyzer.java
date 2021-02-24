@@ -11,6 +11,7 @@ import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.PublicKey;
@@ -41,15 +42,15 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
     @Override
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         YopResponseMetadata metadata = response.getMetadata();
-        if (StringUtils.isNotEmpty(metadata.getYopSign())) {
+        if (BooleanUtils.isTrue(context.isSkipVerifySign()) || StringUtils.isBlank(metadata.getYopSign())) {
+            return false;
+        } else {
             PKICredentialsItem pkiCredentialsItem = getCredentialItem(context.getSignOptions(), context.getAppKey(), metadata.getYopCertSerialNo());
             if (null != pkiCredentialsItem) {
                 YopPKICredentials credentials = new YopPKICredentials(context.getAppKey(), null, pkiCredentialsItem);
                 context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), credentials, context.getSignOptions());
             } else {
-                if (context.isForceVerifySign()) {
-                    throw new YopClientException("yop platform credentials not found");
-                }
+                throw new YopClientException("yop platform credentials not found");
             }
         }
         return false;

@@ -140,8 +140,8 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
             if (StringUtils.isNotBlank(appKey) && !StringUtils.equals("default", appKey)) {
                 request.getRequestConfig().setAppKey(appKey);
             }
-            // 不强制验签
-            request.getRequestConfig().setForceVerifySign(false);
+            // 跳过验签
+            request.getRequestConfig().setSkipVerifySign(true);
             request.getRequestConfig().setSecurityReq(CERT_DOWNLOAD_API_SECURITY);
             YopResponse response = yopClient.request(request);
 

@@ -38,7 +38,7 @@ public class HttpResponseHandleContext implements Serializable {
 
     private final Encryptor encryptor;
 
-    private final Boolean forceVerifySign;
+    private final Boolean skipVerifySign;
 
     public HttpResponseHandleContext(CloseableHttpResponse httpResponse, Request originRequest, RequestConfig requestConfig, ExecutionContext executionContext) throws IOException {
         this.appKey = (String) originRequest.getHeaders().get(Headers.YOP_APPKEY);
@@ -48,7 +48,7 @@ public class HttpResponseHandleContext implements Serializable {
         this.signOptions = executionContext.getSignOptions();
         this.needDecrypt = requestConfig.getNeedEncrypt();
         this.encryptor = executionContext.getEncryptor();
-        this.forceVerifySign = requestConfig.getForceVerifySign();
+        this.skipVerifySign = requestConfig.getSkipVerifySign();
     }
 
     public String getAppKey() {
@@ -79,7 +79,7 @@ public class HttpResponseHandleContext implements Serializable {
         return encryptor;
     }
 
-    public Boolean isForceVerifySign() {
-        return forceVerifySign;
+    public Boolean isSkipVerifySign() {
+        return skipVerifySign;
     }
 }

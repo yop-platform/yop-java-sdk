@@ -37,7 +37,7 @@ public class RequestConfig {
 
     private Boolean needEncrypt;
 
-    private Boolean forceVerifySign;
+    private Boolean skipVerifySign;
 
     public String getAppKey() {
         return appKey;
@@ -103,12 +103,12 @@ public class RequestConfig {
         this.needEncrypt = needEncrypt;
     }
 
-    public Boolean getForceVerifySign() {
-        return forceVerifySign;
+    public Boolean getSkipVerifySign() {
+        return skipVerifySign;
     }
 
-    public void setForceVerifySign(Boolean forceVerifySign) {
-        this.forceVerifySign = forceVerifySign;
+    public void setSkipVerifySign(Boolean skipVerifySign) {
+        this.skipVerifySign = skipVerifySign;
     }
 
     public static final class Builder {
@@ -120,7 +120,7 @@ public class RequestConfig {
         private Integer requestTimeout;
         private Integer clientExecutionTimeout;
         private Boolean needEncrypt;
-        private Boolean forceVerifySign;
+        private Boolean skipVerifySign;
 
         private Builder() {
         }
@@ -169,8 +169,8 @@ public class RequestConfig {
             return this;
         }
 
-        public Builder withForceVerifySign(Boolean forceVerifySign) {
-            this.forceVerifySign = forceVerifySign;
+        public Builder withSkipVerifySign(Boolean skipVerifySign) {
+            this.skipVerifySign = skipVerifySign;
             return this;
         }
 
@@ -184,7 +184,7 @@ public class RequestConfig {
             requestConfig.setRequestTimeout(requestTimeout);
             requestConfig.setClientExecutionTimeout(clientExecutionTimeout);
             requestConfig.setNeedEncrypt(needEncrypt);
-            requestConfig.setForceVerifySign(forceVerifySign);
+            requestConfig.setSkipVerifySign(skipVerifySign);
             return requestConfig;
         }
     }
