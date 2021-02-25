@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public interface YopPlatformCredentialsProvider {
 
-    String YOP_CERT_RSA_DEFAULT_SERIAL_NO = "default";
+    String YOP_CERT_RSA_DEFAULT_SERIAL_NO = "rsa_default";
 
     /**
      * 根据应用&证书序列号获取平台凭证

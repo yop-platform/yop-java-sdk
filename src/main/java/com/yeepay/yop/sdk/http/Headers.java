@@ -111,6 +111,6 @@ public interface Headers {
 
     String YOP_OBJECT_TYPE = "x-yop-object-type";
 
-    String YOP_CERT_SERIALNO = "x-yop-serial-no";
+    String YOP_CERT_SERIAL_NO = "x-yop-serial-no";
 
 }
