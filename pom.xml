@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>4.0.0</version>
+    <version>4.0.0-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -123,6 +123,17 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j-api.version}</version>
         </dependency>
+
+        <!--<dependency>
+            <groupId>com.cfca</groupId>
+            <artifactId>logback-cfca-jdk1.6</artifactId>
+            <version>3.2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.cfca</groupId>
+            <artifactId>sadk</artifactId>
+            <version>3.3.1.0</version>
+        </dependency>-->
 
         <!-- test dependencies -->
         <dependency>

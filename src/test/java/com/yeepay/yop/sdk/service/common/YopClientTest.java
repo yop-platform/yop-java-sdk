@@ -26,6 +26,7 @@ public class YopClientTest {
 
     @Test
     public void requestWithDefaultConfigFile() {
+        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_default.json");
         YopClient yopClient = YopClientBuilder.builder()
                 .build();
 

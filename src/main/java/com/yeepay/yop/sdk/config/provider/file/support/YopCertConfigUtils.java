@@ -5,11 +5,13 @@ import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.FileUtils;
+import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
 
 import java.security.KeyStore;
 import java.security.PublicKey;
 import java.util.Enumeration;
+import java.util.Scanner;
 
 /**
  * title: sdk配置支持类<br>
@@ -70,6 +72,11 @@ public final class YopCertConfigUtils {
                 } catch (Exception ex) {
                     throw new YopServiceException("Cert key is error, " + yopCertConfig, ex);
                 }
+                break;
+            case FILE_SM2:
+                Scanner scanner = new Scanner(FileUtils.getResourceAsStream(yopCertConfig.getValue()), "UTF-8");
+                String priPem = scanner.useDelimiter("\\A").next();
+                privateKey = Sm2CertUtils.getPrivateFormSm2(priPem, yopCertConfig.getPassword());
                 break;
             default:
                 throw new RuntimeException("Not support cert store type.");

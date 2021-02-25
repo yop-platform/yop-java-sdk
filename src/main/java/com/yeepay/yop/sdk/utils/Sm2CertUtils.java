@@ -4,6 +4,12 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import cfca.sadk.algorithm.common.PKIException;
+import cfca.sadk.algorithm.sm2.SM2PrivateKey;
+import cfca.sadk.org.bouncycastle.crypto.params.ECPrivateKeyParameters;
+import cfca.sadk.org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
+import cfca.sadk.util.KeyUtil;
+import com.yeepay.yop.sdk.exception.YopServiceException;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -23,9 +29,9 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.NoSuchProviderException;
-import java.security.Security;
+import java.security.*;
 import java.security.cert.*;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,19 +63,36 @@ public class Sm2CertUtils {
     }
 
     /**
-     * 校验证书
+     * 校验证书签名
      *
      * @param issuerPubKey 从颁发者CA证书中提取出来的公钥
      * @param cert         待校验的证书
-     * @return
      */
-    public static boolean verifyCertificate(BCECPublicKey issuerPubKey, X509Certificate cert) {
-        try {
+    public static void verifyCertificate(BCECPublicKey issuerPubKey, X509Certificate cert) throws NoSuchProviderException, CertificateException,
+            NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        checkCertDate(cert);
+        if (null != issuerPubKey) {
             cert.verify(issuerPubKey, BouncyCastleProvider.PROVIDER_NAME);
-        } catch (Exception ex) {
-            return false;
         }
-        return true;
+    }
+
+    /**
+     * 校验证书有效期（过期后24小时内继续可用）
+     *
+     * @param certificate
+     * @throws CertificateExpiredException
+     * @throws CertificateNotYetValidException
+     */
+    private static void checkCertDate(X509Certificate certificate) throws CertificateExpiredException, CertificateNotYetValidException {
+        Date now = new Date();
+        long time24HoursAgo = now.getTime() - 24 * 3600 * 1000;
+        if (time24HoursAgo > certificate.getNotAfter().getTime()) {
+            throw new CertificateExpiredException("certificate expired on " + certificate.getNotAfter().getTime());
+        }
+
+        if (now.getTime() < certificate.getNotBefore().getTime()) {
+            throw new CertificateNotYetValidException("certificate not valid till " + certificate.getNotBefore().getTime());
+        }
     }
 
     public static X509Certificate getX509Certificate(String certFilePath) throws IOException, CertificateException,
@@ -89,6 +112,19 @@ public class Sm2CertUtils {
             NoSuchProviderException {
         ByteArrayInputStream bais = new ByteArrayInputStream(certBytes);
         return getX509Certificate(bais);
+    }
+
+    public static String getPrivateFormSm2(String pemPri, String pwd) {
+        try {
+            SM2PrivateKey privateKeyFromSM2 = KeyUtil.getPrivateKeyFromSM2(pemPri.getBytes(), pwd);
+            BCECPrivateKey bcecPrivateKey = new BCECPrivateKey(privateKeyFromSM2.getAlgorithm(),
+                    new ECPrivateKeyParameters(privateKeyFromSM2.getD(), null),
+                    privateKeyFromSM2.getParams());
+            return Encodes.encodeBase64(bcecPrivateKey.getEncoded());
+        } catch (PKIException e) {
+            throw new YopServiceException("illegal cert", e);
+        }
+
     }
 
     public static X509Certificate getX509Certificate(InputStream is) throws CertificateException,
