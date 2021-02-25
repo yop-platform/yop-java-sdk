@@ -23,9 +23,9 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.NoSuchProviderException;
-import java.security.Security;
+import java.security.*;
 import java.security.cert.*;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,20 +57,35 @@ public class Sm2CertUtils {
     }
 
     /**
-     * 校验证书
+     * 校验证书签名
      *
      * @param issuerPubKey 从颁发者CA证书中提取出来的公钥
      * @param cert         待校验的证书
-     * @return
      */
-    public static boolean verifyCertificate(BCECPublicKey issuerPubKey, X509Certificate cert) {
-        try {
+    public static void verifyCertificate(BCECPublicKey issuerPubKey, X509Certificate cert) throws NoSuchProviderException, CertificateException,
+            NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        checkCertDate(cert);
+        if (null != issuerPubKey) {
             cert.verify(issuerPubKey, BouncyCastleProvider.PROVIDER_NAME);
-            cert.checkValidity();
-        } catch (Exception ex) {
-            return false;
         }
-        return true;
+    }
+
+    /**
+     * 校验证书有效期（过期后24小时内继续可用）
+     * @param certificate
+     * @throws CertificateExpiredException
+     * @throws CertificateNotYetValidException
+     */
+    private static void checkCertDate(X509Certificate certificate) throws CertificateExpiredException, CertificateNotYetValidException {
+        Date now = new Date();
+        long time24HoursAgo = now.getTime() - 24 * 3600 * 1000;
+        if (time24HoursAgo > certificate.getNotAfter().getTime()) {
+            throw new CertificateExpiredException("certificate expired on " + certificate.getNotAfter().getTime());
+        }
+
+        if (now.getTime() < certificate.getNotBefore().getTime()) {
+            throw new CertificateNotYetValidException("certificate not valid till " + certificate.getNotBefore().getTime());
+        }
     }
 
     public static X509Certificate getX509Certificate(String certFilePath) throws IOException, CertificateException,

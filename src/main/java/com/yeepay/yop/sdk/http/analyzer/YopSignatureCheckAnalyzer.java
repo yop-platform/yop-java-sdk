@@ -13,8 +13,12 @@ import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
+
+import static com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider.YOP_CERT_RSA_DEFAULT_SERIAL_NO;
 
 /**
  * title: 签名校验<br>
@@ -27,6 +31,8 @@ import java.security.PublicKey;
  * @since 17/12/1 10:43
  */
 public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopSignatureCheckAnalyzer.class);
 
     private static final YopSignatureCheckAnalyzer INSTANCE = new YopSignatureCheckAnalyzer();
 
@@ -57,9 +63,15 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
     }
 
     private PKICredentialsItem getCredentialItem(SignOptions signOptions, String appKey, String serialNo) {
+        CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
+        if (certType == CertTypeEnum.RSA2048) {
+            if (StringUtils.isNotBlank(serialNo)) {
+                LOGGER.warn("rsa signed request not need serialNo:{}.", serialNo);
+            }
+            serialNo = YOP_CERT_RSA_DEFAULT_SERIAL_NO;
+        }
         final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
         if (null != yopPlatformCredentials) {
-            CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
             PublicKey publicKey = yopPlatformCredentials.getPublicKey(certType);
             if (null != publicKey) {
                 return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(certType), certType);
