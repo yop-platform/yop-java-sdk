@@ -31,7 +31,7 @@ public class YopRsaPlatformCredentialsLoader implements YopPlatformCredentialsLo
     private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap<>();
 
     @Override
-    public synchronized Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
+    public Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
         if (!credentialsMap.containsKey(YOP_CERT_RSA_DEFAULT_SERIAL_NO)) {
             reload(appKey, serialNo);
         }

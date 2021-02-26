@@ -55,7 +55,7 @@ public class YopSm2PlatformCredentialsLoader implements YopPlatformCredentialsLo
     private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap<>();
 
     @Override
-    public synchronized Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
+    public Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
         if (!credentialsMap.containsKey(serialNo)) {
             reload(appKey, serialNo);
         }
@@ -139,18 +139,18 @@ public class YopSm2PlatformCredentialsLoader implements YopPlatformCredentialsLo
         for (YopCertConfig yopCertkey : isvEncryptKey) {
             if (yopCertkey.getCertType() == CertTypeEnum.SM4) {
                 byte[] certBytes = null;
-                final String certKeyHex = yopCertkey.getValue();
+                final String certKeyBase64 = yopCertkey.getValue();
                 try {
-                    certBytes = Sm4Utils.decrypt_GCM_NoPadding(Encodes.decodeBase64(certKeyHex),
+                    certBytes = Sm4Utils.decrypt_GCM_NoPadding(Encodes.decodeBase64(certKeyBase64),
                             encryptCert.getAssociatedData(), encryptCert.getNonce(), encryptCert.getCiphertext());
                 } catch (Exception e) {
-                    LOGGER.warn("fail to try decrypt cert, certKey:" + certKeyHex + ", cert:" + encryptCert + ", ex:", e);
+                    LOGGER.warn("fail to try decrypt cert, certKey:" + certKeyBase64 + ", cert:" + encryptCert + ", ex:", e);
                 }
                 if (null != certBytes) {
                     try {
                         return Sm2CertUtils.getX509Certificate(certBytes);
                     } catch (Exception e) {
-                        LOGGER.error("error to parse cert bytes, certKey:" + certKeyHex + ", cert:" + encryptCert + ", ex:", e);
+                        LOGGER.error("error to parse cert bytes, certKey:" + certKeyBase64 + ", cert:" + encryptCert + ", ex:", e);
                     }
                 }
             } else {
