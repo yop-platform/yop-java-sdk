@@ -29,7 +29,7 @@ public class YopCertStore implements Serializable {
     /**
      * 是否开启本地存储
      */
-    private Boolean enable;
+    private Boolean enable = true;
 
     /**
      * 是否懒加载，默认启动时加载

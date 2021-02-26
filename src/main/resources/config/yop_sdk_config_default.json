@@ -9,7 +9,7 @@
     }
   ],
   "yop_cert_store": {
-    "enable":false,
+    "enable":true,
     "lazy":false
   },
   "http_client": {
