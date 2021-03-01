@@ -1,6 +1,8 @@
 package com.yeepay.yop.sdk.auth.req;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,19 +17,23 @@ import java.util.Map;
  */
 public class DefaultAuthorizationReqRegistry implements AuthorizationReqRegistry {
 
-    private final Map<String, AuthorizationReq> authorizationReqs;
+    private final Map<String, List<AuthorizationReq>> authorizationReqs;
 
     public DefaultAuthorizationReqRegistry() {
-        authorizationReqs = new HashMap<String, AuthorizationReq>();
+        authorizationReqs = new HashMap<String, List<AuthorizationReq>>();
     }
 
     @Override
-    public void register(String operationId, String securityReq) {
-        authorizationReqs.put(operationId, AuthorizationReqSupport.getAuthorizationReq(securityReq));
+    public void register(String operationId, List<String> securityReqs) {
+        List<AuthorizationReq> authorizationReqList = new ArrayList<>(securityReqs.size());
+        for (String securityReq : securityReqs) {
+            authorizationReqList.add(AuthorizationReqSupport.getAuthorizationReq(securityReq));
+        }
+        authorizationReqs.put(operationId, authorizationReqList);
     }
 
     @Override
-    public AuthorizationReq getAuthorizationReq(String operationId) {
+    public List<AuthorizationReq> getAuthorizationReq(String operationId) {
         return authorizationReqs.get(operationId);
     }
 }

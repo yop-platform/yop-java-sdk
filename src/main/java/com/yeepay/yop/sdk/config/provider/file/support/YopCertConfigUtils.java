@@ -7,6 +7,7 @@ import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.security.KeyStore;
 import java.security.PublicKey;
@@ -80,6 +81,9 @@ public final class YopCertConfigUtils {
                 break;
             default:
                 throw new RuntimeException("Not support cert store type.");
+        }
+        if (StringUtils.isEmpty(privateKey)) {
+            throw new YopServiceException("empty private!cert_type is" + yopCertConfig.getCertType());
         }
         return privateKey;
     }
