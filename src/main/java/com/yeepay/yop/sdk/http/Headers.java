@@ -64,6 +64,8 @@ public interface Headers {
 
     String YOP_CONTENT_SHA256 = "x-yop-content-sha256";
 
+    String YOP_CONTENT_SM3 = "x-yop-content-sm3";
+
     /**
      * 签名
      */
@@ -108,5 +110,7 @@ public interface Headers {
     String YOP_NEXT_APPEND_OFFSET = "x-yop-next-append-offset";
 
     String YOP_OBJECT_TYPE = "x-yop-object-type";
+
+    String YOP_CERT_SERIAL_NO = "x-yop-serial-no";
 
 }

@@ -10,7 +10,9 @@ import java.util.Map;
 public enum CertTypeEnum {
     AES128("AES128", "AES算法，密钥长度128", "AES", 128, 16, true),
     AES256("AES256", "AES算法, 密钥长度256", "AES", 256, 32, true),
-    RSA2048("RSA2048", "RSA算法, 密钥长度2048", "RSA", 2048, 294, false);
+    RSA2048("RSA2048", "RSA算法, 密钥长度2048", "RSA", 2048, 294, false),
+    SM2("SM2", "SM2算法，密钥长度256", "SM2", 256, 32, false),
+    SM4("SM4", "SM4算法，密钥长度128", "SM2", 128, 16, true);
 
     private static final Map<String, CertTypeEnum> VALUE_MAP = new HashMap<String, CertTypeEnum>();
 

@@ -1,10 +1,24 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
+import com.yeepay.yop.sdk.auth.SignOptions;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.security.PublicKey;
+
+import static com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider.YOP_CERT_RSA_DEFAULT_SERIAL_NO;
 
 /**
  * title: 签名校验<br>
@@ -18,7 +32,11 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopSignatureCheckAnalyzer.class);
+
     private static final YopSignatureCheckAnalyzer INSTANCE = new YopSignatureCheckAnalyzer();
+
+    private String SM2_PROTOCOL_PREFIX = "YOP-SM2-SM3";
 
     public static YopSignatureCheckAnalyzer getInstance() {
         return INSTANCE;
@@ -30,10 +48,36 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
     @Override
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         YopResponseMetadata metadata = response.getMetadata();
-        if (StringUtils.isNotEmpty(metadata.getYopSign())) {
-            context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), context.getYopPublicKey(), context.getSignOptions());
+        if (BooleanUtils.isTrue(context.isSkipVerifySign()) || StringUtils.isBlank(metadata.getYopSign())) {
+            return false;
+        } else {
+            PKICredentialsItem pkiCredentialsItem = getCredentialItem(context.getSignOptions(), context.getAppKey(), metadata.getYopCertSerialNo());
+            if (null != pkiCredentialsItem) {
+                YopPKICredentials credentials = new YopPKICredentials(context.getAppKey(), null, pkiCredentialsItem);
+                context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), credentials, context.getSignOptions());
+            } else {
+                throw new YopClientException("yop platform credentials not found");
+            }
         }
         return false;
+    }
+
+    private PKICredentialsItem getCredentialItem(SignOptions signOptions, String appKey, String serialNo) {
+        CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
+        if (certType == CertTypeEnum.RSA2048) {
+            if (StringUtils.isNotBlank(serialNo)) {
+                LOGGER.warn("rsa signed request not need serialNo:{}.", serialNo);
+            }
+            serialNo = YOP_CERT_RSA_DEFAULT_SERIAL_NO;
+        }
+        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
+        if (null != yopPlatformCredentials) {
+            PublicKey publicKey = yopPlatformCredentials.getPublicKey(certType);
+            if (null != publicKey) {
+                return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(certType), certType);
+            }
+        }
+        return null;
     }
 
 }

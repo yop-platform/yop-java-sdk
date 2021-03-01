@@ -7,7 +7,6 @@ import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.io.Serializable;
-import java.security.PrivateKey;
 import java.util.Map;
 
 /**
@@ -30,7 +29,9 @@ public class YopAppConfig implements Serializable {
 
     private String encryptKey;
 
-    private Map<CertTypeEnum, PrivateKey> isvPrivateKeys;
+    private Map<CertTypeEnum, String> isvPrivateKeys;
+
+    private YopCertConfig[] isvEncryptKey;
 
     public String getAppKey() {
         return appKey;
@@ -78,8 +79,21 @@ public class YopAppConfig implements Serializable {
         }
     }
 
-    public PrivateKey loadPrivateKey(CertTypeEnum certType) {
+    public String loadPrivateKey(CertTypeEnum certType) {
         return this.isvPrivateKeys.get(certType);
+    }
+
+    public YopCertConfig[] getIsvEncryptKey() {
+        return isvEncryptKey;
+    }
+
+    public void setIsvEncryptKey(YopCertConfig[] isvEncryptKey) {
+        this.isvEncryptKey = isvEncryptKey;
+    }
+
+    public YopAppConfig withIsvEncryptKey(YopCertConfig[] isvEncryptKey) {
+        this.isvEncryptKey = isvEncryptKey;
+        return this;
     }
 
     public static final class Builder {
@@ -101,7 +115,8 @@ public class YopAppConfig implements Serializable {
         public YopAppConfig build() {
             YopAppConfig yopAppConfig = new YopAppConfig()
                     .withAppKey(yopFileSdkConfig.getAppKey())
-                    .withEncryptKey(yopFileSdkConfig.getEncryptKey());
+                    .withEncryptKey(yopFileSdkConfig.getEncryptKey())
+                    .withIsvEncryptKey(yopFileSdkConfig.getIsvEncryptKey());
             if (yopFileSdkConfig.getIsvPrivateKey() != null && yopFileSdkConfig.getIsvPrivateKey().length >= 1) {
                 yopAppConfig.storeIsvPrivateKey(yopFileSdkConfig.getIsvPrivateKey());
             }

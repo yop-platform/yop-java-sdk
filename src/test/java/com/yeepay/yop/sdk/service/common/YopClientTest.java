@@ -1,6 +1,10 @@
 package com.yeepay.yop.sdk.service.common;
 
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import org.junit.Test;
@@ -26,6 +30,9 @@ public class YopClientTest {
                 .build();
 
         YopRequest request = new YopRequest("/rest/file/upload", "POST");
+        RequestConfig requestConfig = new RequestConfig();
+        requestConfig.setSecurityReq("YOP-SM2-SM3");
+        request = (YopRequest) request.withRequestConfig(requestConfig);
         YopResponse response = yopClient.request(request);
         System.out.println(response);
     }
@@ -47,7 +54,7 @@ public class YopClientTest {
     public void requestWithCustomConfigFile2() {
         // 使用该配置文件初始化SDK，且配置文件中有appkey和密钥
         // 或者在JVM启动时指定：-Dyop.sdk.config.file=file://home/aaa/...
-        System.setProperty("yop.sdk.config.file", "file:///Users/xxx/yop_sdk_config_app_10085525305.json");
+        System.setProperty("yop.sdk.config.file", "yop_sdk_config_app_10085525305.json");
 
         YopClient yopClient = YopClientBuilder.builder()
                 .build();
@@ -64,8 +71,10 @@ public class YopClientTest {
         YopRequest request = new YopRequest("/rest/file/upload", "POST");
 
         // 编码指定appkey和密钥
-        YopRSACredentials yopRSACredentials = new YopRSACredentials(appKey, priKey);
-        request.getRequestConfig().setCredentials(yopRSACredentials);
+        //YopRSACredentials yopRSACredentials = new YopRSACredentials(appKey, priKey);
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(RSAKeyUtils.string2PrivateKey(priKey), null, CertTypeEnum.RSA2048);
+        YopPKICredentials yopPKICredentials = new YopPKICredentials(appKey, null, pkiCredentialsItem);
+        request.getRequestConfig().setCredentials(yopPKICredentials);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);

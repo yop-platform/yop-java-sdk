@@ -2,6 +2,7 @@ package com.yeepay.yop.sdk.config;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
 import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
@@ -42,6 +43,8 @@ public final class YopSdkConfig implements Serializable {
     private YopProxyConfig proxy;
 
     private String region;
+
+    private YopCertStore yopCertStore;
 
     public String getServerRoot() {
         return serverRoot;
@@ -112,6 +115,14 @@ public final class YopSdkConfig implements Serializable {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public YopCertStore getYopCertStore() {
+        return yopCertStore;
+    }
+
+    public void setYopCertStore(YopCertStore yopCertStore) {
+        this.yopCertStore = yopCertStore;
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.yeepay.yop.sdk.auth.cipher;
 
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.Encryptor;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
@@ -34,7 +34,7 @@ public class DefaultEncryptor implements Encryptor {
 
     private final byte[] key;
 
-    public DefaultEncryptor(YopRSACredentials credentials) {
+    public DefaultEncryptor(YopPKICredentials credentials) {
         String secretKey = credentials.getEncryptKey();
         if (StringUtils.isEmpty(secretKey)) {
             throw new YopClientException("no encryptKey configured");

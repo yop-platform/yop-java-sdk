@@ -5,15 +5,19 @@
 
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopAESCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
+import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 
 /**
  * title: <br>
@@ -35,12 +39,22 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
         }
         CertTypeEnum certType = CertTypeEnum.parse(credentialType);
         if (certType.isSymmetric()) {
-            return new YopAESCredentials(appConfig.getAppKey(), appConfig.getAesSecretKey());
+            return new YopAESCredentials(appConfig.getAppKey(), null, appConfig.getAesSecretKey());
         } else {
-            return new YopRSACredentials(appConfig.getAppKey(),
-                    (RSAPrivateKey) appConfig.loadPrivateKey(certType),
-                    appConfig.getEncryptKey());
+
+            PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(string2PrivateKey(appConfig.loadPrivateKey(certType), certType), null, certType);
+            return new YopPKICredentials(appConfig.getAppKey(), null, pkiCredentialsItem);
         }
+    }
+
+    private PrivateKey string2PrivateKey(String privateKey, CertTypeEnum certType) {
+        if (CertTypeEnum.SM2 == certType) {
+            return Sm2Utils.string2PrivateKey(privateKey);
+        }
+        if (CertTypeEnum.RSA2048 == certType) {
+            return RSAKeyUtils.string2PrivateKey(privateKey);
+        }
+        throw new YopClientException("unsupported certType");
     }
 
 }

@@ -10,14 +10,14 @@ package com.yeepay.yop.sdk.security;
  * @version 1.0.0
  * @since 16/11/24 下午2:32
  */
-public interface SymmetricEncryption {
+public interface Encryption<K> {
 
     /**
      * 随机生成对称密钥
      *
      * @return byte[]
      */
-    byte[] generateRandomKey();
+    K generateRandomKey();
 
     /**
      * 加密

@@ -157,10 +157,10 @@ public class YopHttpClient {
         CloseableHttpResponse httpResponse;
         CloseableHttpAsyncClient httpAsyncClient = null;
         try {
+            signRequest(request, executionContext);
             if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
                 encryptRequest(request, executionContext);
             }
-            signRequest(request, executionContext);
             requestLogger.debug("Sending Request: {}", request);
             httpRequest = this.createHttpRequest(request);
             HttpContext httpContext = this.createHttpContext(request);

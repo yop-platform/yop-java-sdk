@@ -2,14 +2,13 @@ package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
+import com.yeepay.yop.sdk.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.PublicKey;
 
 /**
  * title: http返回处理上下文<br>
@@ -25,28 +24,35 @@ public class HttpResponseHandleContext implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    private final String appKey;
+
     private final YopHttpResponse response;
 
     private final Request originRequest;
 
-    private final Signer signer;
+    private final YopSigner signer;
 
     private final SignOptions signOptions;
-
-    private final PublicKey yopPublicKey;
 
     private final Boolean needDecrypt;
 
     private final Encryptor encryptor;
 
+    private final Boolean skipVerifySign;
+
     public HttpResponseHandleContext(CloseableHttpResponse httpResponse, Request originRequest, RequestConfig requestConfig, ExecutionContext executionContext) throws IOException {
+        this.appKey = (String) originRequest.getHeaders().get(Headers.YOP_APPKEY);
         this.response = new YopHttpResponse(httpResponse);
         this.originRequest = originRequest;
         this.signer = executionContext.getSigner();
         this.signOptions = executionContext.getSignOptions();
-        this.yopPublicKey = executionContext.getYopPublicKey();
         this.needDecrypt = requestConfig.getNeedEncrypt();
         this.encryptor = executionContext.getEncryptor();
+        this.skipVerifySign = requestConfig.getSkipVerifySign();
+    }
+
+    public String getAppKey() {
+        return appKey;
     }
 
     public YopHttpResponse getResponse() {
@@ -57,16 +63,12 @@ public class HttpResponseHandleContext implements Serializable {
         return originRequest;
     }
 
-    public Signer getSigner() {
+    public YopSigner getSigner() {
         return signer;
     }
 
     public SignOptions getSignOptions() {
         return signOptions;
-    }
-
-    public PublicKey getYopPublicKey() {
-        return yopPublicKey;
     }
 
     public Boolean isNeedDecrypt() {
@@ -77,5 +79,7 @@ public class HttpResponseHandleContext implements Serializable {
         return encryptor;
     }
 
-
+    public Boolean isSkipVerifySign() {
+        return skipVerifySign;
+    }
 }

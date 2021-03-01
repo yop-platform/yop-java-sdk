@@ -1,32 +1,33 @@
+/*
+ * Copyright: Copyright (c)2011
+ * Company: 易宝支付(YeePay)
+ */
 package com.yeepay.yop.sdk.auth.credentials;
 
-
-import java.io.Serializable;
-
 /**
- * title: <br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
- * @author menghao.chen
+ * @author yunmei.wu
  * @version 1.0.0
- * @since 17/11/2 10:38
+ * @since 2021/1/18 3:55 下午
  */
-public interface YopCredentials extends Serializable {
-
-    /**
-     * Returns the YOP app key ID for this credentials object.
-     *
-     * @return the YOP app key for this credentials object.
-     */
+public interface YopCredentials<T> {
     String getAppKey();
 
     /**
-     * Returns the Yop secret access key for this credentials object.
+     * 获取认证凭证
      *
-     * @return The Yop secret access key for this credentials object.
+     * @return
      */
-    String getSecretKey();
+    T getCredential();
 
+    /**
+     * 获取加密密钥
+     *
+     * @return
+     */
+    String getEncryptKey();
 }

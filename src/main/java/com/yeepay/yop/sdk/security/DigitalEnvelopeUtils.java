@@ -1,7 +1,8 @@
 package com.yeepay.yop.sdk.security;
 
 import com.google.common.base.Charsets;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
@@ -47,13 +48,15 @@ public class DigitalEnvelopeUtils {
         SymmetricEncryptAlgEnum symmetricEncryptAlg = SymmetricEncryptAlgEnum.parse(args[2]);
         DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[3]);
 
-        SymmetricEncryption symmetricEncryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
+        Encryption unsymmetricEncryption = UnsymmetricEncryptionFactory.getUnsymmetricEncryption(digestAlg);
 
         //用私钥对随机密钥进行解密
-        byte[] randomKey = RSA.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey);
+        byte[] randomKey = unsymmetricEncryption.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey.getEncoded());
+
+        Encryption encryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
 
         //解密得到源数据
-        byte[] encryptedData = symmetricEncryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
+        byte[] encryptedData = encryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
 
         //分解参数
         String data = new String(encryptedData, Charsets.UTF_8);
@@ -62,7 +65,8 @@ public class DigitalEnvelopeUtils {
 
         //验证签名
         PublicKey publicKey = getYopPublicKey(CertTypeEnum.RSA2048);
-        boolean verifySign = RSA.verifySign(sourceData, signToBase64, publicKey, digestAlg);
+        Signer signer = SignerFactory.getSigner(digestAlg);
+        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(), Encodes.decodeBase64(signToBase64));
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
         }
@@ -95,10 +99,10 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, String credentialType) {
-        YopRSACredentials yopCredentials = (YopRSACredentials) YopCredentialsProviderRegistry.getProvider()
+        YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
                 .getCredentials(appKey, credentialType);
-        PrivateKey privateKey = yopCredentials.getPrivateKey();
-        return decrypt(cipherText, privateKey);
+        PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
+        return decrypt(cipherText, pkiCredentialsItem.getPrivateKey());
     }
 
     /**

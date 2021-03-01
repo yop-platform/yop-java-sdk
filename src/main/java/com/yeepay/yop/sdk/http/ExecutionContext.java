@@ -3,14 +3,12 @@ package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-
-import java.security.PublicKey;
+import com.yeepay.yop.sdk.auth.signer.YopSigner;
 
 public class ExecutionContext {
 
-    private final Signer signer;
+    private final YopSigner signer;
 
     private final SignOptions signOptions;
 
@@ -18,17 +16,14 @@ public class ExecutionContext {
 
     private final YopCredentials yopCredentials;
 
-    private final PublicKey yopPublicKey;
-
-    private ExecutionContext(Signer signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials, PublicKey yopPublicKey) {
+    private ExecutionContext(YopSigner signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials) {
         this.signer = signer;
         this.signOptions = signOptions;
         this.encryptor = encryptor;
         this.yopCredentials = yopCredentials;
-        this.yopPublicKey = yopPublicKey;
     }
 
-    public Signer getSigner() {
+    public YopSigner getSigner() {
         return signer;
     }
 
@@ -44,17 +39,11 @@ public class ExecutionContext {
         return yopCredentials;
     }
 
-    public PublicKey getYopPublicKey() {
-        return yopPublicKey;
-    }
-
     public static final class Builder {
-        private Signer signer;
+        private YopSigner signer;
         private SignOptions signOptions;
         private Encryptor encryptor;
         private YopCredentials yopCredentials;
-        private PublicKey yopPublicKey;
-
 
         private Builder() {
         }
@@ -63,7 +52,7 @@ public class ExecutionContext {
             return new Builder();
         }
 
-        public Builder withSigner(Signer signer) {
+        public Builder withSigner(YopSigner signer) {
             this.signer = signer;
             return this;
         }
@@ -83,13 +72,8 @@ public class ExecutionContext {
             return this;
         }
 
-        public Builder withYopPublicKey(PublicKey yopPublicKey) {
-            this.yopPublicKey = yopPublicKey;
-            return this;
-        }
-
         public ExecutionContext build() {
-            return new ExecutionContext(signer, signOptions, encryptor, yopCredentials, yopPublicKey);
+            return new ExecutionContext(signer, signOptions, encryptor, yopCredentials);
         }
     }
 }
