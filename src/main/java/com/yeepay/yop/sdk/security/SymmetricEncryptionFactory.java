@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.security;
 
 import com.yeepay.yop.sdk.security.aes.AES;
+import com.yeepay.yop.sdk.security.sm.SM4;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,14 +18,15 @@ import java.util.Map;
  */
 public class SymmetricEncryptionFactory {
 
-    private static final Map<SymmetricEncryptAlgEnum, SymmetricEncryption> map;
+    private static final Map<SymmetricEncryptAlgEnum, Encryption> map;
 
     static {
-        map = new HashMap<SymmetricEncryptAlgEnum, SymmetricEncryption>();
+        map = new HashMap<SymmetricEncryptAlgEnum, Encryption>();
         map.put(SymmetricEncryptAlgEnum.AES, new AES());
+        map.put(SymmetricEncryptAlgEnum.SM4, new SM4());
     }
 
-    public static SymmetricEncryption getSymmetricEncryption(SymmetricEncryptAlgEnum symmetricEncryptAlg) {
+    public static Encryption getSymmetricEncryption(SymmetricEncryptAlgEnum symmetricEncryptAlg) {
         return map.get(symmetricEncryptAlg);
     }
 }

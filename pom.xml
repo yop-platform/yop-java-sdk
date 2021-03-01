@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.8</version>
+    <version>4.0.0</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -27,6 +27,7 @@
         <org.springframework>5.3.1</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
+        <bouncycastle.version>1.65</bouncycastle.version>
         <tika-core.version>1.18</tika-core.version>
     </properties>
 
@@ -103,6 +104,19 @@
             <artifactId>spring-core</artifactId>
             <version>${org.springframework}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${bouncycastle.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${bouncycastle.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.slf4j</groupId>

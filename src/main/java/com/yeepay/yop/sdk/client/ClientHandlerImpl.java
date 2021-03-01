@@ -1,18 +1,16 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.auth.SignerSupport;
 import com.yeepay.yop.sdk.auth.cipher.DefaultEncryptor;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
+import com.yeepay.yop.sdk.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
-import com.yeepay.yop.sdk.config.YopSdkConfig;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.ExecutionContext;
 import com.yeepay.yop.sdk.http.YopHttpClient;
@@ -36,8 +34,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ClientHandlerImpl implements ClientHandler {
 
-    private final YopSdkConfigProvider yopSdkConfigProvider;
-
     private final YopCredentialsProvider yopCredentialsProvider;
 
     private final AuthorizationReqRegistry authorizationReqRegistry;
@@ -47,7 +43,6 @@ public class ClientHandlerImpl implements ClientHandler {
     private final GateWayRouter gateWayRouter;
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
-        this.yopSdkConfigProvider = handlerParams.getClientParams().getYopSdkConfigProvider();
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
         ServerRootSpace serverRootSpace = new ServerRootSpace(handlerParams.getClientParams().getEndPoint(),
@@ -57,7 +52,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
-        YopHttpClient yopHttpClient = null;
+        YopHttpClient yopHttpClient;
         if (null == handlerParams) {
             yopHttpClient = YopHttpClientFactory.getDefaultClient();
         } else {
@@ -84,11 +79,9 @@ public class ClientHandlerImpl implements ClientHandler {
         if (authorizationReq == null) {
             throw new YopClientException("no authenticate req defined");
         } else {
-            YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
-                    .withSigner(SignerSupport.getSigner(authorizationReq.getSignerType()))
-                    .withSignOptions(authorizationReq.getSignOptions())
-                    .withYopPublicKey(yopSdkConfig.loadYopPublicKey(authorizationReq.getCredentialType()));
+                    .withSigner(YopSignerFactory.getSigner(authorizationReq.getSignerType()))
+                    .withSignOptions(authorizationReq.getSignOptions());
 
             YopCredentials credential = executionParams.getInput().getRequestConfig().getCredentials();
             if (credential == null) {
@@ -106,8 +99,8 @@ public class ClientHandlerImpl implements ClientHandler {
 
             RequestConfig requestConfig = executionParams.getInput().getRequestConfig();
             if (requestConfig != null && BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
-                if (credential instanceof YopRSACredentials) {
-                    builder.withEncryptor(new DefaultEncryptor((YopRSACredentials) credential));
+                if (credential instanceof YopPKICredentials) {
+                    builder.withEncryptor(new DefaultEncryptor((YopPKICredentials) credential));
                 } else {
                     throw new YopClientException("securityReq does't support encryption");
                 }
@@ -117,6 +110,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
+        //获取商户自定义的安全需求
         String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
         if (StringUtils.isNotEmpty(customSecurityReq)) {
             AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);

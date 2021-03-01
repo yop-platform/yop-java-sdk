@@ -2,6 +2,7 @@ package com.yeepay.yop.sdk.auth.req;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.SignerTypeEnum;
 
 /**
  * title: 认证需求<br>
@@ -18,7 +19,7 @@ public class AuthorizationReq {
     /**
      * 签名类型
      */
-    private final String signerType;
+    private final SignerTypeEnum signerType;
 
     /**
      * 证书类型
@@ -40,7 +41,7 @@ public class AuthorizationReq {
      */
     private final String protocolPrefix;
 
-    private AuthorizationReq(String signerType, String credentialType, String signatureAlg, DigestAlgEnum digestAlg, String protocolPrefix) {
+    private AuthorizationReq(SignerTypeEnum signerType, String credentialType, String signatureAlg, DigestAlgEnum digestAlg, String protocolPrefix) {
         this.signerType = signerType;
         this.credentialType = credentialType;
         this.signatureAlg = signatureAlg;
@@ -48,7 +49,7 @@ public class AuthorizationReq {
         this.protocolPrefix = protocolPrefix;
     }
 
-    public String getSignerType() {
+    public SignerTypeEnum getSignerType() {
         return signerType;
     }
 
@@ -73,7 +74,7 @@ public class AuthorizationReq {
     }
 
     public static final class Builder {
-        private String signerType;
+        private SignerTypeEnum signerType;
         private String credentialType;
         private String signatureAlg;
         private DigestAlgEnum digestAlg;
@@ -86,7 +87,7 @@ public class AuthorizationReq {
             return new Builder();
         }
 
-        public Builder withSignerType(String signerType) {
+        public Builder withSignerType(SignerTypeEnum signerType) {
             this.signerType = signerType;
             return this;
         }

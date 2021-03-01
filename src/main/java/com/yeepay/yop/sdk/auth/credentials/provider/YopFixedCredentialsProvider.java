@@ -8,6 +8,7 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +31,12 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
 
     @Override
     public final YopCredentials getCredentials(String appKey, String credentialType) {
+        checkAndLoad(appKey);
+        String key = appKey + ":" + credentialType;
+        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(appConfig, credentialType));
+    }
+
+    private void checkAndLoad(String appKey) {
         if (null == appConfig) {
             synchronized (YopFixedSdkConfigProvider.class) {
                 if (null == appConfig) {
@@ -38,9 +45,6 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
                 }
             }
         }
-
-        String key = appKey + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(appConfig, credentialType));
     }
 
     /**
@@ -51,4 +55,9 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
      */
     protected abstract YopAppConfig loadAppConfig(String appKey);
 
+    @Override
+    public YopCertConfig[] getIsvEncryptKey(String appKey) {
+        checkAndLoad(appKey);
+        return appConfig.getIsvEncryptKey();
+    }
 }
