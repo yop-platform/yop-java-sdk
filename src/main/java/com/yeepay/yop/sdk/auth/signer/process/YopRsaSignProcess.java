@@ -20,8 +20,6 @@ import com.yeepay.yop.sdk.security.rsa.RSA;
  */
 public class YopRsaSignProcess implements YopSignProcess {
 
-    private static final String SEPARATOR = "$";
-
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SHA256;
 
     @Override

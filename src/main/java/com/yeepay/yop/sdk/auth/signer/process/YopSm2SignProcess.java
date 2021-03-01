@@ -21,9 +21,6 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
  * @since 2021/1/18 3:59 下午
  */
 public class YopSm2SignProcess implements YopSignProcess {
-    private static final String SEPARATOR = "$";
-
-    private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SM3;
 
     @Override
     public String sign(String content, PKICredentialsItem credentialsItem) {
