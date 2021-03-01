@@ -61,6 +61,10 @@ public interface YopSigner {
         }
     }
 
+    default void registerYopSignProcess(CertTypeEnum certTypeEnum, YopSignProcess yopSignProcess) {
+        signerProcessMap.put(certTypeEnum, yopSignProcess);
+    }
+
     default YopSignProcess getSignProcess(CertTypeEnum certType) {
         return signerProcessMap.get(certType);
     }

@@ -27,12 +27,16 @@ public class YopSm2SignProcess implements YopSignProcess {
 
     @Override
     public String sign(String content, PKICredentialsItem credentialsItem) {
-        return Sm2Utils.sign(content, (BCECPrivateKey) credentialsItem.getPrivateKey()) + SEPARATOR + DIGEST_ALG.getValue();
+        return Sm2Utils.sign(content, (BCECPrivateKey) credentialsItem.getPrivateKey());
     }
 
     @Override
     public boolean verify(String content, String signature, PKICredentialsItem credentialsItem) {
-        String rawSignature = signature.split(SEPARATOR)[0];
-        return Sm2Utils.verifySign(content, rawSignature, (BCECPublicKey) credentialsItem.getPublicKey());
+        return Sm2Utils.verifySign(content, signature, (BCECPublicKey) credentialsItem.getPublicKey());
+    }
+
+    @Override
+    public DigestAlgEnum getDigestAlg() {
+        return DigestAlgEnum.SM3;
     }
 }

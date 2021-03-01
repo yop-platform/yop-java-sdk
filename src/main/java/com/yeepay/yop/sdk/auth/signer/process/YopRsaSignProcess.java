@@ -26,12 +26,16 @@ public class YopRsaSignProcess implements YopSignProcess {
 
     @Override
     public String sign(String content, PKICredentialsItem credentialsItem) {
-        return RSA.sign(content, credentialsItem.getPrivateKey(), DIGEST_ALG) + SEPARATOR + DIGEST_ALG.getValue();
+        return RSA.sign(content, credentialsItem.getPrivateKey(), DIGEST_ALG);
     }
 
     @Override
     public boolean verify(String content, String signature, PKICredentialsItem credentialsItem) {
-        String rawSignature = signature.split(SEPARATOR)[0];
-        return RSA.verifySign(content, rawSignature, credentialsItem.getPublicKey(), DIGEST_ALG);
+        return RSA.verifySign(content, signature, credentialsItem.getPublicKey(), DIGEST_ALG);
+    }
+
+    @Override
+    public DigestAlgEnum getDigestAlg() {
+        return DigestAlgEnum.SHA256;
     }
 }

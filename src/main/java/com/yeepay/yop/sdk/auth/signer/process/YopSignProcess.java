@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.auth.signer.process;
 
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.security.DigestAlgEnum;
 
 /**
  * title: <br/>
@@ -35,4 +36,11 @@ public interface YopSignProcess {
      * @return
      */
     boolean verify(String content, String signature, PKICredentialsItem credentialsItem);
+
+    /**
+     * 获取摘要算法
+     *
+     * @return
+     */
+    DigestAlgEnum getDigestAlg();
 }

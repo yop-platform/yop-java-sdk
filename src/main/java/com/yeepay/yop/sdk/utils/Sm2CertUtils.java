@@ -4,6 +4,11 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import cfca.sadk.algorithm.common.PKIException;
+import cfca.sadk.algorithm.sm2.SM2PrivateKey;
+import cfca.sadk.org.bouncycastle.crypto.params.ECPrivateKeyParameters;
+import cfca.sadk.org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
+import cfca.sadk.util.KeyUtil;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;

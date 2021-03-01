@@ -14,6 +14,7 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcess;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
@@ -125,7 +126,8 @@ public class YopPKISigner implements YopSigner {
         String canonicalURI = this.getCanonicalURIPath(apiUri);
         String canonicalRequest = authString + "\n" + request.getHttpMethod() + "\n" + canonicalURI + "\n" +
                 canonicalQueryString + "\n" + canonicalHeader;
-        String signature = getSignProcess(pkiCredentialsItem.getCertType()).sign(canonicalRequest, pkiCredentialsItem);
+        YopSignProcess yopSignProcess = getSignProcess(pkiCredentialsItem.getCertType());
+        String signature = yopSignProcess.sign(canonicalRequest, pkiCredentialsItem) + "$" + yopSignProcess.getDigestAlg().getValue();
         String authorizationHeader = options.getProtocolPrefix() + " " + authString + "/" + signedHeaders + "/" + signature;
 
         LOGGER.debug("CanonicalRequest:{}\tAuthorization:{}", canonicalRequest.replace("\n", "[\\n]"),
