@@ -20,7 +20,7 @@ public interface AuthorizationReqRegistry {
      * @param operationId  operationId
      * @param securityReqs 安全需求
      */
-    void register(String operationId, List<String> securityReqs);
+    void register(String operationId, String securityReqs);
 
     /**
      * 获取安全需求
