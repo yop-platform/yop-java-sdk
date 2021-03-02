@@ -20,7 +20,7 @@ import java.util.List;
 public class MockAuthorizationReqRegistry implements AuthorizationReqRegistry {
 
     @Override
-    public void register(String operationId, List<String> securityReq) {
+    public void register(String operationId, String securityReq) {
         //do nothing
     }
 
