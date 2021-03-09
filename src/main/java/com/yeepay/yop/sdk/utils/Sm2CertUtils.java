@@ -4,12 +4,6 @@
  */
 package com.yeepay.yop.sdk.utils;
 
-import cfca.sadk.algorithm.common.PKIException;
-import cfca.sadk.algorithm.sm2.SM2PrivateKey;
-import cfca.sadk.org.bouncycastle.crypto.params.ECPrivateKeyParameters;
-import cfca.sadk.org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
-import cfca.sadk.util.KeyUtil;
-import com.yeepay.yop.sdk.exception.YopServiceException;
 import org.bouncycastle.asn1.pkcs.ContentInfo;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -50,19 +44,6 @@ public class Sm2CertUtils {
         if (Security.getProvider("BC") == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
-    }
-
-    public static String getPrivateFormSm2(String pemPri, String pwd) {
-        try {
-            SM2PrivateKey privateKeyFromSM2 = KeyUtil.getPrivateKeyFromSM2(pemPri.getBytes(), pwd);
-            BCECPrivateKey bcecPrivateKey = new BCECPrivateKey(privateKeyFromSM2.getAlgorithm(),
-                    new ECPrivateKeyParameters(privateKeyFromSM2.getD(), null),
-                    privateKeyFromSM2.getParams());
-            return Encodes.encodeBase64(bcecPrivateKey.getEncoded());
-        } catch (PKIException e) {
-            throw new YopServiceException("illegal cert", e);
-        }
-
     }
 
     public static BCECPublicKey getBCECPublicKey(X509Certificate sm2Cert) {
