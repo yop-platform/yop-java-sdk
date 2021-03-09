@@ -117,18 +117,6 @@
             <version>${bouncycastle.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.yeepay.cfca</groupId>
-            <artifactId>SADK</artifactId>
-            <version>3.7.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.yeepay.cfca</groupId>
-            <artifactId>logback-cfca</artifactId>
-            <version>4.2.1.0</version>
-            <classifier>jdk1.6</classifier>
-        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -312,50 +300,6 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
                         <version>2.5.1</version>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
-                        <version>3.1.1</version>
-                        <configuration>
-                            <!-- put your configurations here -->
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>shade</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactSet>
-                                        <includes>
-                                            <include>com.yeepay.cfca:SADK</include>
-                                            <include>com.yeepay.cfca:logback-cfca</include>
-                                        </includes>
-                                    </artifactSet>
-                                    <filters>
-                                        <filter>
-                                            <artifact>*:*</artifact>
-                                            <excludes>
-                                                <exclude>META-INF/services/*</exclude>
-                                                <exclude>META-INF/versions/*</exclude>
-                                                <exclude>META-INF/*.SF</exclude>
-                                                <exclude>META-INF/*.DSA</exclude>
-                                                <exclude>META-INF/*.RSA</exclude>
-                                            </excludes>
-                                        </filter>
-                                    </filters>
-                                    <relocations>
-                                        <relocation>
-                                            <pattern>cfca</pattern>
-                                            <shadedPattern>com.yeepay.cfca</shadedPattern>
-                                        </relocation>
-                                    </relocations>
-                                </configuration>
-                            </execution>
-                        </executions>
                     </plugin>
 
                     <plugin>
