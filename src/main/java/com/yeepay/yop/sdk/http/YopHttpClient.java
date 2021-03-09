@@ -229,11 +229,11 @@ public class YopHttpClient {
             SSLContext s;
             if (StringUtils.isNotEmpty(tlsVersion)) {
                 s = SSLContext.getInstance(tlsVersion);
+                // 初始化SSLContext实例
+                s.init(null, null, null);
             } else {
                 s = SSLContext.getDefault();
             }
-            // 初始化SSLContext实例
-            s.init(null, null, null);
             sslSocketFactory = new SSLConnectionSocketFactory(s,
                     SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
