@@ -40,7 +40,11 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
         }
 
         String key = appKey + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(appConfig, credentialType));
+        YopCredentials found = yopCredentialsMap.get(key);
+        if (null == found) {
+            yopCredentialsMap.put(key, buildCredentials(appConfig, credentialType));
+        }
+        return yopCredentialsMap.get(key);
     }
 
     /**

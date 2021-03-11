@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.8</version>
+    <version>3.3.8.1</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -24,7 +24,7 @@
         <jackson.version>2.11.2</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
         <junit-version>4.12</junit-version>
-        <org.springframework>5.3.1</org.springframework>
+        <org.springframework>3.2.18.RELEASE</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <tika-core.version>1.18</tika-core.version>
@@ -327,5 +327,40 @@
 <!--                </repository>-->
             </distributionManagement>
         </profile>
+        <profile>
+            <id>jdk1.7</id>
+            <properties>
+                <commons-lang3.version>3.5</commons-lang3.version>
+                <jackson.version>2.10.2</jackson.version>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <configuration>
+                            <source>1.7</source>
+                            <target>1.7</target>
+                            <compilerVersion>1.7</compilerVersion>
+                            <encoding>UTF-8</encoding>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
+
+    <distributionManagement>
+        <repository>
+            <id>YeepayReleases</id>
+            <name>Internal Releases</name>
+            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/</url>
+        </repository>
+        <snapshotRepository>
+            <id>YeepaySnapshots</id>
+            <name>Internal Snapshots</name>
+            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-snapshot/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
