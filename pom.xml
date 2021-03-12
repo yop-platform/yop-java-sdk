@@ -24,7 +24,7 @@
         <jackson.version>2.11.2</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
         <junit-version>4.12</junit-version>
-        <org.springframework>3.2.18.RELEASE</org.springframework>
+        <org.springframework>5.3.1</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <tika-core.version>1.18</tika-core.version>
@@ -332,6 +332,7 @@
             <properties>
                 <commons-lang3.version>3.5</commons-lang3.version>
                 <jackson.version>2.10.2</jackson.version>
+                <org.springframework>3.2.18.RELEASE</org.springframework>
             </properties>
             <build>
                 <plugins>
