@@ -71,9 +71,11 @@ public final class YopSdkConfig implements Serializable {
     }
 
     public void storeYopPublicKey(YopCertConfig[] yopPublicKeys) {
-        this.yopPublicKeys = Maps.newHashMap();
-        for (YopCertConfig yopCertConfig : yopPublicKeys) {
-            this.yopPublicKeys.put(yopCertConfig.getCertType(), YopCertConfigUtils.loadPublicKey(yopCertConfig));
+        if (null != yopPublicKeys && yopPublicKeys.length > 0) {
+            this.yopPublicKeys = Maps.newHashMap();
+            for (YopCertConfig yopCertConfig : yopPublicKeys) {
+                this.yopPublicKeys.put(yopCertConfig.getCertType(), YopCertConfigUtils.loadPublicKey(yopCertConfig));
+            }
         }
     }
 

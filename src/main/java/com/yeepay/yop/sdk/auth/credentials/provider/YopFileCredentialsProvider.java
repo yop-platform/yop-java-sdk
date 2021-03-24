@@ -25,7 +25,7 @@ public class YopFileCredentialsProvider extends YopFixedCredentialsProvider {
     @Override
     protected YopAppConfig loadAppConfig(String appKey) {
         YopFileSdkConfigProvider yopFileSdkConfigProvider = (YopFileSdkConfigProvider) (YopSdkConfigProviderRegistry.getProvider());
-        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadYopFileSdkConfig();
+        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig(appKey);
 
         return YopAppConfig.Builder.builder()
                 .withSDKConfig(yopFileSdkConfig)

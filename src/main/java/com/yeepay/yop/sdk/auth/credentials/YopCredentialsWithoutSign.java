@@ -28,8 +28,4 @@ public class YopCredentialsWithoutSign implements YopCredentials<String> {
         return appKey;
     }
 
-    @Override
-    public String getEncryptKey() {
-        return null;
-    }
 }

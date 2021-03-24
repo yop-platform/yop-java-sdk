@@ -12,17 +12,14 @@ package com.yeepay.yop.sdk.auth.credentials;
  */
 public class YopAESCredentials implements YopCredentials<String> {
 
-    private static final long serialVersionUID = 5706406781522872546L;
+    private static final long serialVersionUID = -1L;
 
     private String appKey;
 
     private String aesKey;
 
-    private String encryptKey;
-
-    public YopAESCredentials(String appKey, String encryptKey, String aesKey) {
+    public YopAESCredentials(String appKey, String aesKey) {
         this.appKey = appKey;
-        this.encryptKey = encryptKey;
         this.appKey = aesKey;
     }
 
@@ -36,8 +33,4 @@ public class YopAESCredentials implements YopCredentials<String> {
         return this.aesKey;
     }
 
-    @Override
-    public String getEncryptKey() {
-        return this.encryptKey;
-    }
 }

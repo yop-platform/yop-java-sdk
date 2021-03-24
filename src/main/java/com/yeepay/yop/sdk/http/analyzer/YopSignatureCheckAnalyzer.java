@@ -53,7 +53,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
         } else {
             PKICredentialsItem pkiCredentialsItem = getCredentialItem(context.getSignOptions(), context.getAppKey(), metadata.getYopCertSerialNo());
             if (null != pkiCredentialsItem) {
-                YopPKICredentials credentials = new YopPKICredentials(context.getAppKey(), null, pkiCredentialsItem);
+                YopPKICredentials credentials = new YopPKICredentials(context.getAppKey(), pkiCredentialsItem);
                 context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), credentials, context.getSignOptions());
             } else {
                 throw new YopClientException("yop platform credentials not found");

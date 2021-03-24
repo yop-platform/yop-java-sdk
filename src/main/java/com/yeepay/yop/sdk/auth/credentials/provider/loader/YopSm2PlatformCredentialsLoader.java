@@ -34,6 +34,8 @@ import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.yeepay.yop.sdk.YopConstants.ISV_ENCRYPT_KEY;
+
 /**
  * title: <br>
  * description: 描述<br>
@@ -64,7 +66,8 @@ public class YopSm2PlatformCredentialsLoader implements YopPlatformCredentialsLo
 
     @Override
     public synchronized Map<String, YopPlatformCredentials> reload(String appKey, String serialNo) {
-        Map<String, X509Certificate> x509CertificateMap = loadAndVerifyFromRemote(appKey, serialNo, YopCredentialsProviderRegistry.getProvider().getIsvEncryptKey(appKey));
+        Map<String, X509Certificate> x509CertificateMap = loadAndVerifyFromRemote(appKey, serialNo,
+                YopCredentialsProviderRegistry.getProvider().getIsvEncryptKey(appKey));
         if (MapUtils.isNotEmpty(x509CertificateMap)) {
             credentialsMap.putAll(storeCerts(YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore(), x509CertificateMap));
         }

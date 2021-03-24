@@ -47,4 +47,11 @@ public interface YopCredentialsProvider {
 
     List<CertTypeEnum> getSupportCertTypes(String appId);
 
+    /**
+     * 移除SDK配置
+     *
+     * @param key key
+     */
+    void removeConfig(String key);
+
 }
