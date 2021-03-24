@@ -19,8 +19,11 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 /**
  * title: 默认客户端处理器<br>
@@ -84,10 +87,11 @@ public class ClientHandlerImpl implements ClientHandler {
                     .withSignOptions(authorizationReq.getSignOptions());
 
             YopCredentials credential = executionParams.getInput().getRequestConfig().getCredentials();
+            String appKey = executionParams.getInput().getRequestConfig().getAppKey();
             if (credential == null) {
-                String appKey = executionParams.getInput().getRequestConfig().getAppKey();
                 if (StringUtils.isEmpty(appKey)) {
-                    credential = yopCredentialsProvider.getCredentials("default", authorizationReq.getCredentialType());
+                    appKey = "default";
+                    credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
                 } else {
                     credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
                 }
@@ -110,6 +114,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
+        String appKey = input.getRequestConfig().getAppKey();
         //获取商户自定义的安全需求
         String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
         if (StringUtils.isNotEmpty(customSecurityReq)) {
@@ -119,7 +124,14 @@ public class ClientHandlerImpl implements ClientHandler {
             }
             return authorizationReq;
         }
-        return authorizationReqRegistry.getAuthorizationReq(input.getOperationId());
+        List<CertTypeEnum> supportCertType = yopCredentialsProvider.getSupportCertTypes(appKey);
+        List<AuthorizationReq> authorizationReqs = authorizationReqRegistry.getAuthorizationReq(input.getOperationId());
+        for (AuthorizationReq authorizationReq : authorizationReqs) {
+            if (supportCertType.contains(CertTypeEnum.parse(authorizationReq.getCredentialType()))) {
+                return authorizationReq;
+            }
+        }
+        throw new YopClientException("can not find private key");
     }
 
     @Override

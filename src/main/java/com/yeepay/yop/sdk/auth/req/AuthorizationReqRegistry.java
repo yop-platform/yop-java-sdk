@@ -1,5 +1,7 @@
 package com.yeepay.yop.sdk.auth.req;
 
+import java.util.List;
+
 /**
  * title: AuthorizationReq注册中心<br>
  * description: <br>
@@ -15,10 +17,10 @@ public interface AuthorizationReqRegistry {
     /**
      * 注册安全需求
      *
-     * @param operationId operationId
-     * @param securityReq 安全需求
+     * @param operationId  operationId
+     * @param securityReqs 安全需求
      */
-    void register(String operationId, String securityReq);
+    void register(String operationId, String securityReqs);
 
     /**
      * 获取安全需求
@@ -26,5 +28,5 @@ public interface AuthorizationReqRegistry {
      * @param operationId operationId
      * @return 安全需求
      */
-    AuthorizationReq getAuthorizationReq(String operationId);
+    List<AuthorizationReq> getAuthorizationReq(String operationId);
 }

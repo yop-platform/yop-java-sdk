@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>4.0.0</version>
+    <version>4.0.1</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -334,11 +334,11 @@
                     <name>Nexus Release Repository</name>
                     <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
-<!--                <repository>-->
-<!--                    <id>github</id>-->
-<!--                    <name>GitHub OWNER Apache Maven Packages</name>-->
-<!--                    <url>https://maven.pkg.github.com/yop-platforBase64m/yop-java-sdk</url>-->
-<!--                </repository>-->
+                <!--                <repository>-->
+                <!--                    <id>github</id>-->
+                <!--                    <name>GitHub OWNER Apache Maven Packages</name>-->
+                <!--                    <url>https://maven.pkg.github.com/yop-platforBase64m/yop-java-sdk</url>-->
+                <!--                </repository>-->
             </distributionManagement>
         </profile>
     </profiles>

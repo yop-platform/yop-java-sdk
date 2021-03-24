@@ -9,7 +9,10 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +37,12 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
         checkAndLoad(appKey);
         String key = appKey + ":" + credentialType;
         return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(appConfig, credentialType));
+    }
+
+    @Override
+    public List<CertTypeEnum> getSupportCertTypes(String appId) {
+        checkAndLoad(appId);
+        return new ArrayList<>(appConfig.getIsvPrivateKeys().keySet());
     }
 
     private void checkAndLoad(String appKey) {
