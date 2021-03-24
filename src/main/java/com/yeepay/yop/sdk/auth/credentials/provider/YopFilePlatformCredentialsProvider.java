@@ -129,7 +129,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
                 return localCredentials;
             }
         }
-        LOGGER.info("no available sm2 cert from local, path:{}, serialNo{}", yopCertStore.getPath(), serialNo);
+        LOGGER.info("no available sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
         return sm2Delegate.load(appKey, serialNo);
     }
 
