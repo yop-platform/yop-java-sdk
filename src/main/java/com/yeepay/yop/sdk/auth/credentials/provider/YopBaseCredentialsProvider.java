@@ -39,20 +39,19 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
         }
         CertTypeEnum certType = CertTypeEnum.parse(credentialType);
         if (certType.isSymmetric()) {
-            return new YopAESCredentials(appConfig.getAppKey(), null, appConfig.getAesSecretKey());
+            return new YopAESCredentials(appConfig.getAppKey(), appConfig.getAesSecretKey());
         } else {
-
             PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(string2PrivateKey(appConfig.loadPrivateKey(certType), certType), null, certType);
-            return new YopPKICredentials(appConfig.getAppKey(), null, pkiCredentialsItem);
+            return new YopPKICredentials(appConfig.getAppKey(), pkiCredentialsItem);
         }
     }
 
     private PrivateKey string2PrivateKey(String privateKey, CertTypeEnum certType) {
-        if (CertTypeEnum.SM2 == certType) {
-            return Sm2Utils.string2PrivateKey(privateKey);
-        }
-        if (CertTypeEnum.RSA2048 == certType) {
-            return RSAKeyUtils.string2PrivateKey(privateKey);
+        switch (certType) {
+            case RSA2048:
+                return RSAKeyUtils.string2PrivateKey(privateKey);
+            case SM2:
+                return Sm2Utils.string2PrivateKey(privateKey);
         }
         throw new YopClientException("unsupported certType");
     }

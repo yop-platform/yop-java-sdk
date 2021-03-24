@@ -83,12 +83,6 @@ public class YopHttpClient {
      * Logger providing detailed information on requests/responses. Users can enable this logger to get access to YOP
      * request IDs for responses, individual requests and parameters sent to YOP, etc.
      */
-    private static final Logger requestLogger = LoggerFactory.getLogger("com.yeepay.g3.yop.sdk.request");
-
-    /**
-     * Logger for more detailed debugging information, that might not be as useful for end users (ex: HTTP client
-     * configuration, etc).
-     */
     private static final Logger logger = LoggerFactory.getLogger(YopHttpClient.class);
 
     /**
@@ -168,7 +162,7 @@ public class YopHttpClient {
             if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
                 encryptRequest(request, executionContext);
             }
-            requestLogger.debug("Sending Request: {}", request);
+            logger.debug("Sending Request: {}", request);
             httpRequest = this.createHttpRequest(request);
             HttpContext httpContext = this.createHttpContext(request);
             if (this.config.isHttpAsyncPutEnabled() && httpRequest.getMethod().equals("PUT")) {

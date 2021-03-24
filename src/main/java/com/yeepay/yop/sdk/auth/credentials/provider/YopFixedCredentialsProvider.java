@@ -7,7 +7,6 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
-import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
@@ -28,45 +27,44 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProvider {
 
-    private YopAppConfig appConfig = null;
-
+    private final Map<String, YopAppConfig> appConfigs = new ConcurrentHashMap<>();
     private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
 
     @Override
-    public final YopCredentials getCredentials(String appKey, String credentialType) {
-        checkAndLoad(appKey);
-        String key = appKey + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(appConfig, credentialType));
+    public final YopCredentials getCredentials(String appId, String credentialType) {
+        String key = appId + ":" + credentialType;
+        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appId), credentialType));
     }
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appId) {
-        checkAndLoad(appId);
-        return new ArrayList<>(appConfig.getIsvPrivateKeys().keySet());
+        return new ArrayList<>(getAppConfig(appId).getIsvPrivateKeys().keySet());
     }
 
-    private void checkAndLoad(String appKey) {
-        if (null == appConfig) {
-            synchronized (YopFixedSdkConfigProvider.class) {
-                if (null == appConfig) {
-                    // TODO 这里可以异步初始化
-                    appConfig = loadAppConfig(appKey);
-                }
-            }
+    private YopAppConfig getAppConfig(String appId) {
+        if (!appConfigs.containsKey(appId)) {
+            appConfigs.computeIfAbsent(appId, k -> loadAppConfig(appId));
         }
+        return appConfigs.get(appId);
     }
 
     /**
-     * 加载用户密钥配置RSAKeyUtils
+     * 加载用户密钥配置
      *
-     * @param appKey appKey
+     * @param appId appId
      * @return 用户密钥配置
      */
-    protected abstract YopAppConfig loadAppConfig(String appKey);
+    protected abstract YopAppConfig loadAppConfig(String appId);
 
     @Override
-    public YopCertConfig[] getIsvEncryptKey(String appKey) {
-        checkAndLoad(appKey);
-        return appConfig.getIsvEncryptKey();
+    public YopCertConfig[] getIsvEncryptKey(String appId) {
+        return getAppConfig(appId).getIsvEncryptKey();
     }
+
+    @Override
+    public void removeConfig(String key) {
+        appConfigs.remove(key);
+        yopCredentialsMap.clear();
+    }
+
 }

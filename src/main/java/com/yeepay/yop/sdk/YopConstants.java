@@ -25,6 +25,8 @@ public interface YopConstants {
 
     String DEFAULT_SANDBOX_VIA = "sandbox";
 
+    String ISV_ENCRYPT_KEY = "ISV_ENCRYPT_KEY";
+
     /**
      * 易宝默认公钥
      */
