@@ -79,6 +79,10 @@ public class YopAppConfig implements Serializable {
         }
     }
 
+    public Map<CertTypeEnum, String> getIsvPrivateKeys() {
+        return this.isvPrivateKeys;
+    }
+
     public String loadPrivateKey(CertTypeEnum certType) {
         return this.isvPrivateKeys.get(certType);
     }
