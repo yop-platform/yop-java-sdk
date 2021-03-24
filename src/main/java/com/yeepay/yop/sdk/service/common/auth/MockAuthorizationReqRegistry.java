@@ -4,6 +4,9 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * title: Mock认证注册中心<br>
  * description: <br>
@@ -22,8 +25,10 @@ public class MockAuthorizationReqRegistry implements AuthorizationReqRegistry {
     }
 
     @Override
-    public AuthorizationReq getAuthorizationReq(String operationId) {
-        return AuthorizationReqSupport.getAuthorizationReq("YOP-RSA2048-SHA256");
-        //return AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3");
+    public List<AuthorizationReq> getAuthorizationReq(String operationId) {
+        List<AuthorizationReq> authorizationReqs = new ArrayList<>();
+        authorizationReqs.add(AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3"));
+        authorizationReqs.add(AuthorizationReqSupport.getAuthorizationReq("YOP-RSA2048-SHA256"));
+        return authorizationReqs;
     }
 }

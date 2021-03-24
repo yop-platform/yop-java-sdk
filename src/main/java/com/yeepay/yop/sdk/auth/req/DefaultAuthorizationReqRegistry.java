@@ -1,6 +1,11 @@
 package com.yeepay.yop.sdk.auth.req;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,19 +20,31 @@ import java.util.Map;
  */
 public class DefaultAuthorizationReqRegistry implements AuthorizationReqRegistry {
 
-    private final Map<String, AuthorizationReq> authorizationReqs;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAuthorizationReqRegistry.class);
+
+    private final Map<String, List<AuthorizationReq>> authorizationReqs;
 
     public DefaultAuthorizationReqRegistry() {
-        authorizationReqs = new HashMap<String, AuthorizationReq>();
+        authorizationReqs = new HashMap<String, List<AuthorizationReq>>();
     }
 
     @Override
-    public void register(String operationId, String securityReq) {
-        authorizationReqs.put(operationId, AuthorizationReqSupport.getAuthorizationReq(securityReq));
+    public void register(String operationId, String securityReqs) {
+        String[] splitReqs = securityReqs.split(",");
+        List<AuthorizationReq> authorizationReqList = new ArrayList<>(splitReqs.length);
+        for (String securityReq : splitReqs) {
+            AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(securityReq);
+            if (null == authorizationReq) {
+                LOGGER.warn("unsupported security req:{}", securityReq);
+            } else {
+                authorizationReqList.add(authorizationReq);
+            }
+        }
+        authorizationReqs.put(operationId, authorizationReqList);
     }
 
     @Override
-    public AuthorizationReq getAuthorizationReq(String operationId) {
+    public List<AuthorizationReq> getAuthorizationReq(String operationId) {
         return authorizationReqs.get(operationId);
     }
 }

@@ -6,7 +6,10 @@ import com.google.common.cache.LoadingCache;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,6 +39,12 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
     public YopCredentials getCredentials(String appKey, String credentialType) {
         final YopAppConfig appConfig = loadFromCache(appKey);
         return null != appConfig ? buildCredentials(appConfig, credentialType) : null;
+    }
+
+    @Override
+    public List<CertTypeEnum> getSupportCertTypes(String appId) {
+        final YopAppConfig appConfig = loadFromCache(appId);
+        return new ArrayList<>(appConfig.getIsvPrivateKeys().keySet());
     }
 
     private LoadingCache<String, YopAppConfig> initCache(Long expire, TimeUnit timeUnit) {
