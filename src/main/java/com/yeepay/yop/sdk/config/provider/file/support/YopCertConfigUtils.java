@@ -58,7 +58,8 @@ public final class YopCertConfigUtils {
                 break;
             case FILE_P12:
                 try {
-                    char[] password = yopCertConfig.getPassword().toCharArray();
+                    String pwd = StringUtils.defaultIfEmpty(yopCertConfig.getPassword(), "");
+                    char[] password = pwd.toCharArray();
                     KeyStore keystore = KeyStore.getInstance("PKCS12");
                     keystore.load(FileUtils.getResourceAsStream(yopCertConfig.getValue()), password);
 
