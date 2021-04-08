@@ -52,6 +52,7 @@ import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.protocol.HttpContext;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,7 @@ import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -104,6 +106,11 @@ public class YopHttpClient {
     private final org.apache.http.client.config.RequestConfig.Builder requestConfigBuilder;
     private CredentialsProvider credentialsProvider;
     private HttpHost proxyHttpHost;
+
+    static {
+        Security.removeProvider("SunEC");
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     /**
      * Constructs a new YOP client using the specified client configuration options (ex: max retry attempts, proxy
