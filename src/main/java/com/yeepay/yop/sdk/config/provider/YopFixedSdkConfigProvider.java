@@ -25,7 +25,6 @@ public abstract class YopFixedSdkConfigProvider implements YopSdkConfigProvider 
         if (null == sdkConfig) {
             synchronized (YopFixedSdkConfigProvider.class) {
                 if (null == sdkConfig) {
-                    // TODO 这里可以异步初始化
                     sdkConfig = loadSdkConfig();
                 }
             }

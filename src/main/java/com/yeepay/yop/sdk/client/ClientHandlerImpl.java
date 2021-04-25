@@ -1,8 +1,6 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.auth.cipher.DefaultEncryptor;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
@@ -18,9 +16,7 @@ import com.yeepay.yop.sdk.http.YopHttpClientFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.RequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -91,24 +87,13 @@ public class ClientHandlerImpl implements ClientHandler {
             if (credential == null) {
                 if (StringUtils.isEmpty(appKey)) {
                     appKey = "default";
-                    credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
-                } else {
-                    credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
                 }
+                credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
             }
             if (credential == null) {
                 throw new YopClientException("No credentials specified");
             }
             builder.withYopCredentials(credential);
-
-            RequestConfig requestConfig = executionParams.getInput().getRequestConfig();
-            if (requestConfig != null && BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
-                if (credential instanceof YopPKICredentials) {
-                    builder.withEncryptor(new DefaultEncryptor((YopPKICredentials) credential));
-                } else {
-                    throw new YopClientException("securityReq does't support encryption");
-                }
-            }
             return builder.build();
         }
     }
