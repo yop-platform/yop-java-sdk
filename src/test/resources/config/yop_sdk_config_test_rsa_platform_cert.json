@@ -3,12 +3,12 @@
     {
       "store_type": "file_cer",
       "cert_type": "RSA2048",
-      "value": "/certs/yop-platform-cert-dist.cer"
+      "value": "/config/certs/yop_platform_cert_dist.cer"
     },
     {
       "store_type": "file_cer",
       "cert_type": "RSA2048",
-      "value": "/certs/yop_platform_cert_qa.cer"
+      "value": "/config/certs/yop_platform_cert_qa.cer"
     }
   ]
 }
