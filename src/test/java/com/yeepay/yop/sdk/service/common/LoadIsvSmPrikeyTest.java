@@ -32,7 +32,7 @@ public class LoadIsvSmPrikeyTest {
     @Before
     public void setUp() {
         System.setProperty("yop.sdk.http", "true");
-        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_test_sm.json");
+        System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
         Security.removeProvider("SunEC");
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -40,7 +40,7 @@ public class LoadIsvSmPrikeyTest {
     @Test
     public void testLoadSm2PrivateKey() {
         YopFileSdkConfigProvider yopFileSdkConfigProvider = (YopFileSdkConfigProvider) YopSdkConfigProviderRegistry.getProvider();
-        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadYopFileSdkConfig();
+        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("app_100800095600038");
         YopCertConfig[] isvPrikeys = yopFileSdkConfig.getIsvPrivateKey();
         Assert.assertTrue(isvPrikeys.length == 2);
         for (YopCertConfig yopCertConfig : isvPrikeys) {

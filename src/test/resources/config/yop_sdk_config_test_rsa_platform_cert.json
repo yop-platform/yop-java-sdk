@@ -8,7 +8,7 @@
     {
       "store_type": "file_cer",
       "cert_type": "RSA2048",
-      "value": "/config/certs/yop_platform_cert_qa.cer"
+      "value": "/config/certs/yop_platform_cert_dev.cer"
     }
   ]
 }
