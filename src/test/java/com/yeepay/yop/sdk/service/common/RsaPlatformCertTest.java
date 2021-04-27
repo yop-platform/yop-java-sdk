@@ -29,9 +29,9 @@ public class RsaPlatformCertTest {
 
     @Test
     public void testRsaPlatformCert() {
-        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_test_rsa_platform_cert.json");
+        System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_rsa_platform_cert.json");
         YopFileSdkConfigProvider yopFileSdkConfigProvider = (YopFileSdkConfigProvider) YopSdkConfigProviderRegistry.getProvider();
-        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadYopFileSdkConfig();
+        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("default");
         YopCertConfig[] yopCertConfigs = yopFileSdkConfig.getYopPublicKey();
         Assert.assertTrue(yopCertConfigs.length == 2);
         String proPubkeyStr = RSAKeyUtils.key2String(YopCertConfigUtils.loadPublicKey(yopCertConfigs[0]));
