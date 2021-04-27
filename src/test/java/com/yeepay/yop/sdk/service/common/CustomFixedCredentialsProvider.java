@@ -54,4 +54,8 @@ public class CustomFixedCredentialsProvider extends YopFixedCredentialsProvider 
         return yopAppConfig;
     }
 
+    @Override
+    public void removeConfig(String key) {
+
+    }
 }
