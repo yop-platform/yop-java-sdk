@@ -61,4 +61,8 @@ public class YopFileCredentialsProvider extends YopFixedCredentialsProvider {
                 .build();
     }
 
+    @Override
+    public void removeConfig(String key) {
+
+    }
 }
