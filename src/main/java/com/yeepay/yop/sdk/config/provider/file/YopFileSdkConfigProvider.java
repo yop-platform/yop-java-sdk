@@ -50,7 +50,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     public YopFileSdkConfig loadSdkConfig(String appKey) {
         appKey = StringUtils.defaultIfBlank(appKey, "default");
         if (!sdkConfigs.containsKey(appKey)) {
-            sdkConfigs.computeIfAbsent(appKey, k -> doLoadYopFileSdkConfig(k));
+            sdkConfigs.put(appKey, doLoadYopFileSdkConfig(appKey));
         }
         return sdkConfigs.get(appKey);
     }
