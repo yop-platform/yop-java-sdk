@@ -80,9 +80,9 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
 
         logger.info("加载默认配置文件{}", configFile);
         YopFileSdkConfig sdkConfig = loadSdkConfigFile(configFile);
-
-        if (!StringUtils.equals(DEFAULT_SDK_CONFIG, appKey)) {
-            YopFileSdkConfig customSdkConfig = loadSdkConfig(DEFAULT_SDK_CONFIG);
+        String defaultFileConfig = SDK_CONFIG_DIR + "/yop_sdk_config_" + DEFAULT_SDK_CONFIG + ".json";
+        if (!StringUtils.equals(defaultFileConfig, configFile)) {
+            YopFileSdkConfig customSdkConfig = loadSdkConfigFile(defaultFileConfig);
             sdkConfig = BeanUtils.merge(customSdkConfig, sdkConfig);
         }
 
