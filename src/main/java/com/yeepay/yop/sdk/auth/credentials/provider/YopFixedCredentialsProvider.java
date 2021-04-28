@@ -34,7 +34,10 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
     @Override
     public final YopCredentials getCredentials(String appId, String credentialType) {
         String key = appId + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appId), credentialType));
+        if (!yopCredentialsMap.keySet().contains(key)) {
+            yopCredentialsMap.put(key, buildCredentials(getAppConfig(appId), credentialType));
+        }
+        return yopCredentialsMap.get(key);
     }
 
     @Override
@@ -44,7 +47,9 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
 
     private YopAppConfig getAppConfig(String appId) {
         if (!appConfigs.containsKey(appId)) {
-            appConfigs.computeIfAbsent(appId, k -> loadAppConfig(appId));
+            if (!appConfigs.keySet().contains(appId)) {
+                appConfigs.put(appId, loadAppConfig(appId));
+            }
         }
         return appConfigs.get(appId);
     }
