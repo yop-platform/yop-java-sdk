@@ -73,7 +73,11 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         String file = System.getProperty(SDK_CONFIG_FILE_PROPERTY_KEY);
         if (StringUtils.isNotEmpty(file)) {
             logger.info("指定了-Dyop.sdk.config.file，值为：{}", file);
-            configFile = configDir + "/" + file;
+            if (!StringUtils.startsWithAny(file, "file://")) {
+                configFile = configDir + "/" + file;
+            } else {
+                configFile = file;
+            }
         } else {
             configFile = configDir + "/yop_sdk_config_" + appKey + ".json";
         }
