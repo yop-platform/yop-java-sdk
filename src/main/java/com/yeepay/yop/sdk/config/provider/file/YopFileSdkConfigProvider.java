@@ -13,6 +13,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,7 +89,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         String defaultFileConfig = SDK_CONFIG_DIR + "/yop_sdk_config_" + DEFAULT_SDK_CONFIG + ".json";
         if (!StringUtils.equals(defaultFileConfig, configFile)) {
             YopFileSdkConfig customSdkConfig = loadSdkConfigFile(defaultFileConfig);
-            sdkConfig = BeanUtils.merge(customSdkConfig, sdkConfig);
+            sdkConfig = fillNullConfig(customSdkConfig, sdkConfig);
         }
 
         if (null == sdkConfig) {
@@ -95,6 +97,42 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         }
 
         return sdkConfig;
+    }
+
+    private YopFileSdkConfig fillNullConfig(YopFileSdkConfig sourceBean, YopFileSdkConfig targetBean) {
+        if (null == sourceBean) {
+            return targetBean;
+        }
+        if (null == targetBean) {
+            return sourceBean;
+        }
+
+        Class sourceBeanClass = sourceBean.getClass();
+        Class targetBeanClass = targetBean.getClass();
+
+        Field[] sourceFields = sourceBeanClass.getDeclaredFields();
+        Field[] targetFields = targetBeanClass.getDeclaredFields();
+        for (int i = 0; i < sourceFields.length; i++) {
+            Field sourceField = sourceFields[i];
+            if (Modifier.isStatic(sourceField.getModifiers())) {
+                continue;
+            }
+            Field targetField = targetFields[i];
+            if (Modifier.isStatic(targetField.getModifiers())) {
+                continue;
+            }
+            sourceField.setAccessible(true);
+            targetField.setAccessible(true);
+            try {
+                if (!(sourceField.get(sourceBean) == null)
+                        && !"serialVersionUID".equals(sourceField.getName()) && targetField.get(targetBean) == null) {
+                    targetField.set(targetBean, sourceField.get(sourceBean));
+                }
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return targetBean;
     }
 
     private YopFileSdkConfig loadSdkConfigFile(String configFile) {
