@@ -5,7 +5,7 @@
     {
       "store_type": "file_cer",
       "cert_type": "RSA2048",
-      "value": "config/certs/yop_platform_rsa_cert_dist.cer"
+      "value": "config/certs/yop_platform_rsa_cert_dist_290297451928.cer"
     }
   ],
   "yop_cert_store": {
