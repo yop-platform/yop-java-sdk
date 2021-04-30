@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 
-import static com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider.YOP_CERT_RSA_DEFAULT_SERIAL_NO;
+import static com.yeepay.yop.sdk.YopConstants.SM2_PROTOCOL_PREFIX;
+import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
 
 /**
  * title: 签名校验<br>
@@ -35,8 +36,6 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
     private static final Logger LOGGER = LoggerFactory.getLogger(YopSignatureCheckAnalyzer.class);
 
     private static final YopSignatureCheckAnalyzer INSTANCE = new YopSignatureCheckAnalyzer();
-
-    private String SM2_PROTOCOL_PREFIX = "YOP-SM2-SM3";
 
     public static YopSignatureCheckAnalyzer getInstance() {
         return INSTANCE;
@@ -68,9 +67,10 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             if (StringUtils.isNotBlank(serialNo)) {
                 LOGGER.warn("rsa signed request not need serialNo:{}.", serialNo);
             }
-            serialNo = YOP_CERT_RSA_DEFAULT_SERIAL_NO;
+            serialNo = YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
         }
-        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
+
+        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
         if (null != yopPlatformCredentials) {
             PublicKey publicKey = yopPlatformCredentials.getPublicKey(certType);
             if (null != publicKey) {
