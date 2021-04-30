@@ -25,6 +25,17 @@ public interface YopConstants {
 
     String DEFAULT_SANDBOX_VIA = "sandbox";
 
+    String DEFAULT_YOP_CERT_STORE_PATH = "/tmp/yop/certs";
+
+    String SM2_PROTOCOL_PREFIX = "YOP-SM2-SM3";
+
+    String YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO = "rsa";
+    String YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO = "sm";
+
+    String YOP_RSA_PLATFORM_CERT_PREFIX = "yop_platform_rsa_cert_";
+    String YOP_SM_PLATFORM_CERT_PREFIX = "yop_platform_sm_cert_";
+    String YOP_PLATFORM_CERT_POSTFIX = ".cer";
+
     String ISV_ENCRYPT_KEY = "ISV_ENCRYPT_KEY";
 
     /**

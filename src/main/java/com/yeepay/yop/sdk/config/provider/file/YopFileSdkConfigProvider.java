@@ -36,14 +36,13 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     public static final String SDK_CONFIG_FILE_PROPERTY_KEY = "yop.sdk.config.file";
 
     private static final String SDK_CONFIG_DIR = "config";
-
-    private static final String DEFAULT_SDK_CONFIG = "default";
+    private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/yop_sdk_config_default.json";
 
     private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap<>();
 
     @Override
     protected YopSdkConfig loadSdkConfig() {
-        return convertYopSdkConfig(loadSdkConfig("default"));
+        return convertYopSdkConfig(loadSdkConfig(""));
     }
 
     public YopFileSdkConfig loadSdkConfig(String appKey) {
@@ -86,9 +85,8 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
 
         logger.info("加载默认配置文件{}", configFile);
         YopFileSdkConfig sdkConfig = loadSdkConfigFile(configFile);
-        String defaultFileConfig = SDK_CONFIG_DIR + "/yop_sdk_config_" + DEFAULT_SDK_CONFIG + ".json";
-        if (!StringUtils.equals(defaultFileConfig, configFile)) {
-            YopFileSdkConfig customSdkConfig = loadSdkConfigFile(defaultFileConfig);
+        if (!StringUtils.equals(DEFAULT_CONFIG_FILE, configFile)) {
+            YopFileSdkConfig customSdkConfig = loadSdkConfigFile(DEFAULT_CONFIG_FILE);
             sdkConfig = fillNullConfig(customSdkConfig, sdkConfig);
         }
 
@@ -178,6 +176,10 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         yopSdkConfig.storeYopPublicKey(yopFileSdkConfig.getYopPublicKey());
         yopSdkConfig.setYopCertStore(yopFileSdkConfig.getYopCertStore());
         return yopSdkConfig;
+    }
+
+    public Map<String, YopFileSdkConfig> getSdkConfigs() {
+        return sdkConfigs;
     }
 
     @Override

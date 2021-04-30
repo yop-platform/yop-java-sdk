@@ -58,7 +58,7 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
     protected abstract YopAppConfig loadAppConfig(String appId);
 
     @Override
-    public YopCertConfig[] getIsvEncryptKey(String appId) {
+    public List<YopCertConfig> getIsvEncryptKey(String appId) {
         return getAppConfig(appId).getIsvEncryptKey();
     }
 

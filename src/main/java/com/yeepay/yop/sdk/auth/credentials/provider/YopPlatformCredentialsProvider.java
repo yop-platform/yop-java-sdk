@@ -21,16 +21,13 @@ import java.util.Map;
  */
 public interface YopPlatformCredentialsProvider {
 
-    String YOP_CERT_RSA_DEFAULT_SERIAL_NO = "rsa_default";
-
     /**
      * 根据应用&证书序列号获取平台凭证
      * @param appKey 应用
      * @param serialNo 证书序列号
      * @return
      */
-    YopPlatformCredentials getCredentials(String appKey, String serialNo);
-
+    YopPlatformCredentials getYopPlatformCredentials(String appKey, String serialNo);
 
     /**
      * 重新加载平台默认凭证

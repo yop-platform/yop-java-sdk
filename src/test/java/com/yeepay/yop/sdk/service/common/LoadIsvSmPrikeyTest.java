@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.security.Security;
+import java.util.List;
 
 /**
  * title: <br/>
@@ -39,11 +40,12 @@ public class LoadIsvSmPrikeyTest {
 
     @Test
     public void testLoadSm2PrivateKey() {
+        String appKey = "app_100800095600038";
         YopFileSdkConfigProvider yopFileSdkConfigProvider = (YopFileSdkConfigProvider) YopSdkConfigProviderRegistry.getProvider();
-        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("app_100800095600038");
-        YopCertConfig[] isvPrikeys = yopFileSdkConfig.getIsvPrivateKey();
-        Assert.assertTrue(isvPrikeys.length == 2);
-        for (YopCertConfig yopCertConfig : isvPrikeys) {
+        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig(appKey);
+        List<YopCertConfig> isvPriKeys = yopFileSdkConfig.getIsvPrivateKey(appKey);
+        Assert.assertTrue(isvPriKeys.size() == 2);
+        for (YopCertConfig yopCertConfig : isvPriKeys) {
             String privateKey = YopCertConfigUtils.loadPrivateKey(yopCertConfig);
             Assert.assertTrue(priKey.equals(privateKey));
         }
