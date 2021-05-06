@@ -85,9 +85,6 @@ public class ClientHandlerImpl implements ClientHandler {
             YopCredentials credential = executionParams.getInput().getRequestConfig().getCredentials();
             String appKey = executionParams.getInput().getRequestConfig().getAppKey();
             if (credential == null) {
-                if (StringUtils.isEmpty(appKey)) {
-                    appKey = "default";
-                }
                 credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
             }
             if (credential == null) {

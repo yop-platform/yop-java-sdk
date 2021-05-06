@@ -8,7 +8,10 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.utils.EnvUtils;
+import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.HttpUtils;
+import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
@@ -29,6 +32,7 @@ import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -56,9 +60,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
+import javax.net.ssl.*;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.List;
@@ -66,6 +73,7 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.YopConstants.*;
 
 /**
  * title: Yop http客户端<br>
@@ -101,6 +109,8 @@ public class YopHttpClient {
     private CredentialsProvider credentialsProvider;
     private HttpHost proxyHttpHost;
 
+    private static final DefaultHostnameVerifier HOSTNAME_VERIFIER_INSTANCE = new DefaultHostnameVerifier();
+
     static {
         Security.removeProvider("SunEC");
         Security.addProvider(new BouncyCastleProvider());
@@ -128,6 +138,7 @@ public class YopHttpClient {
             this.requestConfigBuilder.setLocalAddress(config.getLocalAddress());
         }
 
+        // http 代理
         String proxyHost = config.getProxyHost();
         int proxyPort = config.getProxyPort();
         if (proxyHost != null && proxyPort > 0) {
@@ -217,36 +228,24 @@ public class YopHttpClient {
      * @return The connection manager for http client.
      */
     private HttpClientConnectionManager createHttpClientConnectionManager() {
-        ConnectionSocketFactory socketFactory = PlainConnectionSocketFactory.getSocketFactory();
         LayeredConnectionSocketFactory sslSocketFactory;
         try {
-            String javaVersion = System.getProperty("java.version");
-            String tlsVersion = null;
-            if (StringUtils.startsWith(javaVersion, "1.8") || StringUtils.startsWith(javaVersion, "1.7")) {
-                tlsVersion = "TLSv1.2";
-            } else if (StringUtils.startsWith(javaVersion, "1.6")) {
-                tlsVersion = "TLSv1.1";
-            }
-            SSLContext s;
-            if (StringUtils.isNotEmpty(tlsVersion)) {
-                s = SSLContext.getInstance(tlsVersion);
-                // 初始化SSLContext实例
-                s.init(null, null, null);
-            } else {
-                s = SSLContext.getDefault();
-            }
-            sslSocketFactory = new SSLConnectionSocketFactory(s,
-                    SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER);
+            SSLContext sslContext = getSSLContext();
+            sslSocketFactory = new SSLConnectionSocketFactory(sslContext, HOSTNAME_VERIFIER_INSTANCE);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             throw new YopClientException("Fail to create SSLConnectionSocketFactory", e);
         }
-        Registry<ConnectionSocketFactory> registry =
-                RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTP.toString(), socketFactory)
-                        .register(Protocol.HTTPS.toString(), sslSocketFactory).build();
+        RegistryBuilder registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTPS.toString(), sslSocketFactory);
+        if (!EnvUtils.isProd()) {
+            ConnectionSocketFactory socketFactory = PlainConnectionSocketFactory.getSocketFactory();
+            registryBuilder.register(Protocol.HTTP.toString(), socketFactory);
+        }
+        Registry<ConnectionSocketFactory> registry = registryBuilder.build();
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
         connectionManager
                 .setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(this.config.getSocketTimeoutInMillis())
                         .setTcpNoDelay(true).build());
+        connectionManager.setDefaultMaxPerRoute(this.config.getMaxConnectionsPerRoute());
         connectionManager.setMaxTotal(this.config.getMaxConnections());
         return connectionManager;
     }
@@ -261,16 +260,80 @@ public class YopHttpClient {
         ConnectingIOReactor ioReactor =
                 new DefaultConnectingIOReactor(IOReactorConfig.custom()
                         .setSoTimeout(this.config.getSocketTimeoutInMillis()).setTcpNoDelay(true).build());
-        SSLContext s = SSLContext.getInstance("TLSv1.2");
-        // 初始化SSLContext实例
-        s.init(null, null, null);
-        Registry<SchemeIOSessionStrategy> sessionStrategyRegistry = RegistryBuilder.<SchemeIOSessionStrategy>create()
-                .register("https", new SSLIOSessionStrategy(s))
-                .build();
+        SSLContext s = getSSLContext();
+        RegistryBuilder sessionStrategyRegistryBuilder = RegistryBuilder.<SchemeIOSessionStrategy>create()
+                .register(Protocol.HTTPS.toString(), new SSLIOSessionStrategy(s));
+        if (!EnvUtils.isProd()) {
+            ConnectionSocketFactory socketFactory = PlainConnectionSocketFactory.getSocketFactory();
+            sessionStrategyRegistryBuilder.register(Protocol.HTTP.toString(), socketFactory);
+        }
+        Registry<SchemeIOSessionStrategy> sessionStrategyRegistry = sessionStrategyRegistryBuilder.build();
         PoolingNHttpClientConnectionManager connectionManager = new PoolingNHttpClientConnectionManager(ioReactor, sessionStrategyRegistry);
-        connectionManager.setDefaultMaxPerRoute(this.config.getMaxConnections());
+        connectionManager.setDefaultMaxPerRoute(this.config.getMaxConnectionsPerRoute());
         connectionManager.setMaxTotal(this.config.getMaxConnections());
         return connectionManager;
+    }
+
+    private SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
+        // 根据JDK版本设置最高TLS版本
+        String javaVersion = System.getProperty(JDK_VERSION);
+        String tlsVersion = null;
+        if (StringUtils.startsWith(javaVersion, JDK_VERSION_1_8) || StringUtils.startsWith(javaVersion, JDK_VERSION_1_7)) {
+            tlsVersion = TLS_VERSION_1_2;
+        } else if (StringUtils.startsWith(javaVersion, JDK_VERSION_1_6)) {
+            tlsVersion = TLS_VERSION_1_1;
+        }
+
+        // 加载证书文件
+        KeyManager[] kms = null;
+        String keyStoreFileName = "";
+        char[] keyStorePwd = "".toCharArray();
+
+        try {
+            KeyStore ks = KeyStore.getInstance("JKS");
+            ks.load(new FileInputStream(keyStoreFileName), keyStorePwd);
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+            kmf.init(ks, keyStorePwd);
+            kms = kmf.getKeyManagers();
+        } catch (Exception e) {
+            logger.error("Load KeyStore fail, keyStoreFileName:" + keyStoreFileName, e);
+        }
+
+        TrustManager[] tms = null;
+        String trustKeyStoreFileName = "config/certs/openapi_chain_rsa.jks";
+        char[] trustKeyStorePwd = "xDf2e-Ex3Kl-0iuoS-56Msn".toCharArray();
+
+        InputStream is = null;
+        try {
+            is = FileUtils.getResourceAsStream(trustKeyStoreFileName);
+            KeyStore tks = KeyStore.getInstance("JKS");
+            tks.load(is, trustKeyStorePwd);
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+            tmf.init(tks);
+            tms = tmf.getTrustManagers();
+        } catch (Exception e) {
+            logger.error("Load TrustKeyStore fail, trustKeyStoreFileName:" + trustKeyStoreFileName, e);
+        } finally {
+            if (null != is) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        SSLContext s;
+        if (StringUtils.isNotEmpty(tlsVersion)) {
+            s = SSLContext.getInstance(tlsVersion);
+            // 初始化SSLContext实例
+            s.init(kms, tms, RandomUtils.secureRandom());
+        } else {
+            s = SSLContext.getDefault();
+        }
+        return s;
     }
 
     /**
