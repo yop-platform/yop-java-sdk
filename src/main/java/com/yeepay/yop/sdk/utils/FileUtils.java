@@ -121,8 +121,7 @@ public final class FileUtils {
         if (StringUtils.startsWith(resource, "/")) {
             resource = StringUtils.substring(resource, 1);
         }
-        final InputStream in = getContextClassLoader().getResourceAsStream(resource);
-        return in == null ? getResourceAsStream("/" + resource) : in;
+        return getContextClassLoader().getResourceAsStream(resource);
     }
 
     public static ClassLoader getContextClassLoader() {
