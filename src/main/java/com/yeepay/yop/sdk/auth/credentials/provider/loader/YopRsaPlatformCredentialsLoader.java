@@ -10,11 +10,10 @@ import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PublicKey;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import static com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider.YOP_CERT_RSA_DEFAULT_SERIAL_NO;
+import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
 
 /**
  * title: <br>
@@ -28,23 +27,14 @@ import static com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredential
  */
 public class YopRsaPlatformCredentialsLoader implements YopPlatformCredentialsLoader {
 
-    private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap<>();
-
     @Override
     public Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
-        if (!credentialsMap.containsKey(YOP_CERT_RSA_DEFAULT_SERIAL_NO)) {
-            reload(appKey, serialNo);
-        }
-        return Collections.unmodifiableMap(credentialsMap);
+        final PublicKey rsaPublicKey = YopSdkConfigProviderRegistry.getProvider().getConfig().loadYopPublicKey(CertTypeEnum.RSA2048);
+        return new HashMap<String, YopPlatformCredentials>(4) {{
+            put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopPlatformCredentialsHolder()
+                    .withSerialNo(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)
+                    .withPublicKey(CertTypeEnum.RSA2048, rsaPublicKey));
+        }};
     }
 
-    @Override
-    public Map<String, YopPlatformCredentials> reload(String appKey, String serialNo) {
-        final PublicKey rsaPublicKey = YopSdkConfigProviderRegistry.getProvider().getConfig().loadYopPublicKey(CertTypeEnum.RSA2048);
-        if (null != rsaPublicKey) {
-            credentialsMap.put(YOP_CERT_RSA_DEFAULT_SERIAL_NO, new YopPlatformCredentialsHolder()
-                    .withSerialNo(YOP_CERT_RSA_DEFAULT_SERIAL_NO).withPublicKey(CertTypeEnum.RSA2048, rsaPublicKey));
-        }
-        return Collections.unmodifiableMap(credentialsMap);
-    }
 }

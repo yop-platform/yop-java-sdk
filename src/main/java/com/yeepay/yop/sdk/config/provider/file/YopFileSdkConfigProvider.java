@@ -13,9 +13,13 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
 
 /**
  * title: 文件sdk配置provider<br>
@@ -34,14 +38,13 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     public static final String SDK_CONFIG_FILE_PROPERTY_KEY = "yop.sdk.config.file";
 
     private static final String SDK_CONFIG_DIR = "config";
-
-    private static final String DEFAULT_SDK_CONFIG = "default";
+    private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/yop_sdk_config_default.json";
 
     private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap<>();
 
     @Override
     protected YopSdkConfig loadSdkConfig() {
-        return convertYopSdkConfig(loadSdkConfig("default"));
+        return convertYopSdkConfig(loadSdkConfig(""));
     }
 
     public YopFileSdkConfig loadSdkConfig(String appKey) {
@@ -73,30 +76,69 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         String file = System.getProperty(SDK_CONFIG_FILE_PROPERTY_KEY);
         if (StringUtils.isNotEmpty(file)) {
             logger.info("指定了-Dyop.sdk.config.file，值为：{}", file);
-            configFile = configDir + "/" + file;
+            if (!StringUtils.startsWithAny(file, FILE_PROTOCOL_PREFIX)) {
+                configFile = configDir + "/" + file;
+            } else {
+                configFile = file;
+            }
         } else {
             configFile = configDir + "/yop_sdk_config_" + appKey + ".json";
         }
 
         logger.info("加载默认配置文件{}", configFile);
-        YopFileSdkConfig sdkConfig = loadSdkConfigFile(configFile);
-
-        if (!StringUtils.equals(DEFAULT_SDK_CONFIG, appKey)) {
-            YopFileSdkConfig customSdkConfig = loadSdkConfig(DEFAULT_SDK_CONFIG);
-            sdkConfig = BeanUtils.merge(customSdkConfig, sdkConfig);
+        YopFileSdkConfig customSdkConfig = loadSdkConfigFile(configFile);
+        if (!StringUtils.equals(DEFAULT_CONFIG_FILE, configFile)) {
+            YopFileSdkConfig defaultConfig = loadSdkConfigFile(DEFAULT_CONFIG_FILE);
+            customSdkConfig = fillNullConfig(defaultConfig, customSdkConfig);
         }
 
-        if (null == sdkConfig) {
+        if (null == customSdkConfig) {
             throw new YopClientException("Can't load config, file:" + configFile);
         }
 
-        return sdkConfig;
+        return customSdkConfig;
+    }
+
+    private YopFileSdkConfig fillNullConfig(YopFileSdkConfig sourceBean, YopFileSdkConfig targetBean) {
+        if (null == sourceBean) {
+            return targetBean;
+        }
+        if (null == targetBean) {
+            return sourceBean;
+        }
+
+        Class sourceBeanClass = sourceBean.getClass();
+        Class targetBeanClass = targetBean.getClass();
+
+        Field[] sourceFields = sourceBeanClass.getDeclaredFields();
+        Field[] targetFields = targetBeanClass.getDeclaredFields();
+        for (int i = 0; i < sourceFields.length; i++) {
+            Field sourceField = sourceFields[i];
+            if (Modifier.isStatic(sourceField.getModifiers())) {
+                continue;
+            }
+            Field targetField = targetFields[i];
+            if (Modifier.isStatic(targetField.getModifiers())) {
+                continue;
+            }
+            sourceField.setAccessible(true);
+            targetField.setAccessible(true);
+            try {
+                if (!(sourceField.get(sourceBean) == null)
+                        && !"serialVersionUID".equals(sourceField.getName()) && targetField.get(targetBean) == null) {
+                    targetField.set(targetBean, sourceField.get(sourceBean));
+                }
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return targetBean;
     }
 
     private YopFileSdkConfig loadSdkConfigFile(String configFile) {
         YopFileSdkConfig sdkConfig = null;
         try {
-            if (!StringUtils.startsWithAny(configFile, "file://")) {
+            if (!StringUtils.startsWithAny(configFile, FILE_PROTOCOL_PREFIX)) {
                 configFile = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + configFile;
             }
             Resource[] resources = new PathMatchingResourcePatternResolver().getResources(configFile);
@@ -136,6 +178,10 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         yopSdkConfig.storeYopPublicKey(yopFileSdkConfig.getYopPublicKey());
         yopSdkConfig.setYopCertStore(yopFileSdkConfig.getYopCertStore());
         return yopSdkConfig;
+    }
+
+    public Map<String, YopFileSdkConfig> getSdkConfigs() {
+        return sdkConfigs;
     }
 
     @Override

@@ -22,6 +22,9 @@ public final class YopCertConfig implements Serializable {
 
     private static final long serialVersionUID = -6377916283927611130L;
 
+    @JsonProperty("app_key")
+    private String appKey;
+
     @JsonProperty("store_type")
     private CertStoreType storeType;
 
@@ -31,6 +34,14 @@ public final class YopCertConfig implements Serializable {
     private String password;
 
     private String value;
+
+    public String getAppKey() {
+        return appKey;
+    }
+
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
+    }
 
     public CertStoreType getStoreType() {
         return storeType;
