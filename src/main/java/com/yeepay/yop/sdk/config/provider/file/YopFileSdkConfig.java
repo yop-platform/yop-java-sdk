@@ -6,10 +6,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * title: SDK配置(新版本)<br>
@@ -113,6 +110,9 @@ public final class YopFileSdkConfig implements Serializable {
     }
 
     public List<YopCertConfig> getIsvPrivateKey(String appKey) {
+        if (null == isvPrivateKeyMap) {
+            return Collections.emptyList();
+        }
         return isvPrivateKeyMap.get(appKey);
     }
 
@@ -182,6 +182,9 @@ public final class YopFileSdkConfig implements Serializable {
     }
 
     public List<YopCertConfig> getIsvEncryptKey(String appKey) {
+        if (null == isvEncryptKeyMap) {
+            return Collections.emptyList();
+        }
         return isvEncryptKeyMap.get(appKey);
     }
 

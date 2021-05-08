@@ -19,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
+
 /**
  * title: 文件sdk配置provider<br>
  * description: <br>
@@ -74,7 +76,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         String file = System.getProperty(SDK_CONFIG_FILE_PROPERTY_KEY);
         if (StringUtils.isNotEmpty(file)) {
             logger.info("指定了-Dyop.sdk.config.file，值为：{}", file);
-            if (!StringUtils.startsWithAny(file, "file://")) {
+            if (!StringUtils.startsWithAny(file, FILE_PROTOCOL_PREFIX)) {
                 configFile = configDir + "/" + file;
             } else {
                 configFile = file;
@@ -84,17 +86,17 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         }
 
         logger.info("加载默认配置文件{}", configFile);
-        YopFileSdkConfig sdkConfig = loadSdkConfigFile(configFile);
+        YopFileSdkConfig customSdkConfig = loadSdkConfigFile(configFile);
         if (!StringUtils.equals(DEFAULT_CONFIG_FILE, configFile)) {
-            YopFileSdkConfig customSdkConfig = loadSdkConfigFile(DEFAULT_CONFIG_FILE);
-            sdkConfig = fillNullConfig(customSdkConfig, sdkConfig);
+            YopFileSdkConfig defaultConfig = loadSdkConfigFile(DEFAULT_CONFIG_FILE);
+            customSdkConfig = fillNullConfig(defaultConfig, customSdkConfig);
         }
 
-        if (null == sdkConfig) {
+        if (null == customSdkConfig) {
             throw new YopClientException("Can't load config, file:" + configFile);
         }
 
-        return sdkConfig;
+        return customSdkConfig;
     }
 
     private YopFileSdkConfig fillNullConfig(YopFileSdkConfig sourceBean, YopFileSdkConfig targetBean) {
@@ -136,7 +138,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     private YopFileSdkConfig loadSdkConfigFile(String configFile) {
         YopFileSdkConfig sdkConfig = null;
         try {
-            if (!StringUtils.startsWithAny(configFile, "file://")) {
+            if (!StringUtils.startsWithAny(configFile, FILE_PROTOCOL_PREFIX)) {
                 configFile = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + configFile;
             }
             Resource[] resources = new PathMatchingResourcePatternResolver().getResources(configFile);

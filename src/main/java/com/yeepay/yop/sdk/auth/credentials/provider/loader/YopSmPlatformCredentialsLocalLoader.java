@@ -10,6 +10,7 @@ import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.utils.EnvUtils;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -44,20 +45,29 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
 
     private YopPlatformCredentialsLoader delegate = new YopSmPlatformCredentialsRemoteLoader();
 
-    private YopCertStore defaultYopCertStore = new YopCertStore("config/certs");
-
-    protected static X509Certificate cfcaRoot, yopInter;
+    protected X509Certificate cfcaRoot, yopInter;
+    private String defaultCertPath = "config/certs";
+    private String defaultCfcaRootFile = defaultCertPath + "/cfca_root.pem", defaultYopInterFile = defaultCertPath + "/yop_inter.pem";
+    private YopCertStore defaultYopCertStore;
 
     {
         try {
-            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/cfca_root.pem"));
+            if (!EnvUtils.isProd()) {
+                String env = EnvUtils.currentEnv(),
+                        envPath = "/" + StringUtils.substringBefore(env, "_") + "/";
+                defaultCertPath = defaultCertPath.replaceFirst("/", envPath);
+                defaultCfcaRootFile = defaultCfcaRootFile.replaceFirst("/", envPath);
+                defaultYopInterFile = defaultYopInterFile.replaceFirst("/", envPath);
+            }
+            defaultYopCertStore = new YopCertStore(defaultCertPath);
+            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultCfcaRootFile));
             try {
                 Sm2CertUtils.verifyCertificate(null, cfcaRoot);
             } catch (Exception e) {
                 throw new YopClientException("invalid cfca root cert, detail:" + e.getMessage());
             }
 
-            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/yop_inter.pem"));
+            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultYopInterFile));
             try {
                 Sm2CertUtils.verifyCertificate((BCECPublicKey) cfcaRoot.getPublicKey(), yopInter);
             } catch (Exception e) {
@@ -74,6 +84,8 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
         YopCertStore yopCertStore = YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
         Map<String, X509Certificate> localCerts = loadAndVerifyFromLocal(yopCertStore, serialNo);
         Map<String, YopPlatformCredentials> localCredentials = new LinkedHashMap<>();
+
+        // 尝试从当前目录加载
         if (MapUtils.isEmpty(localCerts)) {
             localCerts = loadAndVerifyFromLocal(defaultYopCertStore, serialNo);
         }
@@ -84,9 +96,6 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
                 return localCredentials;
             }
         }
-
-        // TODO 尝试从当前目录加载
-
         LOGGER.info("no available sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
 
         // 从远程加载
@@ -101,15 +110,16 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
             try {
                 String filename = yopCertStore.getPath() + "/" + YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX;
                 fis = FileUtils.getResourceAsStream(filename);
-                final X509Certificate cert = Sm2CertUtils.getX509Certificate(fis);
+                if (null != fis) {
+                    final X509Certificate cert = Sm2CertUtils.getX509Certificate(fis);
 
-                // TODO 不支持QA环境
-//                Sm2CertUtils.verifyCertificate((BCECPublicKey) yopInter.getPublicKey(), cert);
-                String realSerialNo = cert.getSerialNumber().toString();
-                if (!realSerialNo.equals(serialNo)) {
-                    LOGGER.warn("wrong file name for cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
+                    Sm2CertUtils.verifyCertificate((BCECPublicKey) yopInter.getPublicKey(), cert);
+                    String realSerialNo = cert.getSerialNumber().toString();
+                    if (!realSerialNo.equals(serialNo)) {
+                        LOGGER.warn("wrong file name for cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
+                    }
+                    certMap.put(realSerialNo, cert);
                 }
-                certMap.put(realSerialNo, cert);
             } catch (Exception e) {
                 LOGGER.error("error when load cert from local file, serialNo:" + serialNo + ", ex:", e);
             } finally {
