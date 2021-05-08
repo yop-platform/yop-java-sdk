@@ -1,4 +1,6 @@
 # yop-java-sdk
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fyop-platform%2Fyop-java-sdk.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fyop-platform%2Fyop-java-sdk?ref=badge_shield)
+
 
 ## Usage
 
@@ -71,3 +73,7 @@ Add this dependency to your project's build file:
 ```groovy
 compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '3.3.8'
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fyop-platform%2Fyop-java-sdk.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fyop-platform%2Fyop-java-sdk?ref=badge_large)
