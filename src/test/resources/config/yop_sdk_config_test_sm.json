@@ -1,0 +1,39 @@
+{
+  "app_key": "app_100800095600038",
+  //  "server_root": "https://openapi.yeepay.com/yop-center",
+  "server_root": "http://ycetest.yeepay.com:30502/yop-center",
+  //  "yos_server_root": "https://yos.yeepay.com/yop-center",
+  "isv_private_key": [
+    {
+      "store_type": "string",
+      "cert_type": "SM2",
+      "value": "MIICSwIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBVTCCAVECAQEEIJJjmqos2ap/Hf/qV6/FCRrnRwgZNOfLj3k+T6tLcDejoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQGhRANCAASlKx2pDQcXfgdCZb8E8GZWUpIHkEBgkRnx+5tueXwcaMJ1om0qv1bxjxLUyHiVG3GOC0Qr1m2+rU+2lVTWYwP4"
+    },
+    {
+      "store_type": "file_p12",
+      "cert_type": "SM2",
+      "value": "/certs/app_100800095600038.pfx",
+      "password": "7777777"
+    }
+  ],
+  "yop_cert_store": {
+    "enable": false
+    //false
+  },
+  "isv_encrypt_key": [
+    {
+      "store_type": "string",
+      //string
+      "cert_type": "SM4",
+      //SM4
+      //加密密钥
+      "value": "JnhWelxyAaFlszR1ER2Upw=="
+    }
+  ],
+  "http_client": {
+    "connect_timeout": 10000,
+    "read_timeout": 30000,
+    "max_conn_total": 2000,
+    "max_conn_per_route": 1000
+  }
+}

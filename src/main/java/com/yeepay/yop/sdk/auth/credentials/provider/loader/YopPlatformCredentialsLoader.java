@@ -22,17 +22,11 @@ public interface YopPlatformCredentialsLoader {
 
     /**
      * 加载平台证书凭证
-     * @param appKey 应用
+     *
+     * @param appKey   应用
      * @param serialNo 证书序列号
      * @return
      */
     Map<String, YopPlatformCredentials> load(String appKey, String serialNo);
 
-    /**
-     * 刷新平台证书凭证
-     * @param appKey 应用
-     * @param serialNo 证书序列号
-     * @return
-     */
-    Map<String, YopPlatformCredentials> reload(String appKey, String serialNo);
 }

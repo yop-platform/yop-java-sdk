@@ -43,8 +43,15 @@ public interface YopCredentialsProvider {
      * @param appKey
      * @return
      */
-    YopCertConfig[] getIsvEncryptKey(String appKey);
+    List<YopCertConfig> getIsvEncryptKey(String appKey);
 
     List<CertTypeEnum> getSupportCertTypes(String appId);
+
+    /**
+     * 移除SDK配置
+     *
+     * @param key key
+     */
+    void removeConfig(String key);
 
 }

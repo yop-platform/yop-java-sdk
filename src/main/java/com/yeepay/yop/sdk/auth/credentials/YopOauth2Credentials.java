@@ -35,8 +35,4 @@ public class YopOauth2Credentials implements YopCredentials<String> {
         return secretKey;
     }
 
-    @Override
-    public String getEncryptKey() {
-        return null;
-    }
 }

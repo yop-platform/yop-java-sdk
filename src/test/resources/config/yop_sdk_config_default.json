@@ -1,23 +1,14 @@
 {
-  "app_key": "app_10085525305",
-  "isv_private_key": [
+  "server_root": "http://ycetest.yeepay.com:30228/yop-center",
+  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
+  "yop_public_key": [
     {
       "store_type": "string",
       "cert_type": "RSA2048",
-      "value": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDFtjrUYU2t+WWOOm6CK3L6nikNKY1gty2x2cmIaAF0IWlBQ33ljJubzNODWGs4kL2nqfQnmMqetLatlMdgvquuftNL3kpZvOX8E746REHPH+MP+dyalvbitwP6vUbFbiKiO555hM1AhtdY17TVZthNtklqDmkXZ7U9Lb5+OIQrxK8uvy+0hupZehpHs0lXBx8Hh2kXFO6BomUWAuc/GVWSBhL1ziq9zx+M37LP4yYEogsqZNq70vi77IaD06r0MgYJ1foyyHz1b5J5joYrkPb9+w8hoU5iK62aitX8bsfRbGh93BbrYBGVwpZGmo8xmxmnEqDyU0HCj50P0GbJ77EtAgMBAAECggEADR318TkzaiNttW3y/vfa/P2ZQ6JKGuyMP4xvbnlX/1hoH0hXBe+6My/3qHMpSetwabtA04+zgawDoqiIQcbkpQMNCa+Jx0JdD8hPipYUt6Up71loZWk2n/v8a5o7I8YWziSecvl4lJtdlitZd/8GwsEhRcQG/OKIh7KNPNqLCkw4TzJkYsL02QogF7fL/NVCw/AakIX1MjDFXCm+e7ifylztRNdm2oUuyw66C+nkORVL3GcabHOixsxUsqhMGBcpIJ4Y+Naypb79nRH255LsexE2N2y39pi9niZJNmfprUJMGhvA1NFcaN363IADfkcoYF0InQA7mMtzszPSWbTTgQKBgQD0PEmzxJxUhpXOKJVcZJhn+1wSyPqclHDRC+uYhyJhut/lSp7gIhoI2+wvIok7bYH3zrbCBregY4hlLiQjTH5zRoF9KvWf6O6OhtZT9RTVFQ+i9yjn/+7t4alWkYaA+oaNG/YXxKLXHOG8KLH7OdBjQpqVYmPyCoqJYNrjQS9axQKBgQDPPEAMPLtFR4esztB1vdcR4lCizyHBUHab/eWxyER22AyHh5VJFP5BTfKB34TFcKXKP/Nn3X5OEzQdoEivbvy+0QkIC2AzODZlcifUY5hj+JljpmldAO4TZM8qW4hrRkvAvu8CLekyVWk6h7gQLr7H2TL7qcqJW8F0ywNRR8yDSQKBgAs3oaLyCsQPEl5PmtyNejp8XvQ16ty6LJxNUdrFihy2+oWLcdSVfGCfyS85BNiH5Qo+okIzEMf7Ck6rWdmNL9mXiWb4TCO2DQ7avolInlZTC07Oz0Aojw656I8jS+wslXVxrVHWJCyBFRURQWtqclm8u2DVDgYV2dsJacQ6QDSJAoGAIKE8+HBLkFH98+CwhAl7Jq66wZfZmcWgl1k35HFDDm9gMarQf6xViFTMnVRjZG8jO6AsJCuE6qgtaYjGSRExrJ3fTSv1Xrs4HWsHCHMSGJOZG06lgmZWFimmUOYOqc1suhGWMoKmGC3IntWlzq59jZwOYf/PCyeuY0Rf5llmwzkCgYEA7NViHZgcukk1iwy4QAu4q4IyzckKIT2pTiKFlVhb4cO48w99HSvfmqJSPUZVN3I15UwVs0lqnzLanU/+aSTYJDArpgEhEwloDAkhfy8NQzM9Ji+XXA3itDdR7A7+Wy5XULqK0FVjXMXNK3sV/O0qGWey7aOiH1QUwMyhT4qlenc="
-    },
-    {
-      "store_type": "string",
-      "cert_type": "SM2",
-      "value": "MIICSwIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBVTCCAVECAQEEIO7CuS6SLoPvIFV/7onGDZLz8Z7QHokp4N83PcarImbWoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQGhRANCAARgmS9r0r4mSaajawAYbgwVcgX3wDs/ed3FY6NCEk+9Is4wWNAlKvr9Zkg+MN9VxIekX/MCZv6EgrhPg7qXo3Zy"
+      "value": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4g7dPL+CBeuzFmARI2GFjZpKODUROaMG+E6wdNfv5lhPqC3jjTIeljWU8AiruZLGRhl92QWcTjb3XonjaV6k9rf9adQtyv2FLS7bl2Vz2WgjJ0FJ5/qMaoXaT+oAgWFk2GypyvoIZsscsGpUStm6BxpWZpbPrGJR0N95un/130cQI9VCmfvgkkCaXt7TU1BbiYzkc8MDpLScGm/GUCB2wB5PclvOxvf5BR/zNVYywTEFmw2Jo0hIPPSWB5Yyf2mx950Fx8da56co/FxLdMwkDOO51Qg3fbaExQDVzTm8Odi++wVJEP1y34tlmpwFUVbAKIEbyyELmi/2S6GG0j9vNwIDAQAB"
     }
   ],
   "yop_cert_store": {
-    "path":"/tmp/yop/certs"
-  },
-  "isv_encrypt_key": [{
-    "store_type": "string",
-    "cert_type": "SM4",
-    "value": "YURqdEFFY2NSNDFyQjE2cA=="
-  }]
+    "enable":false
+  }
 }
