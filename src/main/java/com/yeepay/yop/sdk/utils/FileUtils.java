@@ -12,11 +12,10 @@ import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.ContentHandler;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.HashMap;
+
+import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
 
 /**
  * title: <br>
@@ -118,7 +117,21 @@ public final class FileUtils {
     }
 
     public static InputStream getResourceAsStream(String resource) {
-        if (StringUtils.startsWith(resource, "/")) {
+        // 支持绝对路径
+        if (StringUtils.startsWith(resource, FILE_PROTOCOL_PREFIX)) {
+            resource = StringUtils.substring(resource, FILE_PROTOCOL_PREFIX.length());
+        }
+        File file = new File(resource);
+        if (file.exists()) {
+            try {
+                return new FileInputStream(file);
+            } catch (FileNotFoundException e) {
+                // ignore
+            }
+        }
+
+        // 尝试从classpath加载
+        while (StringUtils.startsWith(resource, "/")) {
             resource = StringUtils.substring(resource, 1);
         }
         return getContextClassLoader().getResourceAsStream(resource);

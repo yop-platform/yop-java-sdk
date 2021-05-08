@@ -51,4 +51,6 @@ public interface YopConstants {
     String JDK_VERSION_1_7 = "1.7";
     String JDK_VERSION_1_8 = "1.8";
 
+    String FILE_PROTOCOL_PREFIX = "file://";
+
 }

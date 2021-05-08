@@ -20,8 +20,11 @@ public final class EnvUtils {
     private static final String ENV_PROD = "prod";
 
     public static boolean isProd() {
-        String env = System.getProperty("yop.sdk.config.env", ENV_PROD);
-        return ENV_PROD.equals(env);
+        return ENV_PROD.equals(currentEnv());
+    }
+
+    public static String currentEnv() {
+        return System.getProperty("yop.sdk.config.env", ENV_PROD);
     }
 
 }
