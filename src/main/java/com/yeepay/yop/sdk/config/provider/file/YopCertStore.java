@@ -4,12 +4,13 @@
  */
 package com.yeepay.yop.sdk.config.provider.file;
 
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+
+import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CERT_STORE_PATH;
 
 /**
  * title: <br>
@@ -26,6 +27,13 @@ public class YopCertStore implements Serializable {
     private static final long serialVersionUID = -1L;
     private static final String DEFAULT_PATH = "/tmp/yop/certs";
 
+    public YopCertStore() {
+    }
+
+    public YopCertStore(String path) {
+        this.path = path;
+    }
+
     /**
      * 是否开启本地存储
      */
@@ -39,7 +47,7 @@ public class YopCertStore implements Serializable {
     /**
      * 本地存储路径：绝对路径
      */
-    private String path;
+    private String path = DEFAULT_PATH;
 
     public Boolean getEnable() {
         return enable;
@@ -58,14 +66,11 @@ public class YopCertStore implements Serializable {
     }
 
     public String getPath() {
-        if (StringUtils.isBlank(path) && BooleanUtils.isTrue(enable)) {
-            return DEFAULT_PATH;
-        }
         return path;
     }
 
     public void setPath(String path) {
-        this.path = path;
+        this.path = StringUtils.defaultString(path, DEFAULT_YOP_CERT_STORE_PATH);
     }
 
     @Override

@@ -5,31 +5,22 @@
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopPlatformCredentialsLoader;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopRsaPlatformCredentialsLoader;
-import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopSm2PlatformCredentialsLoader;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopSmPlatformCredentialsLocalLoader;
 import com.yeepay.yop.sdk.exception.YopServiceException;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.FileUtils;
-import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.security.cert.X509Certificate;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
+import static com.yeepay.yop.sdk.YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO;
 
 /**
  * title: <br>
@@ -45,57 +36,40 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(YopFilePlatformCredentialsProvider.class);
 
-    private YopPlatformCredentialsLoader rsaDelegate = new YopRsaPlatformCredentialsLoader();
-    private YopPlatformCredentialsLoader sm2Delegate = new YopSm2PlatformCredentialsLoader();
-
+    /**
+     * serialNo -> YopPlatformCredentials
+     */
     private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap<>();
 
-    protected static X509Certificate cfcaRoot, yopInter;
-    {
-        try {
-            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/cfca_root.pem"));
-            try {
-                Sm2CertUtils.verifyCertificate(null, cfcaRoot);
-            } catch (Exception e) {
-                throw new YopClientException("invalid cfca root cert, detail:" + e.getMessage());
-            }
+    /**
+     * type -> YopPlatformCredentialsLoader
+     */
+    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = new HashMap<>(2);
 
-            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream("config/certs/yop_inter.pem"));
-            try {
-                Sm2CertUtils.verifyCertificate((BCECPublicKey) cfcaRoot.getPublicKey(), yopInter);
-            } catch (Exception e) {
-                throw new YopClientException("invalid yop inter cert, detail:" + e.getMessage());
-            }
-        } catch (Exception e) {
-            LOGGER.error("error when load parent certs, ex:", e);
-        }
+    public YopFilePlatformCredentialsProvider() {
+        this.yopPlatformCredentialsLoaderMap.put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopRsaPlatformCredentialsLoader());
+        this.yopPlatformCredentialsLoaderMap.put(YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopSmPlatformCredentialsLocalLoader());
     }
 
     @Override
-    public YopPlatformCredentials getCredentials(String appKey, String serialNo) {
+    public YopPlatformCredentials getYopPlatformCredentials(String appKey, String serialNo) {
         if (StringUtils.isBlank(serialNo)) {
             throw new YopServiceException("serialNo is required");
         }
+
         YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
         if (null == foundCredentials) {
-            if (!serialNo.equals(YOP_CERT_RSA_DEFAULT_SERIAL_NO)) {
-                // SM2
-                Map<String, YopPlatformCredentials> sm2Credentials = load(appKey, serialNo);
-                if (MapUtils.isNotEmpty(sm2Credentials)) {
-                    sm2Credentials.forEach(credentialsMap::put);
-                }
-                if (sm2Credentials.containsKey(serialNo)) {
-                    return sm2Credentials.get(serialNo);
-                }
+            String yopPlatformLoader = YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO;
+            if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
+                yopPlatformLoader = serialNo;
             }
 
-            // RSA
-            Map<String, YopPlatformCredentials> rsaCredentials = rsaDelegate.load(appKey, serialNo);
-            if (MapUtils.isNotEmpty(rsaCredentials)) {
-                rsaCredentials.forEach(credentialsMap::put);
+            Map<String, YopPlatformCredentials> yopPlatformCredentials = yopPlatformCredentialsLoaderMap.get(yopPlatformLoader).load(appKey, serialNo);
+            if (MapUtils.isNotEmpty(yopPlatformCredentials)) {
+                yopPlatformCredentials.forEach(credentialsMap::put);
             }
-            if (rsaCredentials.containsKey(serialNo)) {
-                return rsaCredentials.get(serialNo);
+            if (yopPlatformCredentials.containsKey(serialNo)) {
+                return yopPlatformCredentials.get(serialNo);
             }
         }
         return foundCredentials;
@@ -103,56 +77,14 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
     @Override
     public Map<String, YopPlatformCredentials> reload(String appKey, String serialNo) {
-        // 1.加载SM2证书
-        Map<String, YopPlatformCredentials> sm2Credentials = sm2Delegate.reload(appKey, serialNo);
-        if (MapUtils.isNotEmpty(sm2Credentials)) {
-            credentialsMap.putAll(sm2Credentials);
+        for (Map.Entry<String, YopPlatformCredentialsLoader> entry : yopPlatformCredentialsLoaderMap.entrySet()) {
+            YopPlatformCredentialsLoader loader = entry.getValue();
+            Map<String, YopPlatformCredentials> yopPlatformCredentials = loader.load(appKey, serialNo);
+            if (MapUtils.isNotEmpty(yopPlatformCredentials)) {
+                credentialsMap.putAll(yopPlatformCredentials);
+            }
         }
-
-        // 2.加载RSA公钥
-        Map<String, YopPlatformCredentials> rsaCredentials = rsaDelegate.reload(appKey, serialNo);
-        if (MapUtils.isNotEmpty(rsaCredentials)) {
-            credentialsMap.putAll(rsaCredentials);
-        }
-
         return Collections.unmodifiableMap(credentialsMap);
     }
 
-    private Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
-        YopCertStore yopCertStore = YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
-        Map<String, X509Certificate> localCerts = loadAndVerifyFromLocal(yopCertStore, serialNo);
-        Map<String, YopPlatformCredentials> localCredentials = new LinkedHashMap<>();
-        if (MapUtils.isNotEmpty(localCerts)) {
-            localCerts.forEach((k,v) -> localCredentials.put(k, new YopPlatformCredentialsHolder()
-                    .withSerialNo(serialNo).withPublicKey(CertTypeEnum.SM2, v.getPublicKey())));
-            if (localCredentials.containsKey(serialNo)) {
-                return localCredentials;
-            }
-        }
-        LOGGER.info("no available sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
-        return sm2Delegate.load(appKey, serialNo);
-    }
-
-    private Map<String, X509Certificate> loadAndVerifyFromLocal(YopCertStore yopCertStore, String serialNo) {
-        Map<String, X509Certificate> certMap = new LinkedHashMap<>();
-        if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
-            final File certFile = new File(yopCertStore.getPath(), "yop_cert_" + serialNo + ".pem");
-            if (certFile.exists()) {
-                try {
-                    final X509Certificate cert = Sm2CertUtils.getX509Certificate(new FileInputStream(certFile));
-                    Sm2CertUtils.verifyCertificate((BCECPublicKey) yopInter.getPublicKey(), cert);
-                    String realSerialNo = cert.getSerialNumber().toString();
-                    if (!realSerialNo.equals(serialNo)) {
-                        LOGGER.warn("wrong file name for cert, path:{}, realSerialNo:{}", certFile.getName(), realSerialNo);
-                    }
-                    certMap.put(realSerialNo, cert);
-                } catch (Exception e) {
-                    LOGGER.error("error when load cert from local file:" + certFile.getName() + ", ex:", e);
-                }
-            } else {
-                LOGGER.warn("invalid path when load cert from local file, path:{}", yopCertStore.getPath());
-            }
-        }
-        return certMap;
-    }
 }

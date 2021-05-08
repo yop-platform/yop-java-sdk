@@ -19,6 +19,7 @@ import java.util.Map;
 public enum CertStoreType {
 
     STRING("string", "明文"),
+    FILE_CER("file_cer", "公钥证书文件"),
     FILE_P12("file_p12", "文件");
 
     private static final Map<String, CertStoreType> VALUE_MAP = Maps.newHashMap();

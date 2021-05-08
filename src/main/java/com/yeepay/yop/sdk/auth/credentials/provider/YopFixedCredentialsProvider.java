@@ -11,6 +11,7 @@ import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProvider {
 
-    private final Map<String, YopAppConfig> appConfigs = new ConcurrentHashMap<>();
+    private final Map<String, YopAppConfig> appConfigs = new HashMap<>();
     private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
 
     @Override
@@ -57,7 +58,7 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
     protected abstract YopAppConfig loadAppConfig(String appId);
 
     @Override
-    public YopCertConfig[] getIsvEncryptKey(String appId) {
+    public List<YopCertConfig> getIsvEncryptKey(String appId) {
         return getAppConfig(appId).getIsvEncryptKey();
     }
 

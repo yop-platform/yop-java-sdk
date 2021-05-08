@@ -5,11 +5,14 @@ import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.FileUtils;
+import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
 /**
@@ -35,6 +38,15 @@ public final class YopCertConfigUtils {
                     publicKey = RSAKeyUtils.string2PublicKey(yopCertConfig.getValue());
                 } else {
                     publicKey = Sm2Utils.string2PublicKey(yopCertConfig.getValue());
+                }
+                break;
+            case FILE_CER:
+                InputStream inputStream = FileUtils.getResourceAsStream(yopCertConfig.getValue());
+                try {
+                    X509Certificate x509Certificate = Sm2CertUtils.getX509Certificate(inputStream);
+                    publicKey = x509Certificate.getPublicKey();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
                 break;
             default:

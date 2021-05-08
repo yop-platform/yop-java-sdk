@@ -1,0 +1,14 @@
+{
+  "yop_public_key": [
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "/config/certs/yop_platform_rsa_cert_290297451928.cer"
+    },
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "/config/certs/yop_platform_rsa_cert_275718169735.cer"
+    }
+  ]
+}
