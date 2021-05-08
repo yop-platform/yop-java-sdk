@@ -18,13 +18,10 @@ public class YopPKICredentials implements YopCredentials<PKICredentialsItem> {
 
     private String appKey;
 
-    private String encryptKey;
-
     private PKICredentialsItem pkiCredentialsItem;
 
-    public YopPKICredentials(String appKey, String encryptKey, PKICredentialsItem pkiCredentialsItem) {
+    public YopPKICredentials(String appKey, PKICredentialsItem pkiCredentialsItem) {
         this.appKey = appKey;
-        this.encryptKey = encryptKey;
         this.pkiCredentialsItem = pkiCredentialsItem;
     }
 
@@ -39,8 +36,4 @@ public class YopPKICredentials implements YopCredentials<PKICredentialsItem> {
         return pkiCredentialsItem;
     }
 
-    @Override
-    public String getEncryptKey() {
-        return this.encryptKey;
-    }
 }

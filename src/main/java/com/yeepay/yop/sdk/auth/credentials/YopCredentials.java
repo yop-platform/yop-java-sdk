@@ -15,6 +15,7 @@ package com.yeepay.yop.sdk.auth.credentials;
  * @since 2021/1/18 3:55 下午
  */
 public interface YopCredentials<T> {
+
     String getAppKey();
 
     /**
@@ -24,10 +25,4 @@ public interface YopCredentials<T> {
      */
     T getCredential();
 
-    /**
-     * 获取加密密钥
-     *
-     * @return
-     */
-    String getEncryptKey();
 }

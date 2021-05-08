@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.yeepay.yop.sdk</groupId>
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>4.0.1</version>
+    <version>4.0.7-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -141,31 +141,7 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <excludes>
-                        <exclude>*.p12</exclude>
-                        <exclude>*.pfx</exclude>
-                        <exclude>cer/*</exclude>
-                        <exclude>config/yop_sdk_config_dev.json</exclude>
-                        <exclude>config/yop_sdk_config_local.json</exclude>
-                        <exclude>config/yop_sdk_config_pro.json</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
+            <!-- Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -173,50 +149,41 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <compilerVersion>1.8</compilerVersion>
+                    <fork>true</fork>
+                    <verbose>true</verbose>
                     <encoding>UTF-8</encoding>
+                    <showWarnings>false</showWarnings>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.5</version>
                 <configuration>
-                    <descriptors>
-                        <descriptor>assembly.xml</descriptor>
-                    </descriptors>
+                    <skip>true</skip>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
-
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
+
     <scm>
-        <tag>master</tag>
-        <url>git@github.com:yop-platform/yop-java-sdk.git</url>
+        <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
     </scm>
+
     <developers>
         <developer>
             <name>baitao.ji</name>
             <email>baitao.ji@yeepay.com</email>
-            <organization>Yeepay</organization>
+            <organization>Yeepay Inc, Ltd</organization>
         </developer>
     </developers>
 
@@ -225,20 +192,30 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <!-- Source -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>2.2.1</version>
+                        <version>3.0.1</version>
+                        <configuration>
+                            <excludes>
+                                <exclude>*.p12</exclude>
+                                <exclude>*.pfx</exclude>
+                                <exclude>config/yop_sdk_config_dev.json</exclude>
+                                <exclude>config/yop_sdk_config_local.json</exclude>
+                                <exclude>config/yop_sdk_config_pro.json</exclude>
+                            </excludes>
+                        </configuration>
                         <executions>
                             <execution>
-                                <phase>package</phase>
+                                <id>attach-sources</id>
+                                <phase>prepare-package</phase>
                                 <goals>
                                     <goal>jar-no-fork</goal>
                                 </goals>
                             </execution>
                         </executions>
                     </plugin>
+
                     <!-- Javadoc -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -260,6 +237,31 @@
                             </execution>
                         </executions>
                     </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jarsigner-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign</id>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>verify</id>
+                                <goals>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <certs>true</certs>
+                        </configuration>
+                    </plugin>
+
                     <!-- GPG -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -267,6 +269,7 @@
                         <version>1.5</version>
                         <executions>
                             <execution>
+                                <id>sign-artifacts</id>
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
@@ -281,25 +284,17 @@
                             </gpgArguments>
                         </configuration>
                     </plugin>
-                    <!--Compiler-->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>3.0</version>
-                        <configuration>
-                            <source>1.8</source>
-                            <target>1.8</target>
-                            <fork>true</fork>
-                            <verbose>true</verbose>
-                            <encoding>UTF-8</encoding>
-                            <showWarnings>false</showWarnings>
-                        </configuration>
-                    </plugin>
-                    <!--Release-->
+
+                    <!-- Release -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
-                        <version>2.5.1</version>
+                        <version>3.0.0-M4</version>
+                        <configuration>
+                            <autoVersionSubmodules>true</autoVersionSubmodules>
+                            <tagNameFormat>v@{project.version}</tagNameFormat>
+                            <!--                    <arguments>-DskipTests</arguments>-->
+                        </configuration>
                     </plugin>
 
                     <plugin>
@@ -326,19 +321,19 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>sonatype-nexus-snapshots</id>
-                    <name>Sonatype Nexus Snapshots</name>
+                    <name>Sonatype Nexus Snapshots Repository</name>
                     <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
                 <repository>
                     <id>sonatype-nexus-staging</id>
-                    <name>Nexus Release Repository</name>
+                    <name>Sonatype Nexus Release Repository</name>
                     <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
-                <!--                <repository>-->
-                <!--                    <id>github</id>-->
-                <!--                    <name>GitHub OWNER Apache Maven Packages</name>-->
-                <!--                    <url>https://maven.pkg.github.com/yop-platforBase64m/yop-java-sdk</url>-->
-                <!--                </repository>-->
+                <!--        <repository>-->
+                <!--            <id>github-staging</id>-->
+                <!--            <name>GitHub OWNER Apache Maven Packages</name>-->
+                <!--            <url>https://maven.pkg.github.com/yop-platform/yop-java-sdk</url>-->
+                <!--        </repository>-->
             </distributionManagement>
         </profile>
     </profiles>
