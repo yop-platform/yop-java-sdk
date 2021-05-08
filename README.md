@@ -60,7 +60,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.yeepay.yop.sdk</groupId>
   <artifactId>yop-java-sdk</artifactId>
-  <version>4.0.3</version>
+  <version>4.0.5</version>
 </dependency>
 ```
 
@@ -69,5 +69,5 @@ Add this dependency to your project's POM:
 Add this dependency to your project's build file:
 
 ```groovy
-compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.0.3'
+compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.0.5'
 ```

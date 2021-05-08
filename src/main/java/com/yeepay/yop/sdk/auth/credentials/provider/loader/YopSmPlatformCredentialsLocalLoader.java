@@ -46,28 +46,27 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
     private YopPlatformCredentialsLoader delegate = new YopSmPlatformCredentialsRemoteLoader();
 
     protected X509Certificate cfcaRoot, yopInter;
-    private String defaultCertPath = "config/certs";
-    private String defaultCfcaRootFile = defaultCertPath + "/cfca_root.pem", defaultYopInterFile = defaultCertPath + "/yop_inter.pem";
+    private String defaultCertPath = "config/certs", defaultCfcaRootFile = "cfca_root.pem",
+            defaultYopInterFile = "yop_inter.pem";
     private YopCertStore defaultYopCertStore;
 
     {
         try {
             if (!EnvUtils.isProd()) {
                 String env = EnvUtils.currentEnv(),
-                        envPath = "/" + StringUtils.substringBefore(env, "_") + "/";
-                defaultCertPath = defaultCertPath.replaceFirst("/", envPath);
-                defaultCfcaRootFile = defaultCfcaRootFile.replaceFirst("/", envPath);
-                defaultYopInterFile = defaultYopInterFile.replaceFirst("/", envPath);
+                        envPrefix = StringUtils.substringBefore(env, "_");
+                defaultCfcaRootFile = envPrefix + "_" + defaultCfcaRootFile;
+                defaultYopInterFile = envPrefix + "_" + defaultYopInterFile;
             }
             defaultYopCertStore = new YopCertStore(defaultCertPath);
-            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultCfcaRootFile));
+            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultCertPath + "/" + defaultCfcaRootFile));
             try {
                 Sm2CertUtils.verifyCertificate(null, cfcaRoot);
             } catch (Exception e) {
                 throw new YopClientException("invalid cfca root cert, detail:" + e.getMessage());
             }
 
-            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultYopInterFile));
+            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultCertPath + "/" + defaultYopInterFile));
             try {
                 Sm2CertUtils.verifyCertificate((BCECPublicKey) cfcaRoot.getPublicKey(), yopInter);
             } catch (Exception e) {
