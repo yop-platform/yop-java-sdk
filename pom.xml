@@ -28,7 +28,7 @@
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <bouncycastle.version>1.65</bouncycastle.version>
-        <tika-core.version>1.18</tika-core.version>
+        <tika-core.version>1.22</tika-core.version>
     </properties>
 
     <dependencies>
