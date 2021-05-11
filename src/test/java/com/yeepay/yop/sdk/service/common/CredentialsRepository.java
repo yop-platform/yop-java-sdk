@@ -59,7 +59,9 @@ public class CredentialsRepository {
 
     public static Collection getApps() {
         List result = new LinkedList<>();
-        securityMap.forEach((k, v) -> result.add(new Object[]{k,v}));
+        for (String key : securityMap.keySet()) {
+            result.add(new Object[]{key, securityMap.get(key)});
+        }
         return result;
     }
 

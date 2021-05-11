@@ -98,7 +98,7 @@ public class YopClientTest {
 
         // 请求级配置
         RequestConfig requestConfig = new RequestConfig();
-        requestConfig.setSecurityReq(securityReq);
+        //requestConfig.setSecurityReq(securityReq);
         request.withRequestConfig(requestConfig);
 
         YopResponse response = yopClient.request(request);

@@ -8,7 +8,9 @@ import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.security.aes.AES;
 import com.yeepay.yop.sdk.security.rsa.RSA;
+import com.yeepay.yop.sdk.security.rsa.RSA2048;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
@@ -45,15 +47,14 @@ public class DigitalEnvelopeUtils {
         }
         String encryptedRandomKeyToBase64 = args[0];
         String encryptedDataToBase64 = args[1];
-        SymmetricEncryptAlgEnum symmetricEncryptAlg = SymmetricEncryptAlgEnum.parse(args[2]);
         DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[3]);
 
-        Encryption unsymmetricEncryption = UnsymmetricEncryptionFactory.getUnsymmetricEncryption(digestAlg);
+        Encryption unsymmetricEncryption = new RSA2048();
 
         //用私钥对随机密钥进行解密
         byte[] randomKey = unsymmetricEncryption.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey.getEncoded());
 
-        Encryption encryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
+        Encryption encryption = new AES();
 
         //解密得到源数据
         byte[] encryptedData = encryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
