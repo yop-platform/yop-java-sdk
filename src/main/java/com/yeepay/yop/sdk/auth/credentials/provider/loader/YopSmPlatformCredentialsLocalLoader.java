@@ -89,8 +89,10 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
             localCerts = loadAndVerifyFromLocal(defaultYopCertStore, serialNo);
         }
         if (MapUtils.isNotEmpty(localCerts)) {
-            localCerts.forEach((k, v) -> localCredentials.put(k, new YopPlatformCredentialsHolder()
-                    .withSerialNo(serialNo).withPublicKey(CertTypeEnum.SM2, v.getPublicKey())));
+            for (String key : localCerts.keySet()) {
+                localCredentials.put(key, new YopPlatformCredentialsHolder()
+                        .withSerialNo(serialNo).withPublicKey(CertTypeEnum.SM2, localCerts.get(key).getPublicKey()));
+            }
             if (localCredentials.containsKey(serialNo)) {
                 return localCredentials;
             }
