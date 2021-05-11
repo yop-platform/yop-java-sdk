@@ -81,8 +81,6 @@ public class YopClientTest {
         YopRequestConfig requestConfig = request.getRequestConfig();
         requestConfig.setAppKey(appId);//多appId时必须指定
         requestConfig.setSecurityReq(securityReq);
-        requestConfig.setReadTimeout(3000);
-        requestConfig.setConnectTimeout(3000);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);
