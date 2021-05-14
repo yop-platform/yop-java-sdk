@@ -98,7 +98,12 @@ public class HttpTest {
 
         for (int i = 0; i < 100; i++) {
             final int suffix = i;
-            thread.execute(() -> remoteRequest("子线程(" + suffix + ")", suffix % 100 != 3));
+            thread.execute(new Runnable() {
+                @Override
+                public void run() {
+                    remoteRequest("子线程(" + suffix + ")", suffix % 100 != 3);
+                }
+            });
         }
 
         thread.awaitTermination(10, TimeUnit.MINUTES);
