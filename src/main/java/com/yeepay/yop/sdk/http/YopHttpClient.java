@@ -21,6 +21,7 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -154,7 +155,7 @@ public class YopHttpClient {
         setAppKey(request, yopCredentials);
         setUserAgent(request);
         HttpRequestBase httpRequest;
-        CloseableHttpResponse httpResponse;
+        CloseableHttpResponse httpResponse = null;
         CloseableHttpAsyncClient httpAsyncClient = null;
         try {
             if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
@@ -186,6 +187,7 @@ public class YopHttpClient {
             throw yop;
         } finally {
             try {
+                HttpClientUtils.closeQuietly(httpResponse);
                 if (httpAsyncClient != null) {
                     httpAsyncClient.close();
                 }
