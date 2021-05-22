@@ -153,9 +153,6 @@ public class ClientConfiguration {
      */
     private Region region = DEFAULT_REGION;
 
-
-    private final boolean httpAsyncPutEnabled = false;
-
     /**
      * The YOP credentials used by the client to sign HTTP requests.
      */
@@ -912,7 +909,4 @@ public class ClientConfiguration {
                 + ", \n  region=" + region + ", \n  credentials=" + credentials + "]\n";
     }
 
-    public boolean isHttpAsyncPutEnabled() {
-        return httpAsyncPutEnabled;
-    }
 }

@@ -1,5 +1,7 @@
 package com.yeepay.yop.sdk.security;
 
+import java.security.NoSuchAlgorithmException;
+
 /**
  * title: 对称加密<br>
  * description: 描述<br>
@@ -17,7 +19,7 @@ public interface Encryption<K> {
      *
      * @return byte[]
      */
-    K generateRandomKey();
+    K generateRandomKey() throws NoSuchAlgorithmException;
 
     /**
      * 加密
