@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +22,7 @@ import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -154,8 +156,9 @@ public class YopHttpClient {
         setAppKey(request, yopCredentials);
         setUserAgent(request);
         HttpRequestBase httpRequest;
-        CloseableHttpResponse httpResponse;
-        CloseableHttpAsyncClient httpAsyncClient = null;
+        CloseableHttpResponse httpResponse = null;
+//        CloseableHttpAsyncClient httpAsyncClient = null;
+        Output yopResponse = null;
         try {
             if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
                 encryptRequest(request, executionContext);
@@ -164,18 +167,19 @@ public class YopHttpClient {
             requestLogger.debug("Sending Request: {}", request);
             httpRequest = this.createHttpRequest(request);
             HttpContext httpContext = this.createHttpContext(request);
-            if (this.config.isHttpAsyncPutEnabled() && httpRequest.getMethod().equals("PUT")) {
-                httpAsyncClient = this.createHttpAsyncClient(this.createNHttpClientConnectionManager());
-                httpAsyncClient.start();
-                Future<HttpResponse> future = httpAsyncClient.execute(HttpAsyncMethods.create(httpRequest),
-                        new BasicAsyncResponseConsumer(),
-                        httpContext, null);
-                httpResponse = new YopCloseableHttpResponse(future.get());
-            } else {
+//            if (this.config.isHttpAsyncPutEnabled() && httpRequest.getMethod().equals("PUT")) {
+//                httpAsyncClient = this.createHttpAsyncClient(this.createNHttpClientConnectionManager());
+//                httpAsyncClient.start();
+//                Future<HttpResponse> future = httpAsyncClient.execute(HttpAsyncMethods.create(httpRequest),
+//                        new BasicAsyncResponseConsumer(),
+//                        httpContext, null);
+//                httpResponse = new YopCloseableHttpResponse(future.get());
+//            } else {
                 httpResponse = this.httpClient.execute(httpRequest, httpContext);
-            }
+//            }
             HttpUtils.printRequest(httpRequest);
-            return responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, requestConfig, executionContext));
+            yopResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, requestConfig, executionContext));
+            return yopResponse;
         } catch (Exception e) {
             YopClientException yop;
             if (e instanceof YopClientException) {
@@ -185,13 +189,16 @@ public class YopHttpClient {
             }
             throw yop;
         } finally {
-            try {
-                if (httpAsyncClient != null) {
-                    httpAsyncClient.close();
-                }
-            } catch (IOException e) {
-                logger.debug("Fail to close HttpAsyncClient", e);
+            if (!(yopResponse instanceof YosDownloadResponse)) {
+                HttpClientUtils.closeQuietly(httpResponse);
             }
+//            try {
+//                if (httpAsyncClient != null) {
+//                    httpAsyncClient.close();
+//                }
+//            } catch (IOException e) {
+//                logger.debug("Fail to close HttpAsyncClient", e);
+//            }
         }
     }
 

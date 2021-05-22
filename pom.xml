@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.8.1</version>
+    <version>3.3.8.3</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -351,16 +351,4 @@
         </profile>
     </profiles>
 
-    <distributionManagement>
-        <repository>
-            <id>YeepayReleases</id>
-            <name>Internal Releases</name>
-            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/</url>
-        </repository>
-        <snapshotRepository>
-            <id>YeepaySnapshots</id>
-            <name>Internal Snapshots</name>
-            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-snapshot/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
