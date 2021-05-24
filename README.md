@@ -62,7 +62,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.yeepay.yop.sdk</groupId>
   <artifactId>yop-java-sdk</artifactId>
-  <version>4.0.5</version>
+  <version>4.1.0</version>
 </dependency>
 ```
 
@@ -71,9 +71,15 @@ Add this dependency to your project's POM:
 Add this dependency to your project's build file:
 
 ```groovy
-compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.0.5'
+compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.1.0'
 ```
 
+## 发版
+
+```
+mvn clean -DskipTests release:prepare -Prelease
+mvn clean -DskipTests release:perform -Prelease
+```
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fyop-platform%2Fyop-java-sdk.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fyop-platform%2Fyop-java-sdk?ref=badge_large)
