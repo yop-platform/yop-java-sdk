@@ -28,15 +28,9 @@ public class AES implements Encryption<byte[]> {
     }
 
     @Override
-    public byte[] generateRandomKey() {
+    public byte[] generateRandomKey() throws NoSuchAlgorithmException {
         //实例化
-        KeyGenerator generator;
-        try {
-            generator = KeyGenerator.getInstance(NAME);
-        } catch (NoSuchAlgorithmException e) {
-            //should never be here
-            return null;
-        }
+        KeyGenerator generator = KeyGenerator.getInstance(NAME);
         //设置密钥长度
         generator.init(128);
         //生成密钥

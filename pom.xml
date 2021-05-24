@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>4.0.7-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -61,11 +61,6 @@
             <version>${joda-time.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
-            <version>4.1.4</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>

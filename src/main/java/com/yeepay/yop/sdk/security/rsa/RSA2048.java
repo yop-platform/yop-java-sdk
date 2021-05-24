@@ -25,16 +25,12 @@ import java.security.spec.X509EncodedKeySpec;
  * @since 2021/2/1 4:31 下午
  */
 public class RSA2048 implements Encryption<KeyPair>, Signer {
-    @Override
-    public KeyPair generateRandomKey() {
-        try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-            kpg.initialize(2048);
-            return kpg.genKeyPair();
-        } catch (NoSuchAlgorithmException e) {
-            throw new YopClientException("unsupported algorithm");
-        }
 
+    @Override
+    public KeyPair generateRandomKey() throws NoSuchAlgorithmException {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(2048);
+        return kpg.genKeyPair();
     }
 
     @Override
