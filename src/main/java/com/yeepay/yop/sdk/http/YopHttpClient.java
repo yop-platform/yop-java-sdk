@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.AuthCache;
@@ -40,19 +39,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
-import org.apache.http.impl.nio.reactor.IOReactorConfig;
-import org.apache.http.nio.client.methods.HttpAsyncMethods;
-import org.apache.http.nio.conn.NHttpClientConnectionManager;
-import org.apache.http.nio.conn.SchemeIOSessionStrategy;
-import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
-import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
-import org.apache.http.nio.reactor.ConnectingIOReactor;
-import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +49,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -83,7 +68,7 @@ public class YopHttpClient {
      * Logger providing detailed information on requests/responses. Users can enable this logger to get access to YOP
      * request IDs for responses, individual requests and parameters sent to YOP, etc.
      */
-    private static final Logger requestLogger = LoggerFactory.getLogger("com.yeepay.g3.yop.sdk.request");
+    private static final Logger requestLogger = LoggerFactory.getLogger("com.yeepay.yop.sdk.http");
 
     /**
      * Logger for more detailed debugging information, that might not be as useful for end users (ex: HTTP client
@@ -157,7 +142,6 @@ public class YopHttpClient {
         setUserAgent(request);
         HttpRequestBase httpRequest;
         CloseableHttpResponse httpResponse = null;
-//        CloseableHttpAsyncClient httpAsyncClient = null;
         Output yopResponse = null;
         try {
             if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
@@ -167,16 +151,7 @@ public class YopHttpClient {
             requestLogger.debug("Sending Request: {}", request);
             httpRequest = this.createHttpRequest(request);
             HttpContext httpContext = this.createHttpContext(request);
-//            if (this.config.isHttpAsyncPutEnabled() && httpRequest.getMethod().equals("PUT")) {
-//                httpAsyncClient = this.createHttpAsyncClient(this.createNHttpClientConnectionManager());
-//                httpAsyncClient.start();
-//                Future<HttpResponse> future = httpAsyncClient.execute(HttpAsyncMethods.create(httpRequest),
-//                        new BasicAsyncResponseConsumer(),
-//                        httpContext, null);
-//                httpResponse = new YopCloseableHttpResponse(future.get());
-//            } else {
-                httpResponse = this.httpClient.execute(httpRequest, httpContext);
-//            }
+            httpResponse = this.httpClient.execute(httpRequest, httpContext);
             HttpUtils.printRequest(httpRequest);
             yopResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, requestConfig, executionContext));
             return yopResponse;
@@ -192,13 +167,6 @@ public class YopHttpClient {
             if (!(yopResponse instanceof YosDownloadResponse)) {
                 HttpClientUtils.closeQuietly(httpResponse);
             }
-//            try {
-//                if (httpAsyncClient != null) {
-//                    httpAsyncClient.close();
-//                }
-//            } catch (IOException e) {
-//                logger.debug("Fail to close HttpAsyncClient", e);
-//            }
         }
     }
 
@@ -254,28 +222,7 @@ public class YopHttpClient {
                 .setDefaultSocketConfig(SocketConfig.custom().setSoTimeout(this.config.getSocketTimeoutInMillis())
                         .setTcpNoDelay(true).build());
         connectionManager.setMaxTotal(this.config.getMaxConnections());
-        return connectionManager;
-    }
-
-    /**
-     * Create connection manager for asynchronous http client.
-     *
-     * @return Connection manager for asynchronous http client.
-     * @throws IOReactorException in case if a non-recoverable I/O error.
-     */
-    protected NHttpClientConnectionManager createNHttpClientConnectionManager() throws IOReactorException, NoSuchAlgorithmException, KeyManagementException {
-        ConnectingIOReactor ioReactor =
-                new DefaultConnectingIOReactor(IOReactorConfig.custom()
-                        .setSoTimeout(this.config.getSocketTimeoutInMillis()).setTcpNoDelay(true).build());
-        SSLContext s = SSLContext.getInstance("TLSv1.2");
-        // 初始化SSLContext实例
-        s.init(null, null, null);
-        Registry<SchemeIOSessionStrategy> sessionStrategyRegistry = RegistryBuilder.<SchemeIOSessionStrategy>create()
-                .register("https", new SSLIOSessionStrategy(s))
-                .build();
-        PoolingNHttpClientConnectionManager connectionManager = new PoolingNHttpClientConnectionManager(ioReactor, sessionStrategyRegistry);
-        connectionManager.setDefaultMaxPerRoute(this.config.getMaxConnections());
-        connectionManager.setMaxTotal(this.config.getMaxConnections());
+        connectionManager.setValidateAfterInactivity(3000);
         return connectionManager;
     }
 
@@ -297,24 +244,6 @@ public class YopHttpClient {
 
         return builder.build();
     }
-
-    /**
-     * Create asynchronous http client based on connection manager.
-     *
-     * @param connectionManager Asynchronous http client connection manager.
-     * @return Asynchronous http client based on connection manager.
-     */
-    protected CloseableHttpAsyncClient createHttpAsyncClient(NHttpClientConnectionManager connectionManager) {
-        HttpAsyncClientBuilder builder = HttpAsyncClients.custom().setConnectionManager(connectionManager);
-
-        int socketBufferSizeInBytes = this.config.getSocketBufferSizeInBytes();
-        if (socketBufferSizeInBytes > 0) {
-            builder.setDefaultConnectionConfig(
-                    ConnectionConfig.custom().setBufferSize(socketBufferSizeInBytes).build());
-        }
-        return builder.build();
-    }
-
 
     /**
      * Creates HttpClient Context object based on the internal request.
@@ -468,6 +397,5 @@ public class YopHttpClient {
         IdleConnectionReaper.removeConnectionManager(this.connectionManager);
         this.connectionManager.shutdown();
     }
-
 
 }

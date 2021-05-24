@@ -6,7 +6,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.8.3</version>
+    <version>3.3.8.5</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -20,14 +20,14 @@
         <commons-codec.version>1.10</commons-codec.version>
         <commons-collections4.version>4.1</commons-collections4.version>
         <commons-io.version>2.4</commons-io.version>
-        <guava.version>18.0</guava.version>
+        <guava.version>30.0-jre</guava.version>
         <jackson.version>2.11.2</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
         <junit-version>4.12</junit-version>
         <org.springframework>3.2.18.RELEASE</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
-        <tika-core.version>1.18</tika-core.version>
+        <tika-core.version>1.26</tika-core.version>
     </properties>
 
     <dependencies>
@@ -60,11 +60,6 @@
             <version>${joda-time.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpasyncclient</artifactId>
-            <version>4.1.4</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
@@ -102,6 +97,7 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
             <version>${org.springframework}</version>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -162,25 +158,6 @@
                     <compilerVersion>1.8</compilerVersion>
                     <encoding>UTF-8</encoding>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
