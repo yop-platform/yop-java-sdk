@@ -219,6 +219,7 @@ public class YopHttpClient {
                         .setTcpNoDelay(true).build());
         connectionManager.setDefaultMaxPerRoute(this.config.getMaxConnectionsPerRoute());
         connectionManager.setMaxTotal(this.config.getMaxConnections());
+        connectionManager.setValidateAfterInactivity(3000);
         return connectionManager;
     }
 
