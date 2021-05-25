@@ -78,7 +78,7 @@ compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.1.1'
 
 ```
 mvn clean -DskipTests release:prepare -Prelease
-mvn clean -DskipTests release:perform -Prelease
+mvn release:perform -Prelease
 ```
 
 ## License
