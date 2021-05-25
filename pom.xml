@@ -5,7 +5,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.8.6</version>
+    <version>3.3.8.7-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -169,7 +169,7 @@
         </license>
     </licenses>
     <scm>
-        <tag>yop-java-sdk-3.3.8.6</tag>
+        <tag>master</tag>
         <url>git@github.com:yop-platform/yop-java-sdk.git</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
