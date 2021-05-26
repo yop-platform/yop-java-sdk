@@ -9,7 +9,6 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
-import com.yeepay.yop.sdk.utils.EnvUtils;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -207,11 +206,8 @@ public class YopHttpClient {
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             throw new YopClientException("Fail to create SSLConnectionSocketFactory", e);
         }
-        RegistryBuilder registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTPS.toString(), sslSocketFactory);
-        if (!EnvUtils.isProd()) {
-            ConnectionSocketFactory socketFactory = PlainConnectionSocketFactory.getSocketFactory();
-            registryBuilder.register(Protocol.HTTP.toString(), socketFactory);
-        }
+        RegistryBuilder registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTPS.toString(), sslSocketFactory)
+                .register(Protocol.HTTP.toString(), PlainConnectionSocketFactory.getSocketFactory());
         Registry<ConnectionSocketFactory> registry = registryBuilder.build();
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
         connectionManager
