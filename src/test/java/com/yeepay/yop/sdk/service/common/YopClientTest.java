@@ -1,21 +1,29 @@
 package com.yeepay.yop.sdk.service.common;
 
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
+import lombok.Builder;
+import lombok.Singular;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * title: <br>
+ * title: YopClientTest<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -24,16 +32,9 @@ import java.util.Collection;
  * @version 1.0.0
  * @since 2020/11/18 上午10:56
  */
-@RunWith(Parameterized.class)
+@DisplayName(value = "Tests Config")
+@RunWith(value = Parameterized.class)
 public class YopClientTest {
-
-    private String appId;
-    private String securityReq;
-
-    public YopClientTest(String appId, String securityReq) {
-        this.appId = appId;
-        this.securityReq = securityReq;
-    }
 
     @Parameterized.Parameters
     public static Collection securityReq() {
@@ -49,156 +50,216 @@ public class YopClientTest {
 //        YopSdkConfigProviderRegistry
     }
 
-    @Test
-    public void requestWithDefaultSingleApp() {
-        System.setProperty("yop.sdk.config.env", "qa_single_default");
+    @BeforeEach
+    public void beforeEach() throws IOException {
+        // do something
+    }
 
-        // Client 级配置
+    @ParameterizedTest(name = "{0}")
+    @MethodSource(value = "credentialProvider")
+    public void requestWithDefaultSingleApp(TestConfig testConfig) {
+        System.setProperty("yop.sdk.config.env", testConfig.env);
+        if (StringUtils.isNotEmpty(testConfig.configFile)) {
+            System.setProperty("yop.sdk.config.file", testConfig.configFile);
+        }
+
+        // Client 级配置，实际使用中请勿放在成员方法内部
         YopClient yopClient = YopClientBuilder.builder()
-//                .withYopSdkConfigProvider(you diy provider)
-//                .withCredentialsProvider(your diy provider)
+                // .withYopSdkConfigProvider(your DIY provider)
+                // .withCredentialsProvider(your DIY provider)
                 .build();
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
+        YopRequest request = new YopRequest(testConfig.apiUri, testConfig.httpMethod);
 
         // Request 级配置
-//        request.getRequestConfig().setSecurityReq("");
+        if (ConfigLevel.REQUEST.equals(testConfig.configLevel)) {
+            request.getRequestConfig()
+                    .setAppKey(testConfig.appId) // 多appId时必须指定
+                    .setSecurityReq(testConfig.securityReq);
+        }
 
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
+        try {
+            YopResponse response = yopClient.request(request);
+            System.out.println(response);
+
+            assertTrue(testConfig.expectResult);
+            // TODO 对 response 中的值做校验
+        } catch (YopClientException e) {
+            e.printStackTrace();
+            assertFalse(testConfig.expectResult);
+            // TODO 对错误码做校验
+        } catch (Exception e) {
+            // 不应该有未包装的异常
+            e.printStackTrace();
+            throw e;
+        }
     }
 
-    @Test
-    public void requestWithDefaultMultiApp() {
-        // 使用该配置文件初始化SDK，但配置文件中无appkey和密钥
-        // 或者在JVM启动时指定：-Dyop.sdk.config.file=file://home/aaa/...
-        System.setProperty("yop.sdk.config.env", "qa_multi_default");
+    static Iterator<TestConfig> credentialProvider() {
+        List<TestConfig> testConfigs = new LinkedList<>();
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithDefaultSingleApp 不指定应用名")
+//                .env("qa_single_default")
+////                .appId("yop-boss") // 不指定应用名
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithDefaultSingleApp 指定应用名")
+//                .env("qa_single_default")
+//                .configLevel(ConfigLevel.REQUEST)
+//                .appId("app_100800095600032")
+//                .securityReq("YOP-SM2-SM3")
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
 
-        YopClient yopClient = YopClientBuilder.builder().build();
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithDefaultMultiApp 指定应用名")
+//                .env("qa_multi_default")
+//                .configLevel(ConfigLevel.REQUEST)
+//                .appId("yop-boss")
+//                .securityReq("YOP-RSA2048-SHA256")
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
+        //    // 一般不存在该情况，这里只是为了方便测试，单app推荐用requestWithDefaultSingleApp()方式
+//        YopCredentialsProviderRegistry.getProvider().removeConfig(null);
+//        YopSdkConfigProviderRegistry.getProvider().removeConfig("default");
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithSingleAppConfig 指定应用名")
+//                .env("qa_single_app")
+//                .configFile("yop_sdk_config_yop-boss.json")
+//                .configLevel(ConfigLevel.REQUEST)
+//                .appId("yop-boss")
+//                .securityReq("YOP-RSA2048-SHA256")
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
 
-        RequestConfig requestConfig = request.getRequestConfig();
-        requestConfig.setAppKey(appId);//多appId时必须指定
-        requestConfig.setSecurityReq(securityReq);
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithMultiAppConfig 指定应用名")
+//                .env("qa_multi_app")
+//                .configFile("yop_sdk_config_yop-boss.json")
+//                .configLevel(ConfigLevel.REQUEST)
+//                .appId("yop-boss")
+//                .securityReq("YOP-RSA2048-SHA256")
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
 
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
+        // ？？？？？
+        testConfigs.add(TestConfig.builder()
+                .title("requestWithSingleAppNotExists")
+                .env("qa")
+                .configFile("yop_sdk_config_app_10085525305.json")
+                .appId("app_10085525305")
+                .configLevel(ConfigLevel.REQUEST)
+                .securityReq("YOP-SM2-SM3")
+                .apiUri("/rest/v1.0/file/upload")
+                .httpMethod("POST")
+                .build());
+
+        // ？？？？
+//        String appId = "app_10085525305";
+//        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(CredentialsRepository.getPrivateKey(appId),
+//                null,
+//                CredentialsRepository.getSupportCertType(appId));
+//        YopPKICredentials yopPKICredentials = new YopPKICredentials(appId, pkiCredentialsItem);
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithCodeConfig")
+//                .env("qa")
+//                .configLevel(ConfigLevel.REQUEST)
+//                .appId(appId)
+//                .securityReq("YOP-SM2-SM3")
+//                .yopCredentials(yopPKICredentials)
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
+
+//        CustomFixedCredentialsProvider customFixedCredentialsProvider = new CustomFixedCredentialsProvider();
+//        YopCredentialsProviderRegistry.registerProvider(customFixedCredentialsProvider);
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithCustomFixedCredentialsProvider")
+//                .env("qa")
+//                .configLevel(ConfigLevel.REQUEST)
+////                .appId()
+//                .securityReq("YOP-SM2-SM3")
+//                .credentialsProvider(customFixedCredentialsProvider)
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
+
+//        CustomCachedCredentialsProvider customCachedCredentialsProvider = new CustomCachedCredentialsProvider();
+//        YopCredentialsProviderRegistry.registerProvider(customCachedCredentialsProvider);
+//        testConfigs.add(TestConfig.builder()
+//                .title("requestWithCustomCachedCredentialsProvider")
+//                .env("qa")
+//                .configLevel(ConfigLevel.REQUEST)
+////                .appId()
+//                .securityReq("YOP-SM2-SM3")
+//                .credentialsProvider(customFixedCredentialsProvider)
+//                .apiUri("/rest/v1.0/file/upload")
+//                .httpMethod("POST")
+//                .build());
+
+        return testConfigs.iterator();
     }
 
-    // 一般不存在该情况，这里只是为了方便测试，单app推荐用requestWithDefaultSingleApp()方式
-    @Test
-    public void requestWithSingleAppConfig() {
-        System.setProperty("yop.sdk.config.env", "qa_single_app");
-        System.setProperty("yop.sdk.config.file", "yop_sdk_config_" + appId + ".json");
+    @Builder
+    static class TestConfig {
 
-        YopClient yopClient = YopClientBuilder.builder().build();
+        /**
+         * 测试场景描述
+         */
+        @Builder.Default
+        private String title = "这个家伙很懒";
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
+        @Builder.Default
+        private String env = "prod";
+        private String configFile;
 
-        // 请求级配置
-        RequestConfig requestConfig = new RequestConfig();
-        requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
+        @Builder.Default
+        private ConfigLevel configLevel = ConfigLevel.CLIENT;
 
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
+        private String appId;
 
-        YopCredentialsProviderRegistry.getProvider().removeConfig(null);
-        YopSdkConfigProviderRegistry.getProvider().removeConfig("default");
+        @Builder.Default
+        private String securityReq = "YOP-SM2-SM3";
+
+        private YopCredentials yopCredentials;
+
+        private YopCredentialsProvider credentialsProvider;
+
+        /**
+         * 商户私钥（ConfigLevel.REQUEST时指定）
+         */
+        private String priKey;
+
+        /**
+         * 平台公钥（ConfigLevel.REQUEST时指定）
+         */
+        private String pubKey;
+
+        private String apiUri;
+
+        @Builder.Default
+        private String httpMethod = "POST";
+
+        @Singular("param")
+        private Map<String, Object> params;
+
+        @Builder.Default
+        private Boolean expectResult = true;
+        private String expectCode;
+
     }
 
-    @Test
-    public void requestWithMultiAppConfig() {
-        System.setProperty("yop.sdk.config.env", "qa_multi_app");
+    static enum ConfigLevel {
 
-        // Client 级配置
-        YopClient yopClient = YopClientBuilder.builder().build();
+        REQUEST, CLIENT;
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
-        // 请求级配置
-        RequestConfig requestConfig = new RequestConfig();
-        requestConfig.setAppKey(appId);// 多appId时必须指定
-        requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
-
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
-    }
-
-    @Test
-    public void requestWithSingleAppNotExists() {
-        System.setProperty("yop.sdk.config.env", "qa");
-        // 使用该配置文件初始化SDK，且配置文件中有appkey和密钥
-        // 或者在JVM启动时指定：-Dyop.sdk.config.file=file://home/aaa/...
-        System.setProperty("yop.sdk.config.file", "yop_sdk_config_app_10085525305.json");
-
-        YopClient yopClient = YopClientBuilder.builder().build();
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
-        RequestConfig requestConfig = request.getRequestConfig();
-        requestConfig.setSecurityReq(securityReq);
-
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
-    }
-
-    @Test
-    public void requestWithCodeConfig() {
-        System.setProperty("yop.sdk.config.env", "qa");
-        YopClient yopClient = YopClientBuilder.builder().build();
-
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
-        // 编码指定appkey和密钥
-        RequestConfig requestConfig = request.getRequestConfig();
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(CredentialsRepository.getPrivateKey(appId), null, CredentialsRepository.getSupportCertType(appId));
-        YopPKICredentials yopPKICredentials = new YopPKICredentials(appId, pkiCredentialsItem);
-        requestConfig.setSecurityReq(securityReq);
-        requestConfig.setCredentials(yopPKICredentials);
-
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
-    }
-
-    @Test
-    public void requestWithCustomFixedCredentialsProvider() {
-        System.setProperty("yop.sdk.config.env", "qa");
-        CustomFixedCredentialsProvider credentialsProvider = new CustomFixedCredentialsProvider();
-        YopCredentialsProviderRegistry.registerProvider(credentialsProvider);
-
-        YopClient yopClient = YopClientBuilder.builder().build();
-
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
-        RequestConfig requestConfig = new RequestConfig();
-        requestConfig.setAppKey(appId);
-        requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
-
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
-    }
-
-    @Test
-    public void requestWithCustomCachedCredentialsProvider() {
-        System.setProperty("yop.sdk.config.env", "qa");
-        CustomCachedCredentialsProvider credentialsProvider = new CustomCachedCredentialsProvider();
-        YopCredentialsProviderRegistry.registerProvider(credentialsProvider);
-
-        YopClient yopClient = YopClientBuilder.builder().build();
-
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
-        // 编码指定appkey
-        RequestConfig requestConfig = new RequestConfig();
-        requestConfig.setAppKey(appId);
-        requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
-
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
     }
 
 }

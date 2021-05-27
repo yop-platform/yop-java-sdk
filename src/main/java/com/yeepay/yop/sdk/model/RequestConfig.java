@@ -43,24 +43,27 @@ public class RequestConfig {
         return appKey;
     }
 
-    public void setAppKey(String appKey) {
+    public RequestConfig setAppKey(String appKey) {
         this.appKey = appKey;
+        return this;
     }
 
     public String getSecurityReq() {
         return securityReq;
     }
 
-    public void setSecurityReq(String securityReq) {
+    public RequestConfig setSecurityReq(String securityReq) {
         this.securityReq = securityReq;
+        return this;
     }
 
     public YopCredentials getCredentials() {
         return credentials;
     }
 
-    public void setCredentials(YopCredentials credentials) {
+    public RequestConfig setCredentials(YopCredentials credentials) {
         this.credentials = credentials;
+        return this;
     }
 
     public Map<String, String> getCustomRequestHeaders() {
@@ -83,32 +86,36 @@ public class RequestConfig {
         return requestTimeout;
     }
 
-    public void setRequestTimeout(Integer requestTimeout) {
+    public RequestConfig setRequestTimeout(Integer requestTimeout) {
         this.requestTimeout = requestTimeout;
+        return this;
     }
 
     public Integer getClientExecutionTimeout() {
         return clientExecutionTimeout;
     }
 
-    public void setClientExecutionTimeout(Integer clientExecutionTimeout) {
+    public RequestConfig setClientExecutionTimeout(Integer clientExecutionTimeout) {
         this.clientExecutionTimeout = clientExecutionTimeout;
+        return this;
     }
 
     public Boolean getNeedEncrypt() {
         return needEncrypt;
     }
 
-    public void setNeedEncrypt(Boolean needEncrypt) {
+    public RequestConfig setNeedEncrypt(Boolean needEncrypt) {
         this.needEncrypt = needEncrypt;
+        return this;
     }
 
     public Boolean getSkipVerifySign() {
         return skipVerifySign;
     }
 
-    public void setSkipVerifySign(Boolean skipVerifySign) {
+    public RequestConfig setSkipVerifySign(Boolean skipVerifySign) {
         this.skipVerifySign = skipVerifySign;
+        return this;
     }
 
     public static final class Builder {

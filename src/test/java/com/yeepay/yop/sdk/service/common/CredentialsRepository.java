@@ -38,6 +38,7 @@ public class CredentialsRepository {
         privateKeyMap.put("yop-boss", RSAKeyUtils.string2PrivateKey(privateKeyStrMap.get("yop-boss")));
         supportCertMap.put("yop-boss", CertTypeEnum.RSA2048);
         securityMap.put("yop-boss", "YOP-RSA2048-SHA256");
+
         privateKeyStrMap.put("app_100800095600032", "MIICSwIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBVTCCAVECAQEEIO74yo+DcjHd6ekJWNsWDp+Eq3reC64S77sjKOq+nZQ4oIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQGhRANCAARnSWJyCS5vEs2EWa0A8TmRpXHjpHh1zuhy9NXKrriKp+H23jXglBKZNPZyoJaevaAzputndyRz5i+ZCk0vhNVg");
         privateKeyMap.put("app_100800095600032", Sm2Utils.string2PrivateKey(privateKeyStrMap.get("app_100800095600032")));
         supportCertMap.put("app_100800095600032", CertTypeEnum.SM2);

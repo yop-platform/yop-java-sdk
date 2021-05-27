@@ -36,6 +36,10 @@ public class YopRequest extends BaseRequest {
 
     private Object content;
 
+    public YopRequest(String apiUri) {
+        this.apiUri = apiUri;
+    }
+
     public YopRequest(String apiUri, String httpMethod) {
         this.apiUri = apiUri;
         this.httpMethod = httpMethod;
