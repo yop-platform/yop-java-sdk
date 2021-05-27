@@ -1,0 +1,41 @@
+{
+  "server_root": "http://ycenc.yeepay.com:30502/yop-center",
+
+//  "server_root": "https://openapi.yeepay.com/yop-center", //https://openapi.yeepay.com/yop-center
+  "yos_server_root":"http://ycenc.yeepay.com:30203/yop-center",
+  "isv_private_key": [
+    {
+      "app_key": "app_100276759800039",
+      "store_type": "string",
+      "cert_type": "RSA2048",
+      //正确的密钥
+      "value": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDLz/wcFScd2gcOSevr/KMf/b5AReQzQe7bnNXDAjKMqNbXgr5eLljNBbpibiyFSGR/4cOtbVzmiLLfl1Ia57HOsBbTNPvh8ZQ8U9cPXtm9CgXPP7P8jon3icDG0dI5Wmxpi242AnyHxWx66j9cL8/Ijmdpef/8S3R0A4doA5w1tdB8ef1fpNdRAB3GFNhL0oAzr/eJcLx9o3et0SNpi2SyarPBvhUvSKUzv1mny2Q3pE2eXIHRd+ZO/qFbdm9n/4bun82NOsdV4jvKNnd82p9czqU4hADNb+3aO95hPAawpF2uq3yM1R0Hz3iN+eSVJuL2JmVueS5QNbSMVWta7UgFAgMBAAECggEACpLXuX0/ckUFaLBdFPkeXWKEpED7/czF347baCqNBM8dlkCqL6in4rsRWFnu5VtEG35S8IRj9XHSFdd74vlyOA7aoEp3Ztlpn1eaKKn7EdubQY1EgS3D6puy7J2mEmOmjDM3nIW0gDa10gqlDttMJFN++fHiXexsNjiYpcTKLd8RDMV6AkKEVfjzZVUD68PRFZyJutjud76KWNWtLQlGFIIr707G1XomNiOk/xPB6KNOG6kQMIxC3au8zDOyyyXX0CuLogkXZUQ7qpgL+KO2Pn3I0WSllizTAhnkQQEys+Bj5hEigLCkliVkfE/haAdsvQjETVyWn7vemooS/P0EYQKBgQD6btYyKB9eFUjqUhukex9iMXFPR3gGZY4vUzt1JcoXZwDxZ8fMupArtud7DaHN1QDHQFTzyj46vn7vPWOmScqJ9XPTz1aY8R5jBVtT+JOfisA0Fch1wIsz2pgVVBCAxbzH7yUs3b9XPTQE4fzFpT3q1xtJnUk6d09NRfY+vBkdwwKBgQDQV9cV7bGNEvW+H5zys8512EJSKuG5DhGC1EIae+QA9nZgDna5YMTYo0ELkuCg5Y8jqMiexdYGX9A5psUoYGr6HHUtH7gaCYlZKJEoSKsS7hBNDnGH030IYqi6YHyPxofT6BsMr3NXputd29kmxkj8mratujsY3iIpWjLJTYK+lwKBgGqueJSZPvOHQa6AF8JzqKTdxxUsrtaawH0sibGXzYU2ndI4kYaHGw9kNSvYXMsgJ9q5bvcDeorvx4cGscKOwLcQVq0uMAeq/3TTPVqCE/Ds3H/Tn7d5tFL8lbjQPM9+bLMHDuET/YSeT+CcnF9dywiVZcxwMlezp5aVbRbAbjqdAoGBAI2YtZCsvDgSA7xUhfmZZJ9I/EIV7NU1j4coNUkEnIBfATLlgaEZ+I733VQ9XbdcbT0iED+AW6Z3ZfBYvLRlWy9jOewSG7BufM+At672PHagH6oPP++9N8QEMYKB4wZgOp41qHSlpbGTu3FN4rbsmlw71h4abOHIztTl/ZA8wrg/AoGASBRvNw+1oMDHl6bo6sXl3XS43hGK0Mq+njrjX81W23NLMl00TE7pOjOwRCcBAV6s4AiTq1Z8QkR+dNG8kPYxZW4SsGYVkfr9kG5nNxx2UT/Bd4yrnPuUeFmX2765yOkxYgTUMpp2ps2X4OKpZxDmuR0/h2VOwqE3zGMbYVOzb6I="
+    },
+    {
+      "app_key": "app_100276759800044",
+      "store_type": "string",
+      "cert_type": "SM2",
+      //新私钥
+      "value":"MIICSwIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBVTCCAVECAQEEIKqAecGy5jv+yfFfJo2tkxlZLJV8NgcXSigBPlWsAA70oIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQGhRANCAARhvg/uRIcHc83JibHSdzFuUk3LieBEkTE/s3Iw6c5+SSdmS20+7fleJs1lX8y7H1nXM/IepoA+bQ29oHBOwlA9"
+    }
+  ],
+  "yop_cert_store": {
+    "enable":false,
+    "path":"/tmp/yop/certs/"
+  },
+  "isv_encrypt_key": [
+    {
+      "app_key": "app_100276759800044",
+      "store_type": "string",
+      "cert_type": "SM4",
+      //加密密钥
+      "value":"ck1LUGI4WW5qRWZYbkMxYQ=="
+    }],
+
+  "http_client": {
+    "connect_timeout": 10000,
+    "read_timeout": 30000,
+    "max_conn_total": 2000,
+    "max_conn_per_route": 1000
+  }
+}
