@@ -2,7 +2,7 @@
  * Copyright: Copyright (c)2011
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.yos;
+package com.yeepay.yop.sdk.benchmark;
 
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.service.common.YopClient;
@@ -27,20 +27,21 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0.0
  * @since 5/27/21
  */
-public class YosTest {
+public class NoCloseFileOutputStreamTest {
 
     private static YopClient yopClient;
 
     static {
-//        System.setProperty("yop.sdk.config.file", "file:///Users/yp-21022/Develop/Projects/Yeepay/yop-sdks/sdk/src/main/resources/config/yop_sdk_config_default_test.json");
+//        System.setProperty("yop.sdk.config.file", "/config/yop_sdk_config_default_test.json");
 //        System.setProperty("yop.sdk.config.env", "qa");
         yopClient = YopClientBuilder.builder().build();
     }
 
     @Test
     public void testYosDownload() throws Exception {
-        ExecutorService thread = Executors.newScheduledThreadPool(120,new ThreadFactory() {
+        ExecutorService thread = Executors.newScheduledThreadPool(120, new ThreadFactory() {
             int i = 0;
+
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(r, "TestThreadPool-" + (i++));

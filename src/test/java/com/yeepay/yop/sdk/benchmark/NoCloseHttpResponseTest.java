@@ -2,8 +2,9 @@
  * Copyright: Copyright (c)2011
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.http;
+package com.yeepay.yop.sdk.benchmark;
 
+import com.yeepay.yop.sdk.http.IdleConnectionReaper;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.RequestConfig;
@@ -39,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0.0
  * @since 5/21/21
  */
-public class HttpTest {
+public class NoCloseHttpResponseTest {
 
     private static CloseableHttpClient httpClient;
 
