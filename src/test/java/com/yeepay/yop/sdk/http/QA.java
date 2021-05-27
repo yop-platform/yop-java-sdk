@@ -1,7 +1,6 @@
 package com.yeepay.yop.sdk.http;
 
 
-import com.yeepay.yop.sdk.http.reselut.AssertResponse;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
@@ -9,12 +8,9 @@ import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 

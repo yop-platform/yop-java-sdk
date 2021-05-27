@@ -2,14 +2,12 @@ package com.yeepay.yop.sdk.http;
 
 //生产 内测
 
-import com.yeepay.yop.sdk.http.reselut.AssertResponse;
 import com.yeepay.yop.sdk.model.RequestConfig;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
