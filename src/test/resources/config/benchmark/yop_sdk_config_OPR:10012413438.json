@@ -1,0 +1,18 @@
+{
+  "app_key": "OPR:10012413438",
+  "isv_private_key": [
+    {
+      "store_type": "string",
+      "cert_type": "RSA2048",
+      "value": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCcKXb/SKitY30pWKON9ra84xcgiRu8kN4z+jvxqyyKpIx6gnNLQE4+6wp5C9LviF3o7rqPFXDSifHLz94AVVKCT7a2mvx7lGk+y56p3GJzrvahjyxbaBMRyDI76tdOvl1T1qFRWFv4OXagDawUcUCKSrxlRej7uALSdeyKaoKnqC0eR2fpuFNbz6NxIqRREIUZiSqmehjUPgBidJuOPJ1/HGkzZhmWBB46QxvermojqoxHEsLi0NakfX/rW3GQC1I1KY58e9ukTnZ2lo8j8gZrbPuY/1WM2Q3pzPGd5OPdtcZGtaHKIrzHupf+Et6EDU8IbZFIDJ/1qQ0JXYpBODVNAgMBAAECggEAOY40zBkhBirNdiAzw76DEnIWU4kFHoY8R2b6kfM3avAD0KFk0f7k996UERIRD/SwPApE2ziZSRfLdQVreq73xoyPuJS96uRDt/+/Pja6WI3LW7dTr2rX4G1rSlcfPOf/qMdJ1Jve5cl0FcCERFKLaYzrC95s5N2ouJ367PcdqaHIHsOUetqHoOH6Z9VCmpHPpX/+RfdXkFS1XfenAPW1x90e1u9e7jWbPfYVhwzjegYyp1KzJsPavs3BwQvu2J4tFq7THKtjA31BelX133kuv3oFeq2J5dFnFfpe3s/p9HtHRGLSKt9Sf/Zy13uFw4kjZCwGnVFZr68LaifPsyJMpwKBgQC6D1yjPNfb7QMLBQZlWEx0ATqYLXbUes6ZdM88Qd/nd1HrweLtAdptofHVXdE4FKIQ75yt7pKKYj0sURhzhM13wchwjXUhBzZYUjOQ9YcUd1f9eaMheZoE149P+pwKB3Yck/hBIJk6W20fMr6vucroA4vbvnvaAmwrR3nNdRKX8wKBgQDW3QBoXnALNTC0iAe5B8z49CYcFqyGFDwtflXulSvRYlxpl4mRAOA+P2oQtaaElZre8LSlC6e93J4VxfvLDeVzFer+g8JuQNJDhvPsoYmT29s+A1kqicE6SU+KAFoMoubuHAClM0elle202IJqdWt/pt/Yl+Z44MBvFzsrvLiNvwKBgQCJIql053Nydc64YIvGRr6TAhTd9SSQl7OPB7l3AFa3lAqdadqINcV46NQGH5AFda++K92flSgNNzs/XsZW3ptSmVHTI3AhV9+GWZAIV++n9g60lOLX2Xjb+MV4fY5lFfrINYfU+OH3UUusowpJGvei6no7DLrchMyVWak89f0uYQKBgHNXTfm5AHKzygKPp32nd1wJTE/1yAVt5WQSlrSttUkAgVVZuMpzau1fg2OW793qpamaE48p85ETVnWfw2wceJjQIkcgmgYvm/AOCPF1QfJyqn3etEYGjwjoA9+0EqMH6+nUdHA6V/LGykUzmMbnY56yCSYvXNR06jh4gxYWiAfnAoGAXh30ObSnOrf3befSF6qAHtEWBAf3oAXnpVKdqNaAy+Py/myJ6fvjENY3ZfzROkZqu5BSyuqiUw+V50WFM6hDgbEXJoRXdm41M9S8JwFBl5qAe1e3BZdbxbUK7G/qM4PQuTaArkvuz0wbJiZ2soFzi6S2ktDraafk+ErRgJx+q1k="
+    }
+  ],
+  "http_client": {
+    "connect_timeout": 10000,
+    "read_timeout": 30000,
+    "max_conn_total": 2,
+    "max_conn_per_route": 2
+  },
+  "server_root": "http://ycenc.yeepay.com:30502/yop-center",
+  "yos_server_root":"http://ycenc.yeepay.com:30203/yop-center"
+}

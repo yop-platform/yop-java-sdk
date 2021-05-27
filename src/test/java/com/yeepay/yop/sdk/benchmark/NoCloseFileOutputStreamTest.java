@@ -32,37 +32,39 @@ public class NoCloseFileOutputStreamTest {
     private static YopClient yopClient;
 
     static {
-//        System.setProperty("yop.sdk.config.file", "/config/yop_sdk_config_default_test.json");
-//        System.setProperty("yop.sdk.config.env", "qa");
+        System.setProperty("yop.sdk.config.env", "benchmark");
+        System.setProperty("yop.sdk.config.file", "yop_sdk_config_OPR:10012413438.json");
         yopClient = YopClientBuilder.builder().build();
     }
 
     @Test
     public void testYosDownload() throws Exception {
-        ExecutorService thread = Executors.newScheduledThreadPool(120, new ThreadFactory() {
+        ExecutorService thread = Executors.newScheduledThreadPool(5, new ThreadFactory() {
             int i = 0;
-
             @Override
             public Thread newThread(Runnable r) {
                 return new Thread(r, "TestThreadPool-" + (i++));
             }
         });
-        for (int i = 0; i < 100; i++) {
+
+        for (int i = 0; i < 20; i++) {
             final int suffix = i;
-            thread.execute(() -> remoteRequest("子线程(" + suffix + ")", true));
+            thread.execute(() -> remoteRequest("子线程(" + suffix + ")", false));
             // 频度控制
             Thread.sleep(1000);
         }
         thread.shutdown();
         thread.awaitTermination(10, TimeUnit.MINUTES);
 
-        remoteRequest("主线程", true);
+        remoteRequest("主线程", false);
     }
 
     private void remoteRequest(String s, boolean closeResp) {
         System.out.println(s + "开始执行");
         try {
             YopRequest requset = new YopRequest("/yos/v1.0/balance/yop-simple-remit/download-electronic-receipt", "GET");
+            requset.getRequestConfig().setAppKey("OPR:10012413438");
+
             requset.addParameter("batchNo", "000000005499580");
             requset.addParameter("orderId", "YB654db6376fd04045a6abd82f055f6e04");
             YosDownloadResponse response = yopClient.download(requset);
