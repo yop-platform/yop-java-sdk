@@ -41,13 +41,6 @@ public class YopFileSdkConfigProviderTest {
         assertEquals("qa", yopSdkConfig.getRegion());
     }
 
-    @Test(expected = YopClientException.class)
-    public void loadSdkConfigEnvButNotExists() {
-        System.setProperty(YopFileSdkConfigProvider.SDK_CONFIG_ENV_PROPERTY_KEY, "sandbox");
-        YopFileSdkConfig yopSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("app_10085525305");
-        assertEquals("sandbox", yopSdkConfig.getRegion());
-    }
-
     @Test
     public void loadSdkConfigFile() {
         System.setProperty(YopFileSdkConfigProvider.SDK_CONFIG_FILE_PROPERTY_KEY, "yop_sdk_config_app_20085525305.json");
