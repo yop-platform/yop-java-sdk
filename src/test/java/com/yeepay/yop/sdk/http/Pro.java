@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.http;
 //生产 内测
 
 import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
@@ -41,21 +42,20 @@ public class Pro {
         AssertResponse.assertResult(response);
     }
 
-    //get 请求  ——参数值 不对
-//    @Test
-//    public void get() {
-//        String appkey = "app_100276759800039"; //每次根据具体appkey修改
-//        YopRequest request = new YopRequest("/yos/v1.0/test/bill-download/download-bill", "GET");
-//        request.withRequestConfig(RequestConfig.Builder.builder().withAppKey(appkey).build());
-//        request.addParameter("clientId", appkey); //clientId :appkey  每次要变
-//        request.addParameter("billDate", "2021-05-26");//这个写YOP就可以了
-//        request.addParameter("merchantNo", "10040020578");//这个写YOP就可以了
-//        request.addParameter("bizType", "yop");//这个写YOP就可以了
-//
-//        YopResponse response = yopClient.request(request);
-//        System.out.println(response);
-//        AssertResponse.assertResult(response);
-//    }
+    //get 、 下载文件
+      @Test
+    public void get() {
+        String appkey = "app_10085575806"; //每次根据具体appkey修改  /yos/v1.0/test/bill-download/download-bill
+        YopRequest request = new YopRequest("/yos/v1.0/bill/download", "GET");
+        request.withRequestConfig(RequestConfig.Builder.builder().withAppKey(appkey).build());
+        request.addParameter("clientId", appkey); //clientId :appkey  每次要变
+        request.addParameter("billDate", "2021-05-13");//这个写YOP就可以了
+        request.addParameter("merchantNo", "10085575806");
+        request.addParameter("bizType", "UA_TRANSFER");
+
+        YosDownloadResponse yosDownloadResponse = yopClient.download(request);
+        System.out.println(yosDownloadResponse);
+    }
 
 
     //上传文件

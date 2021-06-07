@@ -36,7 +36,6 @@ public class NoCloseFileOutputStreamTest {
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_OPR:10012413438.json");
         yopClient = YopClientBuilder.builder().build();
     }
-
     @Test
     public void testYosDownload() throws Exception {
         ExecutorService thread = Executors.newScheduledThreadPool(5, new ThreadFactory() {
