@@ -62,7 +62,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.yeepay.yop.sdk</groupId>
   <artifactId>yop-java-sdk</artifactId>
-  <version>4.1.4</version>
+  <version>4.1.5</version>
 </dependency>
 ```
 

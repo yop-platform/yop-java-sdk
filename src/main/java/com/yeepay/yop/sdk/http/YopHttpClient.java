@@ -7,7 +7,7 @@ import com.yeepay.yop.sdk.internal.MultiPartFile;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import com.yeepay.yop.sdk.utils.RandomUtils;
@@ -20,6 +20,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.HttpClientUtils;
@@ -47,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -88,7 +88,7 @@ public class YopHttpClient {
 
     private final HttpClientConnectionManager connectionManager;
 
-    private final org.apache.http.client.config.RequestConfig.Builder requestConfigBuilder;
+    private final RequestConfig defaultConfig;
     private CredentialsProvider credentialsProvider;
     private HttpHost proxyHttpHost;
 
@@ -110,15 +110,14 @@ public class YopHttpClient {
     public YopHttpClient(ClientConfiguration config) {
         checkNotNull(config, "config should not be null.");
         this.config = config;
-        this.connectionManager = this.createHttpClientConnectionManager();
-        this.httpClient = this.createHttpClient(this.connectionManager);
-        IdleConnectionReaper.registerConnectionManager(this.connectionManager);
 
-        this.requestConfigBuilder = org.apache.http.client.config.RequestConfig.custom();
-        this.requestConfigBuilder.setConnectTimeout(config.getConnectionTimeoutInMillis());
-        this.requestConfigBuilder.setStaleConnectionCheckEnabled(true);
+        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
+                .setConnectTimeout(config.getConnectionTimeoutInMillis())
+                .setConnectionRequestTimeout(config.getConnectionRequestTimeoutInMillis())
+                .setSocketTimeout(config.getSocketTimeoutInMillis())
+                .setStaleConnectionCheckEnabled(true);
         if (config.getLocalAddress() != null) {
-            this.requestConfigBuilder.setLocalAddress(config.getLocalAddress());
+            requestConfigBuilder.setLocalAddress(config.getLocalAddress());
         }
 
         // http 代理
@@ -126,7 +125,7 @@ public class YopHttpClient {
         int proxyPort = config.getProxyPort();
         if (proxyHost != null && proxyPort > 0) {
             this.proxyHttpHost = new HttpHost(proxyHost, proxyPort, config.getProxyScheme());
-            this.requestConfigBuilder.setProxy(this.proxyHttpHost);
+            requestConfigBuilder.setProxy(this.proxyHttpHost);
 
             this.credentialsProvider = new BasicCredentialsProvider();
             String proxyUsername = config.getProxyUsername();
@@ -139,10 +138,15 @@ public class YopHttpClient {
                                 proxyWorkstation, proxyDomain));
             }
         }
+
+        this.connectionManager = this.createHttpClientConnectionManager();
+        this.defaultConfig = requestConfigBuilder.build();
+        this.httpClient = this.createHttpClient(this.connectionManager, defaultConfig);
+        IdleConnectionReaper.registerConnectionManager(this.connectionManager);
     }
 
     public <Output extends BaseResponse, Input extends BaseRequest> Output execute(Request<Input> request,
-                                                                                   RequestConfig requestConfig,
+                                                                                   YopRequestConfig yopRequestConfig,
                                                                                    ExecutionContext executionContext,
                                                                                    HttpResponseHandler<Output> responseHandler) {
         YopCredentials yopCredentials = executionContext.getYopCredentials();
@@ -153,15 +157,15 @@ public class YopHttpClient {
         Output yopResponse = null;
         try {
             signRequest(request, executionContext);
-            if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
+            if (BooleanUtils.isTrue(yopRequestConfig.getNeedEncrypt())) {
                 encryptRequest(request, executionContext);
             }
             logger.debug("Sending Request: {}", request);
             httpRequest = this.createHttpRequest(request);
-            HttpContext httpContext = this.createHttpContext(request);
+            HttpContext httpContext = this.createHttpContext(request, yopRequestConfig);
             httpResponse = this.httpClient.execute(httpRequest, httpContext);
             HttpUtils.printRequest(httpRequest);
-            yopResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, requestConfig, executionContext));
+            yopResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
             return yopResponse;
         } catch (Exception e) {
             YopClientException yop;
@@ -287,7 +291,8 @@ public class YopHttpClient {
      * @param connectionManager The connection manager setting http client.
      * @return Http client based on connection manager.
      */
-    private CloseableHttpClient createHttpClient(HttpClientConnectionManager connectionManager) {
+    private CloseableHttpClient createHttpClient(HttpClientConnectionManager connectionManager,
+                                                 RequestConfig requestConfig) {
         HttpClientBuilder builder =
                 HttpClients.custom().setConnectionManager(connectionManager).disableAutomaticRetries();
 
@@ -297,7 +302,7 @@ public class YopHttpClient {
                     ConnectionConfig.custom().setBufferSize(socketBufferSizeInBytes).build());
         }
 
-        return builder.build();
+        return builder.setDefaultRequestConfig(requestConfig).build();
     }
 
     /**
@@ -306,9 +311,22 @@ public class YopHttpClient {
      * @param request The internal request.
      * @return HttpClient Context object.
      */
-    protected HttpClientContext createHttpContext(Request<? extends BaseRequest> request) {
+    protected HttpClientContext createHttpContext(Request<? extends BaseRequest> request,
+                                                  YopRequestConfig yopRequestConfig) {
         HttpClientContext context = HttpClientContext.create();
-        context.setRequestConfig(this.requestConfigBuilder.build());
+
+        // 定制请求级参数
+        if (yopRequestConfig.getConnectTimeout() > 0 || yopRequestConfig.getReadTimeout() > 0) {
+            RequestConfig.Builder requestConfigBuilder = RequestConfig.copy(this.defaultConfig);
+            if (yopRequestConfig.getConnectTimeout() > 0) {
+                requestConfigBuilder.setConnectTimeout(yopRequestConfig.getConnectTimeout());
+            }
+            if (yopRequestConfig.getReadTimeout() > 0) {
+                requestConfigBuilder.setSocketTimeout(yopRequestConfig.getReadTimeout());
+            }
+            context.setRequestConfig(requestConfigBuilder.build());
+        }
+
         if (this.credentialsProvider != null) {
             context.setCredentialsProvider(this.credentialsProvider);
         }
@@ -320,7 +338,7 @@ public class YopHttpClient {
         return context;
     }
 
-    private HttpRequestBase createHttpRequest(Request<?> request) throws IOException {
+    private HttpRequestBase createHttpRequest(Request<?> request) {
         HttpRequestBase httpRequest;
         String uri = HttpUtils.appendUri(request.getEndpoint(), request.getResourcePath()).toASCIIString();
         boolean isMultiPart = request.getMultiPartFiles() != null && request.getMultiPartFiles().size() > 0;

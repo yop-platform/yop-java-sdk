@@ -19,7 +19,7 @@ import java.util.Map;
  * @version 1.0.0
  * @since 17/11/14 17:24
  */
-public class RequestConfig {
+public class YopRequestConfig {
 
     private String appKey;
 
@@ -31,9 +31,15 @@ public class RequestConfig {
 
     private Map<String, List<String>> customQueryParameters;
 
-    private Integer requestTimeout;
+    /**
+     * 获取数据的超时时间, 单位：ms
+     */
+    private int readTimeout;
 
-    private Integer clientExecutionTimeout;
+    /**
+     * 建立连接的超时, 单位：ms
+     */
+    private int connectTimeout;
 
     private Boolean needEncrypt;
 
@@ -79,20 +85,20 @@ public class RequestConfig {
         this.customQueryParameters = customQueryParameters;
     }
 
-    public Integer getRequestTimeout() {
-        return requestTimeout;
+    public int getReadTimeout() {
+        return readTimeout;
     }
 
-    public void setRequestTimeout(Integer requestTimeout) {
-        this.requestTimeout = requestTimeout;
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
     }
 
-    public Integer getClientExecutionTimeout() {
-        return clientExecutionTimeout;
+    public int getConnectTimeout() {
+        return connectTimeout;
     }
 
-    public void setClientExecutionTimeout(Integer clientExecutionTimeout) {
-        this.clientExecutionTimeout = clientExecutionTimeout;
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
     }
 
     public Boolean getNeedEncrypt() {
@@ -117,8 +123,8 @@ public class RequestConfig {
         private YopCredentials credentials;
         private Map<String, String> customRequestHeaders;
         private Map<String, List<String>> customQueryParameters;
-        private Integer requestTimeout;
-        private Integer clientExecutionTimeout;
+        private int readTimeout;
+        private int connectTimeout;
         private Boolean needEncrypt;
         private Boolean skipVerifySign;
 
@@ -155,12 +161,12 @@ public class RequestConfig {
         }
 
         public Builder withRequestTimeout(Integer requestTimeout) {
-            this.requestTimeout = requestTimeout;
+            this.readTimeout = requestTimeout;
             return this;
         }
 
-        public Builder withClientExecutionTimeout(Integer clientExecutionTimeout) {
-            this.clientExecutionTimeout = clientExecutionTimeout;
+        public Builder withConnectTimeout(Integer connectTimeout) {
+            this.connectTimeout = connectTimeout;
             return this;
         }
 
@@ -174,15 +180,15 @@ public class RequestConfig {
             return this;
         }
 
-        public RequestConfig build() {
-            RequestConfig requestConfig = new RequestConfig();
+        public YopRequestConfig build() {
+            YopRequestConfig requestConfig = new YopRequestConfig();
             requestConfig.setAppKey(appKey);
             requestConfig.setSecurityReq(securityReq);
             requestConfig.setCredentials(credentials);
             requestConfig.setCustomRequestHeaders(customRequestHeaders);
             requestConfig.setCustomQueryParameters(customQueryParameters);
-            requestConfig.setRequestTimeout(requestTimeout);
-            requestConfig.setClientExecutionTimeout(clientExecutionTimeout);
+            requestConfig.setReadTimeout(readTimeout);
+            requestConfig.setConnectTimeout(connectTimeout);
             requestConfig.setNeedEncrypt(needEncrypt);
             requestConfig.setSkipVerifySign(skipVerifySign);
             return requestConfig;

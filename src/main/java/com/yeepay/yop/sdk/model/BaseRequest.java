@@ -16,14 +16,14 @@ import java.io.Serializable;
  */
 public abstract class BaseRequest implements Serializable, Cloneable {
 
-    private RequestConfig requestConfig = RequestConfig.Builder.builder().build();
+    private YopRequestConfig requestConfig = YopRequestConfig.Builder.builder().build();
 
     @JsonIgnore
-    public RequestConfig getRequestConfig() {
+    public YopRequestConfig getRequestConfig() {
         return requestConfig;
     }
 
-    public BaseRequest withRequestConfig(RequestConfig requestConfig) {
+    public BaseRequest withRequestConfig(YopRequestConfig requestConfig) {
         this.requestConfig = requestConfig;
         return this;
     }
