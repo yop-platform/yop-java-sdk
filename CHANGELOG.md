@@ -1,6 +1,6 @@
 | 版本 | 变更内容  |
 | --- | --- |
-| 4.1.5、3.3.8.7 | 支持配置 connect_request_timeout，支持单笔请求设置各种超时时间 |
+| 4.1.5、3.3.8.7、3.3.8.8 | 支持配置 connect_request_timeout，支持单笔请求设置各种超时时间 |
 | 4.1.4 | 恢复 http 支持 |
 | 4.1.2 | 修复 commons-io 2.8.0 |
 | 4.1.1 | 设置setValidateAfterInactivity(3000) |
