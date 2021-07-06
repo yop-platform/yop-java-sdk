@@ -20,7 +20,7 @@ import com.yeepay.yop.sdk.http.YopHttpClientFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -104,7 +104,7 @@ public class ClientHandlerImpl implements ClientHandler {
             }
             builder.withYopCredentials(credential);
 
-            RequestConfig requestConfig = executionParams.getInput().getRequestConfig();
+            YopRequestConfig requestConfig = executionParams.getInput().getRequestConfig();
             if (requestConfig != null && BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
                 if (credential instanceof YopRSACredentials) {
                     builder.withEncryptor(new DefaultEncryptor((YopRSACredentials) credential));

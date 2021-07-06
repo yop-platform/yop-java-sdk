@@ -20,7 +20,12 @@ public class ClientConfiguration {
     /**
      * The default timeout for creating new connections.
      */
-    public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS = 50 * 1000;
+    public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS = 10 * 1000;
+
+    /**
+     * The default timeout for request new connections form pool.
+     */
+    public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_IN_MILLIS = 10 * 1000;
 
     /**
      * The default timeout for reading from a connected socket.
@@ -135,6 +140,11 @@ public class ClientConfiguration {
      * The connection timeout in milliseconds. A value of 0 means infinity, and is not recommended.
      */
     private int connectionTimeoutInMillis = ClientConfiguration.DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS;
+
+    /**
+     * 从连接池获取到连接的超时时间
+     */
+    private int connectionRequestTimeoutInMillis = ClientConfiguration.DEFAULT_CONNECTION_REQUEST_TIMEOUT_IN_MILLIS;
 
     /**
      * The optional size (in bytes) for the low level TCP socket buffer. This is an advanced option for advanced users
@@ -698,6 +708,9 @@ public class ClientConfiguration {
      */
     public void setSocketTimeoutInMillis(int socketTimeoutInMillis) {
         checkArgument(socketTimeoutInMillis >= 0, "socketTimeoutInMillis should not be negative.");
+        if (0 == socketTimeoutInMillis) {
+            return;
+        }
         this.socketTimeoutInMillis = socketTimeoutInMillis;
     }
 
@@ -732,6 +745,9 @@ public class ClientConfiguration {
      */
     public void setConnectionTimeoutInMillis(int connectionTimeoutInMillis) {
         checkArgument(connectionTimeoutInMillis >= 0, "connectionTimeoutInMillis should not be negative.");
+        if (0 == connectionTimeoutInMillis) {
+            return;
+        }
         this.connectionTimeoutInMillis = connectionTimeoutInMillis;
     }
 
@@ -745,6 +761,42 @@ public class ClientConfiguration {
      */
     public ClientConfiguration withConnectionTimeoutInMillis(int connectionTimeoutInMillis) {
         this.setConnectionTimeoutInMillis(connectionTimeoutInMillis);
+        return this;
+    }
+
+    /**
+     * Returns the connection request timeout in milliseconds.
+     *
+     * @return the connection request timeout in milliseconds.
+     */
+    public int getConnectionRequestTimeoutInMillis() {
+        return this.connectionRequestTimeoutInMillis;
+    }
+
+    /**
+     * Sets the connection request timeout in milliseconds. A value of 0 means infinity, and is not recommended.
+     *
+     * @param connectionRequestTimeoutInMillis the connection request timeout in milliseconds.
+     * @throws IllegalArgumentException if connectionRequestTimeoutInMillis is negative.
+     */
+    public void setConnectionRequestTimeoutInMillis(int connectionRequestTimeoutInMillis) {
+        checkArgument(connectionRequestTimeoutInMillis >= 0, "connectionRequestTimeoutInMillis should not be negative.");
+        if (0 == connectionRequestTimeoutInMillis) {
+            return;
+        }
+        this.connectionRequestTimeoutInMillis = connectionRequestTimeoutInMillis;
+    }
+
+    /**
+     * Sets the connection request timeout in milliseconds, and returns the updated configuration instance. A value of 0 means
+     * infinity, and is not recommended.
+     *
+     * @param connectionRequestTimeoutInMillis the connection request timeout in milliseconds.
+     * @return the updated configuration instance.
+     * @throws IllegalArgumentException if connectionRequestTimeoutInMillis is negative.
+     */
+    public ClientConfiguration withConnectionRequestTimeoutInMillis(int connectionRequestTimeoutInMillis) {
+        this.setConnectionRequestTimeoutInMillis(connectionRequestTimeoutInMillis);
         return this;
     }
 

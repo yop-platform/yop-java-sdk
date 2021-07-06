@@ -18,49 +18,69 @@ import java.io.Serializable;
  */
 public final class YopHttpClientConfig implements Serializable {
 
-    private static final long serialVersionUID = -6377916283927611130L;
+    private static final long serialVersionUID = -1L;
 
+    /**
+     * 建立连接的超时
+     */
     @JsonProperty("connect_timeout")
-    private Integer connectTimeout;
+    private int connectTimeout;
 
+    /**
+     * 从连接池获取到连接的超时时间
+     */
+    @JsonProperty("connect_request_timeout")
+    private int connectRequestTimeout;
+
+    /**
+     * 获取数据的超时时间
+     */
     @JsonProperty("read_timeout")
-    private Integer readTimeout;
+    private int readTimeout;
 
     @JsonProperty("max_conn_total")
-    private Integer maxConnTotal;
+    private int maxConnTotal;
 
     @JsonProperty("max_conn_per_route")
-    private Integer maxConnPerRoute;
+    private int maxConnPerRoute;
 
-    public Integer getConnectTimeout() {
+    public int getConnectTimeout() {
         return connectTimeout;
     }
 
-    public void setConnectTimeout(Integer connectTimeout) {
+    public void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
     }
 
-    public Integer getReadTimeout() {
+    public int getConnectRequestTimeout() {
+        return connectRequestTimeout;
+    }
+
+    public void setConnectRequestTimeout(int connectRequestTimeout) {
+        this.connectRequestTimeout = connectRequestTimeout;
+    }
+
+    public int getReadTimeout() {
         return readTimeout;
     }
 
-    public void setReadTimeout(Integer readTimeout) {
+    public void setReadTimeout(int readTimeout) {
         this.readTimeout = readTimeout;
     }
 
-    public Integer getMaxConnTotal() {
+    public int getMaxConnTotal() {
         return maxConnTotal;
     }
 
-    public void setMaxConnTotal(Integer maxConnTotal) {
+    public void setMaxConnTotal(int maxConnTotal) {
         this.maxConnTotal = maxConnTotal;
     }
 
-    public Integer getMaxConnPerRoute() {
+    public int getMaxConnPerRoute() {
         return maxConnPerRoute;
     }
 
-    public void setMaxConnPerRoute(Integer maxConnPerRoute) {
+    public void setMaxConnPerRoute(int maxConnPerRoute) {
         this.maxConnPerRoute = maxConnPerRoute;
     }
 

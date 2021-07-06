@@ -4,7 +4,7 @@ import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.Signer;
 import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
@@ -39,13 +39,16 @@ public class HttpResponseHandleContext implements Serializable {
 
     private final Encryptor encryptor;
 
-    public HttpResponseHandleContext(CloseableHttpResponse httpResponse, Request originRequest, RequestConfig requestConfig, ExecutionContext executionContext) throws IOException {
+    public HttpResponseHandleContext(CloseableHttpResponse httpResponse,
+                                     Request originRequest,
+                                     YopRequestConfig yopRequestConfig,
+                                     ExecutionContext executionContext) throws IOException {
         this.response = new YopHttpResponse(httpResponse);
         this.originRequest = originRequest;
         this.signer = executionContext.getSigner();
         this.signOptions = executionContext.getSignOptions();
         this.yopPublicKey = executionContext.getYopPublicKey();
-        this.needDecrypt = requestConfig.getNeedEncrypt();
+        this.needDecrypt = yopRequestConfig.getNeedEncrypt();
         this.encryptor = executionContext.getEncryptor();
     }
 
