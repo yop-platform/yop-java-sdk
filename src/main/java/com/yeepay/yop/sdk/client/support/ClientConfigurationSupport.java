@@ -36,6 +36,7 @@ public class ClientConfigurationSupport {
             YopHttpClientConfig yopHttpClientConfig = yopSdkConfig.getYopHttpClientConfig();
             clientConfiguration.withMaxConnections(yopHttpClientConfig.getMaxConnTotal())
                     .withConnectionTimeoutInMillis(yopHttpClientConfig.getConnectTimeout())
+                    .withConnectionRequestTimeoutInMillis(yopHttpClientConfig.getConnectRequestTimeout())
                     .withSocketTimeoutInMillis(yopHttpClientConfig.getReadTimeout())
                     .withMaxConnectionsPerRoute(yopHttpClientConfig.getMaxConnPerRoute());
         }

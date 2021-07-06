@@ -4,7 +4,7 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import org.junit.BeforeClass;
@@ -78,9 +78,11 @@ public class YopClientTest {
 
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
-        RequestConfig requestConfig = request.getRequestConfig();
+        YopRequestConfig requestConfig = request.getRequestConfig();
         requestConfig.setAppKey(appId);//多appId时必须指定
         requestConfig.setSecurityReq(securityReq);
+        requestConfig.setReadTimeout(3000);
+        requestConfig.setConnectTimeout(3000);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);
@@ -97,7 +99,7 @@ public class YopClientTest {
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
         // 请求级配置
-        RequestConfig requestConfig = new RequestConfig();
+        YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setSecurityReq(securityReq);
         request.withRequestConfig(requestConfig);
 
@@ -118,7 +120,7 @@ public class YopClientTest {
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
         // 请求级配置
-        RequestConfig requestConfig = new RequestConfig();
+        YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setAppKey(appId);// 多appId时必须指定
         requestConfig.setSecurityReq(securityReq);
         request.withRequestConfig(requestConfig);
@@ -137,7 +139,7 @@ public class YopClientTest {
         YopClient yopClient = YopClientBuilder.builder().build();
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
-        RequestConfig requestConfig = request.getRequestConfig();
+        YopRequestConfig requestConfig = request.getRequestConfig();
         requestConfig.setSecurityReq(securityReq);
 
         YopResponse response = yopClient.request(request);
@@ -152,7 +154,7 @@ public class YopClientTest {
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
         // 编码指定appkey和密钥
-        RequestConfig requestConfig = request.getRequestConfig();
+        YopRequestConfig requestConfig = request.getRequestConfig();
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(CredentialsRepository.getPrivateKey(appId), null, CredentialsRepository.getSupportCertType(appId));
         YopPKICredentials yopPKICredentials = new YopPKICredentials(appId, pkiCredentialsItem);
         requestConfig.setSecurityReq(securityReq);
@@ -172,7 +174,7 @@ public class YopClientTest {
 
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
-        RequestConfig requestConfig = new RequestConfig();
+        YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setAppKey(appId);
         requestConfig.setSecurityReq(securityReq);
         request.withRequestConfig(requestConfig);
@@ -192,7 +194,7 @@ public class YopClientTest {
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
         // 编码指定appkey
-        RequestConfig requestConfig = new RequestConfig();
+        YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setAppKey(appId);
         requestConfig.setSecurityReq(securityReq);
         request.withRequestConfig(requestConfig);

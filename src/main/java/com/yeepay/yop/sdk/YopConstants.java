@@ -11,7 +11,7 @@ import java.nio.charset.Charset;
  */
 public interface YopConstants {
 
-    String VERSION = "4.1.4";
+    String VERSION = "4.1.5";
 
     String DEFAULT_ENCODING = "UTF-8";
 
