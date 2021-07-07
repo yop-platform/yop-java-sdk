@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.yeepay.yop.sdk</groupId>
@@ -18,16 +19,16 @@
         <commons-lang3.version>3.6</commons-lang3.version>
         <commons-codec.version>1.10</commons-codec.version>
         <commons-collections4.version>4.1</commons-collections4.version>
-        <commons-io.version>2.7</commons-io.version>
-        <guava.version>30.1.1-android</guava.version>
+        <commons-io.version>2.4</commons-io.version>
+        <guava.version>20.0</guava.version>
         <jackson.version>2.11.2</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
-        <junit-version>4.13.2</junit-version>
-        <org.springframework>4.3.9.RELEASE</org.springframework>
+        <junit.version>4.13.2</junit.version>
+        <org.springframework>4.3.15.RELEASE</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <bouncycastle.version>1.67</bouncycastle.version>
-        <tika-core.version>1.22</tika-core.version>
+        <tika-core.version>1.18</tika-core.version>
     </properties>
 
     <dependencies>
@@ -122,7 +123,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit-version}</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -149,6 +150,7 @@
                     <showWarnings>false</showWarnings>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -157,8 +159,21 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+
+            <!-- Release -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M4</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <!--                    <arguments>-DskipTests</arguments>-->
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -280,18 +295,6 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Release -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.0.0-M4</version>
-                        <configuration>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <!--                    <arguments>-DskipTests</arguments>-->
-                        </configuration>
-                    </plugin>
-
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -329,6 +332,18 @@
                 <!--            <name>GitHub OWNER Apache Maven Packages</name>-->
                 <!--            <url>https://maven.pkg.github.com/yop-platform/yop-java-sdk</url>-->
                 <!--        </repository>-->
+            </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>yeepay</id>
+            <distributionManagement>
+                <repository>
+                    <id>yeepay-staging</id>
+                    <name>Yeepay Maven</name>
+                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-3rd-party</url>
+                    <layout>default</layout>
+                </repository>
             </distributionManagement>
         </profile>
     </profiles>
