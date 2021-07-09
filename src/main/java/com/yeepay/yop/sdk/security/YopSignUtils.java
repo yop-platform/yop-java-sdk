@@ -10,8 +10,8 @@ import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcess;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessFactory;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.security.PrivateKey;
@@ -67,12 +67,12 @@ public class YopSignUtils {
     public static void verify(String data, String signature, PublicKey publicKey) {
         validSignature(signature);
         String args[] = signature.split("\\$");
-        YopSignProcess yopSignProcess = YopSignProcessFactory.getYopSignProcess(digestAlgANdCertTypeMap.get(args[1]).getValue());
-        if (null == yopSignProcess) {
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getYopSignProcess(digestAlgANdCertTypeMap.get(args[1]).getValue());
+        if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, publicKey, digestAlgANdCertTypeMap.get(args[1]));
-        if (!yopSignProcess.verify(data, args[0], pkiCredentialsItem)) {
+        if (!yopSignProcessor.verify(data, args[0], pkiCredentialsItem)) {
             throw new YopClientException("verify fail!");
         }
     }
@@ -101,12 +101,12 @@ public class YopSignUtils {
      * @return
      */
     public static String sign(String data, String certType, PrivateKey privateKey) {
-        YopSignProcess yopSignProcess = YopSignProcessFactory.getYopSignProcess(certType);
-        if (null == yopSignProcess) {
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getYopSignProcess(certType);
+        if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, null, CertTypeEnum.parse(certType));
-        return yopSignProcess.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcess.getDigestAlg().getValue();
+        return yopSignProcessor.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcessor.getDigestAlg().getValue();
     }
 
     private static void validSignature(String signature) {

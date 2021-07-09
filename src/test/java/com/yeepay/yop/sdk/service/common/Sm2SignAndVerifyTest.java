@@ -10,7 +10,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.signer.YopSigner;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcess;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -76,8 +76,8 @@ public class Sm2SignAndVerifyTest {
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(CertTypeEnum.SM2), CertTypeEnum.SM2);
         YopTestSigner yopTestSigner = new YopTestSigner();
         String content = "{\"requestId\":\"3dd63639-bf35-427b-9110-f691ef00c20a\",\"code\":\"40042\",\"message\":\"非法的参数\",\"subCode\":\"isv.service.not-exists\",\"subMessage\":\"服务不存在\",\"docUrl\":\"http://10.151.31.146/docs/v2/platform/sdk_guide/error_code/index.html#platform_isv_service_not-exists\"}";
-        YopSignProcess yopSignProcess = yopTestSigner.getSignProcess(CertTypeEnum.SM2);
-        boolean verifySuccess = yopSignProcess.verify(content, signature, pkiCredentialsItem);
+        YopSignProcessor yopSignProcessor = yopTestSigner.getSignProcess(CertTypeEnum.SM2);
+        boolean verifySuccess = yopSignProcessor.verify(content, signature, pkiCredentialsItem);
         Assert.assertTrue(verifySuccess);
     }
 
