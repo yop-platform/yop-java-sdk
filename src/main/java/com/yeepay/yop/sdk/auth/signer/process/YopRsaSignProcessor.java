@@ -18,7 +18,7 @@ import com.yeepay.yop.sdk.security.rsa.RSA;
  * @version 1.0.0
  * @since 2021/1/18 3:58 下午
  */
-public class YopRsaSignProcess implements YopSignProcess {
+public class YopRsaSignProcessor implements YopSignProcessor {
 
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SHA256;
 
