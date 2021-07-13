@@ -17,7 +17,7 @@ import com.yeepay.yop.sdk.security.DigestAlgEnum;
  * @version 1.0.0
  * @since 2021/1/18 4:00 下午
  */
-public interface YopSignProcess {
+public interface YopSignProcessor {
     /**
      * 签名
      *

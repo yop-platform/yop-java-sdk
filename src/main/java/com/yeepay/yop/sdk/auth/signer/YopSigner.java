@@ -7,9 +7,9 @@ package com.yeepay.yop.sdk.auth.signer;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcess;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcess;
-import com.yeepay.yop.sdk.auth.signer.process.YopSm2SignProcess;
+import com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSm2SignProcessor;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
@@ -31,10 +31,10 @@ import java.util.Map;
  * @since 2021/1/18 3:23 下午
  */
 public interface YopSigner {
-    Map<CertTypeEnum, YopSignProcess> signerProcessMap = new HashMap() {
+    Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new HashMap() {
         {
-            put(CertTypeEnum.SM2, new YopSm2SignProcess());
-            put(CertTypeEnum.RSA2048, new YopRsaSignProcess());
+            put(CertTypeEnum.SM2, new YopSm2SignProcessor());
+            put(CertTypeEnum.RSA2048, new YopRsaSignProcessor());
         }
     };
 
@@ -61,11 +61,11 @@ public interface YopSigner {
         }
     }
 
-    default void registerYopSignProcess(CertTypeEnum certTypeEnum, YopSignProcess yopSignProcess) {
-        signerProcessMap.put(certTypeEnum, yopSignProcess);
+    default void registerYopSignProcess(CertTypeEnum certTypeEnum, YopSignProcessor yopSignProcessor) {
+        signerProcessMap.put(certTypeEnum, yopSignProcessor);
     }
 
-    default YopSignProcess getSignProcess(CertTypeEnum certType) {
+    default YopSignProcessor getSignProcess(CertTypeEnum certType) {
         return signerProcessMap.get(certType);
     }
 }
