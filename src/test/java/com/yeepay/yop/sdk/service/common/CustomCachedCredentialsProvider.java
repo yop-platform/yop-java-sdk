@@ -26,6 +26,8 @@ import java.util.List;
  */
 public class CustomCachedCredentialsProvider extends YopCachedCredentialsProvider {
 
+    private static final String DEFAULT_APPKEY = "xxx";
+
     @Override
     protected YopAppConfig loadAppConfig(String appKey) {
         YopAppConfig yopAppConfig = new YopAppConfig();
@@ -56,5 +58,10 @@ public class CustomCachedCredentialsProvider extends YopCachedCredentialsProvide
 
     @Override
     public void removeConfig(String key) {
+    }
+
+    @Override
+    public String getDefaultAppKey() {
+        return DEFAULT_APPKEY;
     }
 }

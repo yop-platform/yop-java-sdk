@@ -88,7 +88,7 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String credentialType) {
-        return decrypt(cipherText, null, credentialType);
+        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), credentialType);
     }
 
     /**
