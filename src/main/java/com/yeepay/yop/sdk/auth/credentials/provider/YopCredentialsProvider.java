@@ -45,7 +45,16 @@ public interface YopCredentialsProvider {
      */
     List<YopCertConfig> getIsvEncryptKey(String appKey);
 
-    List<CertTypeEnum> getSupportCertTypes(String appId);
+    List<CertTypeEnum> getSupportCertTypes(String appKey);
+
+    /**
+     * 单应用时，用于加载默认配置
+     * 多应用时，用于指定默认应用(自定义provider时，须覆盖实现)
+     * @return
+     */
+    default String getDefaultAppKey() {
+        return null;
+    }
 
     /**
      * 移除SDK配置
