@@ -6,7 +6,7 @@
 package com.yeepay.yop.sdk.utils.support;
 
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.auth.signer.YopPKISigner;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PrivateKey;
@@ -26,6 +26,8 @@ import java.util.Map;
 public final class CashierSupport {
 
     private static final String CASHIER_URL = "https://cash.yeepay.com/cashier/std";
+
+    private static final YopPKISigner YOP_PKI_SIGNER = new YopPKISigner();
 
     public static String getPayUrl(PrivateKey privateKey, String appKey, String merchantNo, String token) {
         return getPayUrl(privateKey, appKey, merchantNo, token, CASHIER_URL);
@@ -71,7 +73,7 @@ public final class CashierSupport {
     // 获取请求收银台的sign
     private static String signature(String plainText, PrivateKey privateKey) {
         CertTypeEnum certType = resolveCertType(privateKey);
-        return YopSigner.signerProcessMap.get(certType).sign(plainText, new PKICredentialsItem(privateKey, null, certType));
+        return YOP_PKI_SIGNER.getSignProcessor(certType).sign(plainText, new PKICredentialsItem(privateKey, null, certType));
     }
 
     private static CertTypeEnum resolveCertType(PrivateKey privateKey) {

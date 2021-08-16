@@ -4,21 +4,13 @@
  */
 package com.yeepay.yop.sdk.auth.signer;
 
-import com.google.common.collect.ImmutableMap;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.auth.signer.process.YopSm2SignProcessor;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
-
-import java.util.Map;
 
 /**
  * title: <br/>
@@ -31,10 +23,6 @@ import java.util.Map;
  * @since 2021/1/18 3:23 下午
  */
 public interface YopSigner {
-    Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new ImmutableMap.Builder<CertTypeEnum, YopSignProcessor>()
-            .put(CertTypeEnum.SM2, new YopSm2SignProcessor())
-            .put(CertTypeEnum.RSA2048, new YopRsaSignProcessor())
-            .build();
 
     /**
      * 签名
@@ -50,20 +38,9 @@ public interface YopSigner {
      * @param httpResponse
      * @param signature
      */
-    default void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials credentials, SignOptions options) {
-        String content = httpResponse.readContent();
-        PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentials.getCredential();
-        content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!signerProcessMap.get(pkiCredentialsItem.getCertType()).verify(content, signature, pkiCredentialsItem)) {
-            throw new VerifySignFailedException("response sign verify failure");
-        }
-    }
+    void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials credentials, SignOptions options);
 
-    default void registerYopSignProcess(CertTypeEnum certTypeEnum, YopSignProcessor yopSignProcessor) {
-        signerProcessMap.put(certTypeEnum, yopSignProcessor);
-    }
+    void registerYopSignProcessor(CertTypeEnum certTypeEnum, YopSignProcessor yopSignProcessor);
 
-    default YopSignProcessor getSignProcess(CertTypeEnum certType) {
-        return signerProcessMap.get(certType);
-    }
+    YopSignProcessor getSignProcessor(CertTypeEnum certType);
 }

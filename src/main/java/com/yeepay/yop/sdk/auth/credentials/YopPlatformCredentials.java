@@ -23,12 +23,14 @@ public interface YopPlatformCredentials extends Serializable {
 
     /**
      * 证书序列号
+     *
      * @return
      */
     String getSerialNo();
 
     /**
      * 证书公钥
+     *
      * @param certType 公钥类型
      * @return
      */

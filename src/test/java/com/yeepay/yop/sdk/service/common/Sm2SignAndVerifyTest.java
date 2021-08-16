@@ -9,7 +9,7 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.auth.signer.YopBaseSigner;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
@@ -46,7 +46,7 @@ public class Sm2SignAndVerifyTest {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    public class YopTestSigner implements YopSigner {
+    public class YopTestSigner extends YopBaseSigner {
         @Override
         public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
         }
@@ -63,7 +63,7 @@ public class Sm2SignAndVerifyTest {
                 "x-yop-request-id:c81634dc-9404-4cbe-8ccb-27269a7ced55";
         YopTestSigner yopTestSigner = new YopTestSigner();
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(Sm2Utils.string2PrivateKey(priKey), null, CertTypeEnum.SM2);
-        String signature = yopTestSigner.getSignProcess(pkiCredentialsItem.getCertType()).sign(content, pkiCredentialsItem);
+        String signature = yopTestSigner.getSignProcessor(pkiCredentialsItem.getCertType()).sign(content, pkiCredentialsItem);
         Assert.assertTrue(StringUtils.isNotEmpty(signature));
 
     }
@@ -76,7 +76,7 @@ public class Sm2SignAndVerifyTest {
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(CertTypeEnum.SM2), CertTypeEnum.SM2);
         YopTestSigner yopTestSigner = new YopTestSigner();
         String content = "{\"requestId\":\"3dd63639-bf35-427b-9110-f691ef00c20a\",\"code\":\"40042\",\"message\":\"非法的参数\",\"subCode\":\"isv.service.not-exists\",\"subMessage\":\"服务不存在\",\"docUrl\":\"http://10.151.31.146/docs/v2/platform/sdk_guide/error_code/index.html#platform_isv_service_not-exists\"}";
-        YopSignProcessor yopSignProcessor = yopTestSigner.getSignProcess(CertTypeEnum.SM2);
+        YopSignProcessor yopSignProcessor = yopTestSigner.getSignProcessor(CertTypeEnum.SM2);
         boolean verifySuccess = yopSignProcessor.verify(content, signature, pkiCredentialsItem);
         Assert.assertTrue(verifySuccess);
     }

@@ -72,6 +72,7 @@ public class Sm2CertUtils {
 
     /**
      * 校验证书有效期（过期后24小时内继续可用）
+     *
      * @param certificate
      * @throws CertificateExpiredException
      * @throws CertificateNotYetValidException
