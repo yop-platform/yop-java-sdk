@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.yeepay.yop.sdk</groupId>
@@ -13,7 +14,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven-plugin-version>1.0.0</maven-plugin-version>
+        <java.version>1.8</java.version>
+        <maven.java.version>${java.version}</maven.java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
 
         <commons-lang3.version>3.6</commons-lang3.version>
         <commons-codec.version>1.10</commons-codec.version>
@@ -22,11 +28,11 @@
         <guava.version>[30.0-jre,)</guava.version>
         <jackson.version>2.11.2</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
-        <junit-version>[4.13.1,)</junit-version>
+        <junit.version>4.13.2</junit.version>
         <org.springframework>5.3.7</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
-        <bouncycastle.version>[1.67,)</bouncycastle.version>
+        <bouncycastle.version>1.67</bouncycastle.version>
         <tika-core.version>[1.22,)</tika-core.version>
     </properties>
 
@@ -122,7 +128,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit-version}</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -141,8 +147,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.6.1</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <fork>true</fork>
                     <verbose>true</verbose>
                     <encoding>UTF-8</encoding>
@@ -156,6 +162,73 @@
                 <configuration>
                     <skip>true</skip>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>${git-commit-id-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
+                    <commitIdGenerationMode>full</commitIdGenerationMode>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <excludes>
+                        <exclude>*.p12</exclude>
+                        <exclude>*.pfx</exclude>
+                        <exclude>config/yop_sdk_config_dev.json</exclude>
+                        <exclude>config/yop_sdk_config_local.json</exclude>
+                        <exclude>config/yop_sdk_config_pro.json</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <aggregate>true</aggregate>
+                    <charset>UTF-8</charset>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -270,8 +343,8 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <developers>
         <developer>
@@ -286,52 +359,6 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <configuration>
-                            <excludes>
-                                <exclude>*.p12</exclude>
-                                <exclude>*.pfx</exclude>
-                                <exclude>config/yop_sdk_config_dev.json</exclude>
-                                <exclude>config/yop_sdk_config_local.json</exclude>
-                                <exclude>config/yop_sdk_config_pro.json</exclude>
-                            </excludes>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Javadoc -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.9.1</version>
-                        <configuration>
-                            <aggregate>true</aggregate>
-                            <charset>UTF-8</charset>
-                            <encoding>UTF-8</encoding>
-                            <docencoding>UTF-8</docencoding>
-                            <additionalparam>-Xdoclint:none</additionalparam>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-jarsigner-plugin</artifactId>
@@ -429,6 +456,36 @@
                 <!--            <url>https://maven.pkg.github.com/yop-platform/yop-java-sdk</url>-->
                 <!--        </repository>-->
             </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>yeepay</id>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>yeepay-snapshots</id>
+                    <name>Yeepay Snapshots Repository</name>
+                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-common-snapshot</url>
+                </snapshotRepository>
+                <repository>
+                    <id>yeepay-staging</id>
+                    <name>Yeepay Release Repository</name>
+                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-common-release</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>jdk7</id>
+            <properties>
+                <java.version>1.7</java.version>
+                <git-commit-id-plugin.version>2.2.6</git-commit-id-plugin.version>
+
+                <commons-io.version>2.4</commons-io.version>
+                <guava.version>20.0</guava.version>
+                <org.springframework>4.3.15.RELEASE</org.springframework>
+                <bouncycastle.version>1.67</bouncycastle.version>
+                <tika-core.version>1.18</tika-core.version>
+            </properties>
         </profile>
     </profiles>
 </project>
