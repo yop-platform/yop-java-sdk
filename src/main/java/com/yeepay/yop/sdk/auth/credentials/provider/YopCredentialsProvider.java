@@ -52,9 +52,7 @@ public interface YopCredentialsProvider {
      * 多应用时，用于指定默认应用(自定义provider时，须覆盖实现)
      * @return
      */
-    default String getDefaultAppKey() {
-        return null;
-    }
+    String getDefaultAppKey();
 
     /**
      * 移除SDK配置
