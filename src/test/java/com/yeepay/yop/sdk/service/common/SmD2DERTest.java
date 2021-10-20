@@ -43,7 +43,6 @@ public class SmD2DERTest {
 
     @Before
     public void setUp() throws Exception {
-        Security.removeProvider("SunEC");
         Security.addProvider(new BouncyCastleProvider());
     }
 

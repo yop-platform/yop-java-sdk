@@ -95,8 +95,9 @@ public class YopHttpClient {
     private static final DefaultHostnameVerifier HOSTNAME_VERIFIER_INSTANCE = new DefaultHostnameVerifier();
 
     static {
-        Security.removeProvider("SunEC");
-        Security.addProvider(new BouncyCastleProvider());
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
     }
 
     /**
