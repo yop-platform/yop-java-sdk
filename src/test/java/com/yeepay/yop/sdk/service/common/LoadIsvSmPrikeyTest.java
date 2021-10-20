@@ -34,7 +34,6 @@ public class LoadIsvSmPrikeyTest {
     public void setUp() {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
-        Security.removeProvider("SunEC");
         Security.addProvider(new BouncyCastleProvider());
     }
 

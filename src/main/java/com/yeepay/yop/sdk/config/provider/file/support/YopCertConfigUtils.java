@@ -8,9 +8,12 @@ import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.InputStream;
+import java.security.Key;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
@@ -72,15 +75,17 @@ public final class YopCertConfigUtils {
                 try {
                     String pwd = StringUtils.defaultIfEmpty(yopCertConfig.getPassword(), "");
                     char[] password = pwd.toCharArray();
-                    KeyStore keystore = KeyStore.getInstance("PKCS12");
+                    KeyStore keystore = KeyStore.getInstance("PKCS12", BouncyCastleProvider.PROVIDER_NAME);
                     keystore.load(FileUtils.getResourceAsStream(yopCertConfig.getValue()), password);
 
                     Enumeration aliases = keystore.aliases();
-                    String keyAlias = "";
-                    while (aliases.hasMoreElements()) {
+                    String keyAlias;
+                    Key key = null;
+                    while (aliases.hasMoreElements() && !(key instanceof PrivateKey)) {
                         keyAlias = (String) aliases.nextElement();
+                        key = keystore.getKey(keyAlias, password);
                     }
-                    privateKey = RSAKeyUtils.key2String(keystore.getKey(keyAlias, password));
+                    privateKey = RSAKeyUtils.key2String(key);
                 } catch (Exception ex) {
                     throw new YopServiceException("Cert key is error, " + yopCertConfig, ex);
                 }
