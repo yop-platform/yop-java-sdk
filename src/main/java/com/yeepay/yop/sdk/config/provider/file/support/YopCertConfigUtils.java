@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.config.provider.file.support;
 
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
@@ -59,7 +60,7 @@ public final class YopCertConfigUtils {
     }
 
     public static String loadPrivateKey(YopCertConfig yopCertConfig) {
-        String privateKey;
+        String privateKey = null;
         if (null == yopCertConfig.getStoreType()) {
             throw new YopServiceException("Can't init ISV private key! Store type is error.");
         }
@@ -85,16 +86,18 @@ public final class YopCertConfigUtils {
                         keyAlias = (String) aliases.nextElement();
                         key = keystore.getKey(keyAlias, password);
                     }
-                    privateKey = RSAKeyUtils.key2String(key);
+                    if (null != key) {
+                        privateKey = RSAKeyUtils.key2String(key);
+                    }
                 } catch (Exception ex) {
-                    throw new YopServiceException("Cert key is error, " + yopCertConfig, ex);
+                    throw new YopClientException("Config wrong for private_key, cert_config:" + yopCertConfig, ex);
                 }
                 break;
             default:
-                throw new RuntimeException("Not support cert store type.");
+                throw new YopClientException("Config wrong for cert store_type not supported, " + yopCertConfig.getStoreType());
         }
         if (StringUtils.isEmpty(privateKey)) {
-            throw new YopServiceException("empty private!cert_type is" + yopCertConfig.getCertType());
+            throw new YopClientException("Config wrong for private_key, cert_config:" + yopCertConfig);
         }
         return privateKey;
     }
