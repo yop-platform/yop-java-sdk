@@ -6,7 +6,10 @@ package com.yeepay.yop.sdk.utils;
 
 import org.junit.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 
 /**
  * title: <br>
@@ -22,13 +25,21 @@ public class FileUtilsTest {
 
     @Test
     public void testLoadClassPathResource() {
-        InputStream resourceAsStream = FileUtils.getResourceAsStream("//config/qa/certs/cfca_root.pem");
-        assert null != resourceAsStream;
+        try (InputStream resourceAsStream = FileUtils.getResourceAsStream("config/certs/qa_cfca_root.pem")) {
+            assert null != resourceAsStream;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
-    public void testLoadAbsPathResource() {
-        InputStream resourceAsStream = FileUtils.getResourceAsStream("/tmp/yop/certs/yop_platform_sm_cert_275550212193.cer");
-        assert null != resourceAsStream;
+    public void testLoadAbsPathResource() throws URISyntaxException {
+        final String absolutePath = new File(FileUtils.getContextClassLoader()
+                .getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
+        try (InputStream resourceAsStream = FileUtils.getResourceAsStream(absolutePath)) {
+            assert null != resourceAsStream;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

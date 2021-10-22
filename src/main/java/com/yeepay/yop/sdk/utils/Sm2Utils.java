@@ -55,7 +55,7 @@ public class Sm2Utils {
     public static final int CURVE_LEN = getCurveLength(DOMAIN_PARAMS);
 
     static {
-        if (Security.getProvider("BC") == null) {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
     }
@@ -67,7 +67,7 @@ public class Sm2Utils {
      */
     public static KeyPair generateKeyPair() {
         try {
-            KeyPairGenerator kpGen = KeyPairGenerator.getInstance("EC", "BC");
+            KeyPairGenerator kpGen = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             kpGen.initialize(ecParameterSpec, new SecureRandom());
             KeyPair kp = kpGen.generateKeyPair();
             return kp;
