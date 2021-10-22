@@ -34,7 +34,8 @@ public class FileUtilsTest {
 
     @Test
     public void testLoadAbsPathResource() throws URISyntaxException {
-        final String absolutePath = new File(FileUtils.getContextClassLoader().getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
+        final String absolutePath = new File(FileUtils.getContextClassLoader()
+                .getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
         try (InputStream resourceAsStream = FileUtils.getResourceAsStream(absolutePath)) {
             assert null != resourceAsStream;
         } catch (IOException e) {
