@@ -41,7 +41,7 @@ import java.util.List;
 public class Sm2CertUtils {
 
     static {
-        if (Security.getProvider("BC") == null) {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
     }

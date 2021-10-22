@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.security.DigestInputStream;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.*;
 
@@ -70,7 +70,7 @@ public class YopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
 
-        if (Security.getProvider("BC") == null) {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
 
@@ -79,12 +79,12 @@ public class YopPKISigner implements YopSigner {
             protected Map<DigestAlgEnum, MessageDigest> initialValue() {
                 try {
                     Map<DigestAlgEnum, MessageDigest> messageDigestMap = new HashMap<>(3);
-                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3"));
+                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3", BouncyCastleProvider.PROVIDER_NAME));
                     messageDigestMap.put(DigestAlgEnum.SHA256, MessageDigest.getInstance("SHA-256"));
                     return messageDigestMap;
-                } catch (NoSuchAlgorithmException e) {
+                } catch (GeneralSecurityException e) {
                     throw new YopClientException(
-                            "Unable to get SHA256 Function"
+                            "Unable to get Digest Function"
                                     + e.getMessage(), e);
                 }
             }

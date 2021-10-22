@@ -43,7 +43,6 @@ public class Sm2SignAndVerifyTest {
     public void setUp() {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_test_sm.json");
-        Security.removeProvider("SunEC");
         Security.addProvider(new BouncyCastleProvider());
     }
 
