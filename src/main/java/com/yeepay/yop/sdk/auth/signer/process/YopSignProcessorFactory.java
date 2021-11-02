@@ -4,7 +4,8 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
-import java.util.HashMap;
+import com.google.common.collect.ImmutableMap;
+
 import java.util.Map;
 
 /**
@@ -18,12 +19,11 @@ import java.util.Map;
  * @since 2021/7/6 下午6:57
  */
 public class YopSignProcessorFactory {
-    private static Map<String, YopSignProcessor> yopSignProcessMap = new HashMap(3) {
-        {
-            put("SM2", new YopSm2SignProcessor());
-            put("RSA2048", new YopRsaSignProcessor());
-        }
-    };
+    private static Map<String, YopSignProcessor> yopSignProcessMap = new ImmutableMap.Builder<String, YopSignProcessor>()
+            .put("SM2", new YopSm2SignProcessor())
+            .put("RSA2048", new YopRsaSignProcessor())
+            .build();
+
 
     public static YopSignProcessor getYopSignProcess(String certType) {
         return yopSignProcessMap.get(certType);

@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.signer;
 
+import com.google.common.collect.ImmutableMap;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
@@ -17,7 +18,6 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,12 +31,10 @@ import java.util.Map;
  * @since 2021/1/18 3:23 下午
  */
 public interface YopSigner {
-    Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new HashMap() {
-        {
-            put(CertTypeEnum.SM2, new YopSm2SignProcessor());
-            put(CertTypeEnum.RSA2048, new YopRsaSignProcessor());
-        }
-    };
+    Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new ImmutableMap.Builder<CertTypeEnum, YopSignProcessor>()
+            .put(CertTypeEnum.SM2, new YopSm2SignProcessor())
+            .put(CertTypeEnum.RSA2048, new YopRsaSignProcessor())
+            .build();
 
     /**
      * 签名

@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.security;
 
+import com.google.common.collect.ImmutableMap;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
@@ -13,10 +14,10 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvid
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,10 +32,10 @@ import java.util.Map;
  */
 public class YopSignUtils {
     private static final String SPLIT_CHAR = "$";
-    private static Map<String, CertTypeEnum> digestAlgANdCertTypeMap = new HashMap() {{
-        put("SHA256", CertTypeEnum.RSA2048);
-        put("SM3", CertTypeEnum.SM2);
-    }};
+    private static Map<String, CertTypeEnum> digestAlgANdCertTypeMap = new ImmutableMap.Builder<String, CertTypeEnum>()
+            .put("SHA256", CertTypeEnum.RSA2048)
+            .put("SM3", CertTypeEnum.SM2)
+            .build();
 
     /**
      * 验签：验签失败则抛出异常
@@ -45,7 +46,7 @@ public class YopSignUtils {
      */
     public static void verify(String data, String signature, String appKey) {
         validSignature(signature);
-        String args[] = signature.split("\\$");
+        String args[] = StringUtils.split(signature, "$");
         CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
         String serialNo = args.length == 4 ? args[3] : (CertTypeEnum.SM2.equals(certType) ? YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO : YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
         final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
