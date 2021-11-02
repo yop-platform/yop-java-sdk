@@ -21,3 +21,8 @@ target
 build
 .idea
 *.iml
+
+release.properties
+pom.xml.releaseBackup
+
+bazel*
