@@ -6,11 +6,13 @@ import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.http.RetryPolicy;
+import org.apache.commons.lang3.StringUtils;
 
 import java.net.InetAddress;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.YopConstants.YOP_HTTP_CLIENT_IMPL_DEFAULT;
 
 /**
  * Basic client configurations for YOP clients.
@@ -168,6 +170,11 @@ public class ClientConfiguration {
      */
     private YopCredentials credentials = null;
 
+    /**
+     * The http client impl
+     */
+    private String clientImpl = YOP_HTTP_CLIENT_IMPL_DEFAULT;
+
     // Initialize DEFAULT_USER_AGENT
     static {
         String language = System.getProperty("user.language");
@@ -218,6 +225,7 @@ public class ClientConfiguration {
         this.endpoint = other.endpoint;
         this.region = other.region;
         this.credentials = other.credentials;
+        this.clientImpl = other.clientImpl;
     }
 
     /**
@@ -247,6 +255,7 @@ public class ClientConfiguration {
         this.socketBufferSizeInBytes = other.socketBufferSizeInBytes;
         this.region = other.region;
         this.credentials = other.credentials;
+        this.clientImpl = other.clientImpl;
     }
 
     /**
@@ -943,6 +952,39 @@ public class ClientConfiguration {
         return this;
     }
 
+    /**
+     * Returns the Http Client Impl
+     *
+     * @return the the Http Client Impl.
+     */
+    public String getClientImpl() {
+        return this.clientImpl;
+    }
+
+    /**
+     * Sets the Http Client Impl
+     *
+     * @param clientImpl the Http Client Impl
+     * @throws NullPointerException if clientImpl is null.
+     */
+    public void setClientImpl(String clientImpl) {
+        if (StringUtils.isNotBlank(clientImpl)) {
+            this.clientImpl = clientImpl;
+        }
+    }
+
+    /**
+     * Sets the Http Client Impl.
+     *
+     * @param clientImpl the Http Client Impl.
+     * @return the updated configuration instance.
+     * @throws NullPointerException if clientImpl is null.
+     */
+    public ClientConfiguration withClientImpl(String clientImpl) {
+        this.setClientImpl(clientImpl);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "ClientConfiguration [ \n  userAgent=" + userAgent
@@ -958,7 +1000,8 @@ public class ClientConfiguration {
                 + socketTimeoutInMillis + ", \n  connectionTimeoutInMillis="
                 + connectionTimeoutInMillis + ", \n  socketBufferSizeInBytes="
                 + socketBufferSizeInBytes + ", \n  endpoint=" + endpoint
-                + ", \n  region=" + region + ", \n  credentials=" + credentials + "]\n";
+                + ", \n  region=" + region + ", \n  credentials=" + credentials
+                + ", \n  clientImpl=" + clientImpl + "]\n";
     }
 
 }

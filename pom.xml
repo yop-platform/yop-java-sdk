@@ -33,6 +33,10 @@
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <bouncycastle.version>1.67</bouncycastle.version>
         <tika-core.version>[1.22,)</tika-core.version>
+        <httpcore.version>4.4.13</httpcore.version>
+        <httpcomponents.version>4.5.13</httpcomponents.version>
+        <okhttp.version>4.9.3</okhttp.version>
+        <oklog-java.version>2.3.0</oklog-java.version>
     </properties>
 
     <dependencies>
@@ -83,17 +87,28 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
-            <version>4.4.13</version>
+            <version>${httpcore.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
+            <version>${httpcomponents.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
-            <version>4.5.13</version>
+            <version>${httpcomponents.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.simonpercic</groupId>
+            <artifactId>oklog3-java</artifactId>
+            <version>${oklog-java.version}</version>
         </dependency>
 
         <dependency>

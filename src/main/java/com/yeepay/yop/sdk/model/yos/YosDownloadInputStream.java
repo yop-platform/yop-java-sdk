@@ -1,11 +1,7 @@
 package com.yeepay.yop.sdk.model.yos;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-
 import java.io.FilterInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.SocketException;
 
 /**
  * title: Yos下载流<br>
@@ -19,20 +15,7 @@ import java.net.SocketException;
  */
 public class YosDownloadInputStream extends FilterInputStream {
 
-    private final CloseableHttpResponse httpResponse;
-
-    public YosDownloadInputStream(InputStream content, CloseableHttpResponse httpResponse) {
+    public YosDownloadInputStream(InputStream content) {
         super(content);
-        this.httpResponse = httpResponse;
-    }
-
-    @Override
-    public void close() throws IOException {
-        this.httpResponse.close();
-        try {
-            super.close();
-        } catch (SocketException e) {
-            // expected from some implementations because the stream is closed
-        }
     }
 }

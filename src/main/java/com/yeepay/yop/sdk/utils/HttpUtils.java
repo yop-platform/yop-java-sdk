@@ -10,14 +10,6 @@ import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.http.Header;
-import org.apache.http.NameValuePair;
-import org.apache.http.StatusLine;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.message.BasicNameValuePair;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -68,6 +60,10 @@ public class HttpUtils {
         for (int i = 0; i < PERCENT_ENCODED_STRINGS.length; ++i) {
             PERCENT_ENCODED_STRINGS[i] = String.format("%%%02X", i);
         }
+    }
+
+    public static boolean isHttpVerbose() {
+        return HTTP_VERBOSE;
     }
 
     /**
@@ -253,41 +249,6 @@ public class HttpUtils {
         }
     }
 
-    public static void printRequest(HttpRequestBase request) {
-        if (!HTTP_VERBOSE) {
-            return;
-        }
-        System.out.println("\n-------------> ");
-        System.out.println(request.getRequestLine());
-        for (Header h : request.getAllHeaders()) {
-            System.out.println(h.getName() + " : " + h.getValue());
-        }
-        RequestConfig config = request.getConfig();
-        if (config != null) {
-            System.out.println("getConnectionRequestTimeout: "
-                    + config.getConnectionRequestTimeout());
-            System.out.println("getConnectTimeout: "
-                    + config.getConnectTimeout());
-            System.out.println("getCookieSpec: " + config.getCookieSpec());
-            System.out.println("getLocalAddress: " + config.getLocalAddress());
-
-        }
-    }
-
-    public static void printResponse(CloseableHttpResponse response) {
-        if (!HTTP_VERBOSE) {
-            return;
-        }
-        System.out.println("\n<------------- ");
-        StatusLine status = response.getStatusLine();
-        System.out.println(status.getStatusCode() + " - "
-                + status.getReasonPhrase());
-        Header[] heads = response.getAllHeaders();
-        for (Header h : heads) {
-            System.out.println(h.getName() + " : " + h.getValue());
-        }
-    }
-
     public static boolean usePayloadForQueryParameters(Request<? extends BaseRequest> request) {
         boolean requestIsPOST = HttpMethodName.POST.equals(request.getHttpMethod());
         boolean requestHasNoPayload = (request.getContent() == null);
@@ -311,18 +272,29 @@ public class HttpUtils {
         if (requestParams.isEmpty()) {
             return null;
         }
-        final List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 
+        List<String> encodedNameValuePair = new ArrayList<>(requestParams.size());
         for (Map.Entry<String, List<String>> entry : requestParams.entrySet()) {
-            String parameterName = entry.getKey();
-            for (String value : entry.getValue()) {
+            String paramName = entry.getKey();
+            for (String paramValue : entry.getValue()) {
                 try {
-                    nameValuePairs.add(new BasicNameValuePair(parameterName, BooleanUtils.isTrue(forSignature) ? value : URLEncoder.encode(value, YopConstants.DEFAULT_ENCODING)));
+                    encodedNameValuePair.add(toNameValuePair(forSignature, paramName, paramValue));
                 } catch (UnsupportedEncodingException e) {
                     throw new YopClientException("unsupported charset.", e);
                 }
             }
         }
-        return URLEncodedUtils.format(nameValuePairs, DEFAULT_ENCODING);
+        return queryStringJoiner.join(encodedNameValuePair);
+    }
+
+    private static String toNameValuePair(Boolean forSignature, String paramName, String paramValue) throws UnsupportedEncodingException {
+        if (null != paramValue) {
+            if (!BooleanUtils.isTrue(forSignature)) {
+                paramValue = URLEncoder.encode(paramValue, YopConstants.DEFAULT_ENCODING);
+            }
+            return URLEncoder.encode(paramName, YopConstants.DEFAULT_ENCODING) + CharacterConstants.EQUAL + URLEncoder.encode(paramValue, YopConstants.DEFAULT_ENCODING);
+        } else {
+            return URLEncoder.encode(paramName, YopConstants.DEFAULT_ENCODING);
+        }
     }
 }

@@ -4,7 +4,6 @@ import com.yeepay.yop.sdk.ErrorCode;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

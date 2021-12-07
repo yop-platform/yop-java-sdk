@@ -4,7 +4,7 @@
  */
 package com.yeepay.yop.sdk.http;
 
-import org.apache.http.HttpStatus;
+import com.yeepay.yop.sdk.http.impl.apache.IdleConnectionReaper;
 import org.apache.http.StatusLine;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
