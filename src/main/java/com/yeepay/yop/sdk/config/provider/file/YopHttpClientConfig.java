@@ -44,6 +44,9 @@ public final class YopHttpClientConfig implements Serializable {
     @JsonProperty("max_conn_per_route")
     private int maxConnPerRoute;
 
+    @JsonProperty("client_impl")
+    private String clientImpl;
+
     public int getConnectTimeout() {
         return connectTimeout;
     }
@@ -82,6 +85,14 @@ public final class YopHttpClientConfig implements Serializable {
 
     public void setMaxConnPerRoute(int maxConnPerRoute) {
         this.maxConnPerRoute = maxConnPerRoute;
+    }
+
+    public String getClientImpl() {
+        return clientImpl;
+    }
+
+    public void setClientImpl(String clientImpl) {
+        this.clientImpl = clientImpl;
     }
 
     @Override

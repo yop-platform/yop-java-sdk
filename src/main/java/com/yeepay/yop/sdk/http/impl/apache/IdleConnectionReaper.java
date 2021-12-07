@@ -1,4 +1,4 @@
-package com.yeepay.yop.sdk.http;
+package com.yeepay.yop.sdk.http.impl.apache;
 
 import com.google.common.collect.Lists;
 import org.apache.http.conn.HttpClientConnectionManager;

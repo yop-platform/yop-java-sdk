@@ -53,4 +53,10 @@ public interface YopConstants {
 
     String FILE_PROTOCOL_PREFIX = "file://";
 
+    String RSA_ECB_PKCS1PADDING = "RSA/ECB/PKCS1Padding";
+
+    String YOP_HTTP_CLIENT_IMPL_OK = "ok";
+    String YOP_HTTP_CLIENT_IMPL_APACHE = "apache";
+    String YOP_HTTP_CLIENT_IMPL_DEFAULT = YOP_HTTP_CLIENT_IMPL_OK;
+
 }

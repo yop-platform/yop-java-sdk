@@ -1,8 +1,8 @@
 package com.yeepay.yop.sdk.security.rsa;
 
 import com.google.common.base.Charsets;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.Constants;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.utils.Encodes;
 
@@ -111,7 +111,7 @@ public class RSA {
     public static byte[] encrypt(byte[] data, Key key) {
         Cipher cipher;
         try {
-            cipher = Cipher.getInstance(Constants.RSA_ECB_PKCS1PADDING);
+            cipher = Cipher.getInstance(YopConstants.RSA_ECB_PKCS1PADDING);
             cipher.init(Cipher.ENCRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
@@ -143,7 +143,7 @@ public class RSA {
      */
     public static byte[] decrypt(byte[] data, Key key) {
         try {
-            Cipher cipher = Cipher.getInstance(Constants.RSA_ECB_PKCS1PADDING);
+            Cipher cipher = Cipher.getInstance(YopConstants.RSA_ECB_PKCS1PADDING);
             cipher.init(Cipher.DECRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
