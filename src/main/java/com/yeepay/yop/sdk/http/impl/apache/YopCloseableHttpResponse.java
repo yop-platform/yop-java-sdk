@@ -1,4 +1,4 @@
-package com.yeepay.yop.sdk.http;
+package com.yeepay.yop.sdk.http.impl.apache;
 
 import org.apache.http.*;
 import org.apache.http.client.methods.CloseableHttpResponse;

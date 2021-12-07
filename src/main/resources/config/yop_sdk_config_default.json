@@ -17,6 +17,7 @@
     "connect_request_timeout": 10000,
     "read_timeout": 30000,
     "max_conn_total": 200,
-    "max_conn_per_route": 100
+    "max_conn_per_route": 100,
+    "client_impl": "apache"
   }
 }

@@ -1,9 +1,9 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
 import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
+import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
@@ -58,7 +58,7 @@ public class YosDownloadResponseAnalyzer implements HttpResponseAnalyzer {
         downloadMetadata.setLastModified(httpResponse.getHeaderAsRfc822Date(Headers.LAST_MODIFIED));
         downloadMetadata.setYopContentSha256(httpResponse.getHeader(Headers.YOP_CONTENT_SHA256));
 
-        downloadResponse.setResult(new YosDownloadInputStream(httpResponse.getContent(), httpResponse.getHttpResponse()));
+        downloadResponse.setResult(new YosDownloadInputStream(httpResponse.getContent()));
         return true;
     }
 }

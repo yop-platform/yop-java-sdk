@@ -5,7 +5,6 @@ import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -40,12 +39,12 @@ public class HttpResponseHandleContext implements Serializable {
 
     private final Boolean skipVerifySign;
 
-    public HttpResponseHandleContext(CloseableHttpResponse httpResponse,
+    public HttpResponseHandleContext(YopHttpResponse httpResponse,
                                      Request originRequest,
                                      YopRequestConfig yopRequestConfig,
                                      ExecutionContext executionContext) throws IOException {
         this.appKey = (String) originRequest.getHeaders().get(Headers.YOP_APPKEY);
-        this.response = new YopHttpResponse(httpResponse);
+        this.response = httpResponse;
         this.originRequest = originRequest;
         this.signer = executionContext.getSigner();
         this.signOptions = executionContext.getSignOptions();

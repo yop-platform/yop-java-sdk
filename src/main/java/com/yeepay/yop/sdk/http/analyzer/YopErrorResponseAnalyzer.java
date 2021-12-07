@@ -2,13 +2,13 @@ package com.yeepay.yop.sdk.http.analyzer;
 
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
+import com.yeepay.yop.sdk.http.HttpStatus;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
+import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopErrorResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
