@@ -314,7 +314,6 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <exclude>META-INF/services/*</exclude>
                                         <exclude>META-INF/spring.*</exclude>
                                         <exclude>META-INF/web-fragment.xml</exclude>
                                         <exclude>META-INF/*.SF</exclude>
@@ -323,9 +322,6 @@
                                         <exclude>mozilla/*</exclude>
                                         <exclude>rebel.xml</exclude>
                                     </excludes>
-                                    <includes>
-                                        <include>META-INF/services/com.yeepay.yop.sdk.http.YopHttpClientProvider</include>
-                                    </includes>
                                 </filter>
                             </filters>
                             <relocations>
