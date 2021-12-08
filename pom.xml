@@ -322,9 +322,6 @@
                                         <exclude>mozilla/*</exclude>
                                         <exclude>rebel.xml</exclude>
                                     </excludes>
-                                    <includes>
-                                        <include>META-INF/services/com.yeepay.yop.sdk.http.YopHttpClientProvider</include>
-                                    </includes>
                                 </filter>
                             </filters>
                             <relocations>
