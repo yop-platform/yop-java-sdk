@@ -69,6 +69,7 @@ public class YopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_APPKEY);
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
+        defaultHeadersToSign.add(Headers.YOP_CONTENT_SM3);
 
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
