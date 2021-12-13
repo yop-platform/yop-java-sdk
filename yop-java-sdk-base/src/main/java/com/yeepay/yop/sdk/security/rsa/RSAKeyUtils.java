@@ -50,7 +50,7 @@ public class RSAKeyUtils {
                     new PKCS8EncodedKeySpec(Encodes.decodeBase64(priKey)));
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new YopClientException("No such algorithm.", e);
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new YopClientException("Convert string to PrivateKey fail.", e);
         }
     }

@@ -23,22 +23,22 @@ public interface YopPlatformCredentialsProvider {
 
     /**
      * 根据应用&证书序列号获取平台凭证
-     * @param appKey 应用
+     *
+     * @param appKey   应用
      * @param serialNo 证书序列号
      * @return
      */
     YopPlatformCredentials getYopPlatformCredentials(String appKey, String serialNo);
 
     /**
-     * 重新加载默认应用下的所有平台凭证
+     * 重新加载平台默认凭证
      */
-    default Map<String, YopPlatformCredentials> reload() throws YopClientException {
-        return reload(YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), "");
-    }
+    Map<String, YopPlatformCredentials> reload() throws YopClientException;
 
     /**
-     * 重新加载某个应用下的平台凭证
-     * @param appKey 指定应用
+     * 重新加载某个应用的平台凭证
+     *
+     * @param appKey   指定应用
      * @param serialNo 证书序列号(非必填，可指定加载特定证书)
      */
     Map<String, YopPlatformCredentials> reload(String appKey, String serialNo);

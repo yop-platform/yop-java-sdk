@@ -48,7 +48,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @version 1.0.0
  * @since 2021/1/18 3:25 下午
  */
-public class YopPKISigner implements YopSigner {
+public class YopPKISigner extends YopBaseSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
 
@@ -79,8 +79,8 @@ public class YopPKISigner implements YopSigner {
             @Override
             protected Map<DigestAlgEnum, MessageDigest> initialValue() {
                 try {
-                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = new HashMap<>(3);
-                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3", BouncyCastleProvider.PROVIDER_NAME));
+                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = new HashMap<DigestAlgEnum, MessageDigest>(3);
+                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3"));
                     messageDigestMap.put(DigestAlgEnum.SHA256, MessageDigest.getInstance("SHA-256"));
                     return messageDigestMap;
                 } catch (GeneralSecurityException e) {
@@ -127,7 +127,7 @@ public class YopPKISigner implements YopSigner {
         String canonicalURI = this.getCanonicalURIPath(apiUri);
         String canonicalRequest = authString + "\n" + request.getHttpMethod() + "\n" + canonicalURI + "\n" +
                 canonicalQueryString + "\n" + canonicalHeader;
-        YopSignProcessor yopSignProcessor = getSignProcess(pkiCredentialsItem.getCertType());
+        YopSignProcessor yopSignProcessor = getSignProcessor(pkiCredentialsItem.getCertType());
         String signature = yopSignProcessor.sign(canonicalRequest, pkiCredentialsItem) + "$" + yopSignProcessor.getDigestAlg().getValue();
         String authorizationHeader = options.getProtocolPrefix() + " " + authString + "/" + signedHeaders + "/" + signature;
 
