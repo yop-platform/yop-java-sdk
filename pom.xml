@@ -445,6 +445,7 @@
                 <org.springframework>4.3.4.RELEASE</org.springframework>
                 <bouncycastle.version>1.67</bouncycastle.version>
                 <tika-core.version>1.18</tika-core.version>
+                <okhttp.version>3.12.6</okhttp.version>
             </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
