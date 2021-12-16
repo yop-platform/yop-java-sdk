@@ -80,6 +80,7 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
                 internalRequest.addHeader(Headers.CONTENT_LENGTH, String.valueOf(contentBytes.length));
             } else if (request.getContent() instanceof InputStream) {
                 //3、单文件流式上传
+                internalRequest.addHeader(Headers.CONTENT_TYPE, "application/octet-stream");
                 internalRequest.setContent((InputStream) request.getContent());
             }
         } else {
