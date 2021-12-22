@@ -4,7 +4,8 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 
 /**
@@ -25,7 +26,14 @@ public interface YopSignProcessor {
      * @param credentialsItem
      * @return
      */
-    String sign(String content, PKICredentialsItem credentialsItem);
+    default String sign(String content, CredentialsItem credentialsItem) {
+        if (!isSupport(credentialsItem)) {
+            throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+        }
+        return doSign(content, credentialsItem);
+    }
+
+    String doSign(String content, CredentialsItem credentialsItem);
 
     /**
      * 验签
@@ -35,7 +43,16 @@ public interface YopSignProcessor {
      * @param credentialsItem
      * @return
      */
-    boolean verify(String content, String signature, PKICredentialsItem credentialsItem);
+    default boolean verify(String content, String signature, CredentialsItem credentialsItem) {
+        if (isSupport(credentialsItem)) {
+            return doVerify(content, signature, credentialsItem);
+        }
+        throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+    }
+
+    boolean doVerify(String content, String signature, CredentialsItem credentialsItem);
+
+    boolean isSupport(CredentialsItem credentialsItem);
 
     /**
      * 获取摘要算法
