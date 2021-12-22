@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.service.common;
 
+import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
@@ -22,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.security.Security;
+import java.util.List;
 
 /**
  * title: <br/>
@@ -47,6 +49,11 @@ public class Sm2SignAndVerifyTest {
     }
 
     public class YopTestSigner implements YopSigner {
+        @Override
+        public List<String> supportSignerAlg() {
+            return Lists.newArrayList("TEST");
+        }
+
         @Override
         public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
         }

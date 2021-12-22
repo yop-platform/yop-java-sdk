@@ -16,10 +16,11 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * title: <br/>
+ * title: Yop 签名器<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -29,6 +30,14 @@ import java.util.Map;
  * @since 2021/1/18 3:23 下午
  */
 public interface YopSigner {
+
+    /**
+     * 支持的签名算法
+     *
+     * @return 支持的签名算法
+     */
+    List<String> supportSignerAlg();
+
     Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new HashMap<>();
 
     /**
