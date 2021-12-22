@@ -13,16 +13,15 @@ import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
-import com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.auth.signer.process.YopSm2SignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.SignerTypeEnum;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
@@ -41,7 +40,7 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: <br/>
+ * title: YopPKISigner<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -63,9 +62,6 @@ public class YopPKISigner implements YopSigner {
     private static final Joiner signedHeaderStringJoiner = Joiner.on(';');
 
     static {
-        YopSigner.registerYopSignProcess(CertTypeEnum.SM2, new YopSm2SignProcessor());
-        YopSigner.registerYopSignProcess(CertTypeEnum.RSA2048, new YopRsaSignProcessor());
-
         defaultHeadersToSign.add(Headers.CONTENT_LENGTH.toLowerCase());
         defaultHeadersToSign.add(Headers.CONTENT_TYPE.toLowerCase());
         defaultHeadersToSign.add(Headers.CONTENT_MD5.toLowerCase());
@@ -98,6 +94,11 @@ public class YopPKISigner implements YopSigner {
     }
 
     @Override
+    public List<String> supportSignerAlg() {
+        return Lists.newArrayList(SignerTypeEnum.SM2.name(), SignerTypeEnum.RSA.name());
+    }
+
+    @Override
     public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
         checkNotNull(request, "request should not be null.");
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
@@ -115,8 +116,8 @@ public class YopPKISigner implements YopSigner {
         String canonicalRequest = buildCanonicalRequest(request, credentials, options, headersToSign);
 
         // 计算签名
-        YopSignProcessor yopSignProcessor = YopSigner.getSignProcess(credentialsItem.getCertType());
-        String signature = yopSignProcessor.sign(canonicalRequest, credentialsItem) + "$" + yopSignProcessor.getDigestAlg().getValue();
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(credentialsItem.getCertType().name());
+        String signature = yopSignProcessor.sign(canonicalRequest, credentialsItem) + "$" + yopSignProcessor.getDigestAlg();
 
         LOGGER.debug("CanonicalRequest:{}", canonicalRequest.replace("\n", "[\\n]"));
         // 添加认证头

@@ -10,7 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 
 /**
- * title: <br/>
+ * title: PKICredentialsItem<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>

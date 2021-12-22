@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.auth.credentials;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 /**
- * title: <br>
+ * title: CredentialsItem<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>

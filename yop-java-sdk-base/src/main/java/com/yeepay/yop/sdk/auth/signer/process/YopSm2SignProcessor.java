@@ -12,7 +12,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
 /**
- * title: <br/>
+ * title: YopSm2SignProcessor<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -41,7 +41,12 @@ public class YopSm2SignProcessor implements YopSignProcessor {
     }
 
     @Override
-    public DigestAlgEnum getDigestAlg() {
-        return DigestAlgEnum.SM3;
+    public String name() {
+        return "SM2";
+    }
+
+    @Override
+    public String getDigestAlg() {
+        return DigestAlgEnum.SM3.name();
     }
 }

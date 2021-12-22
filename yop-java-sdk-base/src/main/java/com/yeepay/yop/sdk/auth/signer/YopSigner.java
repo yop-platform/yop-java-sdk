@@ -7,19 +7,17 @@ package com.yeepay.yop.sdk.auth.signer;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
- * title: <br/>
+ * title: Yop 签名器<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -29,7 +27,13 @@ import java.util.Map;
  * @since 2021/1/18 3:23 下午
  */
 public interface YopSigner {
-    Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new HashMap<>();
+
+    /**
+     * 支持的签名算法
+     *
+     * @return 支持的签名算法
+     */
+    List<String> supportSignerAlg();
 
     /**
      * 签名
@@ -49,16 +53,9 @@ public interface YopSigner {
         String content = httpResponse.readContent();
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentials.getCredential();
         content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!signerProcessMap.get(pkiCredentialsItem.getCertType()).verify(content, signature, pkiCredentialsItem)) {
+        if (!YopSignProcessorFactory.getSignProcessor(pkiCredentialsItem.getCertType().name()).verify(content, signature, pkiCredentialsItem)) {
             throw new VerifySignFailedException("response sign verify failure");
         }
     }
 
-    static void registerYopSignProcess(CertTypeEnum certTypeEnum, YopSignProcessor yopSignProcessor) {
-        signerProcessMap.put(certTypeEnum, yopSignProcessor);
-    }
-
-    static YopSignProcessor getSignProcess(CertTypeEnum certType) {
-        return signerProcessMap.get(certType);
-    }
 }

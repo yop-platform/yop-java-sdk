@@ -6,10 +6,9 @@ package com.yeepay.yop.sdk.auth.signer.process;
 
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
 
 /**
- * title: <br/>
+ * title: YopSignProcessor<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -19,6 +18,7 @@ import com.yeepay.yop.sdk.security.DigestAlgEnum;
  * @since 2021/1/18 4:00 下午
  */
 public interface YopSignProcessor {
+
     /**
      * 签名
      *
@@ -55,9 +55,16 @@ public interface YopSignProcessor {
     boolean isSupport(CredentialsItem credentialsItem);
 
     /**
+     * 签名器名称
+     *
+     * @return
+     */
+    String name();
+
+    /**
      * 获取摘要算法
      *
      * @return
      */
-    DigestAlgEnum getDigestAlg();
+    String getDigestAlg();
 }

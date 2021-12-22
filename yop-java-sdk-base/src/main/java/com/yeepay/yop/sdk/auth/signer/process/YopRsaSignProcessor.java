@@ -10,7 +10,7 @@ import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.rsa.RSA;
 
 /**
- * title: <br/>
+ * title: YopRsaSignProcessor<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -41,7 +41,12 @@ public class YopRsaSignProcessor implements YopSignProcessor {
     }
 
     @Override
-    public DigestAlgEnum getDigestAlg() {
-        return DigestAlgEnum.SHA256;
+    public String name() {
+        return "RSA2048";
+    }
+
+    @Override
+    public String getDigestAlg() {
+        return DigestAlgEnum.SHA256.name();
     }
 }
