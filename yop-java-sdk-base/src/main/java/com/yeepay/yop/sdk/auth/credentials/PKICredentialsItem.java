@@ -19,7 +19,7 @@ import java.security.PublicKey;
  * @version 1.0.0
  * @since 2021/1/20 12:20 上午
  */
-public class PKICredentialsItem {
+public class PKICredentialsItem implements CredentialsItem {
 
     private PrivateKey privateKey;
 
@@ -41,6 +41,7 @@ public class PKICredentialsItem {
         return publicKey;
     }
 
+    @Override
     public CertTypeEnum getCertType() {
         return certType;
     }

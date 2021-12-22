@@ -17,8 +17,6 @@ import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.junit.Test;
 
-import java.io.File;
-
 /**
  * title: <br>
  * description: 描述<br>
