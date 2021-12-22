@@ -107,7 +107,7 @@ public class YopSignUtils {
             throw new YopClientException("unsupported certType");
         }
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, null, CertTypeEnum.parse(certType));
-        return yopSignProcessor.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcessor.getDigestAlg().getValue();
+        return yopSignProcessor.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcessor.getDigestAlg();
     }
 
     private static void validSignature(String signature) {

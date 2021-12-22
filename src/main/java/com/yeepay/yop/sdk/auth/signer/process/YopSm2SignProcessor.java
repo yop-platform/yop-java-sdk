@@ -41,7 +41,12 @@ public class YopSm2SignProcessor implements YopSignProcessor {
     }
 
     @Override
-    public DigestAlgEnum getDigestAlg() {
-        return DigestAlgEnum.SM3;
+    public String name() {
+        return "SM2";
+    }
+
+    @Override
+    public String getDigestAlg() {
+        return DigestAlgEnum.SM3.name();
     }
 }
