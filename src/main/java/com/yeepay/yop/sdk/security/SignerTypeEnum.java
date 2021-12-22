@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.security;
 
 /**
- * title: <br/>
+ * title: SignerTypeEnum<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -15,16 +15,14 @@ package com.yeepay.yop.sdk.security;
  * @since 2021/1/21 2:33 上午
  */
 public enum SignerTypeEnum {
-    SM2("SM2", "SM2签名"),
-    OAUTH2("OAUTH2", "OAUTH2签名"),
-    RSA("RSA", "RSA签名");
+    SM2("SM2签名"),
+    OAUTH2("OAUTH2签名"),
+    RSA("RSA签名");
+
     private String value;
-    private String description;
 
-    SignerTypeEnum(String value, String description) {
+    SignerTypeEnum(String value) {
         this.value = value;
-        this.description = description;
     }
-
 
 }

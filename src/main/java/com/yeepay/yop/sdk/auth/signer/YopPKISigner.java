@@ -23,6 +23,7 @@ import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.SignerTypeEnum;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
@@ -41,7 +42,7 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: <br/>
+ * title: YopPKISigner<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -97,6 +98,11 @@ public class YopPKISigner implements YopSigner {
     }
 
     @Override
+    public List<String> supportSignerAlg() {
+        return Lists.newArrayList(SignerTypeEnum.SM2.name(), SignerTypeEnum.RSA.name());
+    }
+
+    @Override
     public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
         checkNotNull(request, "request should not be null.");
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
@@ -115,7 +121,7 @@ public class YopPKISigner implements YopSigner {
 
         // 计算签名
         YopSignProcessor yopSignProcessor = YopSigner.getSignProcess(credentialsItem.getCertType());
-        String signature = yopSignProcessor.sign(canonicalRequest, credentialsItem) + "$" + yopSignProcessor.getDigestAlg().getValue();
+        String signature = yopSignProcessor.sign(canonicalRequest, credentialsItem) + "$" + yopSignProcessor.getDigestAlg();
 
         LOGGER.debug("CanonicalRequest:{}", canonicalRequest.replace("\n", "[\\n]"));
         // 添加认证头
