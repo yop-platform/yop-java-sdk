@@ -47,7 +47,7 @@ public class DigitalEnvelopeUtils {
         String encryptedRandomKeyToBase64 = args[0];
         String encryptedDataToBase64 = args[1];
         SymmetricEncryptAlgEnum symmetricEncryptAlg = SymmetricEncryptAlgEnum.parse(args[2]);
-        DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[3]);
+        DigestAlgEnum digestAlg = DigestAlgEnum.valueOf(args[3]);
 
         Encryption unsymmetricEncryption = UnsymmetricEncryptionFactory.getUnsymmetricEncryption(digestAlg);
 
@@ -120,7 +120,7 @@ public class DigitalEnvelopeUtils {
             throw new VerifySignFailedException("Illegal format");
         }
         String signToBase64 = args[0];
-        DigestAlgEnum digestAlg = DigestAlgEnum.parse(args[1]);
+        DigestAlgEnum digestAlg = DigestAlgEnum.valueOf(args[1]);
         //验证签名
         boolean verifySign = RSA.verifySign(content.replaceAll("[ \t\n]", ""), signToBase64, publicKey, digestAlg);
         if (!verifySign) {

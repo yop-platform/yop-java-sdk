@@ -41,7 +41,12 @@ public class YopRsaSignProcessor implements YopSignProcessor {
     }
 
     @Override
-    public DigestAlgEnum getDigestAlg() {
-        return DigestAlgEnum.SHA256;
+    public String name() {
+        return "RSA2048";
+    }
+
+    @Override
+    public String getDigestAlg() {
+        return DigestAlgEnum.SHA256.name();
     }
 }
