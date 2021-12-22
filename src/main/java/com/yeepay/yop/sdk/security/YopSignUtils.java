@@ -68,7 +68,7 @@ public class YopSignUtils {
     public static void verify(String data, String signature, PublicKey publicKey) {
         validSignature(signature);
         String args[] = signature.split("\\$");
-        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getYopSignProcess(digestAlgANdCertTypeMap.get(args[1]).getValue());
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(digestAlgANdCertTypeMap.get(args[1]).name());
         if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
@@ -102,7 +102,7 @@ public class YopSignUtils {
      * @return
      */
     public static String sign(String data, String certType, PrivateKey privateKey) {
-        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getYopSignProcess(certType);
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(certType);
         if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
