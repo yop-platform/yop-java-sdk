@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.rsa.RSA;
@@ -23,13 +24,20 @@ public class YopRsaSignProcessor implements YopSignProcessor {
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SHA256;
 
     @Override
-    public String sign(String content, PKICredentialsItem credentialsItem) {
-        return RSA.sign(content, credentialsItem.getPrivateKey(), DIGEST_ALG);
+    public String doSign(String content, CredentialsItem credentialsItem) {
+        PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
+        return RSA.sign(content, pkiCredentialsItem.getPrivateKey(), DIGEST_ALG);
     }
 
     @Override
-    public boolean verify(String content, String signature, PKICredentialsItem credentialsItem) {
-        return RSA.verifySign(content, signature, credentialsItem.getPublicKey(), DIGEST_ALG);
+    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
+        PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
+        return RSA.verifySign(content, signature, pkiCredentialsItem.getPublicKey(), DIGEST_ALG);
+    }
+
+    @Override
+    public boolean isSupport(CredentialsItem credentialsItem) {
+        return credentialsItem instanceof PKICredentialsItem;
     }
 
     @Override
