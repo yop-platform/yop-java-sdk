@@ -7,17 +7,14 @@ package com.yeepay.yop.sdk.auth.signer;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * title: Yop 签名器<br/>
@@ -38,8 +35,6 @@ public interface YopSigner {
      */
     List<String> supportSignerAlg();
 
-    Map<CertTypeEnum, YopSignProcessor> signerProcessMap = new HashMap<>();
-
     /**
      * 签名
      *
@@ -58,16 +53,9 @@ public interface YopSigner {
         String content = httpResponse.readContent();
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentials.getCredential();
         content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!signerProcessMap.get(pkiCredentialsItem.getCertType()).verify(content, signature, pkiCredentialsItem)) {
+        if (!YopSignProcessorFactory.getSignProcessor(pkiCredentialsItem.getCertType().name()).verify(content, signature, pkiCredentialsItem)) {
             throw new VerifySignFailedException("response sign verify failure");
         }
     }
 
-    static void registerYopSignProcess(CertTypeEnum certTypeEnum, YopSignProcessor yopSignProcessor) {
-        signerProcessMap.put(certTypeEnum, yopSignProcessor);
-    }
-
-    static YopSignProcessor getSignProcess(CertTypeEnum certType) {
-        return signerProcessMap.get(certType);
-    }
 }

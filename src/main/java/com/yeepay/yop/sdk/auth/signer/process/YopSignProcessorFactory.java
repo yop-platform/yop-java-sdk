@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
- * title: <br>
+ * title: YopSignProcessorFactory<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -39,7 +39,12 @@ public class YopSignProcessorFactory {
         return getSignProcessor(certType);
     }
 
-    public static void registeYopSignProcess(String certType, YopSignProcessor yopSignProcessor) {
+    public static void registerSignProcessor(String certType, YopSignProcessor yopSignProcessor) {
         YOP_SIGN_PROCESSOR_MAP.put(certType, yopSignProcessor);
+    }
+
+    @Deprecated
+    public static void registeYopSignProcess(String certType, YopSignProcessor yopSignProcessor) {
+        registerSignProcessor(certType, yopSignProcessor);
     }
 }

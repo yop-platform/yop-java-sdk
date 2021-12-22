@@ -12,6 +12,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -69,7 +70,7 @@ public class Sm2SignAndVerifyTest {
                 "x-yop-appkey:app_100800095600038\n" +
                 "x-yop-request-id:c81634dc-9404-4cbe-8ccb-27269a7ced55";
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(Sm2Utils.string2PrivateKey(priKey), null, CertTypeEnum.SM2);
-        String signature = YopSigner.getSignProcess(pkiCredentialsItem.getCertType()).sign(content, pkiCredentialsItem);
+        String signature = YopSignProcessorFactory.getSignProcessor(pkiCredentialsItem.getCertType().name()).sign(content, pkiCredentialsItem);
         Assert.assertTrue(StringUtils.isNotEmpty(signature));
 
     }
@@ -81,7 +82,7 @@ public class Sm2SignAndVerifyTest {
         YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(CertTypeEnum.SM2), CertTypeEnum.SM2);
         String content = "{\"requestId\":\"3dd63639-bf35-427b-9110-f691ef00c20a\",\"code\":\"40042\",\"message\":\"非法的参数\",\"subCode\":\"isv.service.not-exists\",\"subMessage\":\"服务不存在\",\"docUrl\":\"http://10.151.31.146/docs/v2/platform/sdk_guide/error_code/index.html#platform_isv_service_not-exists\"}";
-        YopSignProcessor yopSignProcessor = YopSigner.getSignProcess(CertTypeEnum.SM2);
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(CertTypeEnum.SM2.name());
         boolean verifySuccess = yopSignProcessor.verify(content, signature, pkiCredentialsItem);
         Assert.assertTrue(verifySuccess);
     }
