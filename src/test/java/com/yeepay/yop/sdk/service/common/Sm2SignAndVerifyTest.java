@@ -10,7 +10,7 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.auth.signer.YopBaseSigner;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.internal.Request;
@@ -49,7 +49,7 @@ public class Sm2SignAndVerifyTest {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    public class YopTestSigner implements YopSigner {
+    public class YopTestSigner extends YopBaseSigner {
         @Override
         public List<String> supportSignerAlg() {
             return Lists.newArrayList("TEST");
