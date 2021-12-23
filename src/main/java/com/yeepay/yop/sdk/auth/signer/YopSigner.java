@@ -5,14 +5,12 @@
 package com.yeepay.yop.sdk.auth.signer;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.util.List;
 
@@ -49,13 +47,9 @@ public interface YopSigner {
      * @param httpResponse
      * @param signature
      */
-    default void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials credentials, SignOptions options) {
-        String content = httpResponse.readContent();
-        PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentials.getCredential();
-        content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!YopSignProcessorFactory.getSignProcessor(pkiCredentialsItem.getCertType().name()).verify(content, signature, pkiCredentialsItem)) {
-            throw new VerifySignFailedException("response sign verify failure");
-        }
-    }
+    void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials credentials, SignOptions options);
 
+    void registerYopSignProcessor(CertTypeEnum certTypeEnum, YopSignProcessor yopSignProcessor);
+
+    YopSignProcessor getSignProcessor(CertTypeEnum certType);
 }

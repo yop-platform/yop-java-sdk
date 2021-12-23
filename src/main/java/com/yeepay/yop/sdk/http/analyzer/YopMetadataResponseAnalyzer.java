@@ -1,6 +1,5 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.google.common.base.CharMatcher;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
@@ -54,7 +53,7 @@ public class YopMetadataResponseAnalyzer implements HttpResponseAnalyzer {
         metadata.setTransferEncoding(httpResponse.getHeader(Headers.TRANSFER_ENCODING));
         String eTag = httpResponse.getHeader(Headers.ETAG);
         if (eTag != null) {
-            metadata.setETag(CharMatcher.is('"').trimFrom(eTag));
+            metadata.setETag(trim(eTag));
         }
         metadata.setExpires(httpResponse.getHeaderAsRfc822Date(Headers.EXPIRES));
         metadata.setLastModified(httpResponse.getHeaderAsRfc822Date(Headers.LAST_MODIFIED));
@@ -62,6 +61,31 @@ public class YopMetadataResponseAnalyzer implements HttpResponseAnalyzer {
         metadata.setYopCertSerialNo(httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO));
         handleYopResponseMetadata(metadata);
         return false;
+    }
+
+    private String trim(String str) {
+        char trimChar = '"';
+        char[] chars = str.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == trimChar) {
+                continue;
+            }
+            {
+                str = StringUtils.substring(str, i);
+                break;
+            }
+        }
+        chars = str.toCharArray();
+        for (int i = chars.length - 1; i >= 0; i--) {
+            if (chars[i] == trimChar) {
+                continue;
+            }
+            {
+                str = StringUtils.substring(str, 0, i + 1);
+                break;
+            }
+        }
+        return str;
     }
 
     private void handleYopResponseMetadata(YopResponseMetadata metadata) {

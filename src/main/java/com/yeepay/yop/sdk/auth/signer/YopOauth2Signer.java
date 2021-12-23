@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @version 1.0.0
  * @since 2020/1/15 上午11:19
  */
-public class YopOauth2Signer implements YopSigner {
+public class YopOauth2Signer extends YopBaseSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopOauth2Signer.class);
 
