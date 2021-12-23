@@ -39,9 +39,8 @@ public class CustomCachedCredentialsProvider extends YopCachedCredentialsProvide
         yopCertConfig.setStoreType(CertStoreType.STRING);
         yopCertConfig.setValue(CredentialsRepository.getPrivateKeyStr(appKey));
 
-        List<YopCertConfig> isvPrivateKeys = new LinkedList<YopCertConfig>() {{
-            add(yopCertConfig);
-        }};
+        List<YopCertConfig> isvPrivateKeys = new LinkedList<YopCertConfig>();
+        isvPrivateKeys.add(yopCertConfig);
         yopAppConfig.setIsvPrivateKey(isvPrivateKeys);
 
         if (certType == CertTypeEnum.SM2) {
@@ -49,9 +48,9 @@ public class CustomCachedCredentialsProvider extends YopCachedCredentialsProvide
             isvEncryptKey.setCertType(CertTypeEnum.SM4);
             isvEncryptKey.setStoreType(CertStoreType.STRING);
             isvEncryptKey.setValue(CredentialsRepository.getEncryptKeyStr(appKey));
-            yopAppConfig.setIsvEncryptKeyList(new LinkedList<YopCertConfig>() {{
-                add(isvEncryptKey);
-            }});
+            List<YopCertConfig> isvEncryptKeyList = new LinkedList<>();
+            isvEncryptKeyList.add(isvEncryptKey);
+            yopAppConfig.setIsvEncryptKeyList(isvEncryptKeyList);
         }
         return yopAppConfig;
     }

@@ -56,4 +56,8 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
         throw new YopClientException("unsupported certType");
     }
 
+    @Override
+    public String getDefaultAppKey() {
+        return null;
+    }
 }
