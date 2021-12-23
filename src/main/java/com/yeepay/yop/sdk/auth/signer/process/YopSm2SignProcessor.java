@@ -21,7 +21,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
  * @version 1.0.0
  * @since 2021/1/18 3:59 下午
  */
-public class YopSm2SignProcessor implements YopSignProcessor {
+public class YopSm2SignProcessor extends BaseYopSignProcessor {
 
     @Override
     public String doSign(String content, CredentialsItem credentialsItem) {
