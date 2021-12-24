@@ -4,13 +4,14 @@
  */
 package com.yeepay.yop.sdk.auth.signer;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.SignerTypeEnum;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
- * title: <br/>
+ * title: YopSignerFactory<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -20,19 +21,34 @@ import java.util.Map;
  * @since 2021/1/21 2:26 上午
  */
 public class YopSignerFactory {
-    private static Map<SignerTypeEnum, YopSigner> signerMap = new HashMap<>(4);
+
+    private static final Map<String, YopSigner> YOP_SIGNER_MAP = Maps.newHashMapWithExpectedSize(3);
 
     static {
-        signerMap.put(SignerTypeEnum.SM2, new YopPKISigner());
-        signerMap.put(SignerTypeEnum.OAUTH2, new YopOauth2Signer());
-        signerMap.put(SignerTypeEnum.RSA, new YopPKISigner());
+        ServiceLoader<YopSigner> yopSignerLoader = ServiceLoader.load(YopSigner.class);
+        for (YopSigner yopSigner : yopSignerLoader) {
+            for (String signerType : yopSigner.supportSignerAlg()) {
+                YOP_SIGNER_MAP.put(signerType, yopSigner);
+            }
+        }
     }
 
+    public static void registerSigner(String signerType, YopSigner signer) {
+        YOP_SIGNER_MAP.put(signerType, signer);
+    }
+
+    @Deprecated
     public static void registerSigner(SignerTypeEnum signerType, YopSigner signer) {
-        signerMap.put(signerType, signer);
+        registerSigner(signerType.name(), signer);
     }
 
-    public static YopSigner getSigner(SignerTypeEnum signerType) {
-        return signerMap.get(signerType);
+    public static YopSigner getSigner(String signerType) {
+        return YOP_SIGNER_MAP.get(signerType);
     }
+
+    @Deprecated
+    public static YopSigner getSigner(SignerTypeEnum signerType) {
+        return getSigner(signerType.name());
+    }
+
 }
