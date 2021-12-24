@@ -4,11 +4,11 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
+import com.yeepay.yop.sdk.exception.YopClientException;
 
 /**
- * title: <br/>
+ * title: YopSignProcessor<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>
@@ -18,6 +18,7 @@ import com.yeepay.yop.sdk.security.DigestAlgEnum;
  * @since 2021/1/18 4:00 下午
  */
 public interface YopSignProcessor {
+
     /**
      * 签名
      *
@@ -25,7 +26,14 @@ public interface YopSignProcessor {
      * @param credentialsItem
      * @return
      */
-    String sign(String content, PKICredentialsItem credentialsItem);
+    default String sign(String content, CredentialsItem credentialsItem) {
+        if (!isSupport(credentialsItem)) {
+            throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+        }
+        return doSign(content, credentialsItem);
+    }
+
+    String doSign(String content, CredentialsItem credentialsItem);
 
     /**
      * 验签
@@ -35,12 +43,28 @@ public interface YopSignProcessor {
      * @param credentialsItem
      * @return
      */
-    boolean verify(String content, String signature, PKICredentialsItem credentialsItem);
+    default boolean verify(String content, String signature, CredentialsItem credentialsItem) {
+        if (isSupport(credentialsItem)) {
+            return doVerify(content, signature, credentialsItem);
+        }
+        throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+    }
+
+    boolean doVerify(String content, String signature, CredentialsItem credentialsItem);
+
+    boolean isSupport(CredentialsItem credentialsItem);
+
+    /**
+     * 签名处理器名称
+     *
+     * @return
+     */
+    String name();
 
     /**
      * 获取摘要算法
      *
      * @return
      */
-    DigestAlgEnum getDigestAlg();
+    String getDigestAlg();
 }
