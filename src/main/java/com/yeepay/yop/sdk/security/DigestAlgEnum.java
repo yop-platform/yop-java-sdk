@@ -1,51 +1,33 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by Fernflower decompiler)
-//
-
+/*
+ * Copyright: Copyright (c)2011
+ * Company: 易宝支付(YeePay)
+ */
 package com.yeepay.yop.sdk.security;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * title: DigestAlgEnum<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
+ *
+ * @author dreambt
+ * @version 1.0.0
+ * @since 2021/12/22 4:00 下午
+ */
 public enum DigestAlgEnum {
-    SHA256("SHA256", "sha-256摘要"),
-    SHA512("SHA512", "sha-512摘要"),
-    SM3("SM3", "SM3摘要算法");
 
-    private static final Map<String, DigestAlgEnum> VALUE_MAP = new HashMap();
+    SHA256("sha-256摘要"),
+    SHA512("sha-512摘要"),
+    SM3("SM3摘要算法");
+
     private final String value;
-    private final String displayName;
 
-    DigestAlgEnum(String value, String displayName) {
+    DigestAlgEnum(String value) {
         this.value = value;
-        this.displayName = displayName;
-    }
-
-    public static DigestAlgEnum parse(String value) {
-        return VALUE_MAP.get(value);
     }
 
     public String getValue() {
         return this.value;
     }
 
-    public String getDisplayName() {
-        return this.displayName;
-    }
-
-    public static Map<String, DigestAlgEnum> getValueMap() {
-        return VALUE_MAP;
-    }
-
-    static {
-        DigestAlgEnum[] var0 = values();
-        int var1 = var0.length;
-
-        for (int var2 = 0; var2 < var1; ++var2) {
-            DigestAlgEnum item = var0[var2];
-            VALUE_MAP.put(item.value, item);
-        }
-
-    }
 }
