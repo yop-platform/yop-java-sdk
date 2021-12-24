@@ -6,7 +6,7 @@ package com.yeepay.yop.sdk.encryptor;
 
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.encryptor.auth.credentials.provider.MockEncryptorCredentialsProvider;
-import com.yeepay.yop.sdk.encryptor.signer.process.EncryptorSignerProcess;
+import com.yeepay.yop.sdk.encryptor.signer.process.MockEncryptorSignProcessor;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.YopClientImpl;
@@ -29,7 +29,7 @@ public class EncryptorTest {
     @Test
     public void test() {
         System.setProperty("yop.sdk.config.env", "qa_single_default");
-        YopSignProcessorFactory.registerSignProcessor(CertTypeEnum.SM2.name(), new EncryptorSignerProcess());
+        YopSignProcessorFactory.registerSignProcessor(CertTypeEnum.SM2.name(), new MockEncryptorSignProcessor());
         YopClientImpl yopClient = YopClientBuilder.builder()
                 .withCredentialsProvider(new MockEncryptorCredentialsProvider())
                 .build();
