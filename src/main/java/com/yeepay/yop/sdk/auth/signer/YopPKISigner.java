@@ -111,8 +111,9 @@ public class YopPKISigner implements YopSigner {
         // Sorted the headers should be signed from the request.
         SortedMap<String, String> headersToSign = this.getHeadersToSign(request.getHeaders(), defaultHeadersToSign);
 
+        String authString = buildAuthString(credentials, options);
         // 获取规范请求串
-        String canonicalRequest = buildCanonicalRequest(request, credentials, options, headersToSign);
+        String canonicalRequest = buildCanonicalRequest(request, headersToSign, authString);
 
         // 计算签名
         YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(credentialsItem.getCertType().name());
@@ -120,7 +121,7 @@ public class YopPKISigner implements YopSigner {
 
         LOGGER.debug("CanonicalRequest:{}", canonicalRequest.replace("\n", "[\\n]"));
         // 添加认证头
-        addAuthHeader(request, credentials, options, headersToSign, signature);
+        addAuthHeader(request, options, headersToSign, signature, authString);
     }
 
     private void additionalHeader(Request<? extends BaseRequest> request, SignOptions options) {
@@ -131,12 +132,8 @@ public class YopPKISigner implements YopSigner {
     }
 
 
-    private void addAuthHeader(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options,
-                               SortedMap<String, String> headersToSign, String signature) {
-        String accessKeyId = credentials.getAppKey();
-        Date timestamp = new Date();
-        String authString = YOP_AUTH_VERSION + "/" + accessKeyId + "/"
-                + DateUtils.formatAlternateIso8601Date(timestamp) + "/" + options.getExpirationInSeconds();
+    private void addAuthHeader(Request<? extends BaseRequest> request, SignOptions options,
+                               SortedMap<String, String> headersToSign, String signature, String authString) {
         String signedHeaders = signedHeaderStringJoiner.join(headersToSign.keySet());
         signedHeaders = signedHeaders.trim().toLowerCase();
         String authorizationHeader = options.getProtocolPrefix() + " " + authString + "/" + signedHeaders + "/" + signature;
@@ -146,20 +143,22 @@ public class YopPKISigner implements YopSigner {
         request.addHeader(Headers.AUTHORIZATION, authorizationHeader);
     }
 
-
-    private String buildCanonicalRequest(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options,
-                                         SortedMap<String, String> headersToSign) {
+    private String buildAuthString(YopCredentials credentials, SignOptions options) {
         //TODO 校验rsaCredentials长度
         String accessKeyId = credentials.getAppKey();
-
         Date timestamp = new Date();
+        return YOP_AUTH_VERSION + "/" + accessKeyId + "/"
+                + DateUtils.formatAlternateIso8601Date(timestamp) + "/" + options.getExpirationInSeconds();
+    }
+
+
+    private String buildCanonicalRequest(Request<? extends BaseRequest> request,
+                                         SortedMap<String, String> headersToSign,
+                                         String authString) {
         // Formatting the query string with signing protocol.
         String canonicalQueryString = getCanonicalQueryString(request);
         // Formatting the headers from the request based on signing protocol.
         String canonicalHeader = this.getCanonicalHeaders(headersToSign);
-
-        String authString = YOP_AUTH_VERSION + "/" + accessKeyId + "/"
-                + DateUtils.formatAlternateIso8601Date(timestamp) + "/" + options.getExpirationInSeconds();
 
         String apiUri = request.getResourcePath();
         String canonicalURI = this.getCanonicalURIPath(apiUri);
