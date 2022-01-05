@@ -270,7 +270,6 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <exclude>META-INF/services/*</exclude>
                                         <exclude>META-INF/spring.*</exclude>
                                         <exclude>META-INF/web-fragment.xml</exclude>
                                         <exclude>META-INF/*.SF</exclude>
