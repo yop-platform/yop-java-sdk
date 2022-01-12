@@ -198,96 +198,291 @@
     </dependencyManagement>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Compiler -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.0</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <fork>true</fork>
+                        <verbose>true</verbose>
+                        <encoding>UTF-8</encoding>
+                        <showWarnings>false</showWarnings>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.5</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>pl.project13.maven</groupId>
+                    <artifactId>git-commit-id-plugin</artifactId>
+                    <version>${git-commit-id-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>get-the-git-infos</id>
+                            <goals>
+                                <goal>revision</goal>
+                            </goals>
+                            <phase>initialize</phase>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                        <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+                        </generateGitPropertiesFilename>
+                        <commitIdGenerationMode>full</commitIdGenerationMode>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>*.p12</exclude>
+                            <exclude>*.pfx</exclude>
+                            <exclude>config/yop_sdk_config_dev.json</exclude>
+                            <exclude>config/yop_sdk_config_local.json</exclude>
+                            <exclude>config/yop_sdk_config_pro.json</exclude>
+                        </excludes>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Javadoc -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.9.1</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                        <charset>UTF-8</charset>
+                        <encoding>UTF-8</encoding>
+                        <docencoding>UTF-8</docencoding>
+                        <additionalparam>-Xdoclint:none</additionalparam>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.2.4</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                            <configuration>
+                                <shadedArtifactAttached>true</shadedArtifactAttached>
+                                <!-- shaded别名 -->
+                                <shadedClassifierName>shade</shadedClassifierName>
+                                <!-- 将所有不使用的类全部排除掉(该插件会误删一些类，暂时不瘦身) -->
+                                <!--                                    <minimizeJar>true</minimizeJar>-->
+                                <artifactSet>
+                                    <excludes>
+                                        <exclude>org.bouncycastle:*</exclude>
+                                    </excludes>
+                                </artifactSet>
+                                <filters>
+                                    <filter>
+                                        <artifact>*:*</artifact>
+                                        <excludes>
+                                            <exclude>META-INF/spring.*</exclude>
+                                            <exclude>META-INF/web-fragment.xml</exclude>
+                                            <exclude>META-INF/*.SF</exclude>
+                                            <exclude>META-INF/*.DSA</exclude>
+                                            <exclude>META-INF/*.RSA</exclude>
+                                            <exclude>mozilla/*</exclude>
+                                            <exclude>rebel.xml</exclude>
+                                        </excludes>
+                                    </filter>
+                                </filters>
+                                <relocations>
+                                    <relocation>
+                                        <pattern>com.fasterxml</pattern>
+                                        <shadedPattern>com.yeepay.shade.com.fasterxml</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>com.google</pattern>
+                                        <shadedPattern>com.yeepay.shade.com.google</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>javax.annotation</pattern>
+                                        <shadedPattern>com.yeepay.shade.javax.annotation</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>org.checkerframework</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.checkerframework</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>org.apache</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.apache</shadedPattern>
+                                        <excludes>
+                                            <exclude>org/apache/commons/logging/**</exclude>
+                                        </excludes>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>org.joda</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.joda</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>org.springframework</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.springframework</shadedPattern>
+                                    </relocation>
+                                </relocations>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <configuration>
+                        <descriptors>
+                            <descriptor>assembly.xml</descriptor>
+                        </descriptors>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jarsigner-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <id>sign</id>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>verify</id>
+                            <goals>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <verbose>true</verbose>
+                        <certs>true</certs>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <!-- 这个configuration必须配置，用于gpg非交互式密码输入 -->
+                        <gpgArguments>
+                            <arg>--pinentry-mode</arg>
+                            <arg>loopback</arg>
+                        </gpgArguments>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.0.0-M4</version>
+                    <configuration>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <tagNameFormat>v@{project.version}</tagNameFormat>
+                        <!--                    <arguments>-DskipTests</arguments>-->
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.7</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <serverId>sonatype-nexus-staging</serverId>
+                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>commons-codec</groupId>
+                            <artifactId>commons-codec</artifactId>
+                            <version>${commons-codec.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
-            <!-- Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <fork>true</fork>
-                    <verbose>true</verbose>
-                    <encoding>UTF-8</encoding>
-                    <showWarnings>false</showWarnings>
-                </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.5</version>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
             </plugin>
 
             <plugin>
                 <groupId>pl.project13.maven</groupId>
                 <artifactId>git-commit-id-plugin</artifactId>
-                <version>${git-commit-id-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>get-the-git-infos</id>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
-                    </generateGitPropertiesFilename>
-                    <commitIdGenerationMode>full</commitIdGenerationMode>
-                </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <excludes>
-                        <exclude>*.p12</exclude>
-                        <exclude>*.pfx</exclude>
-                        <exclude>config/yop_sdk_config_dev.json</exclude>
-                        <exclude>config/yop_sdk_config_local.json</exclude>
-                        <exclude>config/yop_sdk_config_pro.json</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
-            <!-- Javadoc -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                    <charset>UTF-8</charset>
-                    <encoding>UTF-8</encoding>
-                    <docencoding>UTF-8</docencoding>
-                    <additionalparam>-Xdoclint:none</additionalparam>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
@@ -322,79 +517,21 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-jarsigner-plugin</artifactId>
-                        <version>3.0.0</version>
-                        <executions>
-                            <execution>
-                                <id>sign</id>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>verify</id>
-                                <goals>
-                                    <goal>verify</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <verbose>true</verbose>
-                            <certs>true</certs>
-                        </configuration>
                     </plugin>
 
-                    <!-- GPG -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- 这个configuration必须配置，用于gpg非交互式密码输入 -->
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
                     </plugin>
 
-                    <!-- Release -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-release-plugin</artifactId>
-                        <version>3.0.0-M4</version>
-                        <configuration>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <!--                    <arguments>-DskipTests</arguments>-->
-                        </configuration>
                     </plugin>
 
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.6.7</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>sonatype-nexus-staging</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>commons-codec</groupId>
-                                <artifactId>commons-codec</artifactId>
-                                <version>${commons-codec.version}</version>
-                            </dependency>
-                        </dependencies>
                     </plugin>
                 </plugins>
             </build>
@@ -432,20 +569,6 @@
                     <url>http://artifact.paas.yp:8000/artifactory/yp3g-common-release</url>
                 </repository>
             </distributionManagement>
-        </profile>
-
-        <profile>
-            <id>jdk7</id>
-            <properties>
-                <java.version>1.7</java.version>
-                <git-commit-id-plugin.version>2.2.6</git-commit-id-plugin.version>
-
-                <commons-io.version>2.4</commons-io.version>
-                <guava.version>20.0</guava.version>
-                <org.springframework>4.3.15.RELEASE</org.springframework>
-                <bouncycastle.version>1.67</bouncycastle.version>
-                <tika-core.version>1.18</tika-core.version>
-            </properties>
         </profile>
     </profiles>
 </project>

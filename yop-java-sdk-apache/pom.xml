@@ -45,93 +45,12 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <!-- shaded别名 -->
-                            <shadedClassifierName>shade</shadedClassifierName>
-                            <!-- 将所有不使用的类全部排除掉(该插件会误删一些类，暂时不瘦身) -->
-                            <!--                                    <minimizeJar>true</minimizeJar>-->
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.bouncycastle:*</exclude>
-                                </excludes>
-                            </artifactSet>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/spring.*</exclude>
-                                        <exclude>META-INF/web-fragment.xml</exclude>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>mozilla/*</exclude>
-                                        <exclude>rebel.xml</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.fasterxml</pattern>
-                                    <shadedPattern>com.yeepay.shade.com.fasterxml</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google</pattern>
-                                    <shadedPattern>com.yeepay.shade.com.google</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>javax.annotation</pattern>
-                                    <shadedPattern>com.yeepay.shade.javax.annotation</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.checkerframework</pattern>
-                                    <shadedPattern>com.yeepay.shade.org.checkerframework</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.apache</pattern>
-                                    <shadedPattern>com.yeepay.shade.org.apache</shadedPattern>
-                                    <excludes>
-                                        <exclude>org/apache/commons/logging/**</exclude>
-                                    </excludes>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.joda</pattern>
-                                    <shadedPattern>com.yeepay.shade.org.joda</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.springframework</pattern>
-                                    <shadedPattern>com.yeepay.shade.org.springframework</shadedPattern>
-                                </relocation>
-                            </relocations>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
