@@ -44,6 +44,7 @@
         <httpcomponents.version>4.5.13</httpcomponents.version>
         <okhttp.version>4.9.3</okhttp.version>
         <oklog-java.version>2.3.0</oklog-java.version>
+        <jmh.version>1.33</jmh.version>
     </properties>
 
     <dependencyManagement>
@@ -192,6 +193,18 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j-api.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
