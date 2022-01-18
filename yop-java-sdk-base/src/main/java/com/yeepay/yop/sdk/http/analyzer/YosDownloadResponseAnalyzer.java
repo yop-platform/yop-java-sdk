@@ -58,7 +58,7 @@ public class YosDownloadResponseAnalyzer implements HttpResponseAnalyzer {
         downloadMetadata.setLastModified(httpResponse.getHeaderAsRfc822Date(Headers.LAST_MODIFIED));
         downloadMetadata.setYopContentSha256(httpResponse.getHeader(Headers.YOP_CONTENT_SHA256));
 
-        downloadResponse.setResult(new YosDownloadInputStream(httpResponse.getContent()));
+        downloadResponse.setResult(new YosDownloadInputStream(httpResponse));
         return true;
     }
 }

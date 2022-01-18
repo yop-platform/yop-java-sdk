@@ -1,7 +1,9 @@
 package com.yeepay.yop.sdk.model.yos;
 
+import com.yeepay.yop.sdk.http.YopHttpResponse;
+
 import java.io.FilterInputStream;
-import java.io.InputStream;
+import java.io.IOException;
 
 /**
  * title: Yos下载流<br>
@@ -15,7 +17,18 @@ import java.io.InputStream;
  */
 public class YosDownloadInputStream extends FilterInputStream {
 
-    public YosDownloadInputStream(InputStream content) {
-        super(content);
+    private final YopHttpResponse httpResponse;
+
+    public YosDownloadInputStream(YopHttpResponse httpResponse) {
+        super(httpResponse.getContent());
+        this.httpResponse = httpResponse;
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if (null != httpResponse) {
+            httpResponse.close();
+        }
     }
 }

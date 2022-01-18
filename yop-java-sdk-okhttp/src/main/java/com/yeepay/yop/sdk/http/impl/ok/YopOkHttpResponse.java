@@ -50,4 +50,10 @@ public class YopOkHttpResponse extends AbstractYopHttpResponse {
         return headers;
     }
 
+    @Override
+    public void close() throws IOException {
+        if (null != httpResponse) {
+            httpResponse.close();
+        }
+    }
 }

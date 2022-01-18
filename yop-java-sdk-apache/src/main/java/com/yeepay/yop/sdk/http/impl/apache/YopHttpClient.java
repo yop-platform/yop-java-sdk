@@ -6,9 +6,7 @@ import com.yeepay.yop.sdk.http.*;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
-import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -22,7 +20,6 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -45,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -130,31 +128,8 @@ public class YopHttpClient extends AbstractYopHttpClient {
     }
 
     @Override
-    public <Output extends BaseResponse, Input extends BaseRequest> Output execute(Request<Input> request,
-                                                                                   YopRequestConfig yopRequestConfig,
-                                                                                   ExecutionContext executionContext,
-                                                                                   HttpResponseHandler<Output> responseHandler) {
-        CloseableHttpResponse httpResponse = null;
-        Output yopResponse = null;
-        try {
-            configYopRequest(request, yopRequestConfig, executionContext);
-            logger.debug("Sending Request: {}", request);
-            httpResponse = this.httpClient.execute(createHttpRequest(request), createHttpContext(request, yopRequestConfig));
-            yopResponse = responseHandler.handle(new HttpResponseHandleContext(new YopApacheHttpResponse(httpResponse), request, yopRequestConfig, executionContext));
-            return yopResponse;
-        } catch (Exception e) {
-            YopClientException yop;
-            if (e instanceof YopClientException) {
-                yop = (YopClientException) e;
-            } else {
-                yop = new YopClientException("Unable to execute HTTP request", e);
-            }
-            throw yop;
-        } finally {
-            if (!(yopResponse instanceof YosDownloadResponse)) {
-                HttpClientUtils.closeQuietly(httpResponse);
-            }
-        }
+    protected <Input extends BaseRequest> YopHttpResponse doExecute(Request<Input> request, YopRequestConfig yopRequestConfig) throws IOException {
+        return new YopApacheHttpResponse(this.httpClient.execute(createHttpRequest(request), createHttpContext(request, yopRequestConfig)));
     }
 
     /**

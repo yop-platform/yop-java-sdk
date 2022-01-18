@@ -8,15 +8,19 @@ import com.github.simonpercic.oklog3.OkLogInterceptor;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.http.AbstractYopHttpClient;
 import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.*;
+import com.yeepay.yop.sdk.http.HttpMethodName;
+import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.utils.HttpUtils;
-import okhttp3.*;
+import okhttp3.Credentials;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -79,25 +83,8 @@ public class YopHttpClient extends AbstractYopHttpClient {
     }
 
     @Override
-    public <Output extends BaseResponse, Input extends BaseRequest> Output execute(
-            Request<Input> yopRequest, YopRequestConfig yopRequestConfig,
-            ExecutionContext executionContext, HttpResponseHandler<Output> responseHandler) {
-        try {
-            configYopRequest(yopRequest, yopRequestConfig, executionContext);
-            OkHttpClient httpClient = createHttpClient(yopRequestConfig);
-            logger.debug("Sending Request: {}", yopRequest);
-            final Response httpResponse = httpClient.newCall(createHttpRequest(yopRequest)).execute();
-            return responseHandler.handle(new HttpResponseHandleContext(
-                    new YopOkHttpResponse(httpResponse), yopRequest, yopRequestConfig, executionContext));
-        } catch (Exception e) {
-            YopClientException yop;
-            if (e instanceof YopClientException) {
-                yop = (YopClientException) e;
-            } else {
-                yop = new YopClientException("Unable to execute HTTP request", e);
-            }
-            throw yop;
-        }
+    protected <Input extends BaseRequest> YopHttpResponse doExecute(Request<Input> request, YopRequestConfig yopRequestConfig) throws IOException {
+        return new YopOkHttpResponse(createHttpClient(yopRequestConfig).newCall(createHttpRequest(request)).execute());
     }
 
     private OkHttpClient createHttpClient(YopRequestConfig yopRequestConfig) {

@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.http;
 
+import java.io.Closeable;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2021/12/1
  */
-public interface YopHttpResponse {
+public interface YopHttpResponse extends Closeable {
 
     String getHeader(String name);
 

@@ -5,6 +5,7 @@ import com.yeepay.yop.sdk.http.AbstractYopHttpResponse;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.utils.HttpClientUtils;
 
 import java.io.IOException;
 import java.util.Map;
@@ -54,4 +55,8 @@ public class YopApacheHttpResponse extends AbstractYopHttpResponse {
         return headers;
     }
 
+    @Override
+    public void close() throws IOException {
+        HttpClientUtils.closeQuietly(this.httpResponse);
+    }
 }
