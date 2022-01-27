@@ -23,8 +23,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -48,16 +46,33 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class YopHttpClient extends AbstractYopHttpClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(YopHttpClient.class);
     private static final RequestBody EMPTY_BODY = RequestBody.create(new byte[0]);
     private static final OkLogInterceptor logInterceptor = OkLogInterceptor.builder()
             .withRequestHeaders(true).withResponseHeaders(true).build();
 
-    private final OkHttpClient defaultHttpClient;
+    /**
+     * OkHttpClients Should Be Shared
+     *
+     * OkHttp performs best when you create a single `OkHttpClient` instance and reuse it for all of
+     * your HTTP calls. This is because each client holds its own connection pool and thread pools.
+     * Reusing connections and threads reduces latency and saves memory. Conversely, creating a client
+     * for each request wastes resources on idle pools.
+     */
+    private static final OkHttpClient sharedHttpClient;
+
+    static {
+        OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
+        if (HttpUtils.isHttpVerbose()) {
+            httpClientBuilder.addInterceptor(logInterceptor);
+        }
+        sharedHttpClient = httpClientBuilder.build();
+    }
+
+    private final OkHttpClient customHttpClient;
 
     public YopHttpClient(ClientConfiguration clientConfig) {
         super(clientConfig);
-        OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
+        OkHttpClient.Builder httpClientBuilder = sharedHttpClient.newBuilder()
                 .connectTimeout(clientConfig.getConnectionTimeoutInMillis(), TimeUnit.MILLISECONDS)
                 .readTimeout(clientConfig.getSocketTimeoutInMillis(), TimeUnit.MILLISECONDS);
 
@@ -76,10 +91,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
                 });
             }
         }
-        if (HttpUtils.isHttpVerbose()) {
-            httpClientBuilder.addInterceptor(logInterceptor);
-        }
-        this.defaultHttpClient = httpClientBuilder.build();
+        this.customHttpClient = httpClientBuilder.build();
     }
 
     @Override
@@ -90,10 +102,10 @@ public class YopHttpClient extends AbstractYopHttpClient {
     private OkHttpClient createHttpClient(YopRequestConfig yopRequestConfig) {
         // 定制请求级参数
         if ((yopRequestConfig.getConnectTimeout() > 0 &&
-                yopRequestConfig.getConnectTimeout() != defaultHttpClient.connectTimeoutMillis()) ||
+                yopRequestConfig.getConnectTimeout() != customHttpClient.connectTimeoutMillis()) ||
                 (yopRequestConfig.getReadTimeout() > 0
-                        && yopRequestConfig.getReadTimeout() != defaultHttpClient.readTimeoutMillis())) {
-            OkHttpClient.Builder requestClientBuilder = defaultHttpClient.newBuilder();
+                        && yopRequestConfig.getReadTimeout() != customHttpClient.readTimeoutMillis())) {
+            OkHttpClient.Builder requestClientBuilder = customHttpClient.newBuilder();
             if (yopRequestConfig.getConnectTimeout() > 0) {
                 requestClientBuilder.connectTimeout(yopRequestConfig.getConnectTimeout(), TimeUnit.MILLISECONDS);
             }
@@ -102,7 +114,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
             }
             return requestClientBuilder.build();
         }
-        return defaultHttpClient;
+        return customHttpClient;
     }
 
     private <Input extends BaseRequest> okhttp3.Request createHttpRequest(Request<Input> request) throws IOException {
