@@ -66,7 +66,9 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         YopHttpResponse httpResponse = null;
         try {
             preExecute(request, yopRequestConfig, executionContext);
-            logger.debug("Sending Request: {}", request);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sending Request: {}", request);
+            }
             httpResponse = doExecute(request, yopRequestConfig);
             analyzedResponse = responseHandler.handle(
                     new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
@@ -101,7 +103,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      */
     protected <Output extends BaseResponse> void postExecute(Output analyzedResponse, YopHttpResponse httpResponse) {
         try {
-            if (!(analyzedResponse instanceof YosDownloadResponse)) {
+            if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
                 httpResponse.close();
             }
         } catch (IOException e) {
