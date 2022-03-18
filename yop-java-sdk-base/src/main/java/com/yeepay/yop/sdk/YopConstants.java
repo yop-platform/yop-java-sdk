@@ -57,6 +57,6 @@ public interface YopConstants {
 
     String YOP_HTTP_CLIENT_IMPL_OK = "ok";
     String YOP_HTTP_CLIENT_IMPL_APACHE = "apache";
-    String YOP_HTTP_CLIENT_IMPL_DEFAULT = YOP_HTTP_CLIENT_IMPL_OK;
+    String YOP_HTTP_CLIENT_IMPL_DEFAULT = YOP_HTTP_CLIENT_IMPL_APACHE;
 
 }

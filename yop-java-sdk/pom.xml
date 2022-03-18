@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.yeepay.yop.sdk</groupId>
-            <artifactId>yop-java-sdk-okhttp</artifactId>
+            <artifactId>yop-java-sdk-apache</artifactId>
         </dependency>
 
         <!-- test dependencies -->

@@ -17,11 +17,8 @@ import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
 import org.junit.Test;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
@@ -41,12 +38,15 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0.0
  * @since 2022/1/13
  */
+@State(value = Scope.Group)
 public class YopClientBenchmarkTest {
 
-    @Before
-    public void init() {
+    private final YopClient yopClient;
+
+    {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.env", "qa");
+        yopClient = YopClientBuilder.builder().build();
     }
 
     @Test
@@ -73,8 +73,8 @@ public class YopClientBenchmarkTest {
      */
     @Benchmark
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Group
     public void testGetCommon() {
-        YopClient yopClient = YopClientBuilder.builder().build();
         YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
         request.addParameter("string0", "dsbzb");
         String appKey = "app_100800191870026";
@@ -94,9 +94,9 @@ public class YopClientBenchmarkTest {
      */
     @Benchmark
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Group
     public void testGetDownload() {
         try {
-            YopClient yopClient = YopClientBuilder.builder().build();
             YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");
             request.addParameter("fileId", "30343");
             request.addParameter("merchantNo", "10040040287");
@@ -123,8 +123,8 @@ public class YopClientBenchmarkTest {
      */
     @Benchmark
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Group
     public void testPostForm() {
-        YopClient yopClient = YopClientBuilder.builder().build();
         YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test/http-json", "POST");
         String appKey = "app_100800095600031";
         request.getRequestConfig().setAppKey(appKey);
@@ -145,8 +145,8 @@ public class YopClientBenchmarkTest {
      */
     @Benchmark
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Group
     public void testPostJson() {
-        YopClient yopClient = YopClientBuilder.builder().build();
         YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test/http-json", "POST");
         String appKey = "app_100800095600031";
         request.getRequestConfig().setAppKey(appKey);
@@ -171,8 +171,8 @@ public class YopClientBenchmarkTest {
      */
     @Benchmark
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    @Group
     public void testPostUpload() throws Exception {
-        YopClient yopClient = YopClientBuilder.builder().build();
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
         String appKey = "app_100400394480007";
         request.getRequestConfig().setAppKey(appKey);
