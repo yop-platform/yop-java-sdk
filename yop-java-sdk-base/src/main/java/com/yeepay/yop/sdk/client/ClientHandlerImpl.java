@@ -83,9 +83,9 @@ public class ClientHandlerImpl implements ClientHandler {
                     .withSignOptions(authorizationReq.getSignOptions());
 
             YopCredentials credential = executionParams.getInput().getRequestConfig().getCredentials();
-            String appKey = executionParams.getInput().getRequestConfig().getAppKey();
             if (credential == null) {
-                credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
+                credential = yopCredentialsProvider.getCredentials(executionParams.getInput().getRequestConfig().getAppKey()
+                        , authorizationReq.getCredentialType());
             }
             if (credential == null) {
                 throw new YopClientException("No credentials specified");
