@@ -18,22 +18,19 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
-
-        <commons-lang3.version>3.6</commons-lang3.version>
+        <commons-lang3.version>3.5</commons-lang3.version>
         <commons-codec.version>1.10</commons-codec.version>
         <commons-collections4.version>4.1</commons-collections4.version>
         <commons-io.version>2.4</commons-io.version>
         <guava.version>20.0</guava.version>
-        <jackson.version>2.11.2</jackson.version>
+        <jackson.version>2.7.9</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
-        <junit.version>4.13.2</junit.version>
+        <junit.version>4.12</junit.version>
         <org.springframework>4.3.4.RELEASE</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <bouncycastle.version>1.67</bouncycastle.version>
-        <tika-core.version>1.18</tika-core.version>
-
+        <tika-core.version>1.6</tika-core.version>
         <git-commit-id-plugin.version>2.2.6</git-commit-id-plugin.version>
     </properties>
 

@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -15,7 +16,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     private static final String SDK_CONFIG_DIR = "config";
     private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/yop_sdk_config_default.json";
 
-    private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap<>();
+    private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap();
 
     @Override
     protected YopSdkConfig loadSdkConfig() {
@@ -128,7 +128,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                         && !"serialVersionUID".equals(sourceField.getName()) && targetField.get(targetBean) == null) {
                     targetField.set(targetBean, sourceField.get(sourceBean));
                 }
-            } catch (IllegalArgumentException | IllegalAccessException e) {
+            } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
@@ -145,14 +145,20 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
             for (int i = resources.length - 1; i >= 0; i--) {
                 Resource resource = resources[i];
                 StringBuilder script = new StringBuilder();
-                try (InputStreamReader isr = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-                     BufferedReader bufferReader = new BufferedReader(isr)) {
+                BufferedReader bufferReader = null;
+                try {
+                    InputStreamReader isr = new InputStreamReader(resource.getInputStream(), YopConstants.DEFAULT_ENCODING);
+                    bufferReader = new BufferedReader(isr);
                     String tempString;
                     while ((tempString = bufferReader.readLine()) != null) {
                         script.append(tempString).append("\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    if (null != bufferReader) {
+                        bufferReader.close();
+                    }
                 }
 
                 if (script.length() > 0) {

@@ -48,7 +48,7 @@ public class CustomCachedCredentialsProvider extends YopCachedCredentialsProvide
             isvEncryptKey.setCertType(CertTypeEnum.SM4);
             isvEncryptKey.setStoreType(CertStoreType.STRING);
             isvEncryptKey.setValue(CredentialsRepository.getEncryptKeyStr(appKey));
-            List<YopCertConfig> isvEncryptKeyList = new LinkedList<>();
+            List<YopCertConfig> isvEncryptKeyList = new LinkedList();
             isvEncryptKeyList.add(isvEncryptKey);
             yopAppConfig.setIsvEncryptKeyList(isvEncryptKeyList);
         }
