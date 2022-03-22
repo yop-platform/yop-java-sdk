@@ -34,9 +34,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MockEncryptorCredentialsProvider implements YopCredentialsProvider {
 
-    private final Map<String, YopAppConfig> appConfigs = new HashMap<>();
-    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
-    private final Map<String, List<YopCredentials>> yopEncryptCredentialsMap = new ConcurrentHashMap<>();
+    private final Map<String, YopAppConfig> appConfigs = new HashMap();
+    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap();
+    private final Map<String, List<YopCredentials>> yopEncryptCredentialsMap = new ConcurrentHashMap();
 
     @Override
     public YopCredentials getCredentials(String appKey, String credentialType) {
@@ -68,7 +68,7 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appKey) {
-        return new ArrayList<>(getAppConfig(appKey).getIsvPrivateKeys().keySet());
+        return new ArrayList(getAppConfig(appKey).getIsvPrivateKeys().keySet());
     }
 
     @Override

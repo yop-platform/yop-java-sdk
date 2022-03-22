@@ -25,7 +25,7 @@ public class YopPlatformCredentialsHolder implements YopPlatformCredentials {
     private static final long serialVersionUID = -1L;
 
     private String serialNo;
-    private Map<CertTypeEnum, PublicKey> credentialsMap = new LinkedHashMap<>();
+    private Map<CertTypeEnum, PublicKey> credentialsMap = new LinkedHashMap();
 
     @Override
     public String getSerialNo() {

@@ -40,12 +40,12 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
     /**
      * serialNo -> YopPlatformCredentials
      */
-    private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap<>();
+    private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap();
 
     /**
      * type -> YopPlatformCredentialsLoader
      */
-    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = new HashMap<>(2);
+    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = new HashMap(2);
 
     public YopFilePlatformCredentialsProvider() {
         this.yopPlatformCredentialsLoaderMap.put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopRsaPlatformCredentialsLoader());

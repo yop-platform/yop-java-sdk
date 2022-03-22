@@ -39,7 +39,7 @@ public class RSA2048 implements Encryption<KeyPair>, Signer {
             PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(
                     new X509EncodedKeySpec(key));
             return RSA.encrypt(plainText, publicKey);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (GeneralSecurityException e) {
             throw new YopClientException("No such algorithm.", e);
         }
     }
@@ -50,7 +50,7 @@ public class RSA2048 implements Encryption<KeyPair>, Signer {
             PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(
                     new PKCS8EncodedKeySpec(key));
             return RSA.decrypt(cipherText, privateKey);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (GeneralSecurityException e) {
             throw new YopClientException("No such algorithm.", e);
         }
 

@@ -69,7 +69,7 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     }
 
     private Map<String, YopPlatformCredentials> storeCerts(YopCertStore yopCertStore, Map<String, X509Certificate> plainCerts) {
-        Map<String, YopPlatformCredentials> result = new LinkedHashMap<>();
+        Map<String, YopPlatformCredentials> result = new LinkedHashMap();
         if (null == plainCerts || 0 == plainCerts.size()) {
             return null;
         }
@@ -84,8 +84,11 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
                         certStoreDir.mkdirs();
                     }
                     final File certFile = new File(certStoreDir, YOP_SM_PLATFORM_CERT_PREFIX + certificateEntry.getKey() + YOP_PLATFORM_CERT_POSTFIX);
-                    try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile))) {
+                    JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile));
+                    try {
                         jcaPEMWriter.writeObject(new PemObject("CERTIFICATE", certificateEntry.getValue().getEncoded()));
+                    } finally {
+                        jcaPEMWriter.close();
                     }
                 }
             } catch (Exception e) {
@@ -160,7 +163,7 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     }
 
     private List<EncryptCertificate> parseYopResponse(YopResponse response) {
-        List<EncryptCertificate> encryptCerts = new ArrayList<>();
+        List<EncryptCertificate> encryptCerts = new ArrayList();
         Map result = (Map) response.getResult();
         if (MapUtils.isNotEmpty(result)) {
             List<Map> data = (List<Map>) result.get("data");

@@ -28,8 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProvider {
 
-    private final Map<String, YopAppConfig> appConfigs = new HashMap<>();
-    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
+    private final Map<String, YopAppConfig> appConfigs = new HashMap();
+    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap();
 
     @Override
     public final YopCredentials getCredentials(String appId, String credentialType) {
@@ -42,7 +42,7 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appId) {
-        return new ArrayList<>(getAppConfig(appId).getIsvPrivateKeys().keySet());
+        return new ArrayList(getAppConfig(appId).getIsvPrivateKeys().keySet());
     }
 
     private YopAppConfig getAppConfig(String appId) {

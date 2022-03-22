@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.nio.charset.Charset;
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
@@ -208,7 +209,7 @@ public class YopHttpClient {
         try {
             SSLContext sslContext = getSSLContext();
             sslSocketFactory = new SSLConnectionSocketFactory(sslContext, HOSTNAME_VERIFIER_INSTANCE);
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+        } catch (GeneralSecurityException e) {
             throw new YopClientException("Fail to create SSLConnectionSocketFactory", e);
         }
         RegistryBuilder registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTPS.toString(), sslSocketFactory)
@@ -277,9 +278,14 @@ public class YopHttpClient {
 
         SSLContext s;
         if (StringUtils.isNotEmpty(tlsVersion)) {
-            s = SSLContext.getInstance(tlsVersion);
-            // 初始化SSLContext实例
-            s.init(null, null, RandomUtils.secureRandom());
+            try {
+                s = SSLContext.getInstance(tlsVersion);
+                // 初始化SSLContext实例
+                s.init(null, null, RandomUtils.secureRandom());
+            } catch (NoSuchAlgorithmException e) {
+                logger.warn("tlsVersion not supported, {}.", tlsVersion);
+                s = SSLContext.getDefault();
+            }
         } else {
             s = SSLContext.getDefault();
         }
