@@ -10,7 +10,6 @@ import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.AbstractYopHttpClient;
 import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
 import com.yeepay.yop.sdk.internal.Request;
@@ -96,10 +95,10 @@ public class YopHttpClient extends AbstractYopHttpClient {
 
     @Override
     protected <Input extends BaseRequest> YopHttpResponse doExecute(Request<Input> request, YopRequestConfig yopRequestConfig) throws IOException {
-        return new YopOkHttpResponse(createHttpClient(yopRequestConfig).newCall(createHttpRequest(request)).execute());
+        return new YopOkHttpResponse(buildHttpClient(yopRequestConfig).newCall(buildHttpRequest(request)).execute());
     }
 
-    private OkHttpClient createHttpClient(YopRequestConfig yopRequestConfig) {
+    private OkHttpClient buildHttpClient(YopRequestConfig yopRequestConfig) {
         // 定制请求级参数
         if ((yopRequestConfig.getConnectTimeout() > 0 &&
                 yopRequestConfig.getConnectTimeout() != customHttpClient.connectTimeoutMillis()) ||
@@ -117,48 +116,31 @@ public class YopHttpClient extends AbstractYopHttpClient {
         return customHttpClient;
     }
 
-    private <Input extends BaseRequest> okhttp3.Request createHttpRequest(Request<Input> request) throws IOException {
+    private <Input extends BaseRequest> okhttp3.Request buildHttpRequest(Request<Input> request) throws IOException {
+        boolean isMultiPart = checkForMultiPart(request);
+
+        String queryParams = "";
         final okhttp3.Request.Builder httpRequestBuilder = new okhttp3.Request.Builder();
-        String uri = HttpUtils.appendUri(request.getEndpoint(), request.getResourcePath()).toASCIIString();
-        boolean isMultiPart = request.getMultiPartFiles() != null && request.getMultiPartFiles().size() > 0;
 
         // 文件上传
         if (isMultiPart) {
-            if (request.getHttpMethod() == HttpMethodName.POST) {
-                final MultipartBody.Builder bodyBuilder = new MultipartBody.Builder()
-                        .setType(MultipartBody.FORM);
-                for (Map.Entry<String, List<String>> entry : request.getParameters().entrySet()) {
-                    String name = entry.getKey();
-                    for (String value : entry.getValue()) {
-                        bodyBuilder.addFormDataPart(HttpUtils.normalize(name), HttpUtils.normalize(value));
-                    }
-                }
-                for (Map.Entry<String, List<MultiPartFile>> entry : request.getMultiPartFiles().entrySet()) {
-                    String name = entry.getKey();
-                    for (MultiPartFile multiPartFile : entry.getValue()) {
-                        bodyBuilder.addFormDataPart(name, multiPartFile.getFileName(),
-                                RequestBody.create(IOUtils.toByteArray(multiPartFile.getInputStream())));
-                    }
-                }
-                httpRequestBuilder.post(bodyBuilder.build());
-            } else {
-                throw new YopClientException("ContentType:multipart/form-data only support Post Request");
-            }
+            httpRequestBuilder.post(buildMultiPartRequest(request));
         } else {
             // queryParams
             String encodedParams = HttpUtils.encodeParameters(request, false);
             boolean hasBodyParams = null != request.getContent();
-            boolean useQueryParams = StringUtils.isNotBlank(encodedParams) &&
+            boolean hasEncodedParams = StringUtils.isNotBlank(encodedParams);
+            boolean useQueryParams = hasEncodedParams &&
                     (!PAYLOAD_SUPPORT_METHODS.contains(request.getHttpMethod()) || hasBodyParams);
             if (useQueryParams) {
-                uri += "?" + encodedParams;
+                queryParams = "?" + encodedParams;
             }
 
             // bodyParams
             RequestBody requestBody = EMPTY_BODY;
             if (hasBodyParams) {
                 requestBody = RequestBody.create(IOUtils.toByteArray(request.getContent()));
-            } else if (StringUtils.isNotBlank(encodedParams) && !useQueryParams) {
+            } else if (hasEncodedParams && !useQueryParams) {
                 requestBody = RequestBody.create(encodedParams.getBytes(YopConstants.DEFAULT_CHARSET));
             }
 
@@ -189,29 +171,53 @@ public class YopHttpClient extends AbstractYopHttpClient {
         }
 
         // headers
-        httpRequestBuilder.addHeader(Headers.HOST, HttpUtils.generateHostHeader(request.getEndpoint()));
-        // Copy over any other headers already in our request
-        for (Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
-            /*
-             * HttpClient4 fills in the Content-Length header and complains if it's already present, so we skip it here.
-             * We also skip the Host header to avoid sending it twice, which will interfere with some signing schemes.
-             */
-            if (entry.getKey().equalsIgnoreCase(Headers.CONTENT_LENGTH)
-                    || entry.getKey().equalsIgnoreCase(Headers.HOST)) {
-                continue;
-            }
-            httpRequestBuilder.addHeader(entry.getKey(), entry.getValue());
-        }
+        buildHttpHeaders(request, new OkHeaderBuilder(httpRequestBuilder));
 
-        final okhttp3.Request httpRequest = httpRequestBuilder.url(uri).build();
+        // the request
+        final okhttp3.Request httpRequest = httpRequestBuilder.url(HttpUtils.appendUri(request.getEndpoint()
+                , request.getResourcePath()).toASCIIString() + queryParams)
+                .build();
+
         if (!isMultiPart) {
             checkNotNull(httpRequest.header(Headers.CONTENT_TYPE), Headers.CONTENT_TYPE + " not set");
         }
         return httpRequest;
     }
 
+    private <Input extends BaseRequest> MultipartBody buildMultiPartRequest(Request<Input> request) throws IOException {
+        final MultipartBody.Builder bodyBuilder = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM);
+        for (Map.Entry<String, List<String>> entry : request.getParameters().entrySet()) {
+            String name = entry.getKey();
+            for (String value : entry.getValue()) {
+                bodyBuilder.addFormDataPart(HttpUtils.normalize(name), HttpUtils.normalize(value));
+            }
+        }
+        for (Map.Entry<String, List<MultiPartFile>> entry : request.getMultiPartFiles().entrySet()) {
+            String name = entry.getKey();
+            for (MultiPartFile multiPartFile : entry.getValue()) {
+                bodyBuilder.addFormDataPart(name, multiPartFile.getFileName(),
+                        RequestBody.create(IOUtils.toByteArray(multiPartFile.getInputStream())));
+            }
+        }
+        return bodyBuilder.build();
+    }
+
     @Override
     public void shutdown() {
         //nothing to do
+    }
+
+    static class OkHeaderBuilder implements HeaderBuilder {
+        private okhttp3.Request.Builder builder;
+
+        public OkHeaderBuilder(okhttp3.Request.Builder builder) {
+            this.builder = builder;
+        }
+
+        @Override
+        public void addHeader(String key, String value) {
+            builder.addHeader(key, value);
+        }
     }
 }

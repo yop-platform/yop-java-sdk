@@ -5,12 +5,11 @@
     <artifactId>yop-java-sdk-parent</artifactId>
     <packaging>pom</packaging>
 
-    <version>4.2.0-SNAPSHOT</version>
+    <version>4.2.1-SNAPSHOT</version>
 
     <modules>
         <module>yop-java-sdk-base</module>
         <module>yop-java-sdk</module>
-        <module>yop-java-sdk-apache</module>
         <module>yop-java-sdk-okhttp</module>
     </modules>
 
@@ -62,11 +61,6 @@
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk-okhttp</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.yeepay.yop.sdk</groupId>
-                <artifactId>yop-java-sdk-apache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

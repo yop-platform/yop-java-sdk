@@ -16,14 +16,18 @@ import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.results.RunResult;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -41,9 +45,9 @@ import java.util.concurrent.TimeUnit;
 @State(value = Scope.Group)
 public class YopClientBenchmarkTest {
 
-    private final YopClient yopClient;
+    private static final YopClient yopClient;
 
-    {
+    static {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.env", "qa");
         yopClient = YopClientBuilder.builder().build();
@@ -63,7 +67,8 @@ public class YopClientBenchmarkTest {
                 .shouldDoGC(true)
                 .build();
 
-        new Runner(options).run();
+        Collection<RunResult> results = new Runner(options).run();
+        Assert.assertTrue(CollectionUtils.isNotEmpty(results));
     }
 
 
@@ -86,7 +91,7 @@ public class YopClientBenchmarkTest {
                 , null
                 , CertTypeEnum.RSA2048)));
         YopResponse response = yopClient.request(request);
-        assert ((Map) response.getResult()).get("id").equals(64);
+        Assert.assertEquals(64, ((Map) response.getResult()).get("id"));
     }
 
     /**

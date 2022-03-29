@@ -276,30 +276,9 @@ public class YopHttpClient extends AbstractYopHttpClient {
     private HttpRequestBase createHttpRequest(Request<?> request) {
         HttpRequestBase httpRequest;
         String uri = HttpUtils.appendUri(request.getEndpoint(), request.getResourcePath()).toASCIIString();
-        boolean isMultiPart = request.getMultiPartFiles() != null && request.getMultiPartFiles().size() > 0;
+        boolean isMultiPart = checkForMultiPart(request);
         if (isMultiPart) {
-            if (request.getHttpMethod() == HttpMethodName.POST) {
-                HttpPost postMethod = new HttpPost(uri);
-                httpRequest = postMethod;
-                MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-                builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-                for (Map.Entry<String, List<String>> entry : request.getParameters().entrySet()) {
-                    String name = entry.getKey();
-                    for (String value : entry.getValue()) {
-                        builder.addTextBody(HttpUtils.normalize(name), HttpUtils.normalize(value));
-                    }
-                }
-                for (Map.Entry<String, List<MultiPartFile>> entry : request.getMultiPartFiles().entrySet()) {
-                    String name = entry.getKey();
-                    for (MultiPartFile multiPartFile : entry.getValue()) {
-                        builder.addBinaryBody(name, multiPartFile.getInputStream(), ContentType.DEFAULT_BINARY,
-                                multiPartFile.getFileName());
-                    }
-                }
-                postMethod.setEntity(builder.build());
-            } else {
-                throw new YopClientException("ContentType:multipart/form-data only support Post Request");
-            }
+            httpRequest = buildMultiPartRequest(uri, request);
         } else {
             String encodedParams = HttpUtils.encodeParameters(request, false);
 
@@ -339,25 +318,33 @@ public class YopHttpClient extends AbstractYopHttpClient {
             }
         }
 
-        httpRequest.addHeader(Headers.HOST, HttpUtils.generateHostHeader(request.getEndpoint()));
-
-        // Copy over any other headers already in our request
-        for (Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
-            /*
-             * HttpClient4 fills in the Content-Length header and complains if it's already present, so we skip it here.
-             * We also skip the Host header to avoid sending it twice, which will interfere with some signing schemes.
-             */
-            if (entry.getKey().equalsIgnoreCase(Headers.CONTENT_LENGTH)
-                    || entry.getKey().equalsIgnoreCase(Headers.HOST)) {
-                continue;
-            }
-
-            httpRequest.addHeader(entry.getKey(), entry.getValue());
-        }
+        // headers
+        buildHttpHeaders(request, new ApacheHeaderBuilder(httpRequest));
         if (!isMultiPart) {
             checkNotNull(httpRequest.getFirstHeader(Headers.CONTENT_TYPE), Headers.CONTENT_TYPE + " not set");
         }
         return httpRequest;
+    }
+
+    private HttpRequestBase buildMultiPartRequest(String uri, Request<?> request) {
+        HttpPost postMethod = new HttpPost(uri);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        for (Map.Entry<String, List<String>> entry : request.getParameters().entrySet()) {
+            String name = entry.getKey();
+            for (String value : entry.getValue()) {
+                builder.addTextBody(HttpUtils.normalize(name), HttpUtils.normalize(value));
+            }
+        }
+        for (Map.Entry<String, List<MultiPartFile>> entry : request.getMultiPartFiles().entrySet()) {
+            String name = entry.getKey();
+            for (MultiPartFile multiPartFile : entry.getValue()) {
+                builder.addBinaryBody(name, multiPartFile.getInputStream(), ContentType.DEFAULT_BINARY,
+                        multiPartFile.getFileName());
+            }
+        }
+        postMethod.setEntity(builder.build());
+        return postMethod;
     }
 
     /**
@@ -397,6 +384,20 @@ public class YopHttpClient extends AbstractYopHttpClient {
     public void shutdown() {
         IdleConnectionReaper.removeConnectionManager(this.connectionManager);
         this.connectionManager.shutdown();
+    }
+
+    static class ApacheHeaderBuilder implements HeaderBuilder {
+
+        private final HttpRequestBase httpRequest;
+
+        public ApacheHeaderBuilder(HttpRequestBase httpRequest) {
+            this.httpRequest = httpRequest;
+        }
+
+        @Override
+        public void addHeader(String key, String value) {
+            httpRequest.addHeader(key, value);
+        }
     }
 
 }

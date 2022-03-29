@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -26,7 +27,7 @@ public class FileUtilsTest {
     @Test
     public void testLoadClassPathResource() {
         try (InputStream resourceAsStream = FileUtils.getResourceAsStream("config/certs/qa_cfca_root.pem")) {
-            assert null != resourceAsStream;
+            Assert.assertNotNull(resourceAsStream);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -37,7 +38,7 @@ public class FileUtilsTest {
         final String absolutePath = new File(FileUtils.getContextClassLoader()
                 .getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
         try (InputStream resourceAsStream = FileUtils.getResourceAsStream(absolutePath)) {
-            assert null != resourceAsStream;
+            Assert.assertNotNull(resourceAsStream);
         } catch (IOException e) {
             e.printStackTrace();
         }

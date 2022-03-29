@@ -289,10 +289,10 @@ public class HttpUtils {
 
     private static String toNameValuePair(Boolean forSignature, String paramName, String paramValue) throws UnsupportedEncodingException {
         if (null != paramValue) {
-            if (!BooleanUtils.isTrue(forSignature)) {
-                paramValue = URLEncoder.encode(paramValue, YopConstants.DEFAULT_ENCODING);
-            }
-            return URLEncoder.encode(paramName, YopConstants.DEFAULT_ENCODING) + CharacterConstants.EQUAL + URLEncoder.encode(paramValue, YopConstants.DEFAULT_ENCODING);
+            String encodedParamValue = BooleanUtils.isTrue(forSignature) ? paramValue
+                    : URLEncoder.encode(paramValue, YopConstants.DEFAULT_ENCODING);
+            return URLEncoder.encode(paramName, YopConstants.DEFAULT_ENCODING) +
+                    CharacterConstants.EQUAL + URLEncoder.encode(encodedParamValue, YopConstants.DEFAULT_ENCODING);
         } else {
             return URLEncoder.encode(paramName, YopConstants.DEFAULT_ENCODING);
         }

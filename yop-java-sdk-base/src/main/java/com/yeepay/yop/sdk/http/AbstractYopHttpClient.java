@@ -13,6 +13,7 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
+import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.Security;
+import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -73,14 +75,10 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             analyzedResponse = responseHandler.handle(
                     new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
             return analyzedResponse;
-        } catch (Exception e) {
-            YopClientException yop;
-            if (e instanceof YopClientException) {
-                yop = (YopClientException) e;
-            } else {
-                yop = new YopClientException("Unable to execute HTTP request", e);
-            }
-            throw yop;
+        } catch (YopClientException e) {
+            throw e;
+        }  catch (Exception e) {
+            throw new YopClientException("Unable to execute HTTP request", e);
         } finally {
             postExecute(analyzedResponse, httpResponse);
         }
@@ -154,6 +152,42 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
 
     protected void setAppKey(Request<? extends BaseRequest> request, YopCredentials yopCredentials) {
         request.addHeader(Headers.YOP_APPKEY, yopCredentials.getAppKey());
+    }
+
+    /**
+     * 校验文件上传请求
+     *
+     * @param request 请求
+     * @param <Input> 请求类
+     * @return true if the request has MultiPartFiles
+     * @throws YopClientException if the request is invalid for multipart
+     */
+    protected  <Input extends BaseRequest> boolean checkForMultiPart(Request<Input> request) throws YopClientException {
+        boolean result = request.getMultiPartFiles() != null && request.getMultiPartFiles().size() > 0;
+        if (result && !HttpMethodName.POST.equals(request.getHttpMethod())) {
+            throw new YopClientException("ContentType:multipart/form-data only support Post Request");
+        }
+        return result;
+    }
+
+    protected  <Input extends BaseRequest> void buildHttpHeaders(Request<Input> request, HeaderBuilder headerBuilder) {
+        headerBuilder.addHeader(Headers.HOST, HttpUtils.generateHostHeader(request.getEndpoint()));
+        // Copy over any other headers already in our request
+        for (Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
+            /*
+             * HttpClient4 fills in the Content-Length header and complains if it's already present, so we skip it here.
+             * We also skip the Host header to avoid sending it twice, which will interfere with some signing schemes.
+             */
+            if (entry.getKey().equalsIgnoreCase(Headers.CONTENT_LENGTH)
+                    || entry.getKey().equalsIgnoreCase(Headers.HOST)) {
+                continue;
+            }
+            headerBuilder.addHeader(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public interface HeaderBuilder {
+        void addHeader(String key, String value);
     }
 
 }
