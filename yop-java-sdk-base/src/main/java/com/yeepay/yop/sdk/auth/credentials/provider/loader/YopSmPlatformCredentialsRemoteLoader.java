@@ -22,6 +22,7 @@ import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import com.yeepay.yop.sdk.utils.Sm4Utils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -84,8 +85,12 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
                         certStoreDir.mkdirs();
                     }
                     final File certFile = new File(certStoreDir, YOP_SM_PLATFORM_CERT_PREFIX + certificateEntry.getKey() + YOP_PLATFORM_CERT_POSTFIX);
-                    try (JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile))) {
+                    JcaPEMWriter jcaPEMWriter = null;
+                    try {
+                        jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile));
                         jcaPEMWriter.writeObject(new PemObject("CERTIFICATE", certificateEntry.getValue().getEncoded()));
+                    } finally {
+                        StreamUtils.closeQuietly(jcaPEMWriter);
                     }
                 }
             } catch (Exception e) {

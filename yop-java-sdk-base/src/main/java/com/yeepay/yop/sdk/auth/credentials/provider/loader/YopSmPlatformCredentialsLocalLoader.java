@@ -13,6 +13,7 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.EnvUtils;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.Sm2CertUtils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -20,8 +21,9 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,21 +61,32 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
                 defaultYopInterFile = envPrefix + "_" + defaultYopInterFile;
             }
             defaultYopCertStore = new YopCertStore(defaultCertPath);
-            cfcaRoot = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultCertPath + "/" + defaultCfcaRootFile));
-            try {
-                Sm2CertUtils.verifyCertificate(null, cfcaRoot);
-            } catch (Exception e) {
-                throw new YopClientException("invalid cfca root cert, detail:" + e.getMessage());
-            }
 
-            yopInter = Sm2CertUtils.getX509Certificate(FileUtils.getResourceAsStream(defaultCertPath + "/" + defaultYopInterFile));
-            try {
-                Sm2CertUtils.verifyCertificate((BCECPublicKey) cfcaRoot.getPublicKey(), yopInter);
-            } catch (Exception e) {
-                throw new YopClientException("invalid yop inter cert, detail:" + e.getMessage());
-            }
+            cfcaRoot = getX508Cert(defaultCertPath + "/" + defaultCfcaRootFile);
+            verifyCertChain("cfca root", null, cfcaRoot);
+
+            yopInter = getX508Cert(defaultCertPath + "/" + defaultYopInterFile);
+            verifyCertChain("yop inter", (BCECPublicKey) cfcaRoot.getPublicKey(), yopInter);
         } catch (Exception e) {
             LOGGER.error("error when load parent certs, ex:", e);
+        }
+    }
+
+    private void verifyCertChain(String certName, BCECPublicKey issuer, X509Certificate cert) {
+        try {
+            Sm2CertUtils.verifyCertificate(issuer, cert);
+        } catch (Exception e) {
+            throw new YopClientException("invalid " + certName + " cert, detail:" + e.getMessage());
+        }
+    }
+
+    private X509Certificate getX508Cert(String certPath) throws CertificateException, NoSuchProviderException {
+        InputStream certStream = null;
+        try {
+            certStream = FileUtils.getResourceAsStream(certPath);
+            return Sm2CertUtils.getX509Certificate(certStream);
+        } finally {
+            StreamUtils.closeQuietly(certStream);
         }
     }
 
@@ -122,13 +135,7 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
             } catch (Exception e) {
                 LOGGER.error("error when load cert from local file, serialNo:" + serialNo + ", ex:", e);
             } finally {
-                if (null != fis) {
-                    try {
-                        fis.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                StreamUtils.closeQuietly(fis);
             }
         }
         return certMap;

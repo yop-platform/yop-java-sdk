@@ -110,7 +110,6 @@ public class HttpTest {
     private static void remoteRequest(String thread, boolean close) {
         System.out.println(thread + "请求执行开始");
         String result = "空";
-//        try (CloseableHttpResponse response = httpClient.execute(RequestBuilder.get(basePath + "/test").build())) {
         CloseableHttpResponse response = null;
         try {
             response = httpClient.execute(RequestBuilder.get(basePath + "/test").build());

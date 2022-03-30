@@ -16,6 +16,7 @@ import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -114,9 +115,14 @@ public class YopClientBenchmarkTest {
                     , null
                     , CertTypeEnum.RSA2048)));
             YosDownloadResponse response = yopClient.download(request);
-            try (YosDownloadInputStream yosDownloadInputStream = response.getResult()) {
-                assert null != yosDownloadInputStream;
-                assert IOUtils.toString(response.getResult(), "UTF-8").length() > 0;
+
+            YosDownloadInputStream yosDownloadInputStream = null;
+            try {
+                yosDownloadInputStream = response.getResult();
+                Assert.assertNotNull(yosDownloadInputStream);
+                Assert.assertTrue(IOUtils.toString(response.getResult(), "UTF-8").length() > 0);
+            } finally {
+                StreamUtils.closeQuietly(yosDownloadInputStream);
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
@@ -26,10 +25,12 @@ public class FileUtilsTest {
 
     @Test
     public void testLoadClassPathResource() {
-        try (InputStream resourceAsStream = FileUtils.getResourceAsStream("config/certs/qa_cfca_root.pem")) {
+        InputStream resourceAsStream = null;
+        try {
+            resourceAsStream = FileUtils.getResourceAsStream("config/certs/qa_cfca_root.pem");
             Assert.assertNotNull(resourceAsStream);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } finally {
+            StreamUtils.closeQuietly(resourceAsStream);
         }
     }
 
@@ -37,10 +38,12 @@ public class FileUtilsTest {
     public void testLoadAbsPathResource() throws URISyntaxException {
         final String absolutePath = new File(FileUtils.getContextClassLoader()
                 .getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
-        try (InputStream resourceAsStream = FileUtils.getResourceAsStream(absolutePath)) {
+        InputStream resourceAsStream = null;
+        try {
+            resourceAsStream = FileUtils.getResourceAsStream(absolutePath);
             Assert.assertNotNull(resourceAsStream);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } finally {
+            StreamUtils.closeQuietly(resourceAsStream);
         }
     }
 }
