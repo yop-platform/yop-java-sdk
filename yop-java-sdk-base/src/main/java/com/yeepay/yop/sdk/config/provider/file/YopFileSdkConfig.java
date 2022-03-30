@@ -119,9 +119,9 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("isv_private_key")
     public void setIsvPrivateKey(YopCertConfig[] isvPrivateKeys) {
         if (null == isvPrivateKeyMap) {
-            isvPrivateKeyMap = new HashMap<>(16);
+            isvPrivateKeyMap = new HashMap(16);
         }
-        for (YopCertConfig isvPrivateKey : isvPrivateKeys) {
+        for (final YopCertConfig isvPrivateKey : isvPrivateKeys) {
             String appKey = StringUtils.defaultString(isvPrivateKey.getAppKey(), getAppKey());
             if (isvPrivateKeyMap.containsKey(appKey)) {
                 isvPrivateKeyMap.get(appKey).add(isvPrivateKey);
@@ -191,9 +191,9 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("isv_encrypt_key")
     public void setIsvEncryptKey(YopCertConfig[] isvEncryptKeys) {
         if (null == isvEncryptKeyMap) {
-            isvEncryptKeyMap = new HashMap<>(16);
+            isvEncryptKeyMap = new HashMap(16);
         }
-        for (YopCertConfig isvEncryptKey : isvEncryptKeys) {
+        for (final YopCertConfig isvEncryptKey : isvEncryptKeys) {
             String appKey = StringUtils.defaultString(isvEncryptKey.getAppKey(), getAppKey());
             if (isvEncryptKeyMap.containsKey(appKey)) {
                 isvEncryptKeyMap.get(appKey).add(isvEncryptKey);

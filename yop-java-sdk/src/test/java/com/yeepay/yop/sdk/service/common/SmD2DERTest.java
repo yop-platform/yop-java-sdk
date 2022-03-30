@@ -99,7 +99,7 @@ public class SmD2DERTest {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return (BCECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+        } catch (GeneralSecurityException e) {
             e.printStackTrace();
             return null;
         }

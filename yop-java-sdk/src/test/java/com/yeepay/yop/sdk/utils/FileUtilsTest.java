@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 
 /**
  * title: <br>
@@ -35,7 +34,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testLoadAbsPathResource() throws URISyntaxException {
+    public void testLoadAbsPathResource() throws Exception {
         final String absolutePath = new File(FileUtils.getContextClassLoader()
                 .getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
         InputStream resourceAsStream = null;

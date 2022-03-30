@@ -2,7 +2,7 @@ package com.yeepay.yop.sdk.http.impl.ok;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.http.AbstractYopHttpResponse;
-import kotlin.Pair;
+import okhttp3.Headers;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -44,8 +44,9 @@ public class YopOkHttpResponse extends AbstractYopHttpResponse {
     @Override
     public Map<String, String> getHeaders() {
         Map<String, String> headers = Maps.newHashMap();
-        for (Pair<? extends String, ? extends String> header : this.httpResponse.headers()) {
-            headers.put(header.getFirst(), header.getSecond());
+        final Headers originHeaders = this.httpResponse.headers();
+        for (String name : originHeaders.names()) {
+            headers.put(name, originHeaders.get(name));
         }
         return headers;
     }
