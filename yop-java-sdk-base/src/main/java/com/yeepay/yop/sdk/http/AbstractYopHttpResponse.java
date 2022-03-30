@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.http;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.utils.DateUtils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +43,13 @@ public abstract class AbstractYopHttpResponse implements YopHttpResponse {
         if (contentStr != null) {
             return contentStr;
         }
-        try(InputStream tmp = this.content) {
-            contentStr = IOUtils.toString(tmp, YopConstants.DEFAULT_ENCODING);
+        try {
+            contentStr = IOUtils.toString(this.content, YopConstants.DEFAULT_ENCODING);
             return contentStr;
         } catch (IOException ex) {
             throw new YopClientException("unable to read response content", ex);
+        } finally {
+            StreamUtils.closeQuietly(this.content);
         }
     }
 

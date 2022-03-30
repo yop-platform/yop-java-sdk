@@ -95,9 +95,7 @@ public class Sm2CertUtils {
             is = new FileInputStream(certFilePath);
             return getX509Certificate(is);
         } finally {
-            if (is != null) {
-                is.close();
-            }
+            StreamUtils.closeQuietly(is);
         }
     }
 
@@ -120,9 +118,7 @@ public class Sm2CertUtils {
             is = new FileInputStream(certChainPath);
             return getCertificateChain(is);
         } finally {
-            if (is != null) {
-                is.close();
-            }
+            StreamUtils.closeQuietly(is);
         }
     }
 

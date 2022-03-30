@@ -2,12 +2,12 @@ package com.yeepay.yop.sdk.config.provider.file.support;
 
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -16,7 +16,6 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
 /**
@@ -34,7 +33,7 @@ public final class YopCertConfigUtils {
     public static PublicKey loadPublicKey(YopCertConfig yopCertConfig) {
         PublicKey publicKey;
         if (null == yopCertConfig.getStoreType()) {
-            throw new YopServiceException("Can't init YOP public key! Store type is error.");
+            throw new YopClientException("Can't init YOP public key! Store type is error.");
         }
         switch (yopCertConfig.getStoreType()) {
             case STRING:
@@ -45,16 +44,21 @@ public final class YopCertConfigUtils {
                 }
                 break;
             case FILE_CER:
-                InputStream inputStream = FileUtils.getResourceAsStream(yopCertConfig.getValue());
                 try {
-                    X509Certificate x509Certificate = Sm2CertUtils.getX509Certificate(inputStream);
-                    publicKey = x509Certificate.getPublicKey();
+                    InputStream inputStream = null;
+                    try {
+                        inputStream = FileUtils.getResourceAsStream(yopCertConfig.getValue());
+                        publicKey = Sm2CertUtils.getX509Certificate(inputStream).getPublicKey();
+                    } finally {
+                        StreamUtils.closeQuietly(inputStream);
+                    }
+
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new YopClientException("Can't init YOP public key! Cer file is error.", e);
                 }
                 break;
             default:
-                throw new RuntimeException("Not support cert store type.");
+                throw new YopClientException("Can't init YOP public key! Store type is error.");
         }
         return publicKey;
     }
@@ -62,14 +66,14 @@ public final class YopCertConfigUtils {
     public static String loadPrivateKey(YopCertConfig yopCertConfig) {
         String privateKey = null;
         if (null == yopCertConfig.getStoreType()) {
-            throw new YopServiceException("Can't init ISV private key! Store type is error.");
+            throw new YopClientException("Can't init ISV private key! Store type is error.");
         }
         switch (yopCertConfig.getStoreType()) {
             case STRING:
                 try {
                     privateKey = yopCertConfig.getValue();
                 } catch (Exception ex) {
-                    throw new YopServiceException("Failed to load private key form config file is error, " + yopCertConfig, ex);
+                    throw new YopClientException("Failed to init private key form config file is error, " + yopCertConfig, ex);
                 }
                 break;
             case FILE_P12:
@@ -77,8 +81,13 @@ public final class YopCertConfigUtils {
                     String pwd = StringUtils.defaultIfEmpty(yopCertConfig.getPassword(), "");
                     char[] password = pwd.toCharArray();
                     KeyStore keystore = KeyStore.getInstance("PKCS12", BouncyCastleProvider.PROVIDER_NAME);
-                    keystore.load(FileUtils.getResourceAsStream(yopCertConfig.getValue()), password);
-
+                    InputStream keyStream = null;
+                    try {
+                        keyStream = FileUtils.getResourceAsStream(yopCertConfig.getValue());
+                        keystore.load(keyStream, password);
+                    } finally {
+                        StreamUtils.closeQuietly(keyStream);
+                    }
                     Enumeration aliases = keystore.aliases();
                     String keyAlias;
                     Key key = null;

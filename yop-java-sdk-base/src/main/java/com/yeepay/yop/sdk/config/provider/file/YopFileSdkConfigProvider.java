@@ -5,7 +5,10 @@ import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.utils.BeanUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -32,6 +35,8 @@ import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
  * @since 20/11/23 12:35
  */
 public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopFileSdkConfigProvider.class);
 
     public static final String SDK_CONFIG_ENV_PROPERTY_KEY = "yop.sdk.config.env";
     public static final String SDK_CONFIG_DIR_PROPERTY_KEY = "yop.sdk.config.dir";
@@ -129,7 +134,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                     targetField.set(targetBean, sourceField.get(sourceBean));
                 }
             } catch (IllegalArgumentException | IllegalAccessException e) {
-                e.printStackTrace();
+                LOGGER.error("error when fillNullConfig, ex:", e);
             }
         }
         return targetBean;
@@ -145,14 +150,18 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
             for (int i = resources.length - 1; i >= 0; i--) {
                 Resource resource = resources[i];
                 StringBuilder script = new StringBuilder();
-                try (InputStreamReader isr = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-                     BufferedReader bufferReader = new BufferedReader(isr)) {
+                BufferedReader bufferReader = null;
+                try {
+                    bufferReader = new BufferedReader(
+                            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8));
                     String tempString;
                     while ((tempString = bufferReader.readLine()) != null) {
                         script.append(tempString).append("\n");
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LOGGER.error("error when loadSdkConfigFile, ex:", e);
+                } finally {
+                    StreamUtils.closeQuietly(bufferReader);
                 }
 
                 if (script.length() > 0) {
@@ -161,7 +170,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("error when loadSdkConfigFile, ex:", e);
         }
         return sdkConfig;
     }

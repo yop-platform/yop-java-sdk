@@ -10,9 +10,14 @@ import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
@@ -28,6 +33,8 @@ import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
  * @since 2018/6/28 下午1:22
  */
 public final class FileUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileUtils.class);
 
     public static String getFileName(InputStream file) {
         String fileName;
@@ -50,17 +57,11 @@ public final class FileUtils {
         InputStream stream = null;
         try {
             stream = new FileInputStream(file);
-            mimeType = getMimeType(new FileInputStream(file));
+            mimeType = getMimeType(stream);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("error when getMimeType, ex:", e);
         } finally {
-            if (null != stream) {
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            StreamUtils.closeQuietly(stream);
         }
 
         return mimeType;
@@ -78,7 +79,7 @@ public final class FileUtils {
             parser.parse(stream, contenthandler, metadata);
             mimeType = metadata.get(HttpHeaders.CONTENT_TYPE);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("error when getMimeType, ex:", e);
         }
 
         return mimeType;
@@ -89,17 +90,11 @@ public final class FileUtils {
         InputStream stream = null;
         try {
             stream = new FileInputStream(file);
-            fileExt = getFileExt(new FileInputStream(file));
+            fileExt = getFileExt(stream);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("error when getFileExt, ex:", e);
         } finally {
-            if (null != stream) {
-                try {
-                    stream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            StreamUtils.closeQuietly(stream);
         }
 
         return fileExt;
@@ -111,7 +106,7 @@ public final class FileUtils {
             String mimeType = getMimeType(stream);
             fileExt = TikaConfig.getDefaultConfig().getMimeRepository().getRegisteredMimeType(mimeType).getExtension();
         } catch (MimeTypeException e) {
-            e.printStackTrace();
+            LOGGER.error("error when getFileExt, ex:", e);
         }
         return fileExt;
     }
