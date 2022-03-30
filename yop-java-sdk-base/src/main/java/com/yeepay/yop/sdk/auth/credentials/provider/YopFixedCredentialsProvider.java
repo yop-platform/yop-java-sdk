@@ -27,22 +27,28 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProvider {
 
-    private final Map<String, YopAppConfig> appConfigs = new ConcurrentHashMap<>();
-    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
+    private final Map<String, YopAppConfig> appConfigs = new ConcurrentHashMap();
+    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap();
 
     @Override
     public final YopCredentials getCredentials(String appId, String credentialType) {
         String key = appId + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appId), credentialType));
+        if (!yopCredentialsMap.containsKey(key)) {
+            yopCredentialsMap.put(key, buildCredentials(getAppConfig(appId), credentialType));
+        }
+        return yopCredentialsMap.get(key);
     }
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appId) {
-        return new ArrayList<>(getAppConfig(appId).getIsvPrivateKeys().keySet());
+        return new ArrayList(getAppConfig(appId).getIsvPrivateKeys().keySet());
     }
 
     private YopAppConfig getAppConfig(String appId) {
-        return appConfigs.computeIfAbsent(appId, k -> loadAppConfig(appId));
+        if (!appConfigs.containsKey(appId)) {
+            appConfigs.put(appId, loadAppConfig(appId));
+        }
+        return appConfigs.get(appId);
     }
 
     /**

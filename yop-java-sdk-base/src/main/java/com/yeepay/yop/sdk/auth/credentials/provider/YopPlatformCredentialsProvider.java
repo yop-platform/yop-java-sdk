@@ -32,9 +32,7 @@ public interface YopPlatformCredentialsProvider {
     /**
      * 重新加载默认应用下的所有平台凭证
      */
-    default Map<String, YopPlatformCredentials> reload() throws YopClientException {
-        return reload(YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), "");
-    }
+    Map<String, YopPlatformCredentials> reload() throws YopClientException;
 
     /**
      * 重新加载某个应用下的平台凭证

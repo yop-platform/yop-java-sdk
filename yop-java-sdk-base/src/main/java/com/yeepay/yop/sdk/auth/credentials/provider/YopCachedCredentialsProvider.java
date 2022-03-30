@@ -44,7 +44,7 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appId) {
         final YopAppConfig appConfig = loadFromCache(appId);
-        return new ArrayList<>(appConfig.getIsvPrivateKeys().keySet());
+        return new ArrayList(appConfig.getIsvPrivateKeys().keySet());
     }
 
     private LoadingCache<String, YopAppConfig> initCache(Long expire, TimeUnit timeUnit) {

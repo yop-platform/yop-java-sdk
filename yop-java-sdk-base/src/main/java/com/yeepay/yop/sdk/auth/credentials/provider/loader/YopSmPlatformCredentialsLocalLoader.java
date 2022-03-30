@@ -95,15 +95,17 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
         // 从本地指定目录加载
         YopCertStore yopCertStore = YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
         Map<String, X509Certificate> localCerts = loadAndVerifyFromLocal(yopCertStore, serialNo);
-        Map<String, YopPlatformCredentials> localCredentials = new LinkedHashMap<>();
+        Map<String, YopPlatformCredentials> localCredentials = new LinkedHashMap();
 
         // 尝试从当前目录加载
         if (MapUtils.isEmpty(localCerts)) {
             localCerts = loadAndVerifyFromLocal(defaultYopCertStore, serialNo);
         }
         if (MapUtils.isNotEmpty(localCerts)) {
-            localCerts.forEach((k, v) -> localCredentials.put(k, new YopPlatformCredentialsHolder()
-                    .withSerialNo(serialNo).withPublicKey(CertTypeEnum.SM2, v.getPublicKey())));
+            for (String key : localCerts.keySet()) {
+                localCredentials.put(key, new YopPlatformCredentialsHolder()
+                        .withSerialNo(serialNo).withPublicKey(CertTypeEnum.SM2, localCerts.get(key).getPublicKey()));
+            }
             if (localCredentials.containsKey(serialNo)) {
                 return localCredentials;
             }
@@ -116,7 +118,7 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
 
     private Map<String, X509Certificate> loadAndVerifyFromLocal(YopCertStore yopCertStore, String serialNo) {
         LOGGER.debug("load sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
-        Map<String, X509Certificate> certMap = new LinkedHashMap<>();
+        Map<String, X509Certificate> certMap = new LinkedHashMap();
         if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
             InputStream fis = null;
             try {

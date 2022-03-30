@@ -31,7 +31,7 @@ public class DefaultAuthorizationReqRegistry implements AuthorizationReqRegistry
     @Override
     public void register(String operationId, String securityReqs) {
         String[] splitReqs = securityReqs.split(",");
-        List<AuthorizationReq> authorizationReqList = new ArrayList<>(splitReqs.length);
+        List<AuthorizationReq> authorizationReqList = new ArrayList(splitReqs.length);
         for (String securityReq : splitReqs) {
             AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(securityReq);
             if (null == authorizationReq) {
