@@ -5,6 +5,8 @@ import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 
+import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonResponse;
+
 /**
  * title: YopJsonResponseAnalyzer<br>
  * description: HTTP body json response handler for YOP responses.<br>
@@ -29,11 +31,8 @@ public class YopJsonResponseAnalyzer implements HttpResponseAnalyzer {
     @Override
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         String content = context.getResponse().readContent();
-        if (content != null) {
-            if (response.getMetadata().getContentLength() > 0
-                    || "chunked".equalsIgnoreCase(response.getMetadata().getTransferEncoding())) {
-                JsonUtils.load(content, response);
-            }
+        if (content != null && isJsonResponse(response.getMetadata().getContentType())) {
+            JsonUtils.load(content, response);
         }
         return true;
     }

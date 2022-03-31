@@ -59,4 +59,8 @@ public interface YopConstants {
     String YOP_HTTP_CLIENT_IMPL_APACHE = "apache";
     String YOP_HTTP_CLIENT_IMPL_DEFAULT = YOP_HTTP_CLIENT_IMPL_APACHE;
 
+    String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
+    String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+    String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
+
 }

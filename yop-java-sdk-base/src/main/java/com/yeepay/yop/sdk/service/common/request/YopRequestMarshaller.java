@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.yeepay.yop.sdk.YopConstants.*;
+
 /**
  * title: YopRequest序列化器<br>
  * description: <br>
@@ -76,16 +78,16 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
             if (request.getContent() instanceof String) {
                 byte[] contentBytes = ((String) request.getContent()).getBytes(YopConstants.DEFAULT_CHARSET);
                 internalRequest.setContent(RestartableInputStream.wrap(contentBytes));
-                internalRequest.addHeader(Headers.CONTENT_TYPE, "application/json");
+                internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_JSON);
                 internalRequest.addHeader(Headers.CONTENT_LENGTH, String.valueOf(contentBytes.length));
             } else if (request.getContent() instanceof InputStream) {
                 //3、单文件流式上传
-                internalRequest.addHeader(Headers.CONTENT_TYPE, "application/octet-stream");
+                internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_STREAM);
                 internalRequest.setContent((InputStream) request.getContent());
             }
         } else {
             //4、form表单上传
-            internalRequest.addHeader(Headers.CONTENT_TYPE, "application/x-www-form-urlencoded");
+            internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_FORM);
         }
         return internalRequest;
     }
