@@ -9,6 +9,8 @@ import com.yeepay.yop.sdk.utils.CharacterConstants;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonResponse;
+
 /**
  * title: 结果解密<br>
  * description: <br>
@@ -27,8 +29,6 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
         return INSTANCE;
     }
 
-    private static final String CONTENT_TYPE_JSON = "application/json";
-
     private YopContentDecryptAnalyzer() {
     }
 
@@ -44,9 +44,5 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
             }
         }
         return false;
-    }
-
-    private boolean isJsonResponse(String contentType) {
-        return StringUtils.startsWith(contentType, CONTENT_TYPE_JSON);
     }
 }
