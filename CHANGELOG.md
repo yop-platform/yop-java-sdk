@@ -1,5 +1,7 @@
 | 版本 | 变更内容  |
 | --- | --- |
+| 4.2.2 | 修复YopFixedCredentialsProvider#getSupportCertTypes并发问题，影响范围：`[4.0.5~4.2.1]` |
+| 4.2.1 | 修复YopJsonResponseAnalyzer对响应体的校验问题 |
 | 4.2.0 | 支持okhttp |
 | 4.1.12 | 修复4.1.10-4.1.11的shade丢失META-INF/services |
 | 4.1.11 | 修复4.1.10中时间戳获取不一致可能导致网关验签失败的问题 |
