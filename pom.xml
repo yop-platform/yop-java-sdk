@@ -5,7 +5,7 @@
     <artifactId>yop-java-sdk-parent</artifactId>
     <packaging>pom</packaging>
 
-    <version>4.2.4-SNAPSHOT</version>
+    <version>4.2.3-jdk6on-SNAPSHOT</version>
 
     <modules>
         <module>yop-java-sdk-base</module>
@@ -19,29 +19,28 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
+        <java.version>1.6</java.version>
         <maven.java.version>${java.version}</maven.java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <git-commit-id-plugin.version>4.9.10</git-commit-id-plugin.version>
-
-        <commons-lang3.version>3.6</commons-lang3.version>
+        <commons-lang3.version>3.5</commons-lang3.version>
         <commons-codec.version>1.10</commons-codec.version>
         <commons-collections4.version>4.1</commons-collections4.version>
-        <commons-io.version>2.8.0</commons-io.version>
-        <guava.version>[30.0-jre,)</guava.version>
-        <jackson.version>[2.13.2,)</jackson.version>
+        <commons-io.version>2.4</commons-io.version>
+        <guava.version>20.0</guava.version>
+        <jackson.version>2.7.9</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
-        <junit.version>4.13.2</junit.version>
-        <org.springframework>5.3.18</org.springframework>
+        <junit.version>4.12</junit.version>
+        <org.springframework>4.3.4.RELEASE</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <bouncycastle.version>1.67</bouncycastle.version>
-        <tika-core.version>[1.22,)</tika-core.version>
+        <tika-core.version>1.6</tika-core.version>
+        <git-commit-id-plugin.version>2.2.6</git-commit-id-plugin.version>
         <httpcore.version>4.4.13</httpcore.version>
         <httpcomponents.version>4.5.13</httpcomponents.version>
-        <okhttp.version>4.9.3</okhttp.version>
+        <okhttp.version>3.12.6</okhttp.version>
         <oklog-java.version>2.3.0</oklog-java.version>
         <jmh.version>1.33</jmh.version>
     </properties>
@@ -505,8 +504,8 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-        <tag>v4.1.10</tag>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <developers>
         <developer>
@@ -576,6 +575,16 @@
                     <url>http://artifact.paas.yp:8000/artifactory/yp3g-common-release</url>
                 </repository>
             </distributionManagement>
+        </profile>
+
+        <profile>
+            <id>doclint-java8-disable</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <properties>
+                <javadoc.opts>-Xdoclint:none</javadoc.opts>
+            </properties>
         </profile>
     </profiles>
 </project>

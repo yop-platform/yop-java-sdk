@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.encryptor.signer.process;
 import com.google.common.collect.ImmutableMap;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
+import com.yeepay.yop.sdk.auth.signer.process.BaseYopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSm2SignProcessor;
@@ -31,9 +32,9 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2021/12/23 10:23 上午
  */
-public class MockEncryptorSignProcessor implements YopSignProcessor {
+public class MockEncryptorSignProcessor extends BaseYopSignProcessor {
 
-    private static final Map<CertTypeEnum, YopSignProcessor> softSignProcessors = ImmutableMap
+    private static final Map<CertTypeEnum, BaseYopSignProcessor> softSignProcessors = ImmutableMap
             .of(CertTypeEnum.SM2, new YopSm2SignProcessor(), CertTypeEnum.RSA2048, new YopRsaSignProcessor());
 
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SM3;

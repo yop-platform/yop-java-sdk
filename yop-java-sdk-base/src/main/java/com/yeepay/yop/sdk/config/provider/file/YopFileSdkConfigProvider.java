@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +46,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     private static final String SDK_CONFIG_DIR = "config";
     private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/yop_sdk_config_default.json";
 
-    private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap<>();
+    private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap();
 
     @Override
     protected YopSdkConfig loadSdkConfig() {
@@ -56,7 +56,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     public YopFileSdkConfig loadSdkConfig(String appKey) {
         appKey = StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY);
         if (!sdkConfigs.containsKey(appKey)) {
-            sdkConfigs.computeIfAbsent(appKey, k -> doLoadYopFileSdkConfig(k));
+            sdkConfigs.put(appKey, doLoadYopFileSdkConfig(appKey));
         }
         return sdkConfigs.get(appKey);
     }
@@ -134,7 +134,9 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                         && !"serialVersionUID".equals(sourceField.getName()) && targetField.get(targetBean) == null) {
                     targetField.set(targetBean, sourceField.get(sourceBean));
                 }
-            } catch (IllegalArgumentException | IllegalAccessException e) {
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("error when fillNullConfig, ex:", e);
+            } catch (IllegalAccessException e) {
                 LOGGER.error("error when fillNullConfig, ex:", e);
             }
         }
@@ -154,7 +156,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                 BufferedReader bufferReader = null;
                 try {
                     bufferReader = new BufferedReader(
-                            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8));
+                            new InputStreamReader(resource.getInputStream(), YopConstants.DEFAULT_ENCODING));
                     String tempString;
                     while ((tempString = bufferReader.readLine()) != null) {
                         script.append(tempString).append("\n");

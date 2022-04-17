@@ -63,7 +63,7 @@ public class YopAppConfig implements Serializable {
     }
 
     public void setIsvPrivateKey(List<YopCertConfig> isvPrivateKeys) {
-        if(CollectionUtils.isEmpty(isvPrivateKeys)){
+        if (CollectionUtils.isEmpty(isvPrivateKeys)) {
             return;
         }
 

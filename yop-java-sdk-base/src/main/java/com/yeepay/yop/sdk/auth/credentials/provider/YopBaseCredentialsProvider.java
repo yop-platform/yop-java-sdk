@@ -5,6 +5,7 @@
 
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopAESCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
@@ -61,4 +62,8 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
         return StringUtils.defaultIfBlank(appKey, getDefaultAppKey());
     }
 
+    @Override
+    public String getDefaultAppKey() {
+        return YopConstants.YOP_DEFAULT_APPKEY;
+    }
 }

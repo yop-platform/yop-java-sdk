@@ -70,7 +70,7 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     }
 
     private Map<String, YopPlatformCredentials> storeCerts(YopCertStore yopCertStore, Map<String, X509Certificate> plainCerts) {
-        Map<String, YopPlatformCredentials> result = new LinkedHashMap<>();
+        Map<String, YopPlatformCredentials> result = new LinkedHashMap();
         if (null == plainCerts || 0 == plainCerts.size()) {
             return null;
         }
@@ -165,7 +165,7 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     }
 
     private List<EncryptCertificate> parseYopResponse(YopResponse response) {
-        List<EncryptCertificate> encryptCerts = new ArrayList<>();
+        List<EncryptCertificate> encryptCerts = new ArrayList();
         Map result = (Map) response.getResult();
         if (MapUtils.isNotEmpty(result)) {
             List<Map> data = (List<Map>) result.get("data");

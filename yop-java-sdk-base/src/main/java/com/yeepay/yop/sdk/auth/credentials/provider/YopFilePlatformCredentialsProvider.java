@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopPlatformCredentialsLoader;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopRsaPlatformCredentialsLoader;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopSmPlatformCredentialsLocalLoader;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,12 +40,12 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
     /**
      * serialNo -> YopPlatformCredentials
      */
-    private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap<>();
+    private Map<String, YopPlatformCredentials> credentialsMap = new ConcurrentHashMap();
 
     /**
      * type -> YopPlatformCredentialsLoader
      */
-    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = new HashMap<>(2);
+    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = new HashMap(2);
 
     public YopFilePlatformCredentialsProvider() {
         this.yopPlatformCredentialsLoaderMap.put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopRsaPlatformCredentialsLoader());
@@ -66,13 +67,20 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
 
             Map<String, YopPlatformCredentials> yopPlatformCredentials = yopPlatformCredentialsLoaderMap.get(yopPlatformLoader).load(appKey, serialNo);
             if (MapUtils.isNotEmpty(yopPlatformCredentials)) {
-                yopPlatformCredentials.forEach(credentialsMap::put);
+                for (String key : yopPlatformCredentials.keySet()) {
+                    credentialsMap.put(key, yopPlatformCredentials.get(key));
+                }
             }
             if (yopPlatformCredentials.containsKey(serialNo)) {
                 return yopPlatformCredentials.get(serialNo);
             }
         }
         return foundCredentials;
+    }
+
+    @Override
+    public Map<String, YopPlatformCredentials> reload() throws YopClientException {
+        return reload(YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), "");
     }
 
     @Override

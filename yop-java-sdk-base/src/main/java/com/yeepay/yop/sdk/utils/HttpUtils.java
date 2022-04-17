@@ -275,7 +275,7 @@ public class HttpUtils {
             return null;
         }
 
-        List<String> encodedNameValuePair = new ArrayList<>(requestParams.size());
+        List<String> encodedNameValuePair = new ArrayList(requestParams.size());
         for (Map.Entry<String, List<String>> entry : requestParams.entrySet()) {
             String paramName = entry.getKey();
             for (String paramValue : entry.getValue()) {
