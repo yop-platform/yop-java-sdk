@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import org.junit.Test;
@@ -25,10 +26,15 @@ public class YopCredentialsProviderTest {
     @Test
     public void loadDefaultCredential() {
         System.setProperty("yop.sdk.config.env", "qa_single_default");
-        final YopCredentials credentials = credentialsProvider.getCredentials(null, "SM2");
-        assert credentials.getAppKey().equals("app_100800095600032");
-        assert credentials instanceof YopPKICredentials
-                && null != ((YopPKICredentials) credentials).getCredential().getPrivateKey();
+        final YopCredentials credentialsDefault1 = credentialsProvider.getCredentials(null, "SM2");
+        final YopCredentials credentialsDefault2 = credentialsProvider.getCredentials(YopConstants.YOP_DEFAULT_APPKEY, "SM2");
+        assert credentialsDefault1.getAppKey().equals("app_100800095600032");
+        assert credentialsDefault1 instanceof YopPKICredentials
+                && null != ((YopPKICredentials) credentialsDefault1).getCredential().getPrivateKey();
+
+        assert credentialsDefault2.getAppKey().equals("app_100800095600032");
+        assert credentialsDefault2 instanceof YopPKICredentials
+                && null != ((YopPKICredentials) credentialsDefault2).getCredential().getPrivateKey();
     }
 
     @Test

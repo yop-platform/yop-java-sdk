@@ -2,11 +2,13 @@ package com.yeepay.yop.sdk.config;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.List;
@@ -124,7 +126,7 @@ public class YopAppConfig implements Serializable {
         }
 
         public YopAppConfig build() {
-            if (null == appKey) {
+            if (null == appKey || StringUtils.equals(appKey, YopConstants.YOP_DEFAULT_APPKEY)) {
                 appKey = yopFileSdkConfig.getAppKey();
             }
             YopAppConfig yopAppConfig = new YopAppConfig();

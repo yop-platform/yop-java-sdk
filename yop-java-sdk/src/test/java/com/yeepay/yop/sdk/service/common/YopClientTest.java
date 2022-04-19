@@ -14,6 +14,8 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_APPKEY;
+
 /**
  * title: <br>
  * description: 描述<br>
@@ -107,7 +109,7 @@ public class YopClientTest {
         System.out.println(response);
 
         YopCredentialsProviderRegistry.getProvider().removeConfig(null);
-        YopSdkConfigProviderRegistry.getProvider().removeConfig("default");
+        YopSdkConfigProviderRegistry.getProvider().removeConfig(YOP_DEFAULT_APPKEY);
     }
 
     @Test

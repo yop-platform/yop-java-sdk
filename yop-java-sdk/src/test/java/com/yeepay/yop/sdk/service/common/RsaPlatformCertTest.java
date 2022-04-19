@@ -13,6 +13,8 @@ import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_APPKEY;
+
 /**
  * title: <br/>
  * description: <br/>
@@ -31,7 +33,7 @@ public class RsaPlatformCertTest {
     public void testRsaPlatformCert() {
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_rsa_platform_cert.json");
         YopFileSdkConfigProvider yopFileSdkConfigProvider = (YopFileSdkConfigProvider) YopSdkConfigProviderRegistry.getProvider();
-        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("default");
+        YopFileSdkConfig yopFileSdkConfig = yopFileSdkConfigProvider.loadSdkConfig(YOP_DEFAULT_APPKEY);
         YopCertConfig[] yopCertConfigs = yopFileSdkConfig.getYopPublicKey();
         Assert.assertTrue(yopCertConfigs.length == 2);
         String proPubkeyStr = RSAKeyUtils.key2String(YopCertConfigUtils.loadPublicKey(yopCertConfigs[0]));

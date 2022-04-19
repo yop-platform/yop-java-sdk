@@ -14,6 +14,7 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +55,10 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
                 return Sm2Utils.string2PrivateKey(privateKey);
         }
         throw new YopClientException("unsupported certType");
+    }
+
+    protected String useDefaultIfBlank(String appKey) {
+        return StringUtils.defaultIfBlank(appKey, getDefaultAppKey());
     }
 
 }
