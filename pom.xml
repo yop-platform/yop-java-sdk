@@ -5,7 +5,7 @@
     <artifactId>yop-java-sdk-parent</artifactId>
     <packaging>pom</packaging>
 
-    <version>4.2.3-jdk6on-SNAPSHOT</version>
+    <version>4.2.3-jdk6on</version>
 
     <modules>
         <module>yop-java-sdk-base</module>
@@ -504,7 +504,7 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>v4.2.3-jdk6on</tag>
   </scm>
 
     <developers>
