@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -53,7 +54,7 @@ public interface YopCredentialsProvider {
      * @return
      */
     default String getDefaultAppKey() {
-        return null;
+        return YopConstants.YOP_DEFAULT_APPKEY;
     }
 
     /**

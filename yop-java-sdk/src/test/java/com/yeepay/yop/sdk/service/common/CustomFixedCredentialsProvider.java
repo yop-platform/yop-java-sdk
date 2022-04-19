@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * title: <br>
+ * title: 固定的商户凭证Provider实现示例<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -26,6 +26,9 @@ import java.util.List;
  */
 public class CustomFixedCredentialsProvider extends YopFixedCredentialsProvider {
 
+    /**
+     * 多应用时，需要指定默认应用
+     */
     private static final String DEFAULT_APPKEY = "xxx";
 
     @Override

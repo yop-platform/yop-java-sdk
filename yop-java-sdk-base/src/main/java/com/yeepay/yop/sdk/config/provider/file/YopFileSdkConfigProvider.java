@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_APPKEY;
 
 /**
  * title: 文件sdk配置provider<br>
@@ -53,7 +54,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     }
 
     public YopFileSdkConfig loadSdkConfig(String appKey) {
-        appKey = StringUtils.defaultIfBlank(appKey, "default");
+        appKey = StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY);
         if (!sdkConfigs.containsKey(appKey)) {
             sdkConfigs.computeIfAbsent(appKey, k -> doLoadYopFileSdkConfig(k));
         }

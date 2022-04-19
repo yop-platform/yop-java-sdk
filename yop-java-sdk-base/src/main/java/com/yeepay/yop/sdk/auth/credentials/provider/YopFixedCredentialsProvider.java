@@ -31,31 +31,32 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
     private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
 
     @Override
-    public final YopCredentials getCredentials(String appId, String credentialType) {
-        String key = appId + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appId), credentialType));
+    public final YopCredentials getCredentials(String appKey, String credentialType) {
+        String key = appKey + ":" + credentialType;
+        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appKey), credentialType));
     }
 
     @Override
-    public List<CertTypeEnum> getSupportCertTypes(String appId) {
-        return new ArrayList<>(getAppConfig(appId).getIsvPrivateKeys().keySet());
+    public List<CertTypeEnum> getSupportCertTypes(String appKey) {
+        return new ArrayList<>(getAppConfig(appKey).getIsvPrivateKeys().keySet());
     }
 
-    private YopAppConfig getAppConfig(String appId) {
-        return appConfigs.computeIfAbsent(appId, k -> loadAppConfig(appId));
+    private YopAppConfig getAppConfig(String appKey) {
+        String appKeyHandled = useDefaultIfBlank(appKey);
+        return appConfigs.computeIfAbsent(appKeyHandled, k -> loadAppConfig(appKeyHandled));
     }
 
     /**
      * 加载用户密钥配置
      *
-     * @param appId appId
+     * @param appKey appKey
      * @return 用户密钥配置
      */
-    protected abstract YopAppConfig loadAppConfig(String appId);
+    protected abstract YopAppConfig loadAppConfig(String appKey);
 
     @Override
-    public List<YopCertConfig> getIsvEncryptKey(String appId) {
-        return getAppConfig(appId).getIsvEncryptKey();
+    public List<YopCertConfig> getIsvEncryptKey(String appKey) {
+        return getAppConfig(appKey).getIsvEncryptKey();
     }
 
     @Override

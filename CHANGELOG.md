@@ -1,5 +1,6 @@
 | 版本 | 变更内容  |
 | --- | --- |
+| 4.2.3 | 修复默认应用加载问题，影响范围：`[4.2.2]` |
 | 4.2.2 | 修复YopFixedCredentialsProvider#getSupportCertTypes并发问题，影响范围：`[4.0.5~4.2.1]` |
 | 4.2.1 | 修复YopJsonResponseAnalyzer对响应体的校验问题 |
 | 4.2.0 | 支持okhttp |

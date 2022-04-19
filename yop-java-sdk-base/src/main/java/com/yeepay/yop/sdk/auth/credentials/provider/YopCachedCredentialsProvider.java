@@ -37,13 +37,13 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
 
     @Override
     public YopCredentials getCredentials(String appKey, String credentialType) {
-        final YopAppConfig appConfig = loadFromCache(appKey);
+        final YopAppConfig appConfig = loadFromCache(useDefaultIfBlank(appKey));
         return null != appConfig ? buildCredentials(appConfig, credentialType) : null;
     }
 
     @Override
-    public List<CertTypeEnum> getSupportCertTypes(String appId) {
-        final YopAppConfig appConfig = loadFromCache(appId);
+    public List<CertTypeEnum> getSupportCertTypes(String appKey) {
+        final YopAppConfig appConfig = loadFromCache(useDefaultIfBlank(appKey));
         return new ArrayList<>(appConfig.getIsvPrivateKeys().keySet());
     }
 
@@ -54,13 +54,13 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
         }
         return cacheBuilder.build(new CacheLoader<String, YopAppConfig>() {
             @Override
-            public YopAppConfig load(String key) throws Exception {
-                logger.debug("try to load appSdkConfig for appKey:" + key);
+            public YopAppConfig load(String appKey) throws Exception {
+                logger.debug("try to load appSdkConfig for appKey:" + appKey);
                 YopAppConfig yopAppConfig = null;
                 try {
-                    yopAppConfig = loadAppConfig(key);
+                    yopAppConfig = loadAppConfig(appKey);
                 } catch (Exception ex) {
-                    logger.warn("UnexpectedException occurred when loading appSdkConfig for appKey:" + key, ex);
+                    logger.warn("UnexpectedException occurred when loading appSdkConfig for appKey:" + appKey, ex);
                 }
                 return yopAppConfig;
             }
@@ -77,7 +77,7 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
 
     @Override
     public List<YopCertConfig> getIsvEncryptKey(String appKey) {
-        final YopAppConfig appConfig = loadFromCache(appKey);
+        final YopAppConfig appConfig = loadFromCache(useDefaultIfBlank(appKey));
         return null != appConfig ? appConfig.getIsvEncryptKey() : null;
     }
 

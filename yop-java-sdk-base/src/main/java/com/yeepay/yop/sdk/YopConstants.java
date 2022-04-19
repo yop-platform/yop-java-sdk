@@ -11,7 +11,7 @@ import java.nio.charset.Charset;
  */
 public interface YopConstants {
 
-    String VERSION = "4.2.2";
+    String VERSION = "4.2.3";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -62,5 +62,7 @@ public interface YopConstants {
     String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
     String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
     String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
+
+    String YOP_DEFAULT_APPKEY = "default";
 
 }

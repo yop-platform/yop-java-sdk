@@ -1,6 +1,5 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,4 +53,13 @@ public class YopFileSdkConfigProviderTest {
         assertEquals("file", yopSdkConfig.getRegion());
     }
 
+    @Test
+    public void loadDefaultSdkConfig() {
+        System.setProperty(YopFileSdkConfigProvider.SDK_CONFIG_ENV_PROPERTY_KEY, "qa");
+        System.setProperty(YopFileSdkConfigProvider.SDK_CONFIG_FILE_PROPERTY_KEY, "yop_sdk_config_app_10085525305.json");
+        YopFileSdkConfig yopSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("");
+        final String defaultAppKey = yopSdkConfig.getAppKey();
+        assertEquals(defaultAppKey, "app_10085525305");
+        assertEquals(yopSdkConfig.getHttpClient().getMaxConnTotal(), 200);
+    }
 }
