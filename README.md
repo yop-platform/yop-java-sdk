@@ -4,7 +4,7 @@
 
 ## Usage
 
-本项目用于对接 YOP 上面的 API。
+本项目用于对接 YOP 上面的 API。详细说明请参考[**_使用JavaSDK_**](https://open.yeepay.com/docs/platform/sdk_guide/java-sdk-guide)
 
 ### 单商编推荐配置
 
@@ -62,7 +62,7 @@ Add this dependency to your project's POM:
 <dependency>
   <groupId>com.yeepay.yop.sdk</groupId>
   <artifactId>yop-java-sdk</artifactId>
-  <version>4.2.0</version>
+  <version>4.2.2</version>
 </dependency>
 ```
 
@@ -71,7 +71,7 @@ Add this dependency to your project's POM:
 Add this dependency to your project's build file:
 
 ```groovy
-compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.2.0'
+compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.2.2'
 ```
 
 ## 发版

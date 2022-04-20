@@ -2,6 +2,7 @@ package com.yeepay.yop.sdk.utils;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
@@ -9,6 +10,7 @@ import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,7 +18,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yeepay.yop.sdk.YopConstants.YOP_HTTP_CONTENT_TYPE_JSON;
@@ -268,14 +273,19 @@ public class HttpUtils {
      * string for the parameters present in the specified request.
      */
     public static String encodeParameters(Request<? extends BaseRequest> request, Boolean forSignature) {
-        Map<String, List<String>> requestParams = BooleanUtils.isTrue(forSignature) ?
-                new TreeMap<String, List<String>>(request.getParameters()) : Collections.unmodifiableMap(request.getParameters());
-
-        if (requestParams.isEmpty()) {
+        if (MapUtils.isEmpty(request.getParameters())) {
             return null;
         }
 
-        List<String> encodedNameValuePair = new ArrayList<>(requestParams.size());
+        Map<String, List<String>> requestParams;
+        if (BooleanUtils.isTrue(forSignature)) {
+            requestParams = Maps.newTreeMap();
+            requestParams.putAll(request.getParameters());
+        } else {
+            requestParams = Collections.unmodifiableMap(request.getParameters());
+        }
+
+        List<String> encodedNameValuePair = Lists.newArrayListWithExpectedSize(requestParams.size());
         for (Map.Entry<String, List<String>> entry : requestParams.entrySet()) {
             String paramName = entry.getKey();
             for (String paramValue : entry.getValue()) {

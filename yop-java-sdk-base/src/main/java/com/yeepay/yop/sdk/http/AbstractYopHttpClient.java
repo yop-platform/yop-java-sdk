@@ -5,7 +5,6 @@
 package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.ImmutableSet;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
@@ -13,18 +12,21 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.HttpUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.Security;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.internal.RequestEncryptor.encrypt;
 
 /**
  * title: <br>
@@ -38,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public abstract class AbstractYopHttpClient implements YopHttpClient {
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractYopHttpClient.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractYopHttpClient.class);
 
     protected static final Set<HttpMethodName> PAYLOAD_SUPPORT_METHODS =
             ImmutableSet.of(HttpMethodName.POST, HttpMethodName.PUT, HttpMethodName.DELETE);
@@ -67,17 +69,16 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         Output analyzedResponse = null;
         YopHttpResponse httpResponse = null;
         try {
-            preExecute(request, yopRequestConfig, executionContext);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Sending Request: {}", request);
+            preExecute(request, executionContext);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Sending Request: {}", request);
             }
             httpResponse = doExecute(request, yopRequestConfig);
-            analyzedResponse = responseHandler.handle(
-                    new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
+            analyzedResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, executionContext));
             return analyzedResponse;
         } catch (YopClientException e) {
             throw e;
-        }  catch (Exception e) {
+        } catch (Exception e) {
             throw new YopClientException("Unable to execute HTTP request", e);
         } finally {
             postExecute(analyzedResponse, httpResponse);
@@ -105,30 +106,33 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                 httpResponse.close();
             }
         } catch (IOException e) {
-            logger.error("error when postExecute, ex:", e);
+            LOGGER.error("error when postExecute, ex:", e);
         }
     }
 
     /**
-     * 签名&加密请求
+     * 加密&签名请求
+     *
      * @param request
-     * @param yopRequestConfig
      * @param executionContext
      * @param <Input>
      */
-    protected  <Input extends BaseRequest> void preExecute(Request<Input> request, YopRequestConfig yopRequestConfig, ExecutionContext executionContext) {
+    protected <Input extends BaseRequest> void preExecute(Request<Input> request,
+                                                          ExecutionContext executionContext)
+            throws ExecutionException, InterruptedException, UnsupportedEncodingException {
         // 请求标头
-        YopCredentials yopCredentials = executionContext.getYopCredentials();
-        setAppKey(request, yopCredentials);
-        setUserAgent(request);
+        addStandardHeader(request, executionContext);
+
+        // 加密
+        encryptRequest(request, executionContext);
 
         // 签名
         signRequest(request, executionContext);
+    }
 
-        // 加密
-        if (BooleanUtils.isTrue(yopRequestConfig.getNeedEncrypt())) {
-            encryptRequest(request, executionContext);
-        }
+    private <Input extends BaseRequest> void addStandardHeader(Request<Input> request, ExecutionContext executionContext) {
+        request.addHeader(Headers.YOP_APPKEY, executionContext.getYopCredentials().getAppKey());
+        request.addHeader(Headers.USER_AGENT, this.clientConfig.getUserAgent());
     }
 
     /**
@@ -138,20 +142,18 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      * @param executionContext 执行上下文
      * @param <Input>          请求类
      */
-    private <Input extends BaseRequest> void encryptRequest(Request<Input> request, ExecutionContext executionContext) {
-        executionContext.getEncryptor().encrypt(request);
+    private <Input extends BaseRequest> void encryptRequest(Request<Input> request, ExecutionContext executionContext)
+            throws ExecutionException, InterruptedException, UnsupportedEncodingException {
+        final YopEncryptor encryptor = executionContext.getEncryptor();
+        if (null == encryptor) {
+            LOGGER.debug("request not encrypted for no YopEncryptor found(or maybe a rsa request)");
+            return;
+        }
+        encrypt(request, encryptor, executionContext.getEncryptOptions().get());
     }
 
     private <Input extends BaseRequest> void signRequest(Request<Input> request, ExecutionContext executionContext) {
         executionContext.getSigner().sign(request, executionContext.getYopCredentials(), executionContext.getSignOptions());
-    }
-
-    protected void setUserAgent(Request<? extends BaseRequest> request) {
-        request.addHeader(Headers.USER_AGENT, this.clientConfig.getUserAgent());
-    }
-
-    protected void setAppKey(Request<? extends BaseRequest> request, YopCredentials yopCredentials) {
-        request.addHeader(Headers.YOP_APPKEY, yopCredentials.getAppKey());
     }
 
     /**

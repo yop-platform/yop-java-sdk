@@ -4,14 +4,20 @@
  */
 package com.yeepay.yop.sdk;
 
+import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.utils.CharacterConstants;
+
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Common constants used by the whole SDK.
  */
 public interface YopConstants {
 
-    String VERSION = "4.2.3";
+    String VERSION = "4.3.0";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -61,8 +67,31 @@ public interface YopConstants {
 
     String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
     String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+    String YOP_HTTP_CONTENT_TYPE_MULTIPART_FORM = "multipart/form-data";
     String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
 
     String YOP_DEFAULT_APPKEY = "default";
+
+    /**
+     * 加密
+     */
+    String YOP_ENCRYPT_V1 = "yop-encrypt-v1";
+    String SM4_CBC_PKCS5PADDING = "SM4/CBC/PKCS5Padding";
+    String SM2 = "SM2";
+    String YOP_DEFAULT_ENCRYPT_ALG = SM4_CBC_PKCS5PADDING;
+    String YOP_CREDENTIALS_ENCRYPT_ALG_SM4 = SM4_CBC_PKCS5PADDING;
+    String YOP_CREDENTIALS_ENCRYPT_ALG_SM2 = SM2;
+    String YOP_CREDENTIALS_DEFAULT_ENCRYPT_ALG = YOP_CREDENTIALS_ENCRYPT_ALG_SM4;
+    String YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO = "YOP_SM2_CERT_SERIAL_NO";
+    String YOP_ENCRYPT_OPTIONS_YOP_SM4_MAIN_CREDENTIALS = "SM4_CERT_ID";
+    String YOP_JSON_CONTENT_FORMAT = "{\"result\":%s}";
+    String YOP_JSON_CONTENT_BIZ_KEY = "result";
+
+    /**
+     * jsonpath
+     */
+    String JSON_PATH_PREFIX = "$.";
+    Set<String> JSON_PATH_ROOT = Collections.unmodifiableSet(Sets.newHashSet("$", "$..*"));
+    List<String> JSON_TOTAL_ENCRYPT_PARAMS = Collections.singletonList(CharacterConstants.DOLLAR);
 
 }

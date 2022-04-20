@@ -1,8 +1,8 @@
 package com.yeepay.yop.sdk.security;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.aes.AES;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -20,7 +20,7 @@ public class SymmetricEncryptionFactory {
     private static final Map<SymmetricEncryptAlgEnum, Encryption> map;
 
     static {
-        map = new HashMap<SymmetricEncryptAlgEnum, Encryption>();
+        map = Maps.newHashMap();
         map.put(SymmetricEncryptAlgEnum.AES, new AES());
     }
 

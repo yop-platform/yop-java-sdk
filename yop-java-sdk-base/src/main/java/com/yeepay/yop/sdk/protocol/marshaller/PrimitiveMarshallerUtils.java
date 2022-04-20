@@ -1,9 +1,9 @@
 package com.yeepay.yop.sdk.protocol.marshaller;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.protocol.marshaller.support.DateTimeMarshaller;
 import com.yeepay.yop.sdk.protocol.marshaller.support.LocalDateMarshaller;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class PrimitiveMarshallerUtils {
 
-    private static final Map<String, PrimitiveMarshaller> MARSHALLERS = new HashMap<String, PrimitiveMarshaller>();
+    private static final Map<String, PrimitiveMarshaller> MARSHALLERS = Maps.newHashMap();
 
     static {
         register(new LocalDateMarshaller());

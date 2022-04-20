@@ -56,7 +56,7 @@ public class Sm2SignAndVerifyTest {
         }
 
         @Override
-        public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
+        public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
         }
     }
 

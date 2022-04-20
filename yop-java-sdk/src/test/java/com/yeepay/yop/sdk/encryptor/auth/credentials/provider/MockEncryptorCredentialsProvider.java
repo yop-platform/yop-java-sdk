@@ -4,6 +4,8 @@
  */
 package com.yeepay.yop.sdk.encryptor.auth.credentials.provider;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.config.YopAppConfig;
@@ -13,14 +15,13 @@ import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfigProvider;
 import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentials;
 import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * title: <br>
@@ -34,27 +35,29 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MockEncryptorCredentialsProvider implements YopCredentialsProvider {
 
-    private final Map<String, YopAppConfig> appConfigs = new HashMap<>();
-    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
-    private final Map<String, List<YopCredentials>> yopEncryptCredentialsMap = new ConcurrentHashMap<>();
+    private final Map<String, YopAppConfig> appConfigs = Maps.newHashMap();
+    private final Map<String, YopCredentials> yopCredentialsMap = Maps.newConcurrentMap();
+    private final Map<String, List<YopCredentials>> yopEncryptCredentialsMap = Maps.newConcurrentMap();
 
     @Override
-    public YopCredentials getCredentials(String appKey, String credentialType) {
+    public YopCredentials<?> getCredentials(String appKey, String credentialType) {
         String key = appKey + ":" + credentialType;
         return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appKey), credentialType));
     }
 
-    protected final YopCredentials buildCredentials(YopAppConfig appConfig, String credentialType) {
-        if (appConfig == null) {
-            return null;
+    protected final YopCredentials<?> buildCredentials(YopAppConfig appConfig, String credentialType) {
+        CertTypeEnum certType;
+        if (null == appConfig || StringUtils.isEmpty(credentialType) ||
+                (null == (certType = CertTypeEnum.parse(credentialType)))) {
+            throw new YopClientException("Illegal params when buildCredentials, credentialType:" + credentialType);
         }
-        CertTypeEnum certType = CertTypeEnum.parse(credentialType);
-        if (certType.isSymmetric()) {
-            MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(appConfig.getAesSecretKey(), certType);
-            return new MockEncryptorCredentials(appConfig.getAppKey(), credentialsItem);
-        } else {
-            MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(appConfig.loadPrivateKey(certType), certType);
-            return new MockEncryptorCredentials(appConfig.getAppKey(), credentialsItem);
+        switch (certType) {
+            case RSA2048:
+            case SM2:
+                MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(appConfig.loadPrivateKey(certType), certType);
+                return new MockEncryptorCredentials(appConfig.getAppKey(), credentialsItem);
+            default:
+                throw new YopClientException("CertType is illegal for YopCredentials, certType:" + certType);
         }
     }
 
@@ -65,7 +68,7 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appKey) {
-        return new ArrayList<>(getAppConfig(appKey).getIsvPrivateKeys().keySet());
+        return Lists.newArrayList(getAppConfig(appKey).getIsvPrivateKeys().keySet());
     }
 
     @Override

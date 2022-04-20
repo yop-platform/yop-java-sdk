@@ -1,5 +1,7 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
@@ -12,10 +14,8 @@ import com.yeepay.yop.sdk.utils.checksum.CRC64Utils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.zip.CheckedInputStream;
 
 /**
@@ -64,8 +64,9 @@ public class YosUploadIntegrityCheckAnalyzer implements HttpResponseAnalyzer {
         if (MapUtils.isEmpty(files)) {
             return null;
         }
-        TreeMap<String, List<MultiPartFile>> sortedFiles = new TreeMap<String, List<MultiPartFile>>(files);
-        List<CheckedInputStream> inputStreams = new ArrayList<CheckedInputStream>(sortedFiles.size());
+        Map<String, List<MultiPartFile>> sortedFiles = Maps.newTreeMap();
+        sortedFiles.putAll(files);
+        List<CheckedInputStream> inputStreams = Lists.newArrayListWithExpectedSize(sortedFiles.size());
         for (List<MultiPartFile> items : sortedFiles.values()) {
             for (MultiPartFile item : items) {
                 inputStreams.add(item.getInputStream());

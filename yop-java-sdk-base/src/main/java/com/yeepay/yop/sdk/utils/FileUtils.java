@@ -1,14 +1,13 @@
 package com.yeepay.yop.sdk.utils;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.HashMap;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
 
@@ -70,7 +68,7 @@ public final class FileUtils {
     private static String getMimeType(InputStream stream) {
         String mimeType = "application/octet-stream";
         AutoDetectParser parser = new AutoDetectParser();
-        parser.setParsers(new HashMap<MediaType, Parser>());
+        parser.setParsers(Maps.newHashMap());
 
         Metadata metadata = new Metadata();
 

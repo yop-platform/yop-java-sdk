@@ -98,12 +98,10 @@ public class YopClientTest {
 
         YopClient yopClient = YopClientBuilder.builder().build();
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
         // 请求级配置
         YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
+        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);
@@ -119,13 +117,11 @@ public class YopClientTest {
         // Client 级配置
         YopClient yopClient = YopClientBuilder.builder().build();
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
         // 请求级配置
         YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setAppKey(appId);// 多appId时必须指定
         requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
+        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);
@@ -174,12 +170,10 @@ public class YopClientTest {
 
         YopClient yopClient = YopClientBuilder.builder().build();
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
         YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setAppKey(appId);
         requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
+        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);
@@ -193,13 +187,11 @@ public class YopClientTest {
 
         YopClient yopClient = YopClientBuilder.builder().build();
 
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
-
         // 编码指定appkey
         YopRequestConfig requestConfig = new YopRequestConfig();
         requestConfig.setAppKey(appId);
         requestConfig.setSecurityReq(securityReq);
-        request.withRequestConfig(requestConfig);
+        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
         YopResponse response = yopClient.request(request);
         System.out.println(response);

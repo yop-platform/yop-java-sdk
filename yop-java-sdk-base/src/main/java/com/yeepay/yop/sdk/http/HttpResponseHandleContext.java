@@ -1,13 +1,15 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
+import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
 
 /**
  * title: http返回处理上下文<br>
@@ -33,24 +35,34 @@ public class HttpResponseHandleContext implements Serializable {
 
     private final SignOptions signOptions;
 
-    private final Boolean needDecrypt;
-
-    private final Encryptor encryptor;
-
     private final Boolean skipVerifySign;
+
+    private final YopCredentials<?> yopCredentials;
+
+    private final boolean encryptSupported;
+
+    private final YopEncryptor encryptor;
+
+    private final EncryptOptions encryptOptions;
 
     public HttpResponseHandleContext(YopHttpResponse httpResponse,
                                      Request originRequest,
-                                     YopRequestConfig yopRequestConfig,
-                                     ExecutionContext executionContext) throws IOException {
+                                     ExecutionContext executionContext) throws IOException, ExecutionException, InterruptedException {
         this.appKey = (String) originRequest.getHeaders().get(Headers.YOP_APPKEY);
         this.response = httpResponse;
         this.originRequest = originRequest;
         this.signer = executionContext.getSigner();
         this.signOptions = executionContext.getSignOptions();
-        this.needDecrypt = yopRequestConfig.getNeedEncrypt();
-        this.encryptor = executionContext.getEncryptor();
-        this.skipVerifySign = yopRequestConfig.getSkipVerifySign();
+        this.skipVerifySign = originRequest.getOriginalRequestObject().getRequestConfig().getSkipVerifySign();
+        this.yopCredentials = executionContext.getYopCredentials();
+        this.encryptSupported = executionContext.isEncryptSupported();
+        if (executionContext.isEncryptSupported()) {
+            this.encryptor = executionContext.getEncryptor();
+            this.encryptOptions = executionContext.getEncryptOptions().get();
+        } else {
+            this.encryptor = null;
+            this.encryptOptions = null;
+        }
     }
 
     public String getAppKey() {
@@ -73,15 +85,23 @@ public class HttpResponseHandleContext implements Serializable {
         return signOptions;
     }
 
-    public Boolean isNeedDecrypt() {
-        return needDecrypt;
+    public Boolean isSkipVerifySign() {
+        return skipVerifySign;
     }
 
-    public Encryptor getEncryptor() {
+    public YopCredentials<?> getYopCredentials() {
+        return yopCredentials;
+    }
+
+    public boolean isEncryptSupported() {
+        return encryptSupported;
+    }
+
+    public YopEncryptor getEncryptor() {
         return encryptor;
     }
 
-    public Boolean isSkipVerifySign() {
-        return skipVerifySign;
+    public EncryptOptions getEncryptOptions() {
+        return encryptOptions;
     }
 }

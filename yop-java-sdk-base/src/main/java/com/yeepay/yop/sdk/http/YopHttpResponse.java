@@ -31,7 +31,7 @@ public interface YopHttpResponse extends Closeable {
 
     String readContent();
 
-    void setDecryptedContent(String decryptedContent);
+    void setContent(Object content);
 
     String getStatusText();
 

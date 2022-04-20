@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.security.rsa;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
@@ -11,7 +12,6 @@ import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class RSA {
 
-    static final Map<DigestAlgEnum, String> SIGN_ALG_MAP = new HashMap<DigestAlgEnum, String>();
+    static final Map<DigestAlgEnum, String> SIGN_ALG_MAP = Maps.newHashMap();
 
     static {
         SIGN_ALG_MAP.put(DigestAlgEnum.SHA256, "SHA256withRSA");

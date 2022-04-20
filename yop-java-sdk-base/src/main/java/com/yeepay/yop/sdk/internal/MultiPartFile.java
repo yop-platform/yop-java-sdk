@@ -29,7 +29,7 @@ public class MultiPartFile implements Serializable {
     private final String fileName;
 
     public MultiPartFile(File file) throws IOException {
-        this.inputStream = new CheckedInputStream(new FileInputStream(file), new CRC64());
+        this.inputStream = getCheckedInputStream(new FileInputStream(file));
         this.fileName = file.getName();
     }
 
@@ -42,6 +42,11 @@ public class MultiPartFile implements Serializable {
         }
         this.fileName = inputStreamPair.getLeft();
         this.inputStream = inputStreamPair.getRight();
+    }
+
+    public MultiPartFile(InputStream in, String originFileName) throws IOException {
+        this.fileName = originFileName;
+        this.inputStream = getCheckedInputStream(in);
     }
 
     public CheckedInputStream getInputStream() {
@@ -58,8 +63,7 @@ public class MultiPartFile implements Serializable {
         //解析文件扩展名的时候会读取流的前64*1024个字节,需要reset文件流
         String fileName = FileUtils.getFileName(in);
         in.reset();
-        CheckedInputStream inputStream = new CheckedInputStream(in, new CRC64());
-        return new ImmutablePair<String, CheckedInputStream>(fileName, inputStream);
+        return new ImmutablePair<String, CheckedInputStream>(fileName, getCheckedInputStream(in));
     }
 
     private static Pair<String, CheckedInputStream> getCheckedInputStreamPair(InputStream inputStream) throws IOException {
@@ -78,7 +82,10 @@ public class MultiPartFile implements Serializable {
         String fileName = FileUtils.getFileName(extReadIn);
         extReadIn.reset();
         SequenceInputStream sequenceInputStream = new SequenceInputStream(extReadIn, inputStream);
-        return new ImmutablePair<String, CheckedInputStream>(fileName, new CheckedInputStream(sequenceInputStream,
-                new CRC64()));
+        return new ImmutablePair<String, CheckedInputStream>(fileName, getCheckedInputStream(sequenceInputStream));
+    }
+
+    private static CheckedInputStream getCheckedInputStream(InputStream inputStream) throws IOException {
+        return new CheckedInputStream(inputStream, new CRC64());
     }
 }

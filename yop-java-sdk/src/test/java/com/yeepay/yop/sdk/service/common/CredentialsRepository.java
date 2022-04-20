@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.service.common;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
@@ -11,7 +12,6 @@ import com.yeepay.yop.sdk.utils.Sm2Utils;
 
 import java.security.PrivateKey;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +58,7 @@ public class CredentialsRepository {
     }
 
     public static Collection getApps() {
-        List result = new LinkedList<>();
+        List result = Lists.newLinkedList();
         securityMap.forEach((k, v) -> result.add(new Object[]{k,v}));
         return result;
     }

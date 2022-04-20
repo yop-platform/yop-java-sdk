@@ -1,13 +1,17 @@
 package com.yeepay.yop.sdk.model;
 
+import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+
+import static com.yeepay.yop.sdk.YopConstants.SM4_CBC_PKCS5PADDING;
 
 /**
  * title: Generic representation of request level configuration<br>
- * description:
+ * description: 用于控制请求的处理细节(包括是否加密、是否验签、走哪种认证策略，连接和读取超时等等)
  * <p>
  * The customer interface for specifying
  * request level configuration is a base request class with configuration methods.
@@ -25,11 +29,7 @@ public class YopRequestConfig {
 
     private String securityReq;
 
-    private YopCredentials credentials;
-
-    private Map<String, String> customRequestHeaders;
-
-    private Map<String, List<String>> customQueryParameters;
+    private YopCredentials<?> credentials;
 
     /**
      * 获取数据的超时时间, 单位：ms
@@ -41,91 +41,155 @@ public class YopRequestConfig {
      */
     private int connectTimeout;
 
+    /**
+     * 是否对请求参数加密
+     */
     private Boolean needEncrypt;
 
+    /**
+     * 是否对请求体(JSON)-整体加密
+     */
+    private Boolean totalEncrypt = true;
+
+    /**
+     * 加密算法
+     */
+    private String encryptAlg = SM4_CBC_PKCS5PADDING;
+
+    /**
+     * 待加密请求头
+     */
+    private final List<String> encryptHeaders = Lists.newArrayList();
+
+    /**
+     * 待加密请求参数
+     */
+    private final List<String> encryptParams = Lists.newArrayList();
+
+    /**
+     * 是否对响应结果验证签名
+     */
     private Boolean skipVerifySign;
 
     public String getAppKey() {
         return appKey;
     }
 
-    public void setAppKey(String appKey) {
+    public YopRequestConfig setAppKey(String appKey) {
         this.appKey = appKey;
+        return this;
     }
 
     public String getSecurityReq() {
         return securityReq;
     }
 
-    public void setSecurityReq(String securityReq) {
+    public YopRequestConfig setSecurityReq(String securityReq) {
         this.securityReq = securityReq;
+        return this;
     }
 
-    public YopCredentials getCredentials() {
+    public YopCredentials<?> getCredentials() {
         return credentials;
     }
 
-    public void setCredentials(YopCredentials credentials) {
+    public YopRequestConfig setCredentials(YopCredentials<?> credentials) {
         this.credentials = credentials;
-    }
-
-    public Map<String, String> getCustomRequestHeaders() {
-        return customRequestHeaders;
-    }
-
-    public void setCustomRequestHeaders(Map<String, String> customRequestHeaders) {
-        this.customRequestHeaders = customRequestHeaders;
-    }
-
-    public Map<String, List<String>> getCustomQueryParameters() {
-        return customQueryParameters;
-    }
-
-    public void setCustomQueryParameters(Map<String, List<String>> customQueryParameters) {
-        this.customQueryParameters = customQueryParameters;
+        return this;
     }
 
     public int getReadTimeout() {
         return readTimeout;
     }
 
-    public void setReadTimeout(int readTimeout) {
+    public YopRequestConfig setReadTimeout(int readTimeout) {
         this.readTimeout = readTimeout;
+        return this;
     }
 
     public int getConnectTimeout() {
         return connectTimeout;
     }
 
-    public void setConnectTimeout(int connectTimeout) {
+    public YopRequestConfig setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
+        return this;
     }
 
     public Boolean getNeedEncrypt() {
         return needEncrypt;
     }
 
-    public void setNeedEncrypt(Boolean needEncrypt) {
+    public YopRequestConfig setNeedEncrypt(Boolean needEncrypt) {
         this.needEncrypt = needEncrypt;
+        return this;
+    }
+
+    public Boolean getTotalEncrypt() {
+        return totalEncrypt;
+    }
+
+    public YopRequestConfig setTotalEncrypt(Boolean totalEncrypt) {
+        if (null != totalEncrypt) {
+            this.totalEncrypt = totalEncrypt;
+        }
+        return this;
+    }
+
+    public String getEncryptAlg() {
+        return encryptAlg;
+    }
+
+    public YopRequestConfig setEncryptAlg(String encryptAlg) {
+        if (StringUtils.isNotBlank(encryptAlg)) {
+            this.encryptAlg = encryptAlg;
+        }
+        return this;
+    }
+
+    public List<String> getEncryptHeaders() {
+        return Collections.unmodifiableList(encryptHeaders);
+    }
+
+    public List<String> getEncryptParams() {
+        return Collections.unmodifiableList(encryptParams);
     }
 
     public Boolean getSkipVerifySign() {
         return skipVerifySign;
     }
 
-    public void setSkipVerifySign(Boolean skipVerifySign) {
+    public YopRequestConfig setSkipVerifySign(Boolean skipVerifySign) {
         this.skipVerifySign = skipVerifySign;
+        return this;
+    }
+
+    public YopRequestConfig addEncryptParam(String name) {
+        encryptParams.add(name);
+        needEncrypt = true;
+        return this;
+    }
+    public YopRequestConfig addEncryptParams(List<String> params) {
+        encryptParams.addAll(params);
+        needEncrypt = true;
+        return this;
+    }
+
+    public YopRequestConfig addEncryptHeader(String headerName) {
+        encryptHeaders.add(headerName);
+        needEncrypt = true;
+        return this;
     }
 
     public static final class Builder {
         private String appKey;
         private String securityReq;
-        private YopCredentials credentials;
-        private Map<String, String> customRequestHeaders;
-        private Map<String, List<String>> customQueryParameters;
+        private YopCredentials<?> credentials;
         private int readTimeout;
         private int connectTimeout;
         private Boolean needEncrypt;
+        private Boolean totalEncrypt;
+        private String encryptAlg;
         private Boolean skipVerifySign;
 
         private Builder() {
@@ -145,18 +209,8 @@ public class YopRequestConfig {
             return this;
         }
 
-        public Builder withCredentials(YopCredentials credentials) {
+        public Builder withCredentials(YopCredentials<?> credentials) {
             this.credentials = credentials;
-            return this;
-        }
-
-        public Builder withCustomRequestHeaders(Map<String, String> customRequestHeaders) {
-            this.customRequestHeaders = customRequestHeaders;
-            return this;
-        }
-
-        public Builder withCustomQueryParameters(Map<String, List<String>> customQueryParameters) {
-            this.customQueryParameters = customQueryParameters;
             return this;
         }
 
@@ -175,23 +229,31 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withTotalEncrypt(Boolean totalEncrypt) {
+            this.totalEncrypt = totalEncrypt;
+            return this;
+        }
+
+        public Builder withEncryptAlg(String encryptAlg) {
+            this.encryptAlg = encryptAlg;
+            return this;
+        }
+
         public Builder withSkipVerifySign(Boolean skipVerifySign) {
             this.skipVerifySign = skipVerifySign;
             return this;
         }
 
         public YopRequestConfig build() {
-            YopRequestConfig requestConfig = new YopRequestConfig();
-            requestConfig.setAppKey(appKey);
-            requestConfig.setSecurityReq(securityReq);
-            requestConfig.setCredentials(credentials);
-            requestConfig.setCustomRequestHeaders(customRequestHeaders);
-            requestConfig.setCustomQueryParameters(customQueryParameters);
-            requestConfig.setReadTimeout(readTimeout);
-            requestConfig.setConnectTimeout(connectTimeout);
-            requestConfig.setNeedEncrypt(needEncrypt);
-            requestConfig.setSkipVerifySign(skipVerifySign);
-            return requestConfig;
+            return new YopRequestConfig().setAppKey(appKey)
+                    .setSecurityReq(securityReq)
+                    .setCredentials(credentials)
+                    .setReadTimeout(readTimeout)
+                    .setConnectTimeout(connectTimeout)
+                    .setNeedEncrypt(needEncrypt)
+                    .setTotalEncrypt(totalEncrypt)
+                    .setEncryptAlg(encryptAlg)
+                    .setSkipVerifySign(skipVerifySign);
         }
     }
 }

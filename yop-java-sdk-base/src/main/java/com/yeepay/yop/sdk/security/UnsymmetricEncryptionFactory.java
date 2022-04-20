@@ -4,10 +4,10 @@
  */
 package com.yeepay.yop.sdk.security;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.rsa.RSA2048;
 import com.yeepay.yop.sdk.security.sm.SM2;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -25,7 +25,7 @@ public class UnsymmetricEncryptionFactory {
     private static final Map<DigestAlgEnum, Encryption> map;
 
     static {
-        map = new HashMap<DigestAlgEnum, Encryption>();
+        map = Maps.newHashMap();
         map.put(DigestAlgEnum.SHA256, new RSA2048());
         map.put(DigestAlgEnum.SM3, new SM2());
     }

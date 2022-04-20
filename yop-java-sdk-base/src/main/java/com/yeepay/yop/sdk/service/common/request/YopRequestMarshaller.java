@@ -1,9 +1,11 @@
 package com.yeepay.yop.sdk.service.common.request;
 
+import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
+import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.internal.DefaultRequest;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
@@ -12,12 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-
-import static com.yeepay.yop.sdk.YopConstants.*;
 
 /**
  * title: YopRequest序列化器<br>
@@ -46,7 +45,7 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
         }
         internalRequest.setResourcePath(request.getApiUri());
         internalRequest.setHttpMethod(HttpMethodName.valueOf(request.getHttpMethod().toUpperCase()));
-        Map<String, String> customerHeaders = request.getRequestConfig().getCustomRequestHeaders();
+        Map<String, String> customerHeaders = request.getHeaders();
         if (customerHeaders != null) {
             for (String key : customerHeaders.keySet()) {
                 internalRequest.addHeader(key, customerHeaders.get(key));
@@ -56,7 +55,7 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
 
         if (!request.getParameters().isEmpty()) {
             for (Map.Entry<String, Collection<String>> entry : request.getParameters().asMap().entrySet()) {
-                internalRequest.addParameters(entry.getKey(), new ArrayList<String>(entry.getValue()));
+                internalRequest.addParameters(entry.getKey(), Lists.newArrayList(entry.getValue()));
             }
         }
         //1、多文件上传
@@ -73,21 +72,27 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
                     }
                 }
             }
+            internalRequest.setContentType(YopContentType.MULTIPART_FORM);
         } else if (request.getContent() != null) {
             //2、json上传
             if (request.getContent() instanceof String) {
                 byte[] contentBytes = ((String) request.getContent()).getBytes(YopConstants.DEFAULT_CHARSET);
                 internalRequest.setContent(RestartableInputStream.wrap(contentBytes));
-                internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_JSON);
                 internalRequest.addHeader(Headers.CONTENT_LENGTH, String.valueOf(contentBytes.length));
+                internalRequest.setContentType(YopContentType.JSON);
             } else if (request.getContent() instanceof InputStream) {
                 //3、单文件流式上传
-                internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_STREAM);
                 internalRequest.setContent((InputStream) request.getContent());
+                internalRequest.setContentType(YopContentType.OCTET_STREAM);
             }
         } else {
             //4、form表单上传
-            internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_FORM);
+            internalRequest.setContentType(YopContentType.FORM_URL_ENCODE);
+        }
+
+        // httpclient 会自动拼multipart内容格式
+        if (!YopContentType.MULTIPART_FORM.equals(internalRequest.getContentType())) {
+            internalRequest.addHeader(Headers.CONTENT_TYPE, internalRequest.getContentType().getValue());
         }
         return internalRequest;
     }

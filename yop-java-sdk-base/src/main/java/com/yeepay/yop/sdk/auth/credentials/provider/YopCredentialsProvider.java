@@ -34,7 +34,7 @@ public interface YopCredentialsProvider {
      * @param credentialType credentialType
      * @return YOPCredentials which the caller can use to authorize an YOP request.
      */
-    YopCredentials getCredentials(String appKey, String credentialType);
+    YopCredentials<?> getCredentials(String appKey, String credentialType);
 
     /**
      * Returns symmetrical keys for using when decrypt yop certs from remote
@@ -44,6 +44,7 @@ public interface YopCredentialsProvider {
      * @param appKey
      * @return
      */
+    @Deprecated
     List<YopCertConfig> getIsvEncryptKey(String appKey);
 
     List<CertTypeEnum> getSupportCertTypes(String appKey);

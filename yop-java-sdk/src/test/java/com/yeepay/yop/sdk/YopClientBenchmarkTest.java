@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
@@ -29,7 +30,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -167,8 +167,8 @@ public class YopClientBenchmarkTest {
                 "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDJvpvNBByNR/i8Uys1uSJJd9ly3lXBQQxcQIiC+sVDtN8Ejo/g5/k9RGoDplXKnzDQ9pNWpcY9GnYgIbFMKIwUqjGaKCTC4/fGZvt4ugqJaDQKeVQsOIs+475DoCi0X7yC0lk8Z8o+C6HqWghq4aiap1WUYameBy2hPxinX0uWisocZ7np/s01z5jE9afv4Agbq/RLv14YQ0LDVFrsKHjNo4XYe6IR3Wynt28WMa9Gs0Y6WXKhgH58KvksrJX0+TztRbbHnCt3DZ74seaxn+bo9UL8K0Q2T3d02qK0bGBIoZkTLWjzaVVacs7xQ0nXU33BaQ600sXi4y54o/HWlUaBAgMBAAECggEAYoGvkWtwhYue6FWzw4eiNj1O78egF7yrTGA2R74qk+S9AHybxDWAfWnqWd3eBhG0xFOhna1UHoHNK+NHrugdffmcPqlbSc4GLdoa79fnTTCUOIkFkJILa6nIPTz2oxwb78TFzbjgB2umo8dSVN3adak/IDSPnZnjrdghMZhWUCqWllI8/33IeWRu3JUeLSeuGvlU8xF5j1ALXXIyleNjep4HPC/+NNE20kWRQS70ffagYG7NuZA0OQSam1n70+2VNmGYoGSd5LcAlUy4/U7Jh525Wx0vjovoR8AGrAUuTsc/blg1fvYusr3Z7stS7vmPTWcfCYVJ49gOHE4YGfb0AQKBgQDj6b+XdVVjY6XcyVFKCbarlJgbhh9rjGECx2DAlnSmQ+67+IQNpAg8txZ3NykrkjXMZIIOrEugsBp86jrjRI7lF4eI2nWqpe4T7ZNEOKMRRXxT1ediYDLr1PAszx/l0/P4Ro3xubtOjOtzx+xKcGASb34c0Hft99uzOYhmVpvErwKBgQDim0pItsBjv18sGlSJZqBweXM1Frmz0fNxy9fTnTTmRA/o5atWLrvACkH2yxBG7gBOIX71CvurCQy+kFwCMZ6//sbDahm3hrdPCoBP9dp5z7POcFMoJHvZzaxkpbdGlYegXt2km6JltRu8FZX1uEJH77C7vi0ewcwzqN2viAvTzwKBgAi2IY2ffYEMCQX0Z/gFgQbz6hB7Qu4wcnDRwB/8YD8Or6xdpmaDE5GGigRKhndU4luKp/H5ofZlZM3Lgi63qyKUkKipeP/p0bzPQubDp2/8kPD/ZxW6iZe8DuYXkKePP28I+1n2+HLbLhDB3oVF4FY0DsT5LuxYofwqwczvmIqfAoGBAIno8muQdUP/et9vYtWAVNI+x8OeggQTGXK/GSnbeg9NitU1uXGo3XDBjWWyLcTNIfhq4EYnmgR8bHophyV6p1+3oaXaE66i2TrMbEy9lmod4xMXPzSmB44FYw6Z4BGf/Tu3oHKGmW4Gq8tq46n4qrX3BPstgW4/iZRDCC/Ev1X3AoGAZjYOhhnRbxMo/ZuCuTdgqkKk/iOiZRByPhdntvXoGuu3eWsf6LNImDm7LJdLj/nSZhhh1JnKNs3bvvzCjNv0OnxcHTqLufCpTzsh7fOTCAH1YN8qcAdGLUaKDq9w/WnfOsezViCZSwvrSybV0nND+sYEoc+DPluG97isqHjq9ys=")
                 , null
                 , CertTypeEnum.RSA2048)));
-        Map<Object, Object> obj = new HashMap<>();
-        Map<Object, Object> arg0 = new HashMap<>();
+        Map<Object, Object> obj = Maps.newHashMap();
+        Map<Object, Object> arg0 = Maps.newHashMap();
         final String paramString = "你好";
         arg0.put("string", paramString);
         obj.put("arg0", arg0);

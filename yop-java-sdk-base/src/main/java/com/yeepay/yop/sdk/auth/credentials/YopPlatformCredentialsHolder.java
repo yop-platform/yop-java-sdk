@@ -4,10 +4,10 @@
  */
 package com.yeepay.yop.sdk.auth.credentials;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PublicKey;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -25,7 +25,7 @@ public class YopPlatformCredentialsHolder implements YopPlatformCredentials {
     private static final long serialVersionUID = -1L;
 
     private String serialNo;
-    private Map<CertTypeEnum, PublicKey> credentialsMap = new LinkedHashMap<>();
+    private Map<CertTypeEnum, PublicKey> credentialsMap = Maps.newHashMap();
 
     @Override
     public String getSerialNo() {

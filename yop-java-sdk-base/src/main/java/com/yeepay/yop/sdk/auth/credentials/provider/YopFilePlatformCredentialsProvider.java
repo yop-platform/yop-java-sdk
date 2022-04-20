@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopPlatformCredentialsLoader;
 import com.yeepay.yop.sdk.auth.credentials.provider.loader.YopRsaPlatformCredentialsLoader;
@@ -15,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,7 +44,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
     /**
      * type -> YopPlatformCredentialsLoader
      */
-    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = new HashMap<>(2);
+    private Map<String, YopPlatformCredentialsLoader> yopPlatformCredentialsLoaderMap = Maps.newHashMapWithExpectedSize(2);
 
     public YopFilePlatformCredentialsProvider() {
         this.yopPlatformCredentialsLoaderMap.put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopRsaPlatformCredentialsLoader());

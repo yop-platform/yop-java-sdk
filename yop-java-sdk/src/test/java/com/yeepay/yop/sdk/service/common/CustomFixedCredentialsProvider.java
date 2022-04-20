@@ -5,13 +5,13 @@
 
 package com.yeepay.yop.sdk.service.common;
 
+import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopFixedCredentialsProvider;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -42,9 +42,8 @@ public class CustomFixedCredentialsProvider extends YopFixedCredentialsProvider 
         yopCertConfig.setStoreType(CertStoreType.STRING);
         yopCertConfig.setValue(CredentialsRepository.getPrivateKeyStr(appKey));
 
-        List<YopCertConfig> isvPrivateKeys = new LinkedList<YopCertConfig>() {{
-            add(yopCertConfig);
-        }};
+        List<YopCertConfig> isvPrivateKeys = Lists.newLinkedList();
+        isvPrivateKeys.add(yopCertConfig);
         yopAppConfig.setIsvPrivateKey(isvPrivateKeys);
 
         if (certType == CertTypeEnum.SM2) {
@@ -52,9 +51,9 @@ public class CustomFixedCredentialsProvider extends YopFixedCredentialsProvider 
             isvEncryptKey.setCertType(CertTypeEnum.SM4);
             isvEncryptKey.setStoreType(CertStoreType.STRING);
             isvEncryptKey.setValue(CredentialsRepository.getEncryptKeyStr(appKey));
-            yopAppConfig.setIsvEncryptKeyList(new LinkedList<YopCertConfig>() {{
-                add(isvEncryptKey);
-            }});
+            List<YopCertConfig> list = Lists.newLinkedList();
+            list.add(isvEncryptKey);
+            yopAppConfig.setIsvEncryptKeyList(list);
         }
         return yopAppConfig;
     }

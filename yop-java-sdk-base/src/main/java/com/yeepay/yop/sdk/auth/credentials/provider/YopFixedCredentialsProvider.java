@@ -5,15 +5,15 @@
 
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * title: 固定的应用sdk配置提供方基类<br>
@@ -27,18 +27,18 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProvider {
 
-    private final Map<String, YopAppConfig> appConfigs = new ConcurrentHashMap<>();
-    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
+    private final Map<String, YopAppConfig> appConfigs = Maps.newConcurrentMap();
+    private final Map<String, YopCredentials> yopCredentialsMap = Maps.newConcurrentMap();
 
     @Override
-    public final YopCredentials getCredentials(String appKey, String credentialType) {
+    public final YopCredentials<?> getCredentials(String appKey, String credentialType) {
         String key = appKey + ":" + credentialType;
         return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appKey), credentialType));
     }
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appKey) {
-        return new ArrayList<>(getAppConfig(appKey).getIsvPrivateKeys().keySet());
+        return Lists.newArrayList(getAppConfig(appKey).getIsvPrivateKeys().keySet());
     }
 
     private YopAppConfig getAppConfig(String appKey) {

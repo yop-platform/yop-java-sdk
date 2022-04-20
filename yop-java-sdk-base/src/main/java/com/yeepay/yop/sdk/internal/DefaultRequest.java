@@ -1,14 +1,18 @@
 package com.yeepay.yop.sdk.internal;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.HttpMethodName;
+import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 
 import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Default implementation of the {@linkplain com.yeepay.yop.sdk.internal.Request} interface.
@@ -17,6 +21,11 @@ import java.util.*;
  * Callers shouldn't ever interact directly with objects of this class.
  */
 public class DefaultRequest<T extends BaseRequest> implements Request<T> {
+
+    /**
+     * the http content-type
+     */
+    private YopContentType contentType;
 
     /**
      * The resource path being requested
@@ -33,17 +42,17 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
      * Lists values in this Map must use an implementation that allows
      * null values to be present.
      */
-    private final Map<String, List<String>> parameters = new LinkedHashMap<String, List<String>>();
+    private final Map<String, List<String>> parameters = Maps.newLinkedHashMap();
 
     /**
      * Map of the files being sent as part of this request
      */
-    private final Map<String, List<MultiPartFile>> multiPartFiles = new LinkedHashMap<String, List<MultiPartFile>>();
+    private final Map<String, List<MultiPartFile>> multiPartFiles = Maps.newLinkedHashMap();
 
     /**
      * Map of the headers included in this request
      */
-    private final Map<String, String> headers = new HashMap<String, String>();
+    private final Map<String, String> headers = Maps.newHashMap();
 
     /**
      * The service endpoint to which this request should be sent
@@ -124,6 +133,16 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         headers.put(name, value);
     }
 
+    @Override
+    public YopContentType getContentType() {
+        return contentType;
+    }
+
+    @Override
+    public void setContentType(YopContentType contentType) {
+        this.contentType = contentType;
+    }
+
     /**
      * @see Request#getHeaders()
      */
@@ -155,7 +174,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     public void addParameter(String name, String value) {
         List<String> paramList = parameters.get(name);
         if (paramList == null) {
-            paramList = new ArrayList<String>();
+            paramList = Lists.newArrayList();
             parameters.put(name, paramList);
         }
         paramList.add(value);
@@ -197,6 +216,12 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     }
 
     @Override
+    public void setMultiPartFiles(Map<String, List<MultiPartFile>> multiPartFiles) {
+        this.multiPartFiles.clear();
+        this.multiPartFiles.putAll(multiPartFiles);
+    }
+
+    @Override
     public Request<T> withMultiPartFile(String name, File file) {
         addMultiPartFile(name, file);
         return this;
@@ -206,7 +231,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     public void addMultiPartFile(String name, File file) {
         List<MultiPartFile> files = multiPartFiles.get(name);
         if (files == null) {
-            files = new ArrayList<MultiPartFile>();
+            files = Lists.newArrayList();
             multiPartFiles.put(name, files);
         }
         try {
@@ -220,7 +245,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     public void addMultiPartFile(String name, InputStream in) {
         List<MultiPartFile> files = multiPartFiles.get(name);
         if (files == null) {
-            files = new ArrayList<MultiPartFile>();
+            files = Lists.newArrayList();
             multiPartFiles.put(name, files);
         }
         try {

@@ -43,7 +43,7 @@ public class YopOauth2Signer implements YopSigner {
     }
 
     @Override
-    public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
+    public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
         checkNotNull(request, "request should not be null.");
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;

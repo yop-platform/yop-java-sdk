@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.credentials.provider.loader;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
@@ -34,8 +35,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,18 +58,19 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     private static final String CERT_DOWNLOAD_API_URI = "/rest/v1.0/yop/platform/certs";
     private static final String CERT_DOWNLOAD_API_METHOD = "GET";
     private static final String CERT_DOWNLOAD_API_SECURITY = "YOP-SM2-SM3";
+    private static final YopClient YOP_CLIENT = YopClientBuilder.builder().build();
 
     @Override
     public Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
         final YopCredentialsProvider yopCredentialsProvider = YopCredentialsProviderRegistry.getProvider();
-        YopCredentials yopCredentials = yopCredentialsProvider.getCredentials(appKey, "SM2");
+        YopCredentials<?> yopCredentials = yopCredentialsProvider.getCredentials(appKey, CertTypeEnum.SM2.getValue());
         Map<String, X509Certificate> x509CertificateMap = loadAndVerifyFromRemote(yopCredentials, serialNo,
                 yopCredentialsProvider.getIsvEncryptKey(yopCredentials.getAppKey()));
         return storeCerts(YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore(), x509CertificateMap);
     }
 
     private Map<String, YopPlatformCredentials> storeCerts(YopCertStore yopCertStore, Map<String, X509Certificate> plainCerts) {
-        Map<String, YopPlatformCredentials> result = new LinkedHashMap<>();
+        Map<String, YopPlatformCredentials> result = Maps.newHashMap();
         if (null == plainCerts || 0 == plainCerts.size()) {
             return null;
         }
@@ -100,19 +100,16 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
         return result;
     }
 
-    private synchronized Map<String, X509Certificate> loadAndVerifyFromRemote(YopCredentials yopCredentials, String serialNo,
+    private synchronized Map<String, X509Certificate> loadAndVerifyFromRemote(YopCredentials<?> yopCredentials, String serialNo,
                                                                               List<YopCertConfig> isvEncryptKeys) {
         try {
-            YopClient yopClient = YopClientBuilder.builder().build();
             YopRequest request = new YopRequest(CERT_DOWNLOAD_API_URI, CERT_DOWNLOAD_API_METHOD);
             // 跳过验签
-            request.getRequestConfig().setSkipVerifySign(true);
-            request.getRequestConfig().setSecurityReq(CERT_DOWNLOAD_API_SECURITY);
-            request.getRequestConfig().setCredentials(yopCredentials);
+            request.getRequestConfig().setSkipVerifySign(true).setSecurityReq(CERT_DOWNLOAD_API_SECURITY).setCredentials(yopCredentials);
             if (StringUtils.isNotBlank(serialNo)) {
                 request.addParameter("serialNo", serialNo);
             }
-            YopResponse response = yopClient.request(request);
+            YopResponse response = YOP_CLIENT.request(request);
 
             // 响应解析
             List<EncryptCertificate> encryptCerts = parseYopResponse(response);
@@ -165,7 +162,7 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     }
 
     private List<EncryptCertificate> parseYopResponse(YopResponse response) {
-        List<EncryptCertificate> encryptCerts = new ArrayList<>();
+        List<EncryptCertificate> encryptCerts = Lists.newArrayList();
         Map result = (Map) response.getResult();
         if (MapUtils.isNotEmpty(result)) {
             List<Map> data = (List<Map>) result.get("data");

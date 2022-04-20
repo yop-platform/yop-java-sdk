@@ -71,6 +71,7 @@ public class YopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SM3);
+        defaultHeadersToSign.add(Headers.YOP_ENCRYPT);
 
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
@@ -80,7 +81,7 @@ public class YopPKISigner implements YopSigner {
             @Override
             protected Map<DigestAlgEnum, MessageDigest> initialValue() {
                 try {
-                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = new HashMap<>(3);
+                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = Maps.newHashMapWithExpectedSize(3);
                     messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3", BouncyCastleProvider.PROVIDER_NAME));
                     messageDigestMap.put(DigestAlgEnum.SHA256, MessageDigest.getInstance("SHA-256"));
                     return messageDigestMap;
@@ -99,7 +100,7 @@ public class YopPKISigner implements YopSigner {
     }
 
     @Override
-    public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
+    public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
         checkNotNull(request, "request should not be null.");
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;
@@ -135,7 +136,7 @@ public class YopPKISigner implements YopSigner {
         request.addHeader(getDigestAlgHeaderName(digestAlg), contentHash);
     }
 
-    private String buildAuthString(YopCredentials credentials, SignOptions options) {
+    private String buildAuthString(YopCredentials<?> credentials, SignOptions options) {
         String appKey = credentials.getAppKey();
         Date timestamp = new Date();
         return YOP_PROTOCOL_VERSION + "/"

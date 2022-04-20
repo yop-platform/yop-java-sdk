@@ -41,7 +41,7 @@ public interface YopSigner {
      * @param request
      * @param credentials
      */
-    void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options);
+    void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options);
 
     /**
      * 验签
@@ -49,7 +49,7 @@ public interface YopSigner {
      * @param httpResponse
      * @param signature
      */
-    default void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials credentials, SignOptions options) {
+    default void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials<?> credentials, SignOptions options) {
         String content = httpResponse.readContent();
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentials.getCredential();
         content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);

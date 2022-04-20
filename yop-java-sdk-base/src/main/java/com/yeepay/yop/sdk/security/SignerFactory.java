@@ -4,10 +4,10 @@
  */
 package com.yeepay.yop.sdk.security;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.rsa.RSA2048;
 import com.yeepay.yop.sdk.security.sm.SM2;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,7 +24,7 @@ public class SignerFactory {
     private static final Map<DigestAlgEnum, Signer> map;
 
     static {
-        map = new HashMap<DigestAlgEnum, Signer>();
+        map = Maps.newHashMap();
         map.put(DigestAlgEnum.SHA256, new RSA2048());
         map.put(DigestAlgEnum.SM3, new SM2());
     }

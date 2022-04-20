@@ -30,12 +30,9 @@ public class YopAppConfig implements Serializable {
 
     private String appKey;
 
-    private String aesSecretKey;
-
-    private String encryptKey;
-
     private Map<CertTypeEnum, String> isvPrivateKeys = Maps.newHashMap();
 
+    @Deprecated
     private List<YopCertConfig> isvEncryptKeys = Lists.newLinkedList();
 
     public String getAppKey() {
@@ -44,22 +41,6 @@ public class YopAppConfig implements Serializable {
 
     public void setAppKey(String appKey) {
         this.appKey = appKey;
-    }
-
-    public String getAesSecretKey() {
-        return aesSecretKey;
-    }
-
-    public void setAesSecretKey(String aesSecretKey) {
-        this.aesSecretKey = aesSecretKey;
-    }
-
-    public String getEncryptKey() {
-        return encryptKey;
-    }
-
-    public void setEncryptKey(String encryptKey) {
-        this.encryptKey = encryptKey;
     }
 
     public void setIsvPrivateKey(List<YopCertConfig> isvPrivateKeys) {
@@ -80,10 +61,12 @@ public class YopAppConfig implements Serializable {
         return this.isvPrivateKeys.get(certType);
     }
 
+    @Deprecated
     public List<YopCertConfig> getIsvEncryptKey() {
         return isvEncryptKeys;
     }
 
+    @Deprecated
     public void setIsvEncryptKeyList(List<YopCertConfig> isvEncryptKeyList) {
         this.isvEncryptKeys = isvEncryptKeyList;
     }
@@ -94,6 +77,7 @@ public class YopAppConfig implements Serializable {
 
         private List<YopCertConfig> isvPrivateKeys;
 
+        @Deprecated
         private List<YopCertConfig> isvEncryptKeys;
 
         private YopFileSdkConfig yopFileSdkConfig;
@@ -115,6 +99,7 @@ public class YopAppConfig implements Serializable {
             return this;
         }
 
+        @Deprecated
         public Builder withIsvEncryptKeys(List<YopCertConfig> isvEncryptKeys) {
             this.isvEncryptKeys = isvEncryptKeys;
             return this;
@@ -131,7 +116,6 @@ public class YopAppConfig implements Serializable {
             }
             YopAppConfig yopAppConfig = new YopAppConfig();
             yopAppConfig.setAppKey(appKey);
-            yopAppConfig.setEncryptKey(yopFileSdkConfig.getEncryptKey());
             if (CollectionUtils.isEmpty(isvPrivateKeys)) {
                 isvPrivateKeys = yopFileSdkConfig.getIsvPrivateKey(appKey);
             }

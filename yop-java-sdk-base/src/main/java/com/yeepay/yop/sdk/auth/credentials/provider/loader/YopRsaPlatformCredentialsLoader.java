@@ -4,13 +4,13 @@
  */
 package com.yeepay.yop.sdk.auth.credentials.provider.loader;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PublicKey;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
@@ -30,11 +30,11 @@ public class YopRsaPlatformCredentialsLoader implements YopPlatformCredentialsLo
     @Override
     public Map<String, YopPlatformCredentials> load(String appKey, String serialNo) {
         final PublicKey rsaPublicKey = YopSdkConfigProviderRegistry.getProvider().getConfig().loadYopPublicKey(CertTypeEnum.RSA2048);
-        return new HashMap<String, YopPlatformCredentials>(4) {{
-            put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopPlatformCredentialsHolder()
-                    .withSerialNo(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)
-                    .withPublicKey(CertTypeEnum.RSA2048, rsaPublicKey));
-        }};
+        Map<String, YopPlatformCredentials> result = Maps.newHashMapWithExpectedSize(4);
+        result.put(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, new YopPlatformCredentialsHolder()
+                .withSerialNo(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)
+                .withPublicKey(CertTypeEnum.RSA2048, rsaPublicKey));
+        return result;
     }
 
 }

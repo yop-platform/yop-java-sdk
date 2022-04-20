@@ -5,14 +5,15 @@
 
 package com.yeepay.yop.sdk.security;
 
-import java.util.HashMap;
+import com.google.common.collect.Maps;
+
 import java.util.Map;
 
 public enum SymmetricEncryptAlgEnum {
     AES("AES", "aes加密算法"),
     SM4("SM4", "sm4加密算法");
 
-    private static final Map<String, SymmetricEncryptAlgEnum> VALUE_MAP = new HashMap();
+    private static final Map<String, SymmetricEncryptAlgEnum> VALUE_MAP = Maps.newHashMap();
     private final String value;
     private final String displayName;
 
