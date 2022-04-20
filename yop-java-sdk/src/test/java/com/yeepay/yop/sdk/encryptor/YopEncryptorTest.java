@@ -80,8 +80,10 @@ public class YopEncryptorTest {
                 Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(appKey)));
         encryptOptions = sm4OptionsEnhanced.get();
         specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), DEFAULT_ENCODING);
-        yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30502/yop-center")
-                .withYosEndpoint("http://ycetest.yeepay.com:30502/yop-center").build();
+        yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30228/yop-center")
+                .withYosEndpoint("http://ycetest.yeepay.com:30228/yop-center").build();
+//        yopClient = YopClientBuilder.builder().withEndpoint("http://localhost:8064/yop-center")
+//                .withYosEndpoint("http://localhost:8064/yop-center").build();
     }
 
     @Test
@@ -175,8 +177,8 @@ public class YopEncryptorTest {
     @Test
     public void yopRequestGet() {
         YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
-        request.addParameter("string0", "le1");
-//        request.addEncryptParameter("string0", "le1");
+//        request.addParameter("string0", "le1");
+        request.addEncryptParameter("string0", "le1");
         request.getRequestConfig().setAppKey("app_15958159879157110002");
         YopResponse response = yopClient.request(request);
         assertTrue(((Map) response.getResult()).get("id").equals(94));
@@ -249,10 +251,13 @@ public class YopEncryptorTest {
     }
 
     @Test
+    // 加密后下载速度慢很多
     public void yopRequestDownload() {
         try {
+            final long start = System.currentTimeMillis();
             YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");
             request.addParameter("fileId", "30343");
+//            request.addParameter("merchantNo", "10040040287");
             request.addEncryptParameter("merchantNo", "10040040287");
             String appKey = "OPR:10040040287";
             request.getRequestConfig().setAppKey(appKey).setSecurityReq("YOP-SM2-SM3");
@@ -264,6 +269,7 @@ public class YopEncryptorTest {
                 File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".zip");
                 tmpFile.deleteOnExit();
                 long size = IOUtils.copy(response.getResult(), new FileOutputStream(tmpFile));
+                LOGGER.debug("downloaded file size:{}，elapsedTime:{}ms", size, System.currentTimeMillis() - start);
                 Assert.assertTrue(size > 0);
             } catch (Exception e) {
                 LOGGER.error("ex:", e);
