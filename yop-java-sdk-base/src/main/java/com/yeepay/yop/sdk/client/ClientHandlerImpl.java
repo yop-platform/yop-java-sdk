@@ -20,17 +20,16 @@ import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENCRYPT_ALG;
+import static com.yeepay.yop.sdk.internal.RequestEncryptor.initEncryptOptionsAndCached;
 
 /**
  * title: 默认客户端处理器<br>
@@ -96,8 +95,7 @@ public class ClientHandlerImpl implements ClientHandler {
             Future<EncryptOptions> encryptOptions = null;
             if (isSm2Request(credential)) {
                 encryptor = getEncryptor(requestConfig);
-                encryptOptions = encryptor.initOptions(requestConfig.getEncryptAlg(),
-                        Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(credential.getAppKey())));
+                encryptOptions = initEncryptOptionsAndCached(credential.getAppKey(), requestConfig.getEncryptAlg());
             }
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
                     .withYopCredentials(credential)

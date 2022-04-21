@@ -4,6 +4,9 @@
  */
 package com.yeepay.yop.sdk.internal;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -14,9 +17,8 @@ import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
-import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+import com.yeepay.yop.sdk.security.encrypt.*;
+import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,6 +35,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
@@ -52,6 +57,24 @@ import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 public class RequestEncryptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestEncryptor.class);
+
+    // 默认缓存24小时
+    private static final LoadingCache<String, Future<EncryptOptions>> ENCRYPT_OPTIONS_CACHE = initCache(24L, TimeUnit.HOURS);
+
+    /**
+     * 初始化加密选项，并缓存
+     *
+     * @param appKey 应用
+     * @param encryptAlg 加解密算法
+     * @return
+     */
+    public static Future<EncryptOptions> initEncryptOptionsAndCached(String appKey, String encryptAlg) {
+        try {
+            return ENCRYPT_OPTIONS_CACHE.get(StringUtils.joinWith(CharacterConstants.COLON, appKey, encryptAlg));
+        } catch (ExecutionException e) {
+            throw new YopClientException("initEncryptOptions error, ex:", e);
+        }
+    }
 
     /**
      * 加密并重写Request
@@ -209,6 +232,30 @@ public class RequestEncryptor {
                 }
                 parameters.put(name, encryptedValues);
                 finalEncryptParams.add(name);
+            }
+        });
+    }
+
+    private static LoadingCache<String, Future<EncryptOptions>> initCache(Long expire, TimeUnit timeUnit) {
+        CacheBuilder cacheBuilder = CacheBuilder.newBuilder();
+        if (expire > 0) {
+            cacheBuilder.expireAfterWrite(expire, timeUnit);
+        }
+        return cacheBuilder.build(new CacheLoader<String, Future<EncryptOptions>>() {
+            @Override
+            public Future<EncryptOptions> load(String cacheKey) throws Exception {
+                LOGGER.debug("try to init encryptOptions for cacheKey:" + cacheKey);
+                Future<EncryptOptions> encryptOptions = null;
+                try {
+                    String[] split = cacheKey.split(CharacterConstants.COLON);
+                    String appKey = split[0], encryptAlg = split[1];
+                    YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
+                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(appKey));
+                    encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
+                } catch (Exception ex) {
+                    LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);
+                }
+                return encryptOptions;
             }
         });
     }

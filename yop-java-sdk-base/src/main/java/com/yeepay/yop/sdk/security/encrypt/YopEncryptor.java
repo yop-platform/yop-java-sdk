@@ -31,6 +31,7 @@ public interface YopEncryptor {
     /**
      * 生成加解密选项（异步）
      *
+     * @param encryptAlg 加解密算法
      * @param enhancers 加解密选项增强处理
      * @return 加解密选项(密钥+算法+iv+aad)
      */
