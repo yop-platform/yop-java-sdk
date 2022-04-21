@@ -13,7 +13,7 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.List;
 
-import static com.yeepay.yop.sdk.YopConstants.JSON_TOTAL_ENCRYPT_PARAMS;
+import static com.yeepay.yop.sdk.YopConstants.TOTAL_ENCRYPT_PARAMS;
 import static com.yeepay.yop.sdk.utils.CharacterConstants.DOLLAR;
 import static com.yeepay.yop.sdk.utils.JsonUtils.isTotalEncrypt;
 
@@ -158,14 +158,14 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest setEncryptContent(String content) {
         setContent(content);
-        getRequestConfig().addEncryptParam(DOLLAR);
+        getRequestConfig().addEncryptParam(DOLLAR).setTotalEncrypt(true);
         return this;
     }
 
     public YopRequest setEncryptContent(String content, List<String> jsonPaths) {
         setContent(content);
         boolean totalEncrypt = isTotalEncrypt(jsonPaths);
-        getRequestConfig().addEncryptParams(totalEncrypt ? JSON_TOTAL_ENCRYPT_PARAMS : jsonPaths)
+        getRequestConfig().addEncryptParams(totalEncrypt ? TOTAL_ENCRYPT_PARAMS : jsonPaths)
                 .setTotalEncrypt(totalEncrypt);
         return this;
     }
@@ -180,7 +180,7 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest setEncryptStream(InputStream inputStream) {
         setStream(inputStream);
-        getRequestConfig().addEncryptParam(DOLLAR);
+        getRequestConfig().addEncryptParam(DOLLAR).setTotalEncrypt(true);
         return this;
     }
 

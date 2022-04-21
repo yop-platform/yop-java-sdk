@@ -92,6 +92,6 @@ public interface YopConstants {
      */
     String JSON_PATH_PREFIX = "$.";
     Set<String> JSON_PATH_ROOT = Collections.unmodifiableSet(Sets.newHashSet("$", "$..*"));
-    List<String> JSON_TOTAL_ENCRYPT_PARAMS = Collections.singletonList(CharacterConstants.DOLLAR);
+    List<String> TOTAL_ENCRYPT_PARAMS = Collections.singletonList(CharacterConstants.DOLLAR);
 
 }

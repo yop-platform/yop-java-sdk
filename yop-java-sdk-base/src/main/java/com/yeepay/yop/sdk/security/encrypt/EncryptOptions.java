@@ -5,6 +5,8 @@
 package com.yeepay.yop.sdk.security.encrypt;
 
 import com.google.common.collect.Maps;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.util.Collections;
 import java.util.Map;
@@ -166,5 +168,11 @@ public class EncryptOptions {
         copy.aad = aad;
         copy.bigParamEncryptMode = bigParamEncryptMode;
         return copy;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this,
+                ToStringStyle.SHORT_PREFIX_STYLE);
     }
 }

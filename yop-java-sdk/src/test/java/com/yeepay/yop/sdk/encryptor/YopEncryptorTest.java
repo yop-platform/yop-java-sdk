@@ -80,8 +80,8 @@ public class YopEncryptorTest {
                 Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(appKey)));
         encryptOptions = sm4OptionsEnhanced.get();
         specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), DEFAULT_ENCODING);
-        yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30228/yop-center")
-                .withYosEndpoint("http://ycetest.yeepay.com:30228/yop-center").build();
+        yopClient = YopClientBuilder.builder().withEndpoint("http://qak8s.iaas.yp:30228/yop-center")
+                .withYosEndpoint("http://qak8s.iaas.yp:30228/yop-center").build();
 //        yopClient = YopClientBuilder.builder().withEndpoint("http://localhost:8064/yop-center")
 //                .withYosEndpoint("http://localhost:8064/yop-center").build();
     }
@@ -179,7 +179,9 @@ public class YopEncryptorTest {
         YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
 //        request.addParameter("string0", "le1");
         request.addEncryptParameter("string0", "le1");
-        request.getRequestConfig().setAppKey("app_15958159879157110002");
+        request.getRequestConfig().setAppKey("app_15958159879157110002")
+                .setTotalEncrypt(true)
+        ;
         YopResponse response = yopClient.request(request);
         assertTrue(((Map) response.getResult()).get("id").equals(94));
     }
@@ -190,7 +192,9 @@ public class YopEncryptorTest {
         String paramString = "你好";
 //        request.addParameter("string", paramString);
         request.addEncryptParameter("string", paramString);
-        request.getRequestConfig().setAppKey("app_15958159879157110002");
+        request.getRequestConfig().setAppKey("app_15958159879157110002")
+                .setTotalEncrypt(true)
+        ;
         YopResponse resp = yopClient.request(request);
         assertTrue (((Map) ((Map) resp.getResult()).get("testDTO")).get("string").equals(paramString));
     }
@@ -225,7 +229,9 @@ public class YopEncryptorTest {
     @Test
     public void yopRequestUpload() throws Exception {
         YopRequest request = new YopRequest("/yos/v1.0/p2f/file-upload", "POST");
-        request.getRequestConfig().setAppKey("app_15958159879157110002");
+        request.getRequestConfig().setAppKey("app_15958159879157110002")
+                .setTotalEncrypt(true)
+        ;
 
         File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".txt");
         tmpFile.deleteOnExit();
@@ -260,7 +266,9 @@ public class YopEncryptorTest {
 //            request.addParameter("merchantNo", "10040040287");
             request.addEncryptParameter("merchantNo", "10040040287");
             String appKey = "OPR:10040040287";
-            request.getRequestConfig().setAppKey(appKey).setSecurityReq("YOP-SM2-SM3");
+            request.getRequestConfig().setAppKey(appKey).setSecurityReq("YOP-SM2-SM3")
+                    .setTotalEncrypt(true)
+            ;
 
             YosDownloadResponse response = yopClient.download(request);
             YosDownloadInputStream yosDownloadInputStream = response.getResult();

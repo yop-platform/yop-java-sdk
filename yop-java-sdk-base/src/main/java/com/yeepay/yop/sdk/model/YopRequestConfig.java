@@ -47,9 +47,9 @@ public class YopRequestConfig {
     private Boolean needEncrypt;
 
     /**
-     * 是否对请求体(JSON)-整体加密
+     * 是否对所有参数都加密
      */
-    private Boolean totalEncrypt = true;
+    private Boolean totalEncrypt;
 
     /**
      * 加密算法

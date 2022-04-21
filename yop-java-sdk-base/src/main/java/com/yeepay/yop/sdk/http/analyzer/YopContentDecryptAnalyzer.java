@@ -104,7 +104,9 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
             }
         }
         yopResp.put(YOP_JSON_CONTENT_BIZ_KEY, valReadWriteCtx.json());
-        httpResponse.setContent(JsonUtils.toJsonString(yopResp));
+        String decryptedContent = JsonUtils.toJsonString(yopResp);
+        LOGGER.debug("json request decrypted, source:{}, target:{}, options:{}", content, decryptedContent, encryptOptions);
+        httpResponse.setContent(decryptedContent);
     }
 
     private void decryptHeaders(YopHttpResponse httpResponse, YopEncryptProtocol.Inst parsedEncryptProtocol,

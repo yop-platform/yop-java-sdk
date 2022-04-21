@@ -139,27 +139,30 @@ public class RequestEncryptor {
 
     private static List<String> encryptParams(YopEncryptor encryptor, List<String> encryptParams, Request<? extends BaseRequest> request,
                                        YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
-        if (CollectionUtils.isEmpty(encryptParams) && null == request.getContent()) {
+
+        boolean totalEncrypt = BooleanUtils.isTrue(requestConfig.getTotalEncrypt());
+        if (!totalEncrypt && CollectionUtils.isEmpty(encryptParams) && null == request.getContent()) {
             return encryptParams;
         }
 
         List<String> finalEncryptParams = Lists.newArrayListWithExpectedSize(encryptParams.size());
         Map<String, List<String>> parameters = request.getParameters();
-        encryptCommonParams(encryptor, finalEncryptParams, encryptParams, parameters, encryptOptions);
+        encryptCommonParams(encryptor, finalEncryptParams, encryptParams, parameters, encryptOptions, totalEncrypt);
 
         Map<String, List<MultiPartFile>> multiPartFiles = request.getMultiPartFiles();
-        encryptMultiPartParams(encryptor, finalEncryptParams, encryptParams, multiPartFiles, encryptOptions);
+        encryptMultiPartParams(encryptor, finalEncryptParams, encryptParams, multiPartFiles, encryptOptions, totalEncrypt);
 
-        encryptContent(encryptor, finalEncryptParams, request, requestConfig, encryptOptions);
-        return finalEncryptParams;
+        encryptContent(encryptor, finalEncryptParams, request, requestConfig, encryptOptions, totalEncrypt);
+        LOGGER.debug("encryptParams finished, totalEncrypt:{}, params:{}", totalEncrypt, finalEncryptParams);
+        return totalEncrypt ? YopConstants.TOTAL_ENCRYPT_PARAMS : finalEncryptParams;
     }
 
     private static void encryptContent(YopEncryptor encryptor, List<String> finalEncryptParams, Request<? extends BaseRequest> request,
-                                YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
+                                       YopRequestConfig requestConfig, EncryptOptions encryptOptions, boolean totalEncrypt) {
         if (null == request.getContent()) return;
 
         if (YopContentType.JSON.equals(request.getContentType())) {
-            byte[] jsonBytes = encryptJsonParams(encryptor, finalEncryptParams, requestConfig, request.getContent(), encryptOptions);
+            byte[] jsonBytes = encryptJsonParams(encryptor, finalEncryptParams, requestConfig, request.getContent(), encryptOptions, totalEncrypt);
             RestartableInputStream restartableInputStream = RestartableInputStream.wrap(jsonBytes);
             request.setContent(restartableInputStream);
             // ！！！覆盖掉原文计算的length，否则httpClient会用原文指定的length头来发送报文，导致完整性校验不通过
@@ -173,11 +176,11 @@ public class RequestEncryptor {
     }
 
     private static byte[] encryptJsonParams(YopEncryptor encryptor, List<String> finalEncryptParams, YopRequestConfig requestConfig,
-                                          InputStream content, EncryptOptions encryptOptions) {
+                                            InputStream content, EncryptOptions encryptOptions, boolean totalEncrypt) {
         try {
             String originJson = IOUtils.toString(content, YopConstants.DEFAULT_ENCODING);
             String encryptedJson;
-            if (BooleanUtils.isFalse(requestConfig.getTotalEncrypt())) {
+            if (BooleanUtils.isFalse(totalEncrypt)) {
                 SortedSet<String> encryptPaths = resolveAllJsonPaths(originJson, requestConfig.getEncryptParams());
 
                 DocumentContext valReadWriteCtx = JsonPath.parse(originJson);
@@ -197,6 +200,7 @@ public class RequestEncryptor {
                 finalEncryptParams.add(DOLLAR);
                 encryptedJson = JsonUtils.toJsonString(encryptor.encryptToBase64(originJson, encryptOptions));
             }
+            LOGGER.debug("json request encrypted, source:{}, target:{}, options:{}", originJson, encryptedJson, encryptOptions);
             return encryptedJson.getBytes(YopConstants.DEFAULT_ENCODING);
         } catch (IOException e) {
             throw new YopClientException("error happened when encrypt json", e);
@@ -204,9 +208,9 @@ public class RequestEncryptor {
     }
 
     private static void encryptMultiPartParams(YopEncryptor encryptor, List<String> finalEncryptParams, List<String> encryptParams,
-                                        Map<String, List<MultiPartFile>> multiPartFiles, EncryptOptions encryptOptions) {
+                                               Map<String, List<MultiPartFile>> multiPartFiles, EncryptOptions encryptOptions, boolean totalEncrypt) {
         multiPartFiles.forEach((name, list) -> {
-            if (encryptParams.contains(name) && CollectionUtils.isNotEmpty(list)) {
+            if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {
                 List<MultiPartFile> encryptedValues = Lists.newArrayListWithExpectedSize(list.size());
                 for (MultiPartFile value : list) {
                     try {
@@ -223,9 +227,9 @@ public class RequestEncryptor {
     }
 
     private static void encryptCommonParams(YopEncryptor encryptor, List<String> finalEncryptParams, List<String> encryptParams,
-                                     Map<String, List<String>> parameters, EncryptOptions encryptOptions) {
+                                            Map<String, List<String>> parameters, EncryptOptions encryptOptions, boolean totalEncrypt) {
         parameters.forEach((name, list) -> {
-            if (encryptParams.contains(name) && CollectionUtils.isNotEmpty(list)) {
+            if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {
                 List<String> encryptedValues = Lists.newArrayListWithExpectedSize(list.size());
                 for (String value : list) {
                     encryptedValues.add(encryptor.encryptToBase64(value, encryptOptions));
