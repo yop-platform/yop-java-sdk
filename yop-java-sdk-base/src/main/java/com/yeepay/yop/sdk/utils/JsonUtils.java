@@ -153,7 +153,7 @@ public class JsonUtils {
         return prettyWriter;
     }
 
-    public static boolean isTotalEncrypt(List<String> jsonPaths) {
+    public static boolean isTotalEncrypt(Set<String> jsonPaths) {
         boolean totalEncrypt = CollectionUtils.isSubCollection(jsonPaths, JSON_PATH_ROOT);
         if (totalEncrypt) {
             return true;
@@ -171,7 +171,7 @@ public class JsonUtils {
      * @param jsonPathPatterns
      * @return
      */
-    public static SortedSet<String> resolveAllJsonPaths(String jsonContent, List<String> jsonPathPatterns) {
+    public static SortedSet<String> resolveAllJsonPaths(String jsonContent, Set<String> jsonPathPatterns) {
         DocumentContext pathReadCtx = JsonPath.using(Configuration.builder()
                 .options(Option.AS_PATH_LIST).build()).parse(jsonContent);
 

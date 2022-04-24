@@ -17,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_V1;
@@ -73,7 +70,7 @@ public enum YopEncryptProtocol {
         this.protocolPrefix = protocolPrefix;
     }
 
-    public static List<String> parseEncryptItems(String itemStr, boolean base64) {
+    public static Set<String> parseEncryptItems(String itemStr, boolean base64) {
         try {
             if (StringUtils.isNotBlank(itemStr)) {
                 String itemStrDecoded;
@@ -83,9 +80,9 @@ public enum YopEncryptProtocol {
                 } else {
                     itemStrDecoded = itemStr;
                 }
-                return Arrays.stream(itemStrDecoded.split(SEMICOLON)).collect(Collectors.toList());
+                return Arrays.stream(itemStrDecoded.split(SEMICOLON)).collect(Collectors.toSet());
             }
-            return Collections.emptyList();
+            return Collections.emptySet();
         } catch (UnsupportedEncodingException e) {
             throw new YopServiceException("error when parse encrypt protocol, ex:", e);
         }
@@ -153,14 +150,14 @@ public enum YopEncryptProtocol {
      */
     public static class Inst {
         private EncryptOptions encryptOptions;
-        private List<String> encryptHeaders;
-        private List<String> encryptParams;
+        private Set<String> encryptHeaders;
+        private Set<String> encryptParams;
 
         public Inst(EncryptOptions encryptOptions) {
             this.encryptOptions = encryptOptions;
         }
 
-        public Inst(EncryptOptions encryptOptions, List<String> encryptHeaders, List<String> encryptParams) {
+        public Inst(EncryptOptions encryptOptions, Set<String> encryptHeaders, Set<String> encryptParams) {
             this.encryptOptions = encryptOptions;
             this.encryptHeaders = encryptHeaders;
             this.encryptParams = encryptParams;
@@ -170,11 +167,11 @@ public enum YopEncryptProtocol {
             return encryptOptions;
         }
 
-        public List<String> getEncryptHeaders() {
+        public Set<String> getEncryptHeaders() {
             return encryptHeaders;
         }
 
-        public List<String> getEncryptParams() {
+        public Set<String> getEncryptParams() {
             return encryptParams;
         }
     }

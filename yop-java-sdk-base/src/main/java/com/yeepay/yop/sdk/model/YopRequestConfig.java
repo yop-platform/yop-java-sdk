@@ -1,11 +1,11 @@
 package com.yeepay.yop.sdk.model;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.SM4_CBC_PKCS5PADDING;
 
@@ -59,12 +59,12 @@ public class YopRequestConfig {
     /**
      * 待加密请求头
      */
-    private final List<String> encryptHeaders = Lists.newArrayList();
+    private final Set<String> encryptHeaders = Sets.newHashSet();
 
     /**
      * 待加密请求参数
      */
-    private final List<String> encryptParams = Lists.newArrayList();
+    private final Set<String> encryptParams = Sets.newHashSet();
 
     /**
      * 是否对响应结果验证签名
@@ -147,12 +147,12 @@ public class YopRequestConfig {
         return this;
     }
 
-    public List<String> getEncryptHeaders() {
-        return Collections.unmodifiableList(encryptHeaders);
+    public Set<String> getEncryptHeaders() {
+        return Collections.unmodifiableSet(encryptHeaders);
     }
 
-    public List<String> getEncryptParams() {
-        return Collections.unmodifiableList(encryptParams);
+    public Set<String> getEncryptParams() {
+        return Collections.unmodifiableSet(encryptParams);
     }
 
     public Boolean getSkipVerifySign() {
@@ -169,7 +169,7 @@ public class YopRequestConfig {
         needEncrypt = true;
         return this;
     }
-    public YopRequestConfig addEncryptParams(List<String> params) {
+    public YopRequestConfig addEncryptParams(Set<String> params) {
         encryptParams.addAll(params);
         needEncrypt = true;
         return this;

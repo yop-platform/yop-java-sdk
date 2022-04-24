@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.encryptor;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
@@ -161,12 +162,12 @@ public class YopEncryptorTest {
 
         // json参数部分加密(伪)
         for (String jsonPath : JSON_PATH_ROOT) {
-            jsonParamsPeudoPartEncrypt(Collections.singletonList(jsonPath));
+            jsonParamsPeudoPartEncrypt(Sets.newHashSet(jsonPath));
         }
         assertThrows("illegal json paths:[$, $..author]", RuntimeException.class, new ThrowingRunnable() {
             @Override
             public void run() throws Throwable {
-                jsonParamsPeudoPartEncrypt(Arrays.asList("$", "$..author"));
+                jsonParamsPeudoPartEncrypt(Sets.newHashSet("$", "$..author"));
             }
         });
 
@@ -306,7 +307,7 @@ public class YopEncryptorTest {
         YopEncryptProtocol.Inst encryptProtocol = parseProtocol(doEncrypt(request));
         assertTrue(encryptProtocol.getEncryptHeaders().isEmpty()
                 && encryptProtocol.getEncryptParams().size() == 1
-                && encryptProtocol.getEncryptParams().get(0).equals("string0"));
+                && encryptProtocol.getEncryptParams().iterator().next().equals("string0"));
         assertEquals("dsbzb", sm4Encryptor.decryptFromBase64(
                 request.getParameters().get("string0").get(0), encryptOptions));
     }
@@ -365,7 +366,7 @@ public class YopEncryptorTest {
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
         YopEncryptProtocol.Inst encryptProtocol = parseProtocol(doEncrypt(request));
         assertTrue(encryptProtocol.getEncryptHeaders().isEmpty()
-                && encryptProtocol.getEncryptParams().get(0).equals(DOLLAR));
+                && encryptProtocol.getEncryptParams().iterator().next().equals(DOLLAR));
 
         assertEquals(specialCharacters, IOUtils.toString(sm4Encryptor.decrypt(
                 request.getContent(), encryptOptions), DEFAULT_ENCODING));
@@ -379,7 +380,7 @@ public class YopEncryptorTest {
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
         YopEncryptProtocol.Inst encryptProtocol = parseProtocol(doEncrypt(request));
         assertTrue(encryptProtocol.getEncryptHeaders().isEmpty()
-                && encryptProtocol.getEncryptParams().get(0).equals(DOLLAR));
+                && encryptProtocol.getEncryptParams().iterator().next().equals(DOLLAR));
 
         assertJsonResult(jsonParam, request);
     }
@@ -389,7 +390,7 @@ public class YopEncryptorTest {
                 IOUtils.toString(request.getContent(), DEFAULT_ENCODING), encryptOptions));
     }
 
-    private void jsonParamsPeudoPartEncrypt(List<String> jsonPath) throws Exception {
+    private void jsonParamsPeudoPartEncrypt(Set<String> jsonPath) throws Exception {
         YopRequest yopRequest = aJsonRequest();
         String jsonParam = jsonParam();
         yopRequest.setEncryptContent(jsonParam, jsonPath);
@@ -397,7 +398,7 @@ public class YopEncryptorTest {
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
         YopEncryptProtocol.Inst encryptProtocol = parseProtocol(doEncrypt(request));
         assertTrue(encryptProtocol.getEncryptHeaders().isEmpty()
-                && encryptProtocol.getEncryptParams().get(0).equals(DOLLAR));
+                && encryptProtocol.getEncryptParams().iterator().next().equals(DOLLAR));
 
         assertJsonResult(jsonParam, request);
     }
@@ -405,7 +406,7 @@ public class YopEncryptorTest {
     private void jsonParamsRealPartEncrypt() throws Exception {
         YopRequest yopRequest = aJsonRequest();
         String jsonParam = jsonParam();
-        yopRequest.setEncryptContent(jsonParam, Arrays.asList("$.store..price", "$..book[?(@.author =~ /.*REES/i)]"));
+        yopRequest.setEncryptContent(jsonParam, Sets.newHashSet("$.store..price", "$..book[?(@.author =~ /.*REES/i)]"));
 
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
         YopEncryptProtocol.Inst encryptProtocol = parseProtocol(doEncrypt(request));

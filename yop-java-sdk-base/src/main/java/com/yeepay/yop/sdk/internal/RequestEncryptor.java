@@ -8,6 +8,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
@@ -31,10 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -86,8 +84,8 @@ public class RequestEncryptor {
     public static void encrypt(Request<? extends BaseRequest> request, YopEncryptor encryptor, EncryptOptions encryptOptions)
             throws UnsupportedEncodingException {
         YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
-        List<String> encryptHeaders = Collections.emptyList();
-        List<String> encryptParams = Collections.emptyList();
+        Set<String> encryptHeaders = Collections.emptySet();
+        Set<String> encryptParams = Collections.emptySet();
         if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
             encryptHeaders = encryptHeaders(encryptor, requestConfig.getEncryptHeaders(), request, encryptOptions);
             encryptParams = encryptParams(encryptor, requestConfig.getEncryptParams(), request, requestConfig, encryptOptions);
@@ -104,8 +102,8 @@ public class RequestEncryptor {
      *
      * @see YopEncryptProtocol#YOP_ENCRYPT_PROTOCOL_V1_REQ
      */
-    public static String buildEncryptHeader(Request<? extends BaseRequest> request, List<String> encryptHeaders,
-                                            List<String> encryptParams, EncryptOptions encryptOptions) throws UnsupportedEncodingException {
+    public static String buildEncryptHeader(Request<? extends BaseRequest> request, Set<String> encryptHeaders,
+                                            Set<String> encryptParams, EncryptOptions encryptOptions) throws UnsupportedEncodingException {
         String encryptHeader =  YOP_ENCRYPT_PROTOCOL_V1_REQ.getProtocolPrefix() + SLASH +
                 StringUtils.replace(encryptOptions.getAlg(), SLASH, UNDER_LINE) + SLASH +
                 encryptOptions.getEncryptedCredentials() + SLASH +
@@ -121,12 +119,12 @@ public class RequestEncryptor {
         return encryptHeader;
     }
 
-    private static List<String> encryptHeaders(YopEncryptor encryptor, List<String> encryptHeaders,
+    private static Set<String> encryptHeaders(YopEncryptor encryptor, Set<String> encryptHeaders,
                                         Request<? extends BaseRequest> request, EncryptOptions encryptOptions) {
         if (CollectionUtils.isEmpty(encryptHeaders)) {
             return encryptHeaders;
         }
-        List<String> finalEncryptHeaders = Lists.newArrayListWithExpectedSize(encryptHeaders.size());
+        Set<String> finalEncryptHeaders = Sets.newHashSetWithExpectedSize(encryptHeaders.size());
         Map<String, String> headers = request.getHeaders();
         headers.forEach((k,v) -> {
             if (encryptHeaders.contains(k) && StringUtils.isNotBlank(v)) {
@@ -137,7 +135,7 @@ public class RequestEncryptor {
         return finalEncryptHeaders;
     }
 
-    private static List<String> encryptParams(YopEncryptor encryptor, List<String> encryptParams, Request<? extends BaseRequest> request,
+    private static Set<String> encryptParams(YopEncryptor encryptor, Set<String> encryptParams, Request<? extends BaseRequest> request,
                                        YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
 
         boolean totalEncrypt = BooleanUtils.isTrue(requestConfig.getTotalEncrypt());
@@ -145,7 +143,7 @@ public class RequestEncryptor {
             return encryptParams;
         }
 
-        List<String> finalEncryptParams = Lists.newArrayListWithExpectedSize(encryptParams.size());
+        Set<String> finalEncryptParams = Sets.newHashSetWithExpectedSize(encryptParams.size());
         Map<String, List<String>> parameters = request.getParameters();
         encryptCommonParams(encryptor, finalEncryptParams, encryptParams, parameters, encryptOptions, totalEncrypt);
 
@@ -157,7 +155,7 @@ public class RequestEncryptor {
         return totalEncrypt ? YopConstants.TOTAL_ENCRYPT_PARAMS : finalEncryptParams;
     }
 
-    private static void encryptContent(YopEncryptor encryptor, List<String> finalEncryptParams, Request<? extends BaseRequest> request,
+    private static void encryptContent(YopEncryptor encryptor, Set<String> finalEncryptParams, Request<? extends BaseRequest> request,
                                        YopRequestConfig requestConfig, EncryptOptions encryptOptions, boolean totalEncrypt) {
         if (null == request.getContent()) return;
 
@@ -175,7 +173,7 @@ public class RequestEncryptor {
         }
     }
 
-    private static byte[] encryptJsonParams(YopEncryptor encryptor, List<String> finalEncryptParams, YopRequestConfig requestConfig,
+    private static byte[] encryptJsonParams(YopEncryptor encryptor, Set<String> finalEncryptParams, YopRequestConfig requestConfig,
                                             InputStream content, EncryptOptions encryptOptions, boolean totalEncrypt) {
         try {
             String originJson = IOUtils.toString(content, YopConstants.DEFAULT_ENCODING);
@@ -207,7 +205,7 @@ public class RequestEncryptor {
         }
     }
 
-    private static void encryptMultiPartParams(YopEncryptor encryptor, List<String> finalEncryptParams, List<String> encryptParams,
+    private static void encryptMultiPartParams(YopEncryptor encryptor, Set<String> finalEncryptParams, Set<String> encryptParams,
                                                Map<String, List<MultiPartFile>> multiPartFiles, EncryptOptions encryptOptions, boolean totalEncrypt) {
         multiPartFiles.forEach((name, list) -> {
             if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {
@@ -226,7 +224,7 @@ public class RequestEncryptor {
         });
     }
 
-    private static void encryptCommonParams(YopEncryptor encryptor, List<String> finalEncryptParams, List<String> encryptParams,
+    private static void encryptCommonParams(YopEncryptor encryptor, Set<String> finalEncryptParams, Set<String> encryptParams,
                                             Map<String, List<String>> parameters, EncryptOptions encryptOptions, boolean totalEncrypt) {
         parameters.forEach((name, list) -> {
             if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {

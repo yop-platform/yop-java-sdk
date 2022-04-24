@@ -9,7 +9,6 @@ import com.yeepay.yop.sdk.utils.CharacterConstants;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -92,6 +91,6 @@ public interface YopConstants {
      */
     String JSON_PATH_PREFIX = "$.";
     Set<String> JSON_PATH_ROOT = Collections.unmodifiableSet(Sets.newHashSet("$", "$..*"));
-    List<String> TOTAL_ENCRYPT_PARAMS = Collections.singletonList(CharacterConstants.DOLLAR);
+    Set<String> TOTAL_ENCRYPT_PARAMS = Sets.newHashSet(CharacterConstants.DOLLAR);
 
 }
