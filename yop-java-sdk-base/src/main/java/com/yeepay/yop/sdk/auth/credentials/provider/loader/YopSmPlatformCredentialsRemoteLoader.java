@@ -27,6 +27,7 @@ import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_SM_PLATFORM_CERT_PREFIX;
  * @version 1.0.0
  * @since 2021-02-25
  */
-public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredentialsLoader {
+public class YopSmPlatformCredentialsRemoteLoader extends AbstractYopPlatformCredentialsLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopSmPlatformCredentialsRemoteLoader.class);
 
@@ -114,15 +115,15 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
             // 响应解析
             List<EncryptCertificate> encryptCerts = parseYopResponse(response);
 
-            // 证书解密
-            return decryptCerts(encryptCerts, isvEncryptKeys);
+            // 证书解密、验证
+            return decryptAndVerifyCerts(encryptCerts, isvEncryptKeys);
         } catch (Exception e) {
             LOGGER.error("error when load sm2 cert from remote, ex:", e);
         }
         return null;
     }
 
-    private Map<String, X509Certificate> decryptCerts(List<EncryptCertificate> encryptCerts, List<YopCertConfig> isvEncryptKeys) {
+    private Map<String, X509Certificate> decryptAndVerifyCerts(List<EncryptCertificate> encryptCerts, List<YopCertConfig> isvEncryptKeys) {
         if (CollectionUtils.isNotEmpty(encryptCerts)) {
             Map<String, X509Certificate> certMap = Maps.newHashMapWithExpectedSize(encryptCerts.size());
             for (EncryptCertificate encryptCert : encryptCerts) {
@@ -149,7 +150,9 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
                 }
                 if (null != certBytes) {
                     try {
-                        return Sm2CertUtils.getX509Certificate(certBytes);
+                        final X509Certificate yopPlatformCert = Sm2CertUtils.getX509Certificate(certBytes);
+                        verifyCertChain(yopPlatformCert.getSerialNumber().toString(), (BCECPublicKey) yopInter.getPublicKey(), yopPlatformCert);
+                        return yopPlatformCert;
                     } catch (Exception e) {
                         LOGGER.error("error to parse cert bytes, certKey:" + certKeyBase64 + ", cert:" + encryptCert + ", ex:", e);
                     }
