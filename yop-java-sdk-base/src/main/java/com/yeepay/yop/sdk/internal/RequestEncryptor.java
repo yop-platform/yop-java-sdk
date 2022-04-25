@@ -19,7 +19,6 @@ import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.encrypt.*;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -68,7 +67,7 @@ public class RequestEncryptor {
      */
     public static Future<EncryptOptions> initEncryptOptionsAndCached(String appKey, String encryptAlg) {
         try {
-            return ENCRYPT_OPTIONS_CACHE.get(StringUtils.joinWith(CharacterConstants.COLON, appKey, encryptAlg));
+            return ENCRYPT_OPTIONS_CACHE.get(StringUtils.joinWith(COMMA, appKey, encryptAlg));
         } catch (ExecutionException e) {
             throw new YopClientException("initEncryptOptions error, ex:", e);
         }
@@ -249,7 +248,7 @@ public class RequestEncryptor {
                 LOGGER.debug("try to init encryptOptions for cacheKey:" + cacheKey);
                 Future<EncryptOptions> encryptOptions = null;
                 try {
-                    String[] split = cacheKey.split(CharacterConstants.COLON);
+                    String[] split = cacheKey.split(COMMA);
                     String appKey = split[0], encryptAlg = split[1];
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
                     List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(appKey));
