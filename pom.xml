@@ -11,6 +11,9 @@
         <module>yop-java-sdk-base</module>
         <module>yop-java-sdk</module>
         <module>yop-java-sdk-okhttp</module>
+        <module>yop-java-sdk-crypto-api</module>
+        <module>yop-java-sdk-crypto-inter</module>
+        <module>yop-java-sdk-crypto-gm</module>
     </modules>
 
     <name>yop-java-sdk-parent</name>

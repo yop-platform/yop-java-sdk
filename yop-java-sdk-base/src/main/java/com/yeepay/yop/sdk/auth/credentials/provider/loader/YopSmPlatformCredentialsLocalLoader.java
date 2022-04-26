@@ -61,7 +61,7 @@ public class YopSmPlatformCredentialsLocalLoader extends AbstractYopPlatformCred
                 return localCredentials;
             }
         }
-        LOGGER.info("no available sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
+        LOGGER.debug("no available platform cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
 
         // 从远程加载
         return delegate.load(appKey, serialNo);

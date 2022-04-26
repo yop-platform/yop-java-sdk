@@ -63,19 +63,20 @@ public interface EncryptOptionsEnhancer {
 
         @Override
         public EncryptOptions enhance(EncryptOptions source) {
-            // 方案调整 暂时不用实现了
             if (!checkForEnhance(source)) {
                 return source;
             }
             YopSm4Credentials sourceCredentials = (YopSm4Credentials) source.getCredentials();
             String credentialStr = sourceCredentials.getCredential();
-            YopPlatformCredentials yopPlatformCredential = YopPlatformCredentialsProviderRegistry.getProvider()
-                    .getYopPlatformCredentials(appKey, "");
+            // todo 选取一个平台证书
+            String serialNo = "275550212193";
+            final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider()
+                    .getYopPlatformCredentials(appKey, serialNo);
             source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialStr,
-                    new EncryptOptions(yopPlatformCredential)));
+                    new EncryptOptions(yopPlatformCredentials)));
             source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
             source.setCredentials(new YopSm4Credentials(appKey, credentialStr));
-            source.enhance(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO, yopPlatformCredential.getSerialNo());
+            source.enhance(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO, serialNo);
             return source;
         }
     }

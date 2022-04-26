@@ -66,7 +66,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
         try {
             SM2Engine engine = engineThreadLocal.get();
             ECPublicKeyParameters pubKeyParameters = convertPublicKeyToParameters((BCECPublicKey)
-                    ((YopPlatformCredentials)options.getCredentials()).getPublicKey(CertTypeEnum.SM2));
+                    ((YopPlatformCredentials) options.getCredentials()).getPublicKey(CertTypeEnum.SM2));
             ParametersWithRandom pwr = new ParametersWithRandom(pubKeyParameters, new SecureRandom());
             engine.init(true, pwr);
             return engine.processBlock(plain, 0, plain.length);
@@ -86,7 +86,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
         try {
             SM2Engine engine = engineThreadLocal.get();
             ECPrivateKeyParameters priKeyParameters = convertPrivateKeyToParameters((BCECPrivateKey)
-                    ((YopPKICredentials)options.getCredentials()).getCredential().getPrivateKey());
+                    ((YopPKICredentials) options.getCredentials()).getCredential().getPrivateKey());
             engine.init(false, priKeyParameters);
             return engine.processBlock(cipher, 0, cipher.length);
         } catch (Throwable e) {

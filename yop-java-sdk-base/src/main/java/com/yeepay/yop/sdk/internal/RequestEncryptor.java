@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
@@ -104,6 +105,7 @@ public class RequestEncryptor {
     public static String buildEncryptHeader(Request<? extends BaseRequest> request, Set<String> encryptHeaders,
                                             Set<String> encryptParams, EncryptOptions encryptOptions) throws UnsupportedEncodingException {
         String encryptHeader =  YOP_ENCRYPT_PROTOCOL_V1_REQ.getProtocolPrefix() + SLASH +
+                encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO) + SLASH +
                 StringUtils.replace(encryptOptions.getAlg(), SLASH, UNDER_LINE) + SLASH +
                 encryptOptions.getEncryptedCredentials() + SLASH +
                 encryptOptions.getIv() + SEMICOLON +
@@ -251,7 +253,7 @@ public class RequestEncryptor {
                     String[] split = cacheKey.split(COMMA);
                     String appKey = split[0], encryptAlg = split[1];
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
-                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(appKey));
+                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new EncryptOptionsEnhancer.Sm2Enhancer(appKey));
                     encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
                 } catch (Exception ex) {
                     LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);

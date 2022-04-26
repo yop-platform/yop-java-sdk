@@ -8,8 +8,6 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSm4Credentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
@@ -17,7 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_V1;
@@ -36,7 +37,7 @@ import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
 public enum YopEncryptProtocol {
 
     /**
-     * 加密协议头(请求)：yop-encrypt-v1/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必
+     * 加密协议头(请求)：yop-encrypt-v1/{平台证书序列号}/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必
      * 填)}/{encryptHeaders}/{encryptParams}
      */
     YOP_ENCRYPT_PROTOCOL_V1_REQ(YOP_ENCRYPT_V1) {
@@ -46,9 +47,9 @@ public enum YopEncryptProtocol {
             EncryptOptions parsedEncryptOptions = srcEncryptOptions.copy();
             String[] items = StringUtils.splitPreserveAllTokens(parseParams.getYopEncrypt(), SLASH);
             parseBasic(items, parsedEncryptOptions);
-            parseCredentials(items, parsedEncryptOptions, parseParams.getYopCredentials().getAppKey());
-            String encryptHeaderStr = items[5];
-            String encryptParamStr = items[6];
+            parseCredentials(items, parsedEncryptOptions, parseParams.getYopCredentials());
+            String encryptHeaderStr = items[6];
+            String encryptParamStr = items[7];
             return new Inst(parsedEncryptOptions, parseEncryptItems(encryptHeaderStr, false),
                     parseEncryptItems(encryptParamStr, true));
         }
@@ -103,44 +104,38 @@ public enum YopEncryptProtocol {
     abstract public Inst parse(ParseParams parseParams);
 
     private static void parseBasic(String[] items, EncryptOptions parsedEncryptOptions) {
-        if (StringUtils.isNotBlank(items[3])) {
-            String[] iv_AAD = StringUtils.splitPreserveAllTokens(items[3], SEMICOLON);
+        if (StringUtils.isNotBlank(items[4])) {
+            String[] iv_AAD = StringUtils.splitPreserveAllTokens(items[4], SEMICOLON);
             parsedEncryptOptions.setIv(iv_AAD[0]);
             if (iv_AAD.length > 1) {
                 parsedEncryptOptions.setAad(iv_AAD[1]);
             }
         }
-        if (StringUtils.isNotBlank(items[1])) {
-            parsedEncryptOptions.setAlg(StringUtils.replace(items[1], UNDER_LINE, SLASH));
+        if (StringUtils.isNotBlank(items[2])) {
+            parsedEncryptOptions.setAlg(StringUtils.replace(items[2], UNDER_LINE, SLASH));
         }
 
-        if (StringUtils.isNotBlank(items[4])) {
-            parsedEncryptOptions.setBigParamEncryptMode(BigParamEncryptMode.valueOf(items[4]));
+        if (StringUtils.isNotBlank(items[5])) {
+            parsedEncryptOptions.setBigParamEncryptMode(BigParamEncryptMode.valueOf(items[5]));
         }
     }
 
-    private static void parseCredentials(String[] items, EncryptOptions parsedEncryptOptions, String appKey) {
+    private static void parseCredentials(String[] items, EncryptOptions parsedEncryptOptions, YopCredentials<?> yopCredentials) {
         Object credential = parsedEncryptOptions.getCredentials();
         String credentialsAlg = parsedEncryptOptions.getCredentialsAlg();
-        if (StringUtils.isNotBlank(items[2]) && credential instanceof YopSm4Credentials) {
-            String encryptedCredential = items[2];
+        if (StringUtils.isNotBlank(items[3]) && credential instanceof YopSm4Credentials) {
+            String encryptedCredential = items[3];
             parsedEncryptOptions.setEncryptedCredentials(encryptedCredential);
 
-            String decryptedSecretKey = null;
-            YopSm4Credentials srcCredentials = (YopSm4Credentials) credential;
-            List<YopCertConfig> mainCredentials = YopCredentialsProviderRegistry.getProvider().getIsvEncryptKey(appKey);
-            EncryptOptions mainEncryptOptions = parsedEncryptOptions.copy();
-            for (YopCertConfig mainCredential : mainCredentials) {
-                try {
-                    mainEncryptOptions.setCredentials(new YopSm4Credentials(mainCredential.getValue()));
-                    decryptedSecretKey = YopEncryptorFactory.getEncryptor(credentialsAlg)
-                            .decryptFromBase64(encryptedCredential, mainEncryptOptions);
-                } catch (Exception e) {
-                    LOGGER.warn("error when decrypt work credential with main " + mainCredential.getValue() + ", ex:", e);
+            try {
+                String decryptedSecretKey = YopEncryptorFactory.getEncryptor(credentialsAlg)
+                        .decryptFromBase64(encryptedCredential, new EncryptOptions(yopCredentials));
+                if (StringUtils.isNotBlank(decryptedSecretKey)) {
+                    credential = new YopSm4Credentials(yopCredentials.getAppKey(), decryptedSecretKey);
+                    parsedEncryptOptions.setCredentials(credential);
                 }
-            }
-            if (StringUtils.isNotBlank(decryptedSecretKey)) {
-                credential = new YopSm4Credentials(srcCredentials.getAppKey(), decryptedSecretKey);
+            } catch (Exception e) {
+                LOGGER.warn("error when decrypt work credential with appKey:" + yopCredentials.getAppKey() + ", ex:", e);
             }
         }
     }
