@@ -178,8 +178,8 @@ public class YopEncryptorTest {
     @Test
     public void yopRequestGet() {
         YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
-//        request.addParameter("string0", "le1");
-        request.addEncryptParameter("string0", "le1");
+        request.addParameter("string0", "le1");
+//        request.addEncryptParameter("string0", "le1");
         request.getRequestConfig().setAppKey("app_15958159879157110002")
                 .setTotalEncrypt(true)
         ;
@@ -259,34 +259,28 @@ public class YopEncryptorTest {
 
     @Test
     // 加密后下载速度慢很多
-    public void yopRequestDownload() {
-        try {
-            final long start = System.currentTimeMillis();
-            YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");
-            request.addParameter("fileId", "30343");
+    public void yopRequestDownload() throws Exception {
+        final long start = System.currentTimeMillis();
+        YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");
+        request.addParameter("fileId", "30343");
 //            request.addParameter("merchantNo", "10040040287");
-            request.addEncryptParameter("merchantNo", "10040040287");
-            String appKey = "OPR:10040040287";
-            request.getRequestConfig().setAppKey(appKey).setSecurityReq("YOP-SM2-SM3")
-                    .setTotalEncrypt(true)
-            ;
+        request.addEncryptParameter("merchantNo", "10040040287");
+        String appKey = "OPR:10040040287";
+        request.getRequestConfig().setAppKey(appKey).setSecurityReq("YOP-SM2-SM3")
+                .setTotalEncrypt(true)
+        ;
 
-            YosDownloadResponse response = yopClient.download(request);
-            YosDownloadInputStream yosDownloadInputStream = response.getResult();
-            try {
-                Assert.assertNotNull(yosDownloadInputStream);
-                File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".zip");
-                tmpFile.deleteOnExit();
-                long size = IOUtils.copy(response.getResult(), new FileOutputStream(tmpFile));
-                LOGGER.debug("downloaded file size:{}，elapsedTime:{}ms", size, System.currentTimeMillis() - start);
-                Assert.assertTrue(size > 0);
-            } catch (Exception e) {
-                LOGGER.error("ex:", e);
-            } finally {
-                StreamUtils.closeQuietly(yosDownloadInputStream);
-            }
-        } catch (Exception e) {
-            LOGGER.error("ex:", e);
+        YosDownloadResponse response = yopClient.download(request);
+        YosDownloadInputStream yosDownloadInputStream = response.getResult();
+        try {
+            Assert.assertNotNull(yosDownloadInputStream);
+            File tmpFile = File.createTempFile(UUID.randomUUID().toString(), ".zip");
+            tmpFile.deleteOnExit();
+            long size = IOUtils.copy(response.getResult(), new FileOutputStream(tmpFile));
+            LOGGER.debug("downloaded file size:{}，elapsedTime:{}ms", size, System.currentTimeMillis() - start);
+            Assert.assertTrue(size > 0);
+        } finally {
+            StreamUtils.closeQuietly(yosDownloadInputStream);
         }
     }
 

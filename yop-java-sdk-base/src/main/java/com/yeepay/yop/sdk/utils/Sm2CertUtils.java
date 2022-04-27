@@ -71,12 +71,13 @@ public class Sm2CertUtils {
     }
 
     /**
-     * 校验证书有效期（过期后24小时内继续可用）
+     * 校验证书有效期（过期后24小时内继续可用，过期前72小时需刷新）
      * @param certificate
      * @throws CertificateExpiredException
      * @throws CertificateNotYetValidException
+     * @return true: 需要刷新，false：不需要
      */
-    private static void checkCertDate(X509Certificate certificate) throws CertificateExpiredException, CertificateNotYetValidException {
+    public static boolean checkCertDate(X509Certificate certificate) throws CertificateExpiredException, CertificateNotYetValidException {
         Date now = new Date();
         long time24HoursAgo = now.getTime() - 24 * 3600 * 1000;
         if (time24HoursAgo > certificate.getNotAfter().getTime()) {
@@ -86,6 +87,9 @@ public class Sm2CertUtils {
         if (now.getTime() < certificate.getNotBefore().getTime()) {
             throw new CertificateNotYetValidException("certificate not valid till " + certificate.getNotBefore().getTime());
         }
+        // 72小时内过期，需刷新
+        long time24HoursAfter = now.getTime() + 72 * 3600 * 1000;
+        return time24HoursAfter > certificate.getNotAfter().getTime() ;
     }
 
     public static X509Certificate getX509Certificate(String certFilePath) throws IOException, CertificateException,

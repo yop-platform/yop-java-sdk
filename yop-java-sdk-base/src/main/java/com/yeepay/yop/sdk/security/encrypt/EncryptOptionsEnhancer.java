@@ -10,6 +10,7 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegist
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,15 +69,13 @@ public interface EncryptOptionsEnhancer {
             }
             YopSm4Credentials sourceCredentials = (YopSm4Credentials) source.getCredentials();
             String credentialStr = sourceCredentials.getCredential();
-            // todo 选取一个平台证书
-            String serialNo = "275550212193";
             final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider()
-                    .getYopPlatformCredentials(appKey, serialNo);
+                    .getLatestAvailable(appKey, CertTypeEnum.SM2.getValue());
             source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialStr,
                     new EncryptOptions(yopPlatformCredentials)));
             source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
             source.setCredentials(new YopSm4Credentials(appKey, credentialStr));
-            source.enhance(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO, serialNo);
+            source.enhance(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO, yopPlatformCredentials.getSerialNo());
             return source;
         }
     }

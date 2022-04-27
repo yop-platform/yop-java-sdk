@@ -12,7 +12,6 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -144,12 +143,11 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      */
     private <Input extends BaseRequest> void encryptRequest(Request<Input> request, ExecutionContext executionContext)
             throws ExecutionException, InterruptedException, UnsupportedEncodingException {
-        final YopEncryptor encryptor = executionContext.getEncryptor();
-        if (null == encryptor) {
+        if (!executionContext.isEncryptSupported()) {
             LOGGER.debug("request not encrypted for no YopEncryptor found(or maybe a rsa request)");
             return;
         }
-        encrypt(request, encryptor, executionContext.getEncryptOptions().get());
+        encrypt(request, executionContext.getEncryptor(), executionContext.getEncryptOptions().get());
     }
 
     private <Input extends BaseRequest> void signRequest(Request<Input> request, ExecutionContext executionContext) {

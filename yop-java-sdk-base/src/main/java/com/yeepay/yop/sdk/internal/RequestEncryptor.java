@@ -4,21 +4,21 @@
  */
 package com.yeepay.yop.sdk.internal;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
-import com.yeepay.yop.sdk.security.encrypt.*;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -32,11 +32,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
+import static com.yeepay.yop.sdk.http.Headers.YOP_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
@@ -54,36 +52,22 @@ import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
  */
 public class RequestEncryptor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RequestEncryptor.class);
-
-    // 默认缓存24小时
-    private static final LoadingCache<String, Future<EncryptOptions>> ENCRYPT_OPTIONS_CACHE = initCache(24L, TimeUnit.HOURS);
-
-    /**
-     * 初始化加密选项，并缓存
-     *
-     * @param appKey 应用
-     * @param encryptAlg 加解密算法
-     * @return
-     */
-    public static Future<EncryptOptions> initEncryptOptionsAndCached(String appKey, String encryptAlg) {
-        try {
-            return ENCRYPT_OPTIONS_CACHE.get(StringUtils.joinWith(COMMA, appKey, encryptAlg));
-        } catch (ExecutionException e) {
-            throw new YopClientException("initEncryptOptions error, ex:", e);
-        }
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptOptionsCache.class);
 
     /**
      * 加密并重写Request
      *
-     * @param request 请求
-     * @param encryptor 加密器
+     * @param request        请求
+     * @param encryptor      加密器
      * @param encryptOptions 加密选项
      */
     public static void encrypt(Request<? extends BaseRequest> request, YopEncryptor encryptor, EncryptOptions encryptOptions)
             throws UnsupportedEncodingException {
         YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
+        // 商户强制不加密
+        if (BooleanUtils.isFalse(requestConfig.getNeedEncrypt())) {
+            return;
+        }
         Set<String> encryptHeaders = Collections.emptySet();
         Set<String> encryptParams = Collections.emptySet();
         if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
@@ -96,7 +80,6 @@ public class RequestEncryptor {
     }
 
 
-
     /**
      * 加密协议头
      *
@@ -104,8 +87,9 @@ public class RequestEncryptor {
      */
     public static String buildEncryptHeader(Request<? extends BaseRequest> request, Set<String> encryptHeaders,
                                             Set<String> encryptParams, EncryptOptions encryptOptions) throws UnsupportedEncodingException {
-        String encryptHeader =  YOP_ENCRYPT_PROTOCOL_V1_REQ.getProtocolPrefix() + SLASH +
-                encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO) + SLASH +
+        String platformSerialNo = (String) encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO);
+        String encryptHeader = YOP_ENCRYPT_PROTOCOL_V1_REQ.getProtocolPrefix() + SLASH +
+                platformSerialNo + SLASH +
                 StringUtils.replace(encryptOptions.getAlg(), SLASH, UNDER_LINE) + SLASH +
                 encryptOptions.getEncryptedCredentials() + SLASH +
                 encryptOptions.getIv() + SEMICOLON +
@@ -117,17 +101,19 @@ public class RequestEncryptor {
 
         // 添加加密头
         request.addHeader(YOP_ENCRYPT, encryptHeader);
+        // 添加证书序列号
+        request.addHeader(YOP_CERT_SERIAL_NO, platformSerialNo);
         return encryptHeader;
     }
 
     private static Set<String> encryptHeaders(YopEncryptor encryptor, Set<String> encryptHeaders,
-                                        Request<? extends BaseRequest> request, EncryptOptions encryptOptions) {
+                                              Request<? extends BaseRequest> request, EncryptOptions encryptOptions) {
         if (CollectionUtils.isEmpty(encryptHeaders)) {
             return encryptHeaders;
         }
         Set<String> finalEncryptHeaders = Sets.newHashSetWithExpectedSize(encryptHeaders.size());
         Map<String, String> headers = request.getHeaders();
-        headers.forEach((k,v) -> {
+        headers.forEach((k, v) -> {
             if (encryptHeaders.contains(k) && StringUtils.isNotBlank(v)) {
                 headers.put(k, encryptor.encryptToBase64(v, encryptOptions));
                 finalEncryptHeaders.add(k);
@@ -137,7 +123,7 @@ public class RequestEncryptor {
     }
 
     private static Set<String> encryptParams(YopEncryptor encryptor, Set<String> encryptParams, Request<? extends BaseRequest> request,
-                                       YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
+                                             YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
 
         boolean totalEncrypt = BooleanUtils.isTrue(requestConfig.getTotalEncrypt());
         if (!totalEncrypt && CollectionUtils.isEmpty(encryptParams) && null == request.getContent()) {
@@ -166,7 +152,7 @@ public class RequestEncryptor {
             request.setContent(restartableInputStream);
             // ！！！覆盖掉原文计算的length，否则httpClient会用原文指定的length头来发送报文，导致完整性校验不通过
             request.addHeader(Headers.CONTENT_LENGTH, String.valueOf(jsonBytes.length));
-        } else if (YopContentType.OCTET_STREAM.equals(request.getContentType())){
+        } else if (YopContentType.OCTET_STREAM.equals(request.getContentType())) {
             request.setContent(encryptor.encrypt(request.getContent(), encryptOptions));
             finalEncryptParams.add(DOLLAR);
         } else {
@@ -235,30 +221,6 @@ public class RequestEncryptor {
                 }
                 parameters.put(name, encryptedValues);
                 finalEncryptParams.add(name);
-            }
-        });
-    }
-
-    private static LoadingCache<String, Future<EncryptOptions>> initCache(Long expire, TimeUnit timeUnit) {
-        CacheBuilder cacheBuilder = CacheBuilder.newBuilder();
-        if (expire > 0) {
-            cacheBuilder.expireAfterWrite(expire, timeUnit);
-        }
-        return cacheBuilder.build(new CacheLoader<String, Future<EncryptOptions>>() {
-            @Override
-            public Future<EncryptOptions> load(String cacheKey) throws Exception {
-                LOGGER.debug("try to init encryptOptions for cacheKey:" + cacheKey);
-                Future<EncryptOptions> encryptOptions = null;
-                try {
-                    String[] split = cacheKey.split(COMMA);
-                    String appKey = split[0], encryptAlg = split[1];
-                    YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
-                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new EncryptOptionsEnhancer.Sm2Enhancer(appKey));
-                    encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
-                } catch (Exception ex) {
-                    LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);
-                }
-                return encryptOptions;
             }
         });
     }

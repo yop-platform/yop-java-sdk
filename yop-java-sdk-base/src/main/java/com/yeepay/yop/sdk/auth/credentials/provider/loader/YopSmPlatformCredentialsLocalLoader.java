@@ -5,8 +5,10 @@
 package com.yeepay.yop.sdk.auth.credentials.provider.loader;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
+import com.yeepay.yop.sdk.cache.YopCertificateCache;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -37,7 +39,7 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_SM_PLATFORM_CERT_PREFIX;
  * @version 1.0.0
  * @since 2021-02-25
  */
-public class YopSmPlatformCredentialsLocalLoader extends AbstractYopPlatformCredentialsLoader {
+public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentialsLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopSmPlatformCredentialsLocalLoader.class);
 
@@ -52,7 +54,7 @@ public class YopSmPlatformCredentialsLocalLoader extends AbstractYopPlatformCred
 
         // 尝试从当前目录加载
         if (MapUtils.isEmpty(localCerts)) {
-            localCerts = loadAndVerifyFromLocal(defaultYopCertStore, serialNo);
+            localCerts = loadAndVerifyFromLocal(YopConstants.DEFAULT_LOCAL_YOP_CERT_STORE, serialNo);
         }
         if (MapUtils.isNotEmpty(localCerts)) {
             localCerts.forEach((k, v) -> localCredentials.put(k, new YopPlatformCredentialsHolder()
@@ -78,7 +80,7 @@ public class YopSmPlatformCredentialsLocalLoader extends AbstractYopPlatformCred
                 if (null != fis) {
                     final X509Certificate cert = Sm2CertUtils.getX509Certificate(fis);
                     String realSerialNo = cert.getSerialNumber().toString();
-                    verifyCertChain(realSerialNo, (BCECPublicKey) yopInter.getPublicKey(), cert);
+                    Sm2CertUtils.verifyCertificate((BCECPublicKey) YopCertificateCache.getYopInterCertFromLocal().getPublicKey(), cert);
                     if (!realSerialNo.equals(serialNo)) {
                         LOGGER.warn("wrong file name for cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
                     }

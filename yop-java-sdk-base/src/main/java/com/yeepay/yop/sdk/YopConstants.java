@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk;
 
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 
 import java.nio.charset.Charset;
@@ -92,5 +93,13 @@ public interface YopConstants {
     String JSON_PATH_PREFIX = "$.";
     Set<String> JSON_PATH_ROOT = Collections.unmodifiableSet(Sets.newHashSet("$", "$..*"));
     Set<String> TOTAL_ENCRYPT_PARAMS = Sets.newHashSet(CharacterConstants.DOLLAR);
+
+    /**
+     * SDK内置证书
+     */
+    String DEFAULT_CERT_PATH = "config/certs";
+    String DEFAULT_CFCA_ROOT_FILE = "cfca_root.pem";
+    String DEFAULT_YOP_INTER_FILE = "yop_inter.pem";
+    YopCertStore DEFAULT_LOCAL_YOP_CERT_STORE = new YopCertStore(DEFAULT_CERT_PATH);
 
 }

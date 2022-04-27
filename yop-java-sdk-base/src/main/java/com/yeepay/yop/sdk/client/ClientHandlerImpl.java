@@ -3,10 +3,12 @@ package com.yeepay.yop.sdk.client;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.auth.signer.YopSignerFactory;
+import com.yeepay.yop.sdk.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
@@ -23,13 +25,13 @@ import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENCRYPT_ALG;
-import static com.yeepay.yop.sdk.internal.RequestEncryptor.initEncryptOptionsAndCached;
 
 /**
  * title: 默认客户端处理器<br>
@@ -93,9 +95,9 @@ public class ClientHandlerImpl implements ClientHandler {
             // 仅国密请求支持加密
             YopEncryptor encryptor = null;
             Future<EncryptOptions> encryptOptions = null;
-            if (isSm2Request(credential)) {
+            if (supportEncrypt(credential, requestConfig)) {
                 encryptor = getEncryptor(requestConfig);
-                encryptOptions = initEncryptOptionsAndCached(credential.getAppKey(), requestConfig.getEncryptAlg());
+                encryptOptions = EncryptOptionsCache.loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg());
             }
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
                     .withYopCredentials(credential)
@@ -107,9 +109,13 @@ public class ClientHandlerImpl implements ClientHandler {
         }
     }
 
-    private boolean isSm2Request(YopCredentials<?> credential) {
-        return credential instanceof YopPKICredentials &&
-                CertTypeEnum.SM2.equals(((YopPKICredentials)credential).getCredential().getCertType());
+    private boolean supportEncrypt(YopCredentials<?> credential, YopRequestConfig requestConfig) {
+        // 指定不加密、或者不支持加密，或者没有有效证书，则不进行加密
+        return !BooleanUtils.isFalse(requestConfig.getNeedEncrypt())
+                && !(credential instanceof YopPKICredentials &&
+                    CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType()))
+                && !(null == YopPlatformCredentialsProviderRegistry.getProvider()
+                    .getLatestAvailable(credential.getAppKey(), CertTypeEnum.SM2.getValue()));
     }
 
     private YopEncryptor getEncryptor(YopRequestConfig requestConfig) {
