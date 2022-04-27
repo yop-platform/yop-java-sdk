@@ -11,4 +11,11 @@
 
     <artifactId>yop-java-sdk-crypto-gm</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.yeepay.yop.sdk</groupId>
+            <artifactId>yop-java-sdk-crypto-api</artifactId>
+        </dependency>
+    </dependencies>
+
 </project>

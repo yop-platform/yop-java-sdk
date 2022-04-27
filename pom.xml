@@ -59,12 +59,27 @@
             </dependency>
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-crypto-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk-okhttp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-crypto-gm</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-crypto-inter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

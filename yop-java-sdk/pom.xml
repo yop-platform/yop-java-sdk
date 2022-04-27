@@ -15,6 +15,14 @@
             <artifactId>yop-java-sdk-base</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.yeepay.yop.sdk</groupId>
+            <artifactId>yop-java-sdk-crypto-gm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.yeepay.yop.sdk</groupId>
+            <artifactId>yop-java-sdk-crypto-inter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
         </dependency>
