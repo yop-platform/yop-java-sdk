@@ -8,10 +8,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.security.encrypt.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +67,7 @@ public class EncryptOptionsCache {
                     String[] split = cacheKey.split(COMMA);
                     String appKey = split[0], encryptAlg = split[1];
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
-                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new EncryptOptionsEnhancer.Sm2Enhancer(appKey));
+                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new Sm2Enhancer(appKey));
                     encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
                 } catch (Exception ex) {
                     LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);

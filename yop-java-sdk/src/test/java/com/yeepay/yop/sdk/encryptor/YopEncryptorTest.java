@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.encryptor;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
@@ -23,11 +24,13 @@ import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.request.YopRequestMarshaller;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
+import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +45,7 @@ import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.utils.CharacterConstants.DOLLAR;
+import static com.yeepay.yop.sdk.utils.CharacterConstants.SLASH;
 import static org.junit.Assert.*;
 
 /**
@@ -62,7 +66,8 @@ public class YopEncryptorTest {
     YopEncryptor sm2Encryptor;
     Future<EncryptOptions> sm4Options;
     Future<EncryptOptions> sm4OptionsEnhanced;
-    String appKey = "app_100800095600038";
+    Future<EncryptOptions> sm2OptionsEnhanced;
+    String appKey = "app_15958159879157110002";
     String credentialType = "SM2";
     YopCredentials<?> yopCredentials;
     EncryptOptions encryptOptions;
@@ -78,8 +83,10 @@ public class YopEncryptorTest {
         sm2Encryptor = YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
         sm4Options = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING, null);
         sm4OptionsEnhanced = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING,
-                Collections.singletonList(new EncryptOptionsEnhancer.Sm4Enhancer(appKey)));
-        encryptOptions = sm4OptionsEnhanced.get();
+                Collections.singletonList(new Sm4Enhancer(appKey)));
+        sm2OptionsEnhanced = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING,
+                Collections.singletonList(new Sm2Enhancer(appKey)));
+        encryptOptions = sm2OptionsEnhanced.get();
         specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), DEFAULT_ENCODING);
         yopClient = YopClientBuilder.builder().withEndpoint("http://qak8s.iaas.yp:30228/yop-center")
                 .withYosEndpoint("http://qak8s.iaas.yp:30228/yop-center").build();
@@ -458,7 +465,18 @@ public class YopEncryptorTest {
         RequestEncryptor.encrypt(request, sm4Encryptor, encryptOptions);
         String encryptHeader = request.getHeaders().get(Headers.YOP_ENCRYPT);
         assertTrue(encryptHeader.startsWith(YOP_ENCRYPT_V1));
-        return encryptHeader;
+        String[] items = StringUtils.splitPreserveAllTokens(encryptHeader, SLASH);
+        assertEquals(8, items.length);
+
+        List<String> itemList = Lists.newArrayListWithExpectedSize(items.length - 1);
+        for (int i = 0; i < 8; i++) {
+            if (i != 3) {
+                itemList.add(items[i]);
+            } else {
+                itemList.add(CharacterConstants.EMPTY);
+            }
+        }
+        return String.join(SLASH, itemList);
     }
 
     private YopRequest aFormRequest() {

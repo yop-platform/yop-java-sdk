@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.security.encrypt;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopSm4Credentials;
+import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
@@ -123,7 +123,7 @@ public enum YopEncryptProtocol {
     private static void parseCredentials(String[] items, EncryptOptions parsedEncryptOptions, YopCredentials<?> yopCredentials) {
         Object credential = parsedEncryptOptions.getCredentials();
         String credentialsAlg = parsedEncryptOptions.getCredentialsAlg();
-        if (StringUtils.isNotBlank(items[3]) && credential instanceof YopSm4Credentials) {
+        if (StringUtils.isNotBlank(items[3]) && credential instanceof YopSymmetricCredentials) {
             String encryptedCredential = items[3];
             parsedEncryptOptions.setEncryptedCredentials(encryptedCredential);
 
@@ -131,7 +131,7 @@ public enum YopEncryptProtocol {
                 String decryptedSecretKey = YopEncryptorFactory.getEncryptor(credentialsAlg)
                         .decryptFromBase64(encryptedCredential, new EncryptOptions(yopCredentials));
                 if (StringUtils.isNotBlank(decryptedSecretKey)) {
-                    credential = new YopSm4Credentials(yopCredentials.getAppKey(), decryptedSecretKey);
+                    credential = new YopSymmetricCredentials(yopCredentials.getAppKey(), decryptedSecretKey);
                     parsedEncryptOptions.setCredentials(credential);
                 }
             } catch (Exception e) {

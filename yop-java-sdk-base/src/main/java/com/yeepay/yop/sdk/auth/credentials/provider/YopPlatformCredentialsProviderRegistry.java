@@ -6,6 +6,8 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.yeepay.yop.sdk.exception.YopClientException;
 
+import java.util.ServiceLoader;
+
 /**
  * title: <br>
  * description: 描述<br>
@@ -17,7 +19,13 @@ import com.yeepay.yop.sdk.exception.YopClientException;
  * @since 2/4/21 5:28 PM
  */
 public class YopPlatformCredentialsProviderRegistry {
-    private static final YopPlatformCredentialsProvider DEFAULT_PROVIDER = new YopFilePlatformCredentialsProvider();
+
+    private static final YopPlatformCredentialsProvider DEFAULT_PROVIDER;
+
+    static {
+        ServiceLoader<YopPlatformCredentialsProvider> serviceLoader = ServiceLoader.load(YopPlatformCredentialsProvider.class);
+        DEFAULT_PROVIDER = serviceLoader.iterator().next();
+    }
 
     private static volatile YopPlatformCredentialsProvider CUSTOM_PROVIDER = null;
 

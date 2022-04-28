@@ -7,15 +7,12 @@ import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
 import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 import java.security.PublicKey;
 import java.util.Map;
-
-import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CERT_STORE_PATH;
 
 /**
  * title: SDK配置(新版本)<br>

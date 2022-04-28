@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.encryptor.auth.credentials.provider;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.config.YopAppConfig;
@@ -69,6 +70,11 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appKey) {
         return Lists.newArrayList(getAppConfig(appKey).getIsvPrivateKeys().keySet());
+    }
+
+    @Override
+    public String getDefaultAppKey() {
+        return YopConstants.YOP_DEFAULT_APPKEY;
     }
 
     @Override

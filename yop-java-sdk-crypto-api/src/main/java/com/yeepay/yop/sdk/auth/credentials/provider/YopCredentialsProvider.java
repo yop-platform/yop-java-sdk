@@ -1,0 +1,65 @@
+package com.yeepay.yop.sdk.auth.credentials.provider;
+
+import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
+
+import java.util.List;
+
+/**
+ * title: Interface for providing YOP credentials.<br>
+ * description:
+ * Implementations are free to use any
+ * strategy for providing YOP credentials, such as simply providing static
+ * credentials that don't change, or more complicated implementations, such as
+ * integrating with existing key management systems.<br>
+ * Copyright: Copyright (c) 2017<br>
+ * Company: 易宝支付(YeePay)<br>
+ *
+ * @author menghao.chen
+ * @version 1.0.0
+ * @since 17/11/14 17:27
+ */
+public interface YopCredentialsProvider {
+
+    /**
+     * Returns Credentials which the caller can use to authorize an YOP request.
+     * Each implementation of YOPCredentialsProvider can chose its own strategy for
+     * loading credentials.  For example, an implementation might load credentials
+     * from an existing key management system, or load new credentials when
+     * credentials are rotated.
+     *
+     * @param appKey         appKey
+     * @param credentialType credentialType
+     * @return YOPCredentials which the caller can use to authorize an YOP request.
+     */
+    YopCredentials<?> getCredentials(String appKey, String credentialType);
+
+    /**
+     * Returns symmetrical keys for using when decrypt yop certs from remote
+     * may be different by appKey
+     * may be not only one for retry
+     *
+     * @param appKey
+     * @return
+     */
+    @Deprecated
+    List<YopCertConfig> getIsvEncryptKey(String appKey);
+
+    List<CertTypeEnum> getSupportCertTypes(String appKey);
+
+    /**
+     * 单应用时，用于加载默认配置
+     * 多应用时，用于指定默认应用(自定义provider时，须覆盖实现)
+     * @return
+     */
+    String getDefaultAppKey();
+
+    /**
+     * 移除SDK配置
+     *
+     * @param key key
+     */
+    void removeConfig(String key);
+
+}
