@@ -21,20 +21,16 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
-import com.yeepay.yop.sdk.security.SignerTypeEnum;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.security.DigestInputStream;
-import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.security.Security;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -49,11 +45,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @version 1.0.0
  * @since 2021/1/18 3:25 下午
  */
-public class AbstractYopPKISigner implements YopSigner {
+public abstract class AbstractYopPKISigner implements YopSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractYopPKISigner.class);
-
-    private static final ThreadLocal<Map<DigestAlgEnum, MessageDigest>> MESSAGE_DIGEST;
 
     private static final String YOP_PROTOCOL_VERSION = "yop-auth-v3";
 
@@ -72,32 +66,11 @@ public class AbstractYopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SM3);
         defaultHeadersToSign.add(Headers.YOP_ENCRYPT);
-
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-
-        MESSAGE_DIGEST = new ThreadLocal<Map<DigestAlgEnum, MessageDigest>>() {
-            @Override
-            protected Map<DigestAlgEnum, MessageDigest> initialValue() {
-                try {
-                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = Maps.newHashMapWithExpectedSize(3);
-                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3", BouncyCastleProvider.PROVIDER_NAME));
-                    messageDigestMap.put(DigestAlgEnum.SHA256, MessageDigest.getInstance("SHA-256"));
-                    return messageDigestMap;
-                } catch (GeneralSecurityException e) {
-                    throw new YopClientException(
-                            "Unable to get Digest Function"
-                                    + e.getMessage(), e);
-                }
-            }
-        };
     }
 
-    @Override
-    public List<String> supportSignerAlg() {
-        return Lists.newArrayList(SignerTypeEnum.SM2.name(), SignerTypeEnum.RSA.name());
-    }
+    private final ThreadLocal<Map<DigestAlgEnum, MessageDigest>> MESSAGE_DIGEST = ThreadLocal.withInitial(this::initMdInstance);
+
+    protected abstract Map<DigestAlgEnum, MessageDigest> initMdInstance();
 
     @Override
     public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
@@ -286,7 +259,7 @@ public class AbstractYopPKISigner implements YopSigner {
      *
      * @return 摘要
      */
-    private static MessageDigest getMessageDigestInstance(DigestAlgEnum digestAlg) {
+    private MessageDigest getMessageDigestInstance(DigestAlgEnum digestAlg) {
         MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
         messageDigest.reset();
         return messageDigest;
