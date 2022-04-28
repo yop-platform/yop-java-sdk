@@ -1,18 +1,12 @@
 package com.yeepay.yop.sdk.config;
 
-import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
-import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
-import java.security.PublicKey;
-import java.util.Map;
 
 /**
  * title: SDK配置(新版本)<br>
@@ -33,8 +27,6 @@ public final class YopSdkConfig implements Serializable {
     private String yosServerRoot;
 
     private String sandboxServerRoot;
-
-    private Map<CertTypeEnum, PublicKey> yopPublicKeys;
 
     private YopHttpClientConfig yopHttpClientConfig;
 
@@ -68,23 +60,6 @@ public final class YopSdkConfig implements Serializable {
 
     public void setSandboxServerRoot(String sandboxServerRoot) {
         this.sandboxServerRoot = sandboxServerRoot;
-    }
-
-    public void storeYopPublicKey(YopCertConfig[] yopPublicKeys) {
-        if (null != yopPublicKeys && yopPublicKeys.length > 0) {
-            this.yopPublicKeys = Maps.newHashMap();
-            for (YopCertConfig yopCertConfig : yopPublicKeys) {
-                this.yopPublicKeys.put(yopCertConfig.getCertType(), YopCertConfigUtils.loadPublicKey(yopCertConfig));
-            }
-        }
-    }
-
-    public PublicKey loadYopPublicKey(String certType) {
-        return this.yopPublicKeys.get(CertTypeEnum.parse(certType));
-    }
-
-    public PublicKey loadYopPublicKey(CertTypeEnum certType) {
-        return this.yopPublicKeys.get(certType);
     }
 
     public YopHttpClientConfig getYopHttpClientConfig() {

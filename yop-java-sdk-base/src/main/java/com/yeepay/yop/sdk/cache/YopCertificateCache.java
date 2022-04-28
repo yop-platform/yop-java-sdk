@@ -22,12 +22,14 @@ import com.yeepay.yop.sdk.utils.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
@@ -61,7 +63,8 @@ public class YopCertificateCache {
 
     private static YopClient YOP_CLIENT;
 
-    private static X509Certificate CFCA_ROOT_CERT, YOP_INTER_CERT;
+    private static X509Certificate CFCA_ROOT_CERT, YOP_INTER_CERT, YOP_PLATFORM_RSA_CERT;
+    private static final String QA_RSA_CERT_SERIAL_NO = "275718169735", PRO_RSA_CERT_SERIAL_NO = "290297451928";
 
     /**
      * 本地加载cfca根证书
@@ -79,6 +82,15 @@ public class YopCertificateCache {
      */
     public static X509Certificate getYopInterCertFromLocal() {
         return CFCA_ROOT_CERT;
+    }
+
+    /**
+     * 本地加载YOP平台RSA证书
+     *
+     * @return X509Certificate
+     */
+    public static X509Certificate getYopPlatformRsaCertFromLocal() {
+        return YOP_PLATFORM_RSA_CERT;
     }
 
     /**
@@ -222,31 +234,44 @@ public class YopCertificateCache {
     static {
         try {
             String cfcaRootFile = DEFAULT_CFCA_ROOT_FILE, yopInterFile = DEFAULT_YOP_INTER_FILE;
+            String yopPlatformRsaCertSerialNo = PRO_RSA_CERT_SERIAL_NO;
             if (!EnvUtils.isProd()) {
                 String env = EnvUtils.currentEnv(),
                         envPrefix = StringUtils.substringBefore(env, "_");
                 cfcaRootFile = envPrefix + "_" + DEFAULT_CFCA_ROOT_FILE;
                 yopInterFile = envPrefix + "_" + DEFAULT_YOP_INTER_FILE;
+                yopPlatformRsaCertSerialNo = QA_RSA_CERT_SERIAL_NO;
             }
 
             // 根证书
-            CFCA_ROOT_CERT = getX508Cert(DEFAULT_CERT_PATH + "/" + cfcaRootFile);
+            CFCA_ROOT_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + cfcaRootFile, CertTypeEnum.SM2);
             Sm2CertUtils.verifyCertificate(null, CFCA_ROOT_CERT);
 
             // 中间证书
-            YOP_INTER_CERT = getX508Cert(DEFAULT_CERT_PATH + "/" + yopInterFile);
+            YOP_INTER_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + yopInterFile, CertTypeEnum.SM2);
             Sm2CertUtils.verifyCertificate((BCECPublicKey) CFCA_ROOT_CERT.getPublicKey(), YOP_INTER_CERT);
+
+            // YOP—RSA证书
+            YOP_PLATFORM_RSA_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + YOP_RSA_PLATFORM_CERT_PREFIX +
+                    yopPlatformRsaCertSerialNo + YOP_PLATFORM_CERT_POSTFIX, CertTypeEnum.RSA2048);
         } catch (Exception e) {
             LOGGER.error("error when load parent certs, ex:", e);
         }
         YOP_CLIENT = YopClientBuilder.builder().build();
     }
 
-    private static X509Certificate getX508Cert(String certPath) throws CertificateException, NoSuchProviderException {
+    private static X509Certificate getX509Cert(String certPath, CertTypeEnum certType) throws CertificateException, NoSuchProviderException {
         InputStream certStream = null;
         try {
             certStream = FileUtils.getResourceAsStream(certPath);
-            return Sm2CertUtils.getX509Certificate(certStream);
+            // TODO 下沉到软算法
+            CertificateFactory cf;
+            if (CertTypeEnum.SM2.equals(certType)) {
+                cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
+            } else {
+                cf = CertificateFactory.getInstance("X.509");
+            }
+            return (X509Certificate) cf.generateCertificate(certStream);
         } finally {
             StreamUtils.closeQuietly(certStream);
         }

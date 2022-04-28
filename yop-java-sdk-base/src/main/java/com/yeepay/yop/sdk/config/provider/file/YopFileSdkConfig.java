@@ -38,9 +38,6 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("sandbox_server_root")
     private String sandboxServerRoot;
 
-    @JsonProperty("yop_public_key")
-    private YopCertConfig[] yopPublicKey;
-
     private Map<String, List<YopCertConfig>> isvPrivateKeyMap;
 
     @JsonProperty("http_client")
@@ -89,14 +86,6 @@ public final class YopFileSdkConfig implements Serializable {
 
     public void setSandboxServerRoot(String sandboxServerRoot) {
         this.sandboxServerRoot = sandboxServerRoot;
-    }
-
-    public YopCertConfig[] getYopPublicKey() {
-        return yopPublicKey;
-    }
-
-    public void setYopPublicKey(YopCertConfig[] yopPublicKey) {
-        this.yopPublicKey = yopPublicKey;
     }
 
     public List<YopCertConfig> getIsvPrivateKey(String appKey) {
