@@ -4,8 +4,16 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
+import com.yeepay.yop.sdk.config.enums.CertStoreType;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.crypto.YopCertCategory;
+import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigitalEnvelopeUtils;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
+import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -30,7 +38,7 @@ public class MerchantNotifyTest {
         String cipherText ="加密的报文";
         String privateKeyStr = "商户的私钥";
         String appKey = "商户的appKey";
-        PrivateKey isvPrivateKey = RSAKeyUtils.string2PrivateKey(privateKeyStr);
+        PrivateKey isvPrivateKey = getPrivateKey(privateKeyStr, CertTypeEnum.RSA2048);
         //若商户存在多应用，解密方法中可设置appKey
         String plaintTextWithAppKey = DigitalEnvelopeUtils.decrypt(cipherText, appKey,"RSA2048");
         System.out.println(plaintTextWithAppKey);
@@ -44,6 +52,14 @@ public class MerchantNotifyTest {
         System.out.println(plaintText);
     }
 
+    private PrivateKey getPrivateKey(String priKey, CertTypeEnum certType) {
+        final YopCertConfig yopCertConfig = new YopCertConfig();
+        yopCertConfig.setCertType(certType);
+        yopCertConfig.setValue(priKey);
+        yopCertConfig.setStoreType(CertStoreType.STRING);
+        return (PrivateKey) YopCertParserFactory.getCertParser(YopCertCategory.PRIVATE, certType).parse(yopCertConfig);
+    }
+
     @Test
     public void testSm4() throws GeneralSecurityException {
         //商户sm4密钥
@@ -55,7 +71,9 @@ public class MerchantNotifyTest {
         String associatedData = null;
         once = StringUtils.defaultIfEmpty(once,null);//若接收到的once值为""（空字符串）调用sdk中的解密方法需传成null
         associatedData = StringUtils.defaultIfEmpty(associatedData,null);//若接收到的associatedData值为""（空字符串）调用sdk中的解密方法需传成null
-        String plainText = new String(Sm4Utils.decrypt_GCM_NoPadding(Encodes.decodeBase64(key),associatedData,once,cipherText));
+        final String encryptAlg = "SM4/GCM/NoPadding";
+        String plainText = YopEncryptorFactory.getEncryptor(encryptAlg).decryptFromBase64(cipherText,
+                new EncryptOptions(new YopSymmetricCredentials(key), "", encryptAlg, once, associatedData, BigParamEncryptMode.stream));
         System.out.println(plainText);
     }
 

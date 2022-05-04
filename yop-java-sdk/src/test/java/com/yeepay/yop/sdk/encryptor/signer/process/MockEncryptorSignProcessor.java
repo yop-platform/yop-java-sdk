@@ -14,10 +14,6 @@ import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsIte
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
-import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 
 import java.util.Map;
 
@@ -43,10 +39,10 @@ public class MockEncryptorSignProcessor implements YopSignProcessor {
         MockEncryptorCredentialsItem mockEncryptorCredentialsItem = (MockEncryptorCredentialsItem) credentialsItem;
         CertTypeEnum certType = credentialsItem.getCertType();
         if (certType == CertTypeEnum.SM2) {
-            return Sm2Utils.sign(content, (BCECPrivateKey) Sm2Utils.string2PrivateKey(mockEncryptorCredentialsItem.getEncryptorCertKey()));
+            return "mock sign, to be impl by yourself";
         }
         if (certType == CertTypeEnum.RSA2048) {
-            return RSA.sign(content, RSAKeyUtils.string2PrivateKey(mockEncryptorCredentialsItem.getEncryptorCertKey()), DIGEST_ALG);
+            return "mock sign, to be impl by yourself";
         }
         throw new YopClientException("UnSupported cert type:" + certType);
     }

@@ -10,8 +10,8 @@ import com.yeepay.yop.sdk.crypto.YopCertCategory;
 import com.yeepay.yop.sdk.crypto.YopCertParser;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.KeyStore;
@@ -38,7 +38,7 @@ public class YopRsa2048PrivateKeyParser extends AbstractYopPrivateKeyParser impl
         switch (certConfig.getStoreType()) {
             case STRING:
                 try {
-                    return Sm2Utils.string2PrivateKey(certConfig.getValue());
+                    return RSAKeyUtils.string2PrivateKey(certConfig.getValue());
                 } catch (Exception ex) {
                     throw new YopClientException("Failed to init private key form config file is error, " + certConfig, ex);
                 }

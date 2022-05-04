@@ -25,10 +25,9 @@ import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.EnvUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
-import com.yeepay.yop.sdk.utils.Sm2CertUtils;
+import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +82,7 @@ public class YopCertificateCache {
      * @return X509Certificate
      */
     public static X509Certificate getYopInterCertFromLocal() {
-        return CFCA_ROOT_CERT;
+        return YOP_INTER_CERT;
     }
 
     /**
@@ -216,7 +215,7 @@ public class YopCertificateCache {
     private static X509Certificate decodeCert(YopPlatformPlainCert platformCert) {
         try {
             byte[] certBytes = platformCert.getCert().getBytes(YopConstants.DEFAULT_ENCODING);
-            return Sm2CertUtils.getX509Certificate(certBytes);
+            return X509CertUtils.getX509Certificate(CertTypeEnum.SM2, certBytes);
         } catch (Exception e) {
             LOGGER.warn("fail to decode platform cert:" + platformCert + ", ex:", e);
         }
@@ -225,7 +224,7 @@ public class YopCertificateCache {
 
     private static X509Certificate verifyCert(X509Certificate platformCert) {
         try {
-            Sm2CertUtils.verifyCertificate((BCECPublicKey) YOP_INTER_CERT.getPublicKey(), platformCert);
+            X509CertUtils.verifyCertificate(CertTypeEnum.SM2, YOP_INTER_CERT.getPublicKey(), platformCert);
             return platformCert;
         } catch (Exception e) {
             LOGGER.error("error to verify platform cert:" + platformCert + ", ex:", e);
@@ -247,11 +246,11 @@ public class YopCertificateCache {
 
             // 根证书
             CFCA_ROOT_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + cfcaRootFile, CertTypeEnum.SM2);
-            Sm2CertUtils.verifyCertificate(null, CFCA_ROOT_CERT);
+            X509CertUtils.verifyCertificate(CertTypeEnum.SM2, null, CFCA_ROOT_CERT);
 
             // 中间证书
             YOP_INTER_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + yopInterFile, CertTypeEnum.SM2);
-            Sm2CertUtils.verifyCertificate((BCECPublicKey) CFCA_ROOT_CERT.getPublicKey(), YOP_INTER_CERT);
+            X509CertUtils.verifyCertificate(CertTypeEnum.SM2, CFCA_ROOT_CERT.getPublicKey(), YOP_INTER_CERT);
 
             // YOP—RSA证书
             YOP_PLATFORM_RSA_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + YOP_RSA_PLATFORM_CERT_PREFIX +

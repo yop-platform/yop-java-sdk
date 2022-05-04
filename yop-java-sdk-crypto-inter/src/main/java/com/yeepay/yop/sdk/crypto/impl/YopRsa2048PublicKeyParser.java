@@ -15,9 +15,6 @@ import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import org.apache.commons.lang3.StringUtils;
 
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-
 /**
  * title: Rsa公钥解析器<br>
  * description: 描述<br>
@@ -44,7 +41,7 @@ public class YopRsa2048PublicKeyParser extends AbstractYopPublicKeyParser implem
                 }
             case FILE_CER:
                 try {
-                    return new YopPublicKey(getX509Cert(certConfig.getValue()));
+                    return new YopPublicKey(getX509Cert(certConfig.getValue(), CertTypeEnum.RSA2048));
                 } catch (Exception e) {
                     throw new YopClientException("Can't init YOP public key! Cer file is error.", e);
                 }
@@ -56,10 +53,5 @@ public class YopRsa2048PublicKeyParser extends AbstractYopPublicKeyParser implem
     @Override
     public String parserId() {
         return StringUtils.joinWith(CharacterConstants.COMMA, YopCertCategory.PUBLIC, CertTypeEnum.RSA2048);
-    }
-
-    @Override
-    protected CertificateFactory getCertificateFactory() throws CertificateException {
-        return CertificateFactory.getInstance("X.509");
     }
 }

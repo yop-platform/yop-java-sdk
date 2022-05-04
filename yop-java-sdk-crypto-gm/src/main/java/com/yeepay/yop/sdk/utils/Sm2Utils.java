@@ -55,9 +55,7 @@ public class Sm2Utils {
     public static final int CURVE_LEN = getCurveLength(DOMAIN_PARAMS);
 
     static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
+        SmInitUtils.init();
     }
 
     /**

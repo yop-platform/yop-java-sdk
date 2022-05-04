@@ -11,13 +11,12 @@ import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfigProvider;
 import com.yeepay.yop.sdk.crypto.YopCertCategory;
 import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.utils.Encodes;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import com.yeepay.yop.sdk.utils.SmInitUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.security.PrivateKey;
-import java.security.Security;
 import java.util.List;
 
 /**
@@ -37,7 +36,7 @@ public class LoadIsvSmPrikeyTest {
     public void setUp() {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
-        Security.addProvider(new BouncyCastleProvider());
+        SmInitUtils.init();
     }
 
     @Test

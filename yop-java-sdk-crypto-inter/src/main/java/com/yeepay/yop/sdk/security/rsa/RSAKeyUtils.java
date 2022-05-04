@@ -4,7 +4,10 @@ package com.yeepay.yop.sdk.security.rsa;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.utils.Encodes;
 
-import java.security.*;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -50,13 +53,9 @@ public class RSAKeyUtils {
                     new PKCS8EncodedKeySpec(Encodes.decodeBase64(priKey)));
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new YopClientException("No such algorithm.", e);
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new YopClientException("Convert string to PrivateKey fail.", e);
         }
-    }
-
-    public static String key2String(Key key) {
-        return Encodes.encodeBase64(key.getEncoded());
     }
 
 }

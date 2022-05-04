@@ -9,20 +9,21 @@ import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.cache.YopCertificateCache;
+import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
+import com.yeepay.yop.sdk.crypto.YopCertCategory;
+import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
+import com.yeepay.yop.sdk.crypto.YopPublicKey;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.FileUtils;
-import com.yeepay.yop.sdk.utils.Sm2CertUtils;
-import com.yeepay.yop.sdk.utils.StreamUtils;
+import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
@@ -73,23 +74,22 @@ public class YopSmPlatformCredentialsLocalLoader implements YopPlatformCredentia
         LOGGER.debug("load sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
         Map<String, X509Certificate> certMap = Maps.newHashMap();
         if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
-            InputStream fis = null;
             try {
                 String filename = yopCertStore.getPath() + "/" + YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX;
-                fis = FileUtils.getResourceAsStream(filename);
-                if (null != fis) {
-                    final X509Certificate cert = Sm2CertUtils.getX509Certificate(fis);
-                    String realSerialNo = cert.getSerialNumber().toString();
-                    Sm2CertUtils.verifyCertificate((BCECPublicKey) YopCertificateCache.getYopInterCertFromLocal().getPublicKey(), cert);
-                    if (!realSerialNo.equals(serialNo)) {
-                        LOGGER.warn("wrong file name for cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
-                    }
-                    certMap.put(realSerialNo, cert);
+                final YopCertConfig yopCertConfig = new YopCertConfig();
+                yopCertConfig.setCertType(CertTypeEnum.SM2);
+                yopCertConfig.setValue(filename);
+                yopCertConfig.setStoreType(CertStoreType.FILE_CER);
+                final X509Certificate cert =
+                        ((YopPublicKey) YopCertParserFactory.getCertParser(YopCertCategory.PUBLIC, CertTypeEnum.SM2).parse(yopCertConfig)).getCert();
+                String realSerialNo = cert.getSerialNumber().toString();
+                X509CertUtils.verifyCertificate(CertTypeEnum.SM2, YopCertificateCache.getYopInterCertFromLocal().getPublicKey(), cert);
+                if (!realSerialNo.equals(serialNo)) {
+                    LOGGER.warn("wrong file name for cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
                 }
+                certMap.put(realSerialNo, cert);
             } catch (Exception e) {
                 LOGGER.error("error when load cert from local file, serialNo:" + serialNo + ", ex:", e);
-            } finally {
-                StreamUtils.closeQuietly(fis);
             }
         }
         return certMap;

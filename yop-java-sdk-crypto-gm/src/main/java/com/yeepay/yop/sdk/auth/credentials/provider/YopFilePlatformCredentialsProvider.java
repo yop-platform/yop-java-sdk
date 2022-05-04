@@ -16,7 +16,7 @@ import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.Sm2CertUtils;
+import com.yeepay.yop.sdk.utils.X509CertUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -116,7 +116,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
                     try {
                         latestCert = YopCertificateCache.loadPlatformSm2Certs(appKey, EMPTY);
                         // 临期：异步刷新
-                        if (Sm2CertUtils.checkCertDate(latestCert)) {
+                        if (X509CertUtils.checkCertDate(latestCert)) {
                             latestCert = YopCertificateCache.refreshPlatformSm2Certs(appKey, EMPTY);
                         }
                     } catch (CertificateException e) {

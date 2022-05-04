@@ -14,11 +14,13 @@ import com.yeepay.yop.sdk.security.encrypt.YopEncryptorAdaptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 import com.yeepay.yop.sdk.utils.Sm4Utils;
+import com.yeepay.yop.sdk.utils.SmInitUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.io.CipherInputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
@@ -43,8 +45,15 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
 
     public static final String SECRET_KEY_TYPE = "SM4";
 
+    // 暂时保留 商户通知用
+    public static final String ALGORITHM_NAME_GCM_NOPADDING = "SM4/GCM/NoPadding";
+
     public static final int ENCRYPT_MODE = 1;
     public static final int DECRYPT_MODE = 2;
+
+    static {
+        SmInitUtils.init();
+    }
 
     private static final ThreadLocal<Map<String, Cipher>> cipherThreadLocal = new ThreadLocal<Map<String, Cipher>>() {
         @Override
@@ -52,6 +61,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Map<String, Cipher> map = Maps.newHashMap();
             try {
                 map.put(SM4_CBC_PKCS5PADDING, Cipher.getInstance(SM4_CBC_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME));
+                map.put(ALGORITHM_NAME_GCM_NOPADDING, Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME));
             } catch (Exception e) {
                 throw new YopClientException("error happened when initial with SM4 alg", e);
             }
@@ -61,7 +71,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
 
     @Override
     public List<String> supportedAlgs() {
-        return Arrays.asList(SM4_CBC_PKCS5PADDING);
+        return Arrays.asList(SM4_CBC_PKCS5PADDING, ALGORITHM_NAME_GCM_NOPADDING);
     }
 
     @Override
@@ -122,6 +132,16 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Cipher cipher = shareMode ? cipherThreadLocal.get().get(encryptOptions.getAlg()) :
                     Cipher.getInstance(encryptOptions.getAlg(), BouncyCastleProvider.PROVIDER_NAME);
             Key sm4Key = new SecretKeySpec(key, SECRET_KEY_TYPE);
+            if (ALGORITHM_NAME_GCM_NOPADDING.equals(encryptOptions.getAlg())) {
+                String nonce = encryptOptions.getIv();
+                byte[] nonceBytes = null != nonce ? Encodes.decodeBase64(nonce) : new byte[12];
+                GCMParameterSpec spec = new GCMParameterSpec(128, nonceBytes);
+                cipher.init(mode, sm4Key, spec);
+                if (StringUtils.isNotBlank(encryptOptions.getAad())) {
+                    cipher.updateAAD(encryptOptions.getAad().getBytes(YopConstants.DEFAULT_ENCODING));
+                }
+                return cipher;
+            }
             if (StringUtils.isNotEmpty(encryptOptions.getIv())) {
                 byte[] ivBytes = Encodes.decodeBase64(encryptOptions.getIv());
                 IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);

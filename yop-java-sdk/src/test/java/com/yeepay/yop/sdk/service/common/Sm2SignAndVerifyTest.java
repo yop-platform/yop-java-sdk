@@ -13,17 +13,20 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvid
 import com.yeepay.yop.sdk.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.config.enums.CertStoreType;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.crypto.YopCertCategory;
+import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
+import com.yeepay.yop.sdk.utils.SmInitUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.security.Security;
+import java.security.PrivateKey;
 import java.util.List;
 
 /**
@@ -46,7 +49,7 @@ public class Sm2SignAndVerifyTest {
     public void setUp() {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_test_sm.json");
-        Security.addProvider(new BouncyCastleProvider());
+        SmInitUtils.init();
     }
 
     public class YopTestSigner implements YopSigner {
@@ -69,10 +72,17 @@ public class Sm2SignAndVerifyTest {
                 "content-type:application%2Fx-www-form-urlencoded\n" +
                 "x-yop-appkey:app_100800095600038\n" +
                 "x-yop-request-id:c81634dc-9404-4cbe-8ccb-27269a7ced55";
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(Sm2Utils.string2PrivateKey(priKey), null, CertTypeEnum.SM2);
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(getPrivateKey(priKey, CertTypeEnum.SM2), null, CertTypeEnum.SM2);
         String signature = YopSignProcessorFactory.getSignProcessor(pkiCredentialsItem.getCertType().name()).sign(content, pkiCredentialsItem);
         Assert.assertTrue(StringUtils.isNotEmpty(signature));
+    }
 
+    private PrivateKey getPrivateKey(String priKey, CertTypeEnum certType) {
+        final YopCertConfig yopCertConfig = new YopCertConfig();
+        yopCertConfig.setCertType(certType);
+        yopCertConfig.setValue(priKey);
+        yopCertConfig.setStoreType(CertStoreType.STRING);
+        return (PrivateKey) YopCertParserFactory.getCertParser(YopCertCategory.PRIVATE, certType).parse(yopCertConfig);
     }
 
     @Test

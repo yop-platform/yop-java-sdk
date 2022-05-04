@@ -7,12 +7,12 @@ package com.yeepay.yop.sdk.auth.signer;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.SignerTypeEnum;
+import com.yeepay.yop.sdk.utils.SmInitUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.MessageDigest;
-import java.security.Security;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +32,7 @@ public class YopSm2Signer extends AbstractYopPKISigner {
     private static final Logger LOGGER = LoggerFactory.getLogger(YopSm2Signer.class);
 
     static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
+        SmInitUtils.init();
     }
 
     @Override

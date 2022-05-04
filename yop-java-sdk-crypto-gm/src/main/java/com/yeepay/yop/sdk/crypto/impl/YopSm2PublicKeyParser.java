@@ -14,11 +14,6 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.NoSuchProviderException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 
 /**
  * title: Sm2密钥解析器<br>
@@ -46,7 +41,7 @@ public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements
                 }
             case FILE_CER:
                 try {
-                    return new YopPublicKey(getX509Cert(certConfig.getValue()));
+                    return new YopPublicKey(getX509Cert(certConfig.getValue(), CertTypeEnum.SM2));
                 } catch (Exception e) {
                     throw new YopClientException("Can't init YOP public key! Cer file is error.", e);
                 }
@@ -60,8 +55,4 @@ public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements
         return StringUtils.joinWith(CharacterConstants.COMMA, YopCertCategory.PUBLIC, CertTypeEnum.SM2);
     }
 
-    @Override
-    protected CertificateFactory getCertificateFactory() throws CertificateException, NoSuchProviderException {
-        return CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
-    }
 }

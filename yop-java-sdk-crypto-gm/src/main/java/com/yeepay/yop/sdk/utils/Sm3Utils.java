@@ -19,6 +19,11 @@ import java.util.Arrays;
  * @since 2021/1/25 3:30 下午
  */
 public class Sm3Utils {
+
+    static {
+        SmInitUtils.init();
+    }
+
     /**
      * 计算SM3摘要值
      *

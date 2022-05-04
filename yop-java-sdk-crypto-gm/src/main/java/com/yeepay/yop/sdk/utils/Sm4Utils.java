@@ -38,9 +38,7 @@ public class Sm4Utils {
     public static final String ALGORITHM_NAME_GCM_NOPADDING = "SM4/GCM/NoPadding";
 
     static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
+        SmInitUtils.init();
     }
 
     /**

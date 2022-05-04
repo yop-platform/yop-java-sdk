@@ -6,6 +6,7 @@
 package com.yeepay.yop.sdk.service.common;
 
 import com.yeepay.yop.sdk.utils.Encodes;
+import com.yeepay.yop.sdk.utils.SmInitUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.spec.OpenSSHPrivateKeySpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
@@ -20,7 +21,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.math.BigInteger;
-import java.security.*;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -43,7 +47,7 @@ public class SmD2DERTest {
 
     @Before
     public void setUp() throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
+        SmInitUtils.init();
     }
 
     @Test

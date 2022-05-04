@@ -4,13 +4,13 @@
  */
 package com.yeepay.yop.sdk.crypto;
 
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
 
 import java.io.InputStream;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 /**
@@ -33,16 +33,13 @@ public abstract class AbstractYopPublicKeyParser {
      * @throws CertificateException
      * @throws NoSuchProviderException
      */
-    protected X509Certificate getX509Cert(String certPath) throws CertificateException, NoSuchProviderException {
+    protected X509Certificate getX509Cert(String certPath, CertTypeEnum certType) throws CertificateException, NoSuchProviderException {
         InputStream certStream = null;
         try {
             certStream = FileUtils.getResourceAsStream(certPath);
-            CertificateFactory cf = getCertificateFactory();
-            return (X509Certificate) cf.generateCertificate(certStream);
+            return X509CertSupportFactory.getSupport(certType.getValue()).generate(certStream);
         } finally {
             StreamUtils.closeQuietly(certStream);
         }
     }
-
-    protected abstract CertificateFactory getCertificateFactory() throws CertificateException, NoSuchProviderException;
 }
