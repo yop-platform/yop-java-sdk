@@ -122,7 +122,7 @@ public class YopFilePlatformCredentialsProvider implements YopPlatformCredential
                     } catch (CertificateException e) {
                         LOGGER.warn("YopPlatformCredentials expired and need reload, appKey:" + appKey + ", credentialType:" + credentialType + ", ex", e);
                         // 过期：同步加载
-                        latestCert = YopCertificateCache.reLoadPlatformSm2Certs(appKey, EMPTY);
+                        latestCert = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY);
                     }
 
                     YopPlatformCredentialsHolder credentials = toCredentials(latestCert);

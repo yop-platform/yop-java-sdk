@@ -18,6 +18,7 @@ import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentials;
 import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,7 +56,7 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
         switch (certType) {
             case RSA2048:
             case SM2:
-                MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(appConfig.loadPrivateKey(certType), certType);
+                MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(Encodes.encodeKey(appConfig.loadPrivateKey(certType)), certType);
                 return new MockEncryptorCredentials(appConfig.getAppKey(), credentialsItem);
             default:
                 throw new YopClientException("CertType is illegal for YopCredentials, certType:" + certType);

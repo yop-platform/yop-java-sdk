@@ -8,12 +8,15 @@ import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfigProvider;
-import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
+import com.yeepay.yop.sdk.crypto.YopCertCategory;
+import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
+import com.yeepay.yop.sdk.utils.Encodes;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.security.PrivateKey;
 import java.security.Security;
 import java.util.List;
 
@@ -45,7 +48,8 @@ public class LoadIsvSmPrikeyTest {
         List<YopCertConfig> isvPriKeys = yopFileSdkConfig.getIsvPrivateKey(appKey);
         Assert.assertTrue(isvPriKeys.size() == 2);
         for (YopCertConfig yopCertConfig : isvPriKeys) {
-            String privateKey = YopCertConfigUtils.loadPrivateKey(yopCertConfig);
+            String privateKey = Encodes.encodeKey((PrivateKey) YopCertParserFactory.getCertParser(YopCertCategory.PRIVATE, yopCertConfig.getCertType())
+                    .parse(yopCertConfig));
             Assert.assertTrue(priKey.equals(privateKey));
         }
     }

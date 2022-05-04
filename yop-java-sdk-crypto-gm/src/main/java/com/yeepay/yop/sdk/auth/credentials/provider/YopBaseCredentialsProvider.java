@@ -12,8 +12,6 @@ import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,21 +43,9 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
             throw new YopClientException("Illegal params when buildCredentials, credentialType:" + credentialType);
         }
 
-        String privateKeyStr = appConfig.loadPrivateKey(certType);
-        if (StringUtils.isEmpty(privateKeyStr)) {
+        PrivateKey privateKey = appConfig.loadPrivateKey(certType);
+        if (null == privateKey) {
             throw new YopClientException("No cert config found when buildCredentials, certType:" + certType);
-        }
-
-        PrivateKey privateKey;
-        switch (certType) {
-            case RSA2048:
-                privateKey = RSAKeyUtils.string2PrivateKey(privateKeyStr);
-                break;
-            case SM2:
-                privateKey = Sm2Utils.string2PrivateKey(privateKeyStr);
-                break;
-            default:
-                throw new YopClientException("CertType is illegal for YopCredentials, certType:" + certType);
         }
 
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, null, certType);

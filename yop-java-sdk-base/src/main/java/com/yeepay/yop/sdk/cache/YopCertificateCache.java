@@ -11,6 +11,11 @@ import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.config.enums.CertStoreType;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.crypto.YopCertCategory;
+import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
+import com.yeepay.yop.sdk.crypto.YopPublicKey;
 import com.yeepay.yop.sdk.model.cert.YopPlatformCertQueryResult;
 import com.yeepay.yop.sdk.model.cert.YopPlatformPlainCert;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -18,18 +23,15 @@ import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import com.yeepay.yop.sdk.utils.*;
+import com.yeepay.yop.sdk.utils.EnvUtils;
+import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.yop.sdk.utils.Sm2CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.security.NoSuchProviderException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
@@ -139,7 +141,7 @@ public class YopCertificateCache {
      * @param serialNo 证书序列号，可空
      * @return 最新平台证书
      */
-    public static X509Certificate reLoadPlatformSm2Certs(String appKey, String serialNo) {
+    public static X509Certificate reloadPlatformSm2Certs(String appKey, String serialNo) {
         final String cacheKey = getCacheKey(appKey, serialNo);
         try {
             PLATFORM_CERT_CACHE.invalidate(cacheKey);
@@ -260,21 +262,12 @@ public class YopCertificateCache {
         YOP_CLIENT = YopClientBuilder.builder().build();
     }
 
-    private static X509Certificate getX509Cert(String certPath, CertTypeEnum certType) throws CertificateException, NoSuchProviderException {
-        InputStream certStream = null;
-        try {
-            certStream = FileUtils.getResourceAsStream(certPath);
-            // TODO 下沉到软算法
-            CertificateFactory cf;
-            if (CertTypeEnum.SM2.equals(certType)) {
-                cf = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
-            } else {
-                cf = CertificateFactory.getInstance("X.509");
-            }
-            return (X509Certificate) cf.generateCertificate(certStream);
-        } finally {
-            StreamUtils.closeQuietly(certStream);
-        }
+    private static X509Certificate getX509Cert(String certPath, CertTypeEnum certType) {
+        final YopCertConfig yopCertConfig = new YopCertConfig();
+        yopCertConfig.setCertType(certType);
+        yopCertConfig.setValue(certPath);
+        yopCertConfig.setStoreType(CertStoreType.FILE_CER);
+        return ((YopPublicKey) YopCertParserFactory.getCertParser(YopCertCategory.PUBLIC, certType).parse(yopCertConfig)).getCert();
     }
 
     private static LoadingCache<String, X509Certificate> initCache(Long expire, TimeUnit timeUnit) {

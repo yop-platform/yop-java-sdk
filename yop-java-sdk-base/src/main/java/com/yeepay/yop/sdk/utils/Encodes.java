@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.Key;
 
 /**
  * title: 封装各种格式的编码解码工具类<br>
@@ -141,5 +142,15 @@ public class Encodes {
         } catch (UnsupportedEncodingException e) {
             throw new YopClientException("Url Decode fails.", e);
         }
+    }
+
+    /**
+     * 对密钥做base64编码
+     *
+     * @param key 密钥
+     * @return
+     */
+    public static String encodeKey(Key key) {
+        return encodeBase64(key.getEncoded());
     }
 }
