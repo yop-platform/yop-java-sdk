@@ -60,7 +60,7 @@ public class YopCertificateCache {
     private static final String CERT_DOWNLOAD_API_PARAM_CERT_TYPE = "certType";
 
     // 证书缓存24小时
-    private static final LoadingCache<String, X509Certificate> PLATFORM_CERT_CACHE = initCache(24L, TimeUnit.HOURS);
+    private static final LoadingCache<String, List<X509Certificate>> PLATFORM_CERT_CACHE = initCache(24L, TimeUnit.HOURS);
 
     private static YopClient YOP_CLIENT;
 
@@ -101,12 +101,12 @@ public class YopCertificateCache {
      * @param serialNo 证书序列号，可空
      * @return 最新平台证书
      */
-    public static X509Certificate loadPlatformSm2Certs(String appKey, String serialNo) {
+    public static List<X509Certificate> loadPlatformSm2Certs(String appKey, String serialNo) {
         final String cacheKey = getCacheKey(appKey, serialNo);
         return loadPlatformSm2Certs(cacheKey);
     }
 
-    private static X509Certificate loadPlatformSm2Certs(String cacheKey) {
+    private static List<X509Certificate> loadPlatformSm2Certs(String cacheKey) {
         try {
             return PLATFORM_CERT_CACHE.get(cacheKey);
         } catch (Exception e) {
@@ -122,7 +122,7 @@ public class YopCertificateCache {
      * @param serialNo 证书序列号，可空
      * @return 最新平台证书
      */
-    public static X509Certificate refreshPlatformSm2Certs(String appKey, String serialNo) {
+    public static List<X509Certificate> refreshPlatformSm2Certs(String appKey, String serialNo) {
         final String cacheKey = getCacheKey(appKey, serialNo);
         try {
             // async
@@ -140,7 +140,7 @@ public class YopCertificateCache {
      * @param serialNo 证书序列号，可空
      * @return 最新平台证书
      */
-    public static X509Certificate reloadPlatformSm2Certs(String appKey, String serialNo) {
+    public static List<X509Certificate> reloadPlatformSm2Certs(String appKey, String serialNo) {
         final String cacheKey = getCacheKey(appKey, serialNo);
         try {
             PLATFORM_CERT_CACHE.invalidate(cacheKey);
@@ -155,8 +155,8 @@ public class YopCertificateCache {
         return StringUtils.isBlank(serialNo) ? appKey : StringUtils.joinWith(COMMA, appKey, serialNo);
     }
 
-    private static synchronized X509Certificate doLoad(YopCredentials<?> yopCredentials, String serialNo) {
-        X509Certificate result = null;
+    private static synchronized List<X509Certificate> doLoad(YopCredentials<?> yopCredentials, String serialNo) {
+        List<X509Certificate> result = Collections.emptyList();
         try {
             YopRequest request = new YopRequest(CERT_DOWNLOAD_API_URI, CERT_DOWNLOAD_API_METHOD);
             // 跳过验签、加解密
@@ -176,7 +176,9 @@ public class YopCertificateCache {
             // 证书验证
             List<X509Certificate> legalPlatformCerts = checkCerts(platformCerts);
 
-            result = CollectionUtils.isEmpty(legalPlatformCerts) ? null : legalPlatformCerts.get(0);
+            if (CollectionUtils.isNotEmpty(legalPlatformCerts)) {
+                result = legalPlatformCerts;
+            }
         } catch (Exception e) {
             LOGGER.error("error when load sm2 cert from remote, ex:", e);
         }
@@ -269,16 +271,16 @@ public class YopCertificateCache {
         return ((YopPublicKey) YopCertParserFactory.getCertParser(YopCertCategory.PUBLIC, certType).parse(yopCertConfig)).getCert();
     }
 
-    private static LoadingCache<String, X509Certificate> initCache(Long expire, TimeUnit timeUnit) {
+    private static LoadingCache<String, List<X509Certificate>> initCache(Long expire, TimeUnit timeUnit) {
         CacheBuilder cacheBuilder = CacheBuilder.newBuilder();
         if (expire > 0) {
             cacheBuilder.expireAfterWrite(expire, timeUnit);
         }
-        return cacheBuilder.build(new CacheLoader<String, X509Certificate>() {
+        return cacheBuilder.build(new CacheLoader<String, List<X509Certificate>>() {
             @Override
-            public X509Certificate load(String cacheKey) throws Exception {
+            public List<X509Certificate> load(String cacheKey) throws Exception {
                 LOGGER.debug("try to init platform cert for cacheKey:" + cacheKey);
-                X509Certificate platformCert = null;
+                List<X509Certificate> platformCert = Collections.emptyList();
                 try {
                     String[] split = cacheKey.split(COMMA);
                     String appKey = split[0], serialNo = split.length > 1 ? split[1] : null;

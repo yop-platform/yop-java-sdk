@@ -5,7 +5,6 @@
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.security.cert.X509Certificate;
 import java.util.Map;
@@ -32,19 +31,6 @@ public interface YopPlatformCredentialsProvider {
     YopPlatformCredentials getYopPlatformCredentials(String appKey, String serialNo);
 
     /**
-     * 重新加载默认应用下的所有平台凭证
-     */
-    Map<String, YopPlatformCredentials> reload() throws YopClientException;
-
-    /**
-     * 重新加载某个应用下的平台凭证
-     *
-     * @param appKey   指定应用
-     * @param serialNo 证书序列号(非必填，可指定加载特定证书)
-     */
-    Map<String, YopPlatformCredentials> reload(String appKey, String serialNo);
-
-    /**
      * 获取应用下某类型的最新可用平台凭证
      *
      * @param appKey 应用标识
@@ -58,5 +44,5 @@ public interface YopPlatformCredentialsProvider {
      *
      * @param certMap 序列号->平台证书
      */
-    void storeCerts(Map<String, X509Certificate> certMap);
+    void saveCertsIntoStore(Map<String, X509Certificate> certMap);
 }

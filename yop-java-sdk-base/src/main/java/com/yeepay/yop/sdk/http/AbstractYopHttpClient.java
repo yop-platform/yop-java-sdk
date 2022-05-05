@@ -13,13 +13,11 @@ import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.utils.HttpUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.Security;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -43,12 +41,6 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
 
     protected static final Set<HttpMethodName> PAYLOAD_SUPPORT_METHODS =
             ImmutableSet.of(HttpMethodName.POST, HttpMethodName.PUT, HttpMethodName.DELETE);
-
-    static {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
 
     /**
      * Client configuration options, such as proxy settings, max retries, etc.
