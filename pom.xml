@@ -10,6 +10,7 @@
     <modules>
         <module>yop-java-sdk-base</module>
         <module>yop-java-sdk</module>
+        <module>yop-java-sdk-apache</module>
         <module>yop-java-sdk-okhttp</module>
         <module>yop-java-sdk-crypto-api</module>
         <module>yop-java-sdk-crypto-inter</module>
@@ -65,6 +66,11 @@
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-apache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
