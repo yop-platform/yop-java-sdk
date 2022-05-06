@@ -10,7 +10,6 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
@@ -31,7 +30,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.http.Headers.YOP_CERT_SERIAL_NO;
@@ -52,7 +54,7 @@ import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
  */
 public class RequestEncryptor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EncryptOptionsCache.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestEncryptor.class);
 
     /**
      * 加密并重写Request
@@ -137,17 +139,17 @@ public class RequestEncryptor {
         Map<String, List<MultiPartFile>> multiPartFiles = request.getMultiPartFiles();
         encryptMultiPartParams(encryptor, finalEncryptParams, encryptParams, multiPartFiles, encryptOptions, totalEncrypt);
 
-        encryptContent(encryptor, finalEncryptParams, request, requestConfig, encryptOptions, totalEncrypt);
+        encryptContent(encryptor, finalEncryptParams, request, requestConfig, encryptOptions);
         LOGGER.debug("encryptParams finished, totalEncrypt:{}, params:{}", totalEncrypt, finalEncryptParams);
         return totalEncrypt ? YopConstants.TOTAL_ENCRYPT_PARAMS : finalEncryptParams;
     }
 
     private static void encryptContent(YopEncryptor encryptor, Set<String> finalEncryptParams, Request<? extends BaseRequest> request,
-                                       YopRequestConfig requestConfig, EncryptOptions encryptOptions, boolean totalEncrypt) {
+                                       YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
         if (null == request.getContent()) return;
 
         if (YopContentType.JSON.equals(request.getContentType())) {
-            byte[] jsonBytes = encryptJsonParams(encryptor, finalEncryptParams, requestConfig, request.getContent(), encryptOptions, totalEncrypt);
+            byte[] jsonBytes = encryptJsonParams(encryptor, finalEncryptParams, requestConfig, request.getContent(), encryptOptions);
             RestartableInputStream restartableInputStream = RestartableInputStream.wrap(jsonBytes);
             request.setContent(restartableInputStream);
             // ！！！覆盖掉原文计算的length，否则httpClient会用原文指定的length头来发送报文，导致完整性校验不通过
@@ -161,20 +163,30 @@ public class RequestEncryptor {
     }
 
     private static byte[] encryptJsonParams(YopEncryptor encryptor, Set<String> finalEncryptParams, YopRequestConfig requestConfig,
-                                            InputStream content, EncryptOptions encryptOptions, boolean totalEncrypt) {
+                                            InputStream content, EncryptOptions encryptOptions) {
         try {
             String originJson = IOUtils.toString(content, YopConstants.DEFAULT_ENCODING);
             String encryptedJson;
-            if (BooleanUtils.isFalse(totalEncrypt)) {
-                SortedSet<String> encryptPaths = resolveAllJsonPaths(originJson, requestConfig.getEncryptParams());
+            Set<String> encryptPaths = null;
+            // 默认整体加
+            boolean totalEncrypt = true;
+            if (BooleanUtils.isFalse(requestConfig.getTotalEncrypt())) {
+                encryptPaths = resolveAllJsonPaths(originJson, requestConfig.getEncryptParams());
+                // 防止设置非法的jsonpath，再次校验参数
+                totalEncrypt = JsonUtils.isTotalEncrypt(encryptPaths);
+            }
 
+            if (!totalEncrypt) {
                 DocumentContext valReadWriteCtx = JsonPath.parse(originJson);
                 for (String encryptPath : encryptPaths) {
                     try {
                         String plainVal = JsonUtils.toJsonString(valReadWriteCtx.read(encryptPath));
                         if (StringUtils.isNotBlank(plainVal)) {
-                            valReadWriteCtx.set(encryptPath, encryptor.encryptToBase64(plainVal, encryptOptions));
+                            String encrypted = encryptor.encryptToBase64(plainVal, encryptOptions);
+                            valReadWriteCtx.set(encryptPath, encrypted);
                             finalEncryptParams.add(encryptPath);
+                            LOGGER.debug("json request encrypted partly, path:{}, source:{}, target:{}, options:{}",
+                                    encryptPath, plainVal, encrypted, encryptOptions);
                         }
                     } catch (PathNotFoundException e) {
                         // ignore 加密父节点后，字节点会找不到

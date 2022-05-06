@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_JSON_CONTENT_BIZ_KEY;
@@ -91,7 +92,7 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
         }
 
         String jsonBizContent = JsonUtils.toJsonString(encryptBizContent);
-        SortedSet<String> encryptPaths = resolveAllJsonPaths(jsonBizContent, parsedEncryptProtocol.getEncryptParams());
+        Set<String> encryptPaths = resolveAllJsonPaths(jsonBizContent, parsedEncryptProtocol.getEncryptParams());
         DocumentContext valReadWriteCtx = JsonPath.parse(jsonBizContent);
         for (String path : encryptPaths) {
             try {

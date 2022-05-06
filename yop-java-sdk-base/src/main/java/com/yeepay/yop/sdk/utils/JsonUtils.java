@@ -31,8 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import static com.yeepay.yop.sdk.YopConstants.JSON_PATH_PREFIX;
-import static com.yeepay.yop.sdk.YopConstants.JSON_PATH_ROOT;
+import static com.yeepay.yop.sdk.YopConstants.*;
 
 public class JsonUtils {
 
@@ -171,12 +170,15 @@ public class JsonUtils {
      * @param jsonPathPatterns
      * @return
      */
-    public static SortedSet<String> resolveAllJsonPaths(String jsonContent, Set<String> jsonPathPatterns) {
+    public static Set<String> resolveAllJsonPaths(String jsonContent, Set<String> jsonPathPatterns) {
         DocumentContext pathReadCtx = JsonPath.using(Configuration.builder()
                 .options(Option.AS_PATH_LIST).build()).parse(jsonContent);
 
         SortedSet<String> encryptPaths = Sets.newTreeSet();
         for (String encryptParam : jsonPathPatterns) {
+            if (JSON_PATH_ROOT.contains(encryptParam)) {
+                return TOTAL_ENCRYPT_PARAMS;
+            }
             if (encryptParam.startsWith(JSON_PATH_PREFIX)) {
                 List<String> pathList = pathReadCtx.read(encryptParam);
                 if (CollectionUtils.isNotEmpty(pathList)) {
