@@ -36,8 +36,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
-import static com.yeepay.yop.sdk.http.Headers.YOP_CERT_SERIAL_NO;
-import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
+import static com.yeepay.yop.sdk.http.Headers.*;
 import static com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
 import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
@@ -104,7 +103,7 @@ public class RequestEncryptor {
         // 添加加密头
         request.addHeader(YOP_ENCRYPT, encryptHeader);
         // 添加证书序列号
-        request.addHeader(YOP_CERT_SERIAL_NO, platformSerialNo);
+        request.addHeader(YOP_SIGN_CERT_SERIAL_NO, platformSerialNo);
         return encryptHeader;
     }
 

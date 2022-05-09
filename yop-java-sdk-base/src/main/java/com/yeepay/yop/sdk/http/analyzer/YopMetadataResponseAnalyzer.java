@@ -12,6 +12,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yeepay.yop.sdk.http.Headers.YOP_SIGN_CERT_SERIAL_NO;
+
 /**
  * title: YopMetadataResponseAnalyzer<br>
  * description: HTTP response handler for YOP responses. Provides common utilities that other specialized YOP response
@@ -59,7 +61,8 @@ public class YopMetadataResponseAnalyzer implements HttpResponseAnalyzer {
         metadata.setExpires(httpResponse.getHeaderAsRfc822Date(Headers.EXPIRES));
         metadata.setLastModified(httpResponse.getHeaderAsRfc822Date(Headers.LAST_MODIFIED));
         metadata.setServer(httpResponse.getHeader(Headers.SERVER));
-        metadata.setYopCertSerialNo(httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO));
+        final String certSerialNo = httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO);
+        metadata.setYopCertSerialNo(StringUtils.defaultIfBlank(certSerialNo, httpResponse.getHeader(YOP_SIGN_CERT_SERIAL_NO)));
         metadata.setYopEncrypt(httpResponse.getHeader(Headers.YOP_ENCRYPT));
         handleYopResponseMetadata(metadata);
         return false;
