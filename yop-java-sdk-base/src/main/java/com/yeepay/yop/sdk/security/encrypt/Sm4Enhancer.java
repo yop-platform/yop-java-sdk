@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
@@ -46,8 +47,9 @@ public class Sm4Enhancer extends AbstractEncryptOptionsEnhancer {
         mainKeyOptions.setCredentials(new YopSymmetricCredentials(appKey, mainCredential));
 
         String credentialStr = ((YopSymmetricCredentials) source.getCredentials()).getCredential();
+        byte[] credentialBytes = Encodes.decodeBase64(credentialStr);
         source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM4)
-                .encryptToBase64(credentialStr, mainKeyOptions));
+                .encryptToBase64(credentialBytes, mainKeyOptions));
         source.setCredentials(new YopSymmetricCredentials(appKey, credentialStr));
         source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_SM4);
         source.enhance(YOP_ENCRYPT_OPTIONS_YOP_SM4_MAIN_CREDENTIALS, mainCredential);

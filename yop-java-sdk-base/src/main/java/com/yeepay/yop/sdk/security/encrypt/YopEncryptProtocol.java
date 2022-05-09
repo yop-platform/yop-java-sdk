@@ -124,14 +124,15 @@ public enum YopEncryptProtocol {
         Object credential = parsedEncryptOptions.getCredentials();
         String credentialsAlg = parsedEncryptOptions.getCredentialsAlg();
         if (StringUtils.isNotBlank(items[3]) && credential instanceof YopSymmetricCredentials) {
-            String encryptedCredential = items[3];
-            parsedEncryptOptions.setEncryptedCredentials(encryptedCredential);
+            String encryptedCredentialStr = items[3];
+            parsedEncryptOptions.setEncryptedCredentials(encryptedCredentialStr);
 
             try {
-                String decryptedSecretKey = YopEncryptorFactory.getEncryptor(credentialsAlg)
-                        .decryptFromBase64(encryptedCredential, new EncryptOptions(yopCredentials));
-                if (StringUtils.isNotBlank(decryptedSecretKey)) {
-                    credential = new YopSymmetricCredentials(yopCredentials.getAppKey(), decryptedSecretKey);
+                byte[] encryptedCredentialBytes = Encodes.decodeBase64(encryptedCredentialStr);
+                byte[] decryptedSecretKey = YopEncryptorFactory.getEncryptor(credentialsAlg)
+                        .decrypt(encryptedCredentialBytes, new EncryptOptions(yopCredentials));
+                if (null != decryptedSecretKey) {
+                    credential = new YopSymmetricCredentials(yopCredentials.getAppKey(), Encodes.encodeUrlSafeBase64(decryptedSecretKey));
                     parsedEncryptOptions.setCredentials(credential);
                 }
             } catch (Exception e) {

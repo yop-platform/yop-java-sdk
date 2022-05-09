@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.utils.Encodes;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_CREDENTIALS_ENCRYPT_ALG_SM2;
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
@@ -36,9 +37,10 @@ public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
         }
         YopSymmetricCredentials sourceCredentials = (YopSymmetricCredentials) source.getCredentials();
         String credentialStr = sourceCredentials.getCredential();
+        byte[] credentialBytes = Encodes.decodeBase64(credentialStr);
         final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider()
                 .getLatestAvailable(appKey, CertTypeEnum.SM2.getValue());
-        source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialStr,
+        source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialBytes,
                 new EncryptOptions(yopPlatformCredentials)));
         source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
         source.setCredentials(new YopSymmetricCredentials(appKey, credentialStr));
