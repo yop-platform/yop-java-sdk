@@ -101,5 +101,10 @@ public interface YopConstants {
     String DEFAULT_CFCA_ROOT_FILE = "cfca_root.pem";
     String DEFAULT_YOP_INTER_FILE = "yop_inter.pem";
     YopCertStore DEFAULT_LOCAL_YOP_CERT_STORE = new YopCertStore(DEFAULT_CERT_PATH);
+    // 默认过期后24小时内可用
+    long DEFAULT_PERIOD_VALID_AFTER_EXPIRE = 24 * 3600 * 1000;
+
+    // 默认过期前72小时内开始刷新
+    long DEFAULT_PERIOD_REFRESH_BEFORE_EXPIRE = 72 * 3600 * 1000;
 
 }

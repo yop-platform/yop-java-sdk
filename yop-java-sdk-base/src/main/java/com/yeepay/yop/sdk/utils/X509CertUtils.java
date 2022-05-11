@@ -4,6 +4,9 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.crypto.X509CertSupportFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
@@ -52,9 +55,11 @@ public class X509CertUtils {
      * @return true: 需要刷新，false：不需要
      */
     public static boolean checkCertDate(X509Certificate certificate) throws CertificateExpiredException, CertificateNotYetValidException {
-        // TODO 商户可配置
+        final YopCertStore yopCertStore = globalCertStoreConfig();
+        long validAfterExpire = getValidAfterExpire(yopCertStore),
+            refreshBeforeExpire = getRefreshBeforeExpire(yopCertStore);
         Date now = new Date();
-        long time24HoursAgo = now.getTime() - 24 * 3600 * 1000;
+        long time24HoursAgo = now.getTime() - validAfterExpire;
         if (time24HoursAgo > certificate.getNotAfter().getTime()) {
             throw new CertificateExpiredException("certificate expired on " + certificate.getNotAfter().getTime());
         }
@@ -62,9 +67,24 @@ public class X509CertUtils {
         if (now.getTime() < certificate.getNotBefore().getTime()) {
             throw new CertificateNotYetValidException("certificate not valid till " + certificate.getNotBefore().getTime());
         }
-        // 72小时内过期，需刷新
-        long time24HoursAfter = now.getTime() + 72 * 3600 * 1000;
-        return time24HoursAfter > certificate.getNotAfter().getTime() ;
+        long time72HoursAfter = now.getTime() + refreshBeforeExpire;
+        return time72HoursAfter > certificate.getNotAfter().getTime() ;
+    }
+
+    private static long getRefreshBeforeExpire(YopCertStore yopCertStore) {
+        if (null != yopCertStore && null != yopCertStore.getRefreshBeforeExpirePeriod() &&
+                yopCertStore.getRefreshBeforeExpirePeriod() > 0) {
+            return yopCertStore.getRefreshBeforeExpirePeriod();
+        }
+        return YopConstants.DEFAULT_PERIOD_REFRESH_BEFORE_EXPIRE;
+    }
+
+    private static long getValidAfterExpire(YopCertStore yopCertStore) {
+        if (null != yopCertStore && null != yopCertStore.getValidAfterExpirePeriod() &&
+            yopCertStore.getValidAfterExpirePeriod() > 0) {
+            return yopCertStore.getValidAfterExpirePeriod();
+        }
+        return YopConstants.DEFAULT_PERIOD_VALID_AFTER_EXPIRE;
     }
 
     public static X509Certificate getX509Certificate(CertTypeEnum certType, byte[] certBytes) throws CertificateException,
@@ -76,6 +96,10 @@ public class X509CertUtils {
     public static X509Certificate getX509Certificate(CertTypeEnum certType, InputStream is) throws CertificateException,
             NoSuchProviderException {
         return X509CertSupportFactory.getSupport(certType.getValue()).generate(is);
+    }
+
+    private static YopCertStore globalCertStoreConfig() {
+        return YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
     }
 }
 

@@ -43,12 +43,22 @@ public final class YopCertConfig implements Serializable {
         this.appKey = appKey;
     }
 
+    public YopCertConfig withAppKey(String appKey) {
+        this.appKey = appKey;
+        return this;
+    }
+
     public CertStoreType getStoreType() {
         return storeType;
     }
 
     public void setStoreType(CertStoreType storeType) {
         this.storeType = storeType;
+    }
+
+    public YopCertConfig withStoreType(CertStoreType storeType) {
+        this.storeType = storeType;
+        return this;
     }
 
     public CertTypeEnum getCertType() {
@@ -59,6 +69,11 @@ public final class YopCertConfig implements Serializable {
         this.certType = certType;
     }
 
+    public YopCertConfig withCertType(CertTypeEnum certType) {
+        this.certType = certType;
+        return this;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -67,12 +82,22 @@ public final class YopCertConfig implements Serializable {
         this.password = password;
     }
 
+    public YopCertConfig withPassword(String password) {
+        this.password = password;
+        return this;
+    }
+
     public String getValue() {
         return value;
     }
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    public YopCertConfig withValue(String value) {
+        this.value = value;
+        return this;
     }
 
     @Override

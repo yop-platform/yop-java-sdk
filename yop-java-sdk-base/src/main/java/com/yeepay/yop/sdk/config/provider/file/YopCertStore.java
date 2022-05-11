@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.config.provider.file;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -13,7 +14,7 @@ import java.io.Serializable;
 import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CERT_STORE_PATH;
 
 /**
- * title: <br>
+ * title: 平台证书外置存储<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -49,6 +50,18 @@ public class YopCertStore implements Serializable {
      */
     private String path = DEFAULT_PATH;
 
+    /**
+     * 证书过期后可用时间(毫秒)
+     */
+    @JsonProperty("valid_after_expire_period")
+    Long validAfterExpirePeriod;
+
+    /**
+     * 证书过期前开始刷新时间(毫秒)
+     */
+    @JsonProperty("refresh_before_expire_period")
+    Long refreshBeforeExpirePeriod;
+
     public Boolean getEnable() {
         return enable;
     }
@@ -71,6 +84,22 @@ public class YopCertStore implements Serializable {
 
     public void setPath(String path) {
         this.path = StringUtils.defaultString(path, DEFAULT_YOP_CERT_STORE_PATH);
+    }
+
+    public Long getValidAfterExpirePeriod() {
+        return validAfterExpirePeriod;
+    }
+
+    public void setValidAfterExpirePeriod(Long validAfterExpirePeriod) {
+        this.validAfterExpirePeriod = validAfterExpirePeriod;
+    }
+
+    public Long getRefreshBeforeExpirePeriod() {
+        return refreshBeforeExpirePeriod;
+    }
+
+    public void setRefreshBeforeExpirePeriod(Long refreshBeforeExpirePeriod) {
+        this.refreshBeforeExpirePeriod = refreshBeforeExpirePeriod;
     }
 
     @Override
