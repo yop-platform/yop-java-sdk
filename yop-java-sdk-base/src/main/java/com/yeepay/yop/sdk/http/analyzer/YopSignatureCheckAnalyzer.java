@@ -74,7 +74,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
         if (null != yopPlatformCredentials) {
             PublicKey publicKey = yopPlatformCredentials.getPublicKey(certType);
             if (null != publicKey) {
-                return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(certType), certType);
+                return new PKICredentialsItem(yopPlatformCredentials.getPublicKey(certType), certType);
             }
         }
         return null;

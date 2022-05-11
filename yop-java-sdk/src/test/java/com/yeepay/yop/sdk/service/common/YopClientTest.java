@@ -153,7 +153,7 @@ public class YopClientTest {
 
         // 编码指定appkey和密钥
         YopRequestConfig requestConfig = request.getRequestConfig();
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(CredentialsRepository.getPrivateKey(appId), null, CredentialsRepository.getSupportCertType(appId));
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(CredentialsRepository.getPrivateKey(appId), CredentialsRepository.getSupportCertType(appId));
         YopPKICredentials yopPKICredentials = new YopPKICredentials(appId, pkiCredentialsItem);
         requestConfig.setSecurityReq(securityReq);
         requestConfig.setCredentials(yopPKICredentials);

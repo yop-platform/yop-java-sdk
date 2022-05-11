@@ -72,7 +72,7 @@ public class YopSignUtils {
         if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, publicKey, digestAlgANdCertTypeMap.get(args[1]));
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(publicKey, digestAlgANdCertTypeMap.get(args[1]));
         if (!yopSignProcessor.verify(data, args[0], pkiCredentialsItem)) {
             throw new YopClientException("verify fail!");
         }
@@ -106,7 +106,7 @@ public class YopSignUtils {
         if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, null, CertTypeEnum.parse(certType));
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, CertTypeEnum.parse(certType));
         return yopSignProcessor.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcessor.getDigestAlg();
     }
 

@@ -71,7 +71,7 @@ public final class CashierSupport {
     // 获取请求收银台的sign
     private static String signature(String plainText, PrivateKey privateKey) {
         CertTypeEnum certType = resolveCertType(privateKey);
-        return YopSignProcessorFactory.getSignProcessor(certType.name()).sign(plainText, new PKICredentialsItem(privateKey, null, certType));
+        return YopSignProcessorFactory.getSignProcessor(certType.name()).sign(plainText, new PKICredentialsItem(privateKey, certType));
     }
 
     private static CertTypeEnum resolveCertType(PrivateKey privateKey) {

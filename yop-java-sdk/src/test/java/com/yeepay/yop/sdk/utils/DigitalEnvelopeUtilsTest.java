@@ -22,7 +22,7 @@ import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 
 /**
- * title: <br>
+ * title: 商户通知工具类测试<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -31,7 +31,7 @@ import java.security.spec.InvalidKeySpecException;
  * @version 1.0.0
  * @since 2021-05-08
  */
-public class MerchantNotifyTest {
+public class DigitalEnvelopeUtilsTest {
 
     @Test
     public void testRsa2048() throws InvalidKeySpecException {

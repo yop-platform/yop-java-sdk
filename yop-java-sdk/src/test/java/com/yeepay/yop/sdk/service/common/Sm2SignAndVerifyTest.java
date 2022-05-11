@@ -72,7 +72,7 @@ public class Sm2SignAndVerifyTest {
                 "content-type:application%2Fx-www-form-urlencoded\n" +
                 "x-yop-appkey:app_100800095600038\n" +
                 "x-yop-request-id:c81634dc-9404-4cbe-8ccb-27269a7ced55";
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(getPrivateKey(priKey, CertTypeEnum.SM2), null, CertTypeEnum.SM2);
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(getPrivateKey(priKey, CertTypeEnum.SM2), CertTypeEnum.SM2);
         String signature = YopSignProcessorFactory.getSignProcessor(pkiCredentialsItem.getCertType().name()).sign(content, pkiCredentialsItem);
         Assert.assertTrue(StringUtils.isNotEmpty(signature));
     }
@@ -90,7 +90,7 @@ public class Sm2SignAndVerifyTest {
         String serialNo = "275550212193";
         String signature = "XoIZA9Z1YKr1lraNuq62CoBOdmvr3Ae2Q9Fu0na8ugKvfDjoBWIEZ8z65BiXG1Ju5qPQ1Xn+RJALBx0bsQ3AEw==";
         YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(CertTypeEnum.SM2), CertTypeEnum.SM2);
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(yopPlatformCredentials.getPublicKey(CertTypeEnum.SM2), CertTypeEnum.SM2);
         String content = "{\"requestId\":\"3dd63639-bf35-427b-9110-f691ef00c20a\",\"code\":\"40042\",\"message\":\"非法的参数\",\"subCode\":\"isv.service.not-exists\",\"subMessage\":\"服务不存在\",\"docUrl\":\"http://10.151.31.146/docs/v2/platform/sdk_guide/error_code/index.html#platform_isv_service_not-exists\"}";
         YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(CertTypeEnum.SM2.name());
         boolean verifySuccess = yopSignProcessor.verify(content, signature, pkiCredentialsItem);
