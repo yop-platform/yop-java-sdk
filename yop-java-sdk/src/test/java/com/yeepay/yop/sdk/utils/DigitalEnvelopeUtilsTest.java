@@ -15,6 +15,7 @@ import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.security.GeneralSecurityException;
@@ -34,6 +35,7 @@ import java.security.spec.InvalidKeySpecException;
 public class DigitalEnvelopeUtilsTest {
 
     @Test
+    @Ignore
     public void testRsa2048() throws InvalidKeySpecException {
         String cipherText ="加密的报文";
         String privateKeyStr = "商户的私钥";

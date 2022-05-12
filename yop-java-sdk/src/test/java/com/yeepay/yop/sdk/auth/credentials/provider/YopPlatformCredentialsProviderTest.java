@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 public class YopPlatformCredentialsProviderTest {
 
     @Test
+    @Ignore
     public void testPro() {
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
         final CredentialsItem rsaPlatformCredentials = provider.getYopPlatformCredentials("", YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();

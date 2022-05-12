@@ -17,6 +17,7 @@ import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.security.PrivateKey;
@@ -31,6 +32,7 @@ import java.security.PrivateKey;
  * @version 1.0.0
  * @since 2021/12/8
  */
+@Ignore
 public class ExampleTest {
 
     @Test

@@ -2,19 +2,19 @@ package com.yeepay.yop.sdk.service.common;
 
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
-
-import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_APPKEY;
 
 /**
  * title: <br>
@@ -100,14 +100,11 @@ public class YopClientTest {
 
         // 请求级配置
         YopRequestConfig requestConfig = new YopRequestConfig();
-        requestConfig.setSecurityReq(securityReq);
+        requestConfig.setSecurityReq(securityReq).setAppKey(appId);
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
         YopResponse response = yopClient.request(request);
-        System.out.println(response);
-
-        YopCredentialsProviderRegistry.getProvider().removeConfig(null);
-        YopSdkConfigProviderRegistry.getProvider().removeConfig(YOP_DEFAULT_APPKEY);
+        Assert.assertNotNull(response);
     }
 
     @Test
@@ -127,7 +124,7 @@ public class YopClientTest {
         System.out.println(response);
     }
 
-    @Test
+    @Test(expected = YopServiceException.class)
     public void requestWithSingleAppNotExists() {
         System.setProperty("yop.sdk.config.env", "qa");
         // 使用该配置文件初始化SDK，且配置文件中有appkey和密钥
@@ -138,10 +135,10 @@ public class YopClientTest {
         YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
 
         YopRequestConfig requestConfig = request.getRequestConfig();
-        requestConfig.setSecurityReq(securityReq);
+        requestConfig.setAppKey("app_10085525305");
 
         YopResponse response = yopClient.request(request);
-        System.out.println(response);
+        Assert.assertNotNull(response);
     }
 
     @Test
@@ -165,36 +162,47 @@ public class YopClientTest {
     @Test
     public void requestWithCustomFixedCredentialsProvider() {
         System.setProperty("yop.sdk.config.env", "qa");
-        CustomFixedCredentialsProvider credentialsProvider = new CustomFixedCredentialsProvider();
-        YopCredentialsProviderRegistry.registerProvider(credentialsProvider);
+        final YopCredentialsProvider oldProvider = YopCredentialsProviderRegistry.getProvider();
+        try {
+            CustomFixedCredentialsProvider credentialsProvider = new CustomFixedCredentialsProvider();
+            YopCredentialsProviderRegistry.registerProvider(credentialsProvider);
 
-        YopClient yopClient = YopClientBuilder.builder().build();
+            YopClient yopClient = YopClientBuilder.builder().build();
 
-        YopRequestConfig requestConfig = new YopRequestConfig();
-        requestConfig.setAppKey(appId);
-        requestConfig.setSecurityReq(securityReq);
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
+            YopRequestConfig requestConfig = new YopRequestConfig();
+            requestConfig.setAppKey(appId);
+            requestConfig.setSecurityReq(securityReq);
+            YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
+            YopResponse response = yopClient.request(request);
+            Assert.assertNotNull(response);
+        } finally {
+            YopCredentialsProviderRegistry.registerProvider(oldProvider);
+        }
+
     }
 
     @Test
     public void requestWithCustomCachedCredentialsProvider() {
         System.setProperty("yop.sdk.config.env", "qa");
-        CustomCachedCredentialsProvider credentialsProvider = new CustomCachedCredentialsProvider();
-        YopCredentialsProviderRegistry.registerProvider(credentialsProvider);
+        final YopCredentialsProvider oldProvider = YopCredentialsProviderRegistry.getProvider();
+        try {
+            CustomCachedCredentialsProvider credentialsProvider = new CustomCachedCredentialsProvider();
+            YopCredentialsProviderRegistry.registerProvider(credentialsProvider);
 
-        YopClient yopClient = YopClientBuilder.builder().build();
+            YopClient yopClient = YopClientBuilder.builder().build();
 
-        // 编码指定appkey
-        YopRequestConfig requestConfig = new YopRequestConfig();
-        requestConfig.setAppKey(appId);
-        requestConfig.setSecurityReq(securityReq);
-        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
+            // 编码指定appkey
+            YopRequestConfig requestConfig = new YopRequestConfig();
+            requestConfig.setAppKey(appId);
+            requestConfig.setSecurityReq(securityReq);
+            YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST", requestConfig);
 
-        YopResponse response = yopClient.request(request);
-        System.out.println(response);
+            YopResponse response = yopClient.request(request);
+            Assert.assertNotNull(response);
+        } finally {
+            YopCredentialsProviderRegistry.registerProvider(oldProvider);
+        }
     }
 
 }

@@ -24,6 +24,7 @@ import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.results.RunResult;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  * @since 2022/1/13
  */
 @State(value = Scope.Group)
+@Ignore
 public class YopClientBenchmarkTest {
 
     private static final YopClient yopClient;

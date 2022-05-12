@@ -22,6 +22,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
+import org.junit.Ignore;
 
 import javax.net.ssl.SSLContext;
 import java.util.concurrent.ExecutorService;
@@ -30,7 +31,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * title: <br>
+ * title: apache连接池测试<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -43,7 +44,7 @@ public class HttpTest {
 
     private static CloseableHttpClient httpClient;
 
-    private static String basePath = "http://172.18.162.165:8080";
+    private static String basePath = "https://open.yeepay.com";
     private static int maxTotal = 5, maxPerRoute = 5, soTimeout = 5000, conTimeout = 1000;
 
     static {
@@ -96,12 +97,12 @@ public class HttpTest {
             }
         });
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10000; i++) {
             final int suffix = i;
             thread.execute(() -> remoteRequest("子线程(" + suffix + ")", suffix % 100 != 3));
         }
 
-        thread.awaitTermination(10, TimeUnit.MINUTES);
+        thread.awaitTermination(3, TimeUnit.MINUTES);
         thread.shutdownNow();
 
         remoteRequest("主线程", false);
@@ -118,7 +119,8 @@ public class HttpTest {
             if (statusCode >= HttpStatus.SC_BAD_REQUEST) {
                 throw new RuntimeException("http code:" + statusCode + ", reason:" + statusLine.getReasonPhrase());
             }
-            result = EntityUtils.toString(response.getEntity());
+            EntityUtils.toString(response.getEntity());
+            result = "成功";
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

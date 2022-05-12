@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
-import org.junit.Before;
+import com.yeepay.yop.sdk.BaseTest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -15,16 +15,9 @@ import static org.junit.Assert.assertEquals;
  * @version 1.0.0
  * @since 2021/3/24 14:39
  */
-public class YopFileSdkConfigProviderTest {
+public class YopFileSdkConfigProviderTest extends BaseTest {
 
     private YopFileSdkConfigProvider yopFileSdkConfigProvider = new YopFileSdkConfigProvider();
-
-    @Before
-    public void setUp() throws Exception {
-        System.clearProperty(YopFileSdkConfigProvider.SDK_CONFIG_DIR_PROPERTY_KEY);
-        System.clearProperty(YopFileSdkConfigProvider.SDK_CONFIG_ENV_PROPERTY_KEY);
-        System.clearProperty(YopFileSdkConfigProvider.SDK_CONFIG_FILE_PROPERTY_KEY);
-    }
 
     @Test
     public void loadSdkConfigDir() {

@@ -1,7 +1,5 @@
 {
   "app_key": "app_15958159879157110002",
-  "server_root": "http://ycetest.yeepay.com:30228/yop-center",
-  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
   "isv_private_key": [
     {
       "store_type": "string",
@@ -15,11 +13,5 @@
       "cert_type": "SM4",
       "value": "JnhWelxyAaFlszR1ER2Upw=="
     }
-  ],
-  "http_client": {
-    "connect_timeout": 10000,
-    "read_timeout": 30000,
-    "max_conn_total": 200,
-    "max_conn_per_route": 100
-  }
+  ]
 }

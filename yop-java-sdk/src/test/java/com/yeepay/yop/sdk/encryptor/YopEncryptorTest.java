@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.yeepay.yop.sdk.BaseTest;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
@@ -38,16 +39,17 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.security.PrivateKey;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
@@ -67,7 +69,7 @@ import static org.junit.Assert.*;
  * @version 1.0.0
  * @since 2022/4/13
  */
-public class YopEncryptorTest {
+public class YopEncryptorTest extends BaseTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopEncryptorTest.class);
 
@@ -83,24 +85,27 @@ public class YopEncryptorTest {
     String specialCharacters;
     YopClient yopClient;
 
-    @Before
-    public void init() throws ExecutionException, InterruptedException, IOException {
-        System.setProperty("yop.sdk.config.env", "qa");
-        System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
-        yopCredentials = YopCredentialsProviderRegistry.getProvider().getCredentials(appKey, credentialType);
-        sm4Encryptor = YopEncryptorFactory.getEncryptor(SM4_CBC_PKCS5PADDING);
-        sm2Encryptor = YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
-        sm4Options = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING, null);
-        sm4OptionsEnhanced = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING,
-                Collections.singletonList(new Sm4Enhancer(appKey)));
-        sm2OptionsEnhanced = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING,
-                Collections.singletonList(new Sm2Enhancer(appKey)));
-        encryptOptions = sm2OptionsEnhanced.get();
-        specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), DEFAULT_ENCODING);
-        yopClient = YopClientBuilder.builder().withEndpoint("http://qak8s.iaas.yp:30228/yop-center")
-                .withYosEndpoint("http://qak8s.iaas.yp:30228/yop-center").build();
+    public YopEncryptorTest() {
+        try {
+            System.setProperty("yop.sdk.config.env", "qa");
+            System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
+            yopCredentials = YopCredentialsProviderRegistry.getProvider().getCredentials(appKey, credentialType);
+            sm4Encryptor = YopEncryptorFactory.getEncryptor(SM4_CBC_PKCS5PADDING);
+            sm2Encryptor = YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
+            sm4Options = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING, null);
+            sm4OptionsEnhanced = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING,
+                    Collections.singletonList(new Sm4Enhancer(appKey)));
+            sm2OptionsEnhanced = sm4Encryptor.initOptions(SM4_CBC_PKCS5PADDING,
+                    Collections.singletonList(new Sm2Enhancer(appKey)));
+            encryptOptions = sm2OptionsEnhanced.get();
+            specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), DEFAULT_ENCODING);
+            yopClient = YopClientBuilder.builder().withEndpoint("http://qak8s.iaas.yp:30228/yop-center")
+                    .withYosEndpoint("http://qak8s.iaas.yp:30228/yop-center").build();
 //        yopClient = YopClientBuilder.builder().withEndpoint("http://localhost:8064/yop-center")
 //                .withYosEndpoint("http://localhost:8064/yop-center").build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test

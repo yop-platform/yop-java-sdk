@@ -40,11 +40,12 @@ public class CredentialsRepository {
         privateKeyMap.put("yop-boss", getPrivateKey(privateKeyStrMap.get("yop-boss"), CertTypeEnum.RSA2048));
         supportCertMap.put("yop-boss", CertTypeEnum.RSA2048);
         securityMap.put("yop-boss", "YOP-RSA2048-SHA256");
-        privateKeyStrMap.put("app_100800095600032", "MIICSwIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBVTCCAVECAQEEIO74yo+DcjHd6ekJWNsWDp+Eq3reC64S77sjKOq+nZQ4oIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQGhRANCAARnSWJyCS5vEs2EWa0A8TmRpXHjpHh1zuhy9NXKrriKp+H23jXglBKZNPZyoJaevaAzputndyRz5i+ZCk0vhNVg");
-        privateKeyMap.put("app_100800095600032", getPrivateKey(privateKeyStrMap.get("app_100800095600032"), CertTypeEnum.SM2));
-        supportCertMap.put("app_100800095600032", CertTypeEnum.SM2);
-        securityMap.put("app_100800095600032", "YOP-SM2-SM3");
-        encryptKeyStrMap.put("app_100800095600032", "YURqdEFFY2NSNDFyQjE2cA==");
+
+        privateKeyStrMap.put("app_15958159879157110002", "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgB0DK/uNgBEVHoM4QSbVW5rZ6Jkni6XEZfqVE33hiq2SgCgYIKoEcz1UBgi2hRANCAAQQnyX/PqhRYBDdw2uK07m5GNyaBeXbxIPwaA4kxTj6tCSFsTkh2x2tJ4OyVzbJThSmUsvu8do2dWvSRml9tziw");
+        privateKeyMap.put("app_15958159879157110002", getPrivateKey(privateKeyStrMap.get("app_15958159879157110002"), CertTypeEnum.SM2));
+        supportCertMap.put("app_15958159879157110002", CertTypeEnum.SM2);
+        securityMap.put("app_15958159879157110002", "YOP-SM2-SM3");
+        encryptKeyStrMap.put("app_15958159879157110002", "JnhWelxyAaFlszR1ER2Upw==");
     }
 
     private static PrivateKey getPrivateKey(String priKey, CertTypeEnum certType) {

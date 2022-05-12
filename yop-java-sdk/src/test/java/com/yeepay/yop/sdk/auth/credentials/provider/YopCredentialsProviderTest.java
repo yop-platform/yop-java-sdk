@@ -29,13 +29,14 @@ public class YopCredentialsProviderTest {
         System.setProperty("yop.sdk.config.env", "qa_single_default");
         final YopCredentials<?> credentialsDefault1 = credentialsProvider.getCredentials(null, CertTypeEnum.SM2.getValue());
         final YopCredentials<?> credentialsDefault2 = credentialsProvider.getCredentials(YopConstants.YOP_DEFAULT_APPKEY, "SM2");
-        assert credentialsDefault1.getAppKey().equals("app_100800095600032");
+        assert credentialsDefault1.getAppKey().equals("app_15958159879157110002");
         assert credentialsDefault1 instanceof YopPKICredentials
                 && null != ((YopPKICredentials) credentialsDefault1).getCredential().getPrivateKey();
 
-        assert credentialsDefault2.getAppKey().equals("app_100800095600032");
+        assert credentialsDefault2.getAppKey().equals("app_15958159879157110002");
         assert credentialsDefault2 instanceof YopPKICredentials
                 && null != ((YopPKICredentials) credentialsDefault2).getCredential().getPrivateKey();
+        System.clearProperty("yop.sdk.config.env");
     }
 
     @Test
@@ -45,5 +46,6 @@ public class YopCredentialsProviderTest {
         assert credentials.getAppKey().equals("app_100800095600032");
         assert credentials instanceof YopPKICredentials
                 && null != ((YopPKICredentials) credentials).getCredential().getPrivateKey();
+        System.clearProperty("yop.sdk.config.env");
     }
 }

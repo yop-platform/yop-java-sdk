@@ -45,10 +45,9 @@ public class Sm2SignAndVerifyTest {
 
     private static final String appKey = "app_100800095600038";
 
-    @Before
-    public void setUp() {
+    static {
         System.setProperty("yop.sdk.http", "true");
-        System.setProperty("yop.sdk.config.file", "config/yop_sdk_config_test_sm.json");
+        System.setProperty("yop.sdk.config.env", "qa");
         SmInitUtils.init();
     }
 
@@ -95,6 +94,5 @@ public class Sm2SignAndVerifyTest {
         boolean verifySuccess = yopSignProcessor.verify(content, signature, yopPlatformCredentials.getCredential());
         Assert.assertTrue(verifySuccess);
     }
-
 
 }
