@@ -28,6 +28,13 @@ import java.util.Map;
 public interface Request<T extends BaseRequest> {
 
     /**
+     * current request-id
+     *
+     * @return
+     */
+    String getRequestId();
+
+    /**
      * http content-type
      *
      * @return the YopContentType

@@ -36,7 +36,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
-import static com.yeepay.yop.sdk.http.Headers.*;
+import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
+import static com.yeepay.yop.sdk.http.Headers.YOP_SIGN_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
 import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
@@ -88,6 +89,9 @@ public class RequestEncryptor {
      */
     public static String buildEncryptHeader(Request<? extends BaseRequest> request, Set<String> encryptHeaders,
                                             Set<String> encryptParams, EncryptOptions encryptOptions) throws UnsupportedEncodingException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("request encrypted, requestId:{}, headers:{}, params:{}", request.getRequestId(), encryptHeaders, encryptParams);
+        }
         String platformSerialNo = (String) encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO);
         String encryptHeader = YOP_ENCRYPT_PROTOCOL_V1_REQ.getProtocolPrefix() + SLASH +
                 platformSerialNo + SLASH +

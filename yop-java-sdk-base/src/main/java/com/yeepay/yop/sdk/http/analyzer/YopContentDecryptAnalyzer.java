@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_JSON_CONTENT_BIZ_KEY;
 import static com.yeepay.yop.sdk.YopConstants.YOP_JSON_CONTENT_FORMAT;
@@ -60,6 +59,10 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
         YopEncryptProtocol.Inst parsedEncryptProtocol = parseEncryptProtocol(metadata.getYopEncrypt(), context.getYopCredentials(), reqEncryptOptions);
         if (null == parsedEncryptProtocol) return false;
 
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("response encrypted, requestId:{}, headers:{}, params:{}", metadata.getYopRequestId(),
+                    parsedEncryptProtocol.getEncryptHeaders(), parsedEncryptProtocol.getEncryptParams());
+        }
         EncryptOptions respEncryptOptions = parsedEncryptProtocol.getEncryptOptions();
         YopHttpResponse httpResponse = context.getResponse();
         decryptHeaders(httpResponse, parsedEncryptProtocol, context.getEncryptor(), respEncryptOptions);

@@ -16,7 +16,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * title: YopRequest序列化器<br>
@@ -51,7 +50,6 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
                 internalRequest.addHeader(key, customerHeaders.get(key));
             }
         }
-        internalRequest.addHeader(Headers.YOP_REQUEST_ID, UUID.randomUUID().toString());
 
         if (!request.getParameters().isEmpty()) {
             for (Map.Entry<String, Collection<String>> entry : request.getParameters().asMap().entrySet()) {

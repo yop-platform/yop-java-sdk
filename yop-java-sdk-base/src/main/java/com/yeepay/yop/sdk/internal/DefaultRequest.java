@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.internal;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Default implementation of the {@linkplain com.yeepay.yop.sdk.internal.Request} interface.
@@ -21,6 +23,11 @@ import java.util.Map;
  * Callers shouldn't ever interact directly with objects of this class.
  */
 public class DefaultRequest<T extends BaseRequest> implements Request<T> {
+
+    /**
+     * the requestId per request
+     */
+    private String requestId;
 
     /**
      * the http content-type
@@ -101,6 +108,8 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     public DefaultRequest(T originalRequest, String serviceName) {
         this.serviceName = serviceName;
         this.originalRequest = originalRequest;
+        this.requestId = UUID.randomUUID().toString();
+        this.headers.put(Headers.YOP_REQUEST_ID, this.requestId);
     }
 
     /**
@@ -130,7 +139,14 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
      */
     @Override
     public void addHeader(String name, String value) {
-        headers.put(name, value);
+        if (!Headers.YOP_REQUEST_ID.equals(name)) {
+            headers.put(name, value);
+        }
+    }
+
+    @Override
+    public String getRequestId() {
+        return requestId;
     }
 
     @Override
