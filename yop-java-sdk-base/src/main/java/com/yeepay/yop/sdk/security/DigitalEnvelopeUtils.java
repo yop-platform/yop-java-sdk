@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
@@ -107,12 +108,11 @@ public class DigitalEnvelopeUtils {
         String signToBase64 = StringUtils.substringAfterLast(data, "$");
 
         //验证签名
-        PublicKey publicKey = YopPlatformCredentialsProviderRegistry.getProvider().
-                getLatestAvailable(appKey, certType.getValue()).
-                getPublicKey(certType);
+        YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
+                getLatestAvailable(appKey, certType.getValue());
 
         final YopSignProcessor yopSignProcess = YopSignProcessorFactory.getSignProcessor(SIGNER_MAP.get(digestAlg));
-        boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, new PKICredentialsItem(publicKey, certType));
+        boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, platformCredentials.getCredential());
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
         }

@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.auth.credentials;
 
 /**
- * title: Yop商户凭证<br/>
+ * title: Yop客户端凭证<br/>
  * description: <br/>
  * Copyright: Copyright (c) 2018<br/>
  * Company: 易宝支付(YeePay)<br/>

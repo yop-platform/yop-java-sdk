@@ -4,12 +4,6 @@
  */
 package com.yeepay.yop.sdk.auth.credentials;
 
-import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
-
-import java.security.PublicKey;
-import java.util.Map;
-
 /**
  * title: <br>
  * description: 描述<br>
@@ -25,7 +19,8 @@ public class YopPlatformCredentialsHolder implements YopPlatformCredentials {
     private static final long serialVersionUID = -1L;
 
     private String serialNo;
-    private Map<CertTypeEnum, PublicKey> credentialsMap = Maps.newHashMap();
+    private String appKey;
+    private CredentialsItem credential;
 
     @Override
     public String getSerialNo() {
@@ -33,8 +28,13 @@ public class YopPlatformCredentialsHolder implements YopPlatformCredentials {
     }
 
     @Override
-    public PublicKey getPublicKey(CertTypeEnum certType) {
-        return credentialsMap.get(certType);
+    public String getAppKey() {
+        return appKey;
+    }
+
+    @Override
+    public CredentialsItem getCredential() {
+        return credential;
     }
 
     public YopPlatformCredentialsHolder withSerialNo(String serialNo) {
@@ -42,13 +42,13 @@ public class YopPlatformCredentialsHolder implements YopPlatformCredentials {
         return this;
     }
 
-    public YopPlatformCredentialsHolder withPublicKey(CertTypeEnum certType, PublicKey publicKey) {
-        credentialsMap.put(certType, publicKey);
+    public YopPlatformCredentialsHolder withAppKey(String appKey) {
+        this.appKey = appKey;
         return this;
     }
 
-    public YopPlatformCredentialsHolder withPublicKeys(Map<CertTypeEnum, PublicKey> publicKeys) {
-        credentialsMap.putAll(publicKeys);
+    public YopPlatformCredentialsHolder withCredentials(CredentialsItem credential) {
+        this.credential = credential;
         return this;
     }
 }

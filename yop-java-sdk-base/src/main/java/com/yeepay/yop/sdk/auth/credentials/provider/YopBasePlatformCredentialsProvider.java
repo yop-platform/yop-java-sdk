@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.cache.YopCertificateCache;
@@ -59,11 +60,11 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
         if (null == foundCredentials) {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                foundCredentials = toCredentials(CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
+                foundCredentials = toCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
             } else {
                 foundCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == foundCredentials) {
-                    foundCredentials = toCredentials(CertTypeEnum.SM2, loadRemoteSm2Cert(appKey, serialNo));
+                    foundCredentials = toCredentials(appKey, CertTypeEnum.SM2, loadRemoteSm2Cert(appKey, serialNo));
                 }
             }
         }
@@ -146,7 +147,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
                         latestCert = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY).get(0);
                     }
 
-                    YopPlatformCredentialsHolder credentials = toCredentials(CertTypeEnum.SM2, latestCert);
+                    YopPlatformCredentials credentials = toCredentials(appKey, CertTypeEnum.SM2, latestCert);
                     credentialsMap.put(credentials.getSerialNo(), credentials);
                     return credentials;
                 case RSA2048:
@@ -161,15 +162,15 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     }
 
     /**
-     * 将证书转换为凭证
+     * 将证书转换为凭证(加密机需要实现)
      *
      * @param certType
      * @param cert
      * @return
      */
-    protected YopPlatformCredentialsHolder toCredentials(CertTypeEnum certType, X509Certificate cert) {
+    protected YopPlatformCredentials toCredentials(String appKey, CertTypeEnum certType, X509Certificate cert) {
         if (null == cert) return null;
-        return new YopPlatformCredentialsHolder().withPublicKey(certType, cert.getPublicKey())
-                .withSerialNo(cert.getSerialNumber().toString());
+        return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType))
+                .withSerialNo(cert.getSerialNumber().toString()).withAppKey(appKey);
     }
 }

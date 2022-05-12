@@ -4,10 +4,10 @@
  */
 package com.yeepay.yop.sdk.security.encrypt.impl;
 
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptorAdaptor;
 import com.yeepay.yop.sdk.utils.SmInitUtils;
@@ -68,8 +68,9 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
     public byte[] encrypt(byte[] plain, EncryptOptions options) {
         try {
             SM2Engine engine = engineThreadLocal.get();
-            ECPublicKeyParameters pubKeyParameters = convertPublicKeyToParameters((BCECPublicKey)
-                    ((YopPlatformCredentials) options.getCredentials()).getPublicKey(CertTypeEnum.SM2));
+            ECPublicKeyParameters pubKeyParameters = convertPublicKeyToParameters(
+                    (BCECPublicKey) ((PKICredentialsItem) ((YopPlatformCredentials)
+                            options.getCredentials()).getCredential()).getPublicKey());
             ParametersWithRandom pwr = new ParametersWithRandom(pubKeyParameters, new SecureRandom());
             engine.init(true, pwr);
             return engine.processBlock(plain, 0, plain.length);

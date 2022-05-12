@@ -61,7 +61,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
 
         if (MapUtils.isNotEmpty(localCerts)) {
             if (localCerts.containsKey(serialNo)) {
-                return toCredentials(CertTypeEnum.SM2, localCerts.get(serialNo));
+                return toCredentials(appKey, CertTypeEnum.SM2, localCerts.get(serialNo));
             }
         }
         LOGGER.debug("no available platform cert from store, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);

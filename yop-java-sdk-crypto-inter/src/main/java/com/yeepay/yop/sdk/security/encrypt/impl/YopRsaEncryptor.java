@@ -5,10 +5,10 @@
 package com.yeepay.yop.sdk.security.encrypt.impl;
 
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptorAdaptor;
 import com.yeepay.yop.sdk.security.rsa.RSA;
@@ -61,7 +61,8 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
     @Override
     public byte[] encrypt(byte[] plain, EncryptOptions options) {
         try {
-            return RSA.encrypt(plain, ((YopPlatformCredentials) options.getCredentials()).getPublicKey(CertTypeEnum.RSA2048));
+            return RSA.encrypt(plain, ((PKICredentialsItem) ((YopPlatformCredentials)
+                    options.getCredentials()).getCredential()).getPublicKey());
         } catch (Throwable e) {
             throw new YopClientException("error happened when encrypt with RSA alg", e);
         }

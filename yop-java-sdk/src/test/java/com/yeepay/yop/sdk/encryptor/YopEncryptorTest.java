@@ -16,8 +16,6 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegist
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.crypto.YopCertCategory;
-import com.yeepay.yop.sdk.crypto.YopCertParser;
-import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.MultiPartFile;

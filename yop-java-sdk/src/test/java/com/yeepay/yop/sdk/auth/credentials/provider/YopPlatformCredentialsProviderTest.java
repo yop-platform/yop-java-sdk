@@ -4,10 +4,12 @@
  */
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.junit.Test;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -25,11 +27,13 @@ public class YopPlatformCredentialsProviderTest {
     @Test
     public void testPro() {
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
-        assertNotNull(provider.getYopPlatformCredentials("",
-                YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getPublicKey(CertTypeEnum.RSA2048));
+        final CredentialsItem rsaPlatformCredentials = provider.getYopPlatformCredentials("", YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
+        assertNotNull(rsaPlatformCredentials);
+        assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        assertNotNull(provider.getYopPlatformCredentials("", "289782695477")
-                .getPublicKey(CertTypeEnum.SM2));
+        final CredentialsItem sm2PlatformCredentials = provider.getYopPlatformCredentials("", "289782695477").getCredential();
+        assertNotNull(sm2PlatformCredentials);
+        assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }
 
     @Test
@@ -37,10 +41,13 @@ public class YopPlatformCredentialsProviderTest {
         System.setProperty("yop.sdk.config.env", "qa");
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
-        assertNotNull(provider.getYopPlatformCredentials("",
-                YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getPublicKey(CertTypeEnum.RSA2048));
+        final CredentialsItem rsaPlatformCredentials = provider.getYopPlatformCredentials("",
+                YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
+        assertNotNull(rsaPlatformCredentials);
+        assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        assertNotNull(provider.getYopPlatformCredentials("", "275550212193")
-                .getPublicKey(CertTypeEnum.SM2));
+        final CredentialsItem sm2PlatformCredentials = provider.getYopPlatformCredentials("", "275550212193").getCredential();
+        assertNotNull(sm2PlatformCredentials);
+        assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }
 }
