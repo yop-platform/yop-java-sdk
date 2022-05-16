@@ -32,7 +32,7 @@ public abstract class YopEncryptorAdaptor implements YopEncryptor {
 
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
             3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
-            new ThreadFactoryBuilder().setNameFormat("yop-encryptor-task-%d").build(), new ThreadPoolExecutor.CallerRunsPolicy());
+            new ThreadFactoryBuilder().setNameFormat("yop-encryptor-task-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
     public Future<EncryptOptions> initOptions(String encryptAlg, List<EncryptOptionsEnhancer> enhancers) {
