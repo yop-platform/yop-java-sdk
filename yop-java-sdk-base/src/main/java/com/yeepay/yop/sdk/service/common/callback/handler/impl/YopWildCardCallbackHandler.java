@@ -29,7 +29,7 @@ public class YopWildCardCallbackHandler implements YopCallbackHandler {
 
     @Override
     public void handle(YopCallback callback) {
-        LOGGER.warn("you need to handle the new yop event, received: {}.", callback);
+        LOGGER.warn("you need to handle the new yop callback, received: {}.", callback);
         throw new YopClientException("no YopCallbackHandler found");
     }
 
