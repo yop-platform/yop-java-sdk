@@ -45,7 +45,7 @@ public class YopSm4CallbackProtocol extends AbstractYopCallbackProtocol {
     /**
      * 密钥类型
      */
-    private CertTypeEnum certTypeEnum = CertTypeEnum.SM4;
+    private CertTypeEnum certType = CertTypeEnum.SM4;
 
     /**
      * appKey
@@ -118,8 +118,8 @@ public class YopSm4CallbackProtocol extends AbstractYopCallbackProtocol {
         return this;
     }
 
-    public YopSm4CallbackProtocol setCertTypeEnum(CertTypeEnum certTypeEnum) {
-        this.certTypeEnum = certTypeEnum;
+    public YopSm4CallbackProtocol setCertType(CertTypeEnum certType) {
+        this.certType = certType;
         return this;
     }
 

@@ -69,7 +69,7 @@ public class YopCallbackProtocolFactory {
         String algorithm = params.get("algorithm");
         if (StringUtils.equals(algorithm, YopConstants.SM4_CALLBACK_ALGORITHM)) {
             return new YopSm4CallbackProtocol().setCustomerIdentification(appKey)
-                    .setAlgorithm(algorithm).setCertTypeEnum(CertTypeEnum.SM4)
+                    .setAlgorithm(algorithm).setCertType(CertTypeEnum.SM4)
                     .setAssociatedData(params.get("associatedData")).setNonce(params.get("nonce"))
                     .setCipherText(params.get("cipherText"))
                     .setOriginRequest(request);
