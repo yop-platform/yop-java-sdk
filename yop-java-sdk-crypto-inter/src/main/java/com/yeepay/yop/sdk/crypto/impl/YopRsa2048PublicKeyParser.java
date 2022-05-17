@@ -43,7 +43,7 @@ public class YopRsa2048PublicKeyParser extends AbstractYopPublicKeyParser implem
                 try {
                     return new YopPublicKey(getX509Cert(certConfig.getValue(), CertTypeEnum.RSA2048));
                 } catch (Exception e) {
-                    throw new YopClientException("Can't init YOP public key! Cer file is error.", e);
+                    throw new YopClientException("Can't init YOP public key! cert_config:" + certConfig, e);
                 }
             default:
                 throw new YopClientException("Can't init YOP public key!, cert_config:" + certConfig);

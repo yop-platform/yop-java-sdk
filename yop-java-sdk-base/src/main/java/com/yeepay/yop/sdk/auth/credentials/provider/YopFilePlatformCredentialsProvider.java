@@ -52,11 +52,11 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
     protected YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo) {
         // 从指定目录加载
         YopCertStore yopCertStore = YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
-        Map<String, X509Certificate> localCerts = loadAndVerify(yopCertStore, serialNo);
+        Map<String, X509Certificate> localCerts = loadAndVerify(yopCertStore, serialNo, true);
 
         // 从内置路径加载
         if (MapUtils.isEmpty(localCerts) || !localCerts.containsKey(serialNo)) {
-            localCerts = loadAndVerify(YopConstants.DEFAULT_LOCAL_YOP_CERT_STORE, serialNo);
+            localCerts = loadAndVerify(YopConstants.DEFAULT_LOCAL_YOP_CERT_STORE, serialNo, false);
         }
 
         if (MapUtils.isNotEmpty(localCerts)) {
@@ -102,12 +102,16 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
         }
     }
 
-    private Map<String, X509Certificate> loadAndVerify(YopCertStore yopCertStore, String serialNo) {
-        LOGGER.debug("load sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
+    private Map<String, X509Certificate> loadAndVerify(YopCertStore yopCertStore, String serialNo, boolean absolutePath) {
+        LOGGER.debug("begin load sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
         Map<String, X509Certificate> certMap = Maps.newHashMap();
         if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
             try {
                 String filename = yopCertStore.getPath() + "/" + YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX;
+                if (absolutePath && !new File(filename).exists()) {
+                    LOGGER.warn("wrong file path for sm2 cert, serialNo:{}, path:{}", serialNo, filename);
+                    return certMap;
+                }
                 final YopCertConfig yopCertConfig = new YopCertConfig();
                 yopCertConfig.setCertType(CertTypeEnum.SM2);
                 yopCertConfig.setValue(filename);
@@ -117,12 +121,12 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
                 String realSerialNo = cert.getSerialNumber().toString();
                 X509CertUtils.verifyCertificate(CertTypeEnum.SM2, YopCertificateCache.getYopInterCertFromLocal().getPublicKey(), cert);
                 if (!realSerialNo.equals(serialNo)) {
-                    LOGGER.warn("wrong file name for cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
+                    LOGGER.warn("wrong file name for sm2 cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
                     certMap.put(serialNo, cert);
                 }
                 certMap.put(realSerialNo, cert);
             } catch (Exception e) {
-                LOGGER.error("error when load cert from local file, serialNo:" + serialNo + ", ex:", e);
+                LOGGER.error("error when load sm2 cert from local file, serialNo:" + serialNo + ", ex:", e);
             }
         }
         return certMap;

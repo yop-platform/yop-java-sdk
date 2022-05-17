@@ -43,7 +43,7 @@ public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements
                 try {
                     return new YopPublicKey(getX509Cert(certConfig.getValue(), CertTypeEnum.SM2));
                 } catch (Exception e) {
-                    throw new YopClientException("Can't init YOP public key! Cer file is error.", e);
+                    throw new YopClientException("Can't init YOP public key! cert_config:" + certConfig, e);
                 }
             default:
                 throw new YopClientException("Can't init YOP public key!, cert_config:" + certConfig);
