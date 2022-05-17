@@ -125,7 +125,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         final String bizContent = decryptBizContent();
 
         // 返回业务数据
-        return YopCallback.Builder.builder().withId(yopRequestId).
+        return YopCallback.builder().withId(yopRequestId).
                 withAppKey(appKey).withType(originRequest.getHttpPath())
                 .withCreateTime(new Date()).withBizData(bizContent)
                 .withMetaInfo("headers", originRequest.getHeaders()).build();

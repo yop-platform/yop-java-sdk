@@ -81,7 +81,7 @@ public class YopSm4CallbackProtocol extends AbstractYopCallbackProtocol {
                         new EncryptOptions(new YopSymmetricCredentials(isvEncryptKey.getValue()), "",
                                 encryptAlg, nonce, associatedData, BigParamEncryptMode.stream));
                 if (null != plainText) {
-                    return YopCallback.Builder.builder().withId(UUID.randomUUID().toString()).
+                    return YopCallback.builder().withId(UUID.randomUUID().toString()).
                             withAppKey(customerIdentification).withType(originRequest.getHttpPath())
                             .withCreateTime(new Date()).withBizData(plainText)
                             .withMetaInfo("headers", originRequest.getHeaders()).build();

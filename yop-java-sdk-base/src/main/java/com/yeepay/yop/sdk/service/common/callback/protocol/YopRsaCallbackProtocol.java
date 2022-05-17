@@ -36,7 +36,7 @@ public class YopRsaCallbackProtocol extends AbstractYopCallbackProtocol {
 
     @Override
     public YopCallback parse() {
-        return YopCallback.Builder.builder().withId(UUID.randomUUID().toString()).
+        return YopCallback.builder().withId(UUID.randomUUID().toString()).
                 withAppKey(customerIdentification).withType(originRequest.getHttpPath())
                 .withCreateTime(new Date()).withBizData(DigitalEnvelopeUtils.decrypt(response, customerIdentification, CertTypeEnum.RSA2048.getValue()))
                 .withMetaInfo("headers", originRequest.getHeaders()).build();

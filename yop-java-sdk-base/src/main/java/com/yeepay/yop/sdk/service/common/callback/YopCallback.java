@@ -81,19 +81,19 @@ public class YopCallback implements Serializable {
         return metaInfo;
     }
 
+    public static Builder builder() {
+        final Builder builder = new Builder();
+        builder.callback = new YopCallback();
+        builder.callback.metaInfo = Maps.newHashMap();
+        return builder;
+    }
+
     public static final class Builder {
 
         private YopCallback callback;
 
         public YopCallback build() {
             return callback;
-        }
-
-        public static Builder builder() {
-            final Builder builder = new Builder();
-            builder.callback = new YopCallback();
-            builder.callback.metaInfo = Maps.newHashMap();
-            return builder;
         }
 
         public Builder withId(String id) {
