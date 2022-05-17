@@ -40,7 +40,10 @@ public class YopCallbackProtocolFactory {
         }
         final Map<String, String> headers = request.getHeaders();
         if (MapUtils.isNotEmpty(headers)) {
-            final String authorization = headers.get(Headers.AUTHORIZATION);
+            String authorization = headers.get(Headers.AUTHORIZATION);
+            if (StringUtils.isBlank(authorization)) {
+                authorization = headers.get(Headers.AUTHORIZATION.toLowerCase());
+            }
             // 目前只有国密有此认证头
             if (StringUtils.isNotBlank(authorization) && authorization.startsWith(YopConstants.SM2_PROTOCOL_PREFIX)) {
                 return new YopSm2CallbackProtocol(request);

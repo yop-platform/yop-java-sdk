@@ -168,6 +168,9 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
     private void initialize(YopCallbackRequest request) {
         try {
             String authorization = request.getHeaders().get(Headers.AUTHORIZATION);
+            if (StringUtils.isBlank(authorization)) {
+                authorization = request.getHeaders().get(Headers.AUTHORIZATION.toLowerCase());
+            }
             String[] protocol = authorization.split(CharacterConstants.SPACE);
             String protocolPrefix = protocol[0], protocolContent = protocol[1];
             String[] parts = protocolPrefix.split(CharacterConstants.DASH_LINE);
