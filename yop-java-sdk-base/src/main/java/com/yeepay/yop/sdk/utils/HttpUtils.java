@@ -3,11 +3,13 @@ package com.yeepay.yop.sdk.utils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.Protocol;
+import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import org.apache.commons.collections4.MapUtils;
@@ -18,10 +20,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yeepay.yop.sdk.YopConstants.YOP_HTTP_CONTENT_TYPE_JSON;
@@ -35,6 +34,7 @@ public class HttpUtils {
 
     private static final Joiner queryStringJoiner = Joiner.on('&');
     private static final boolean HTTP_VERBOSE = Boolean.parseBoolean(System.getProperty("yop.sdk.http", "false"));
+    private static final Set<YopContentType> FORM_CONTENT_TYPES = Sets.newHashSet(YopContentType.FORM_URL_ENCODE, YopContentType.MULTIPART_FORM);
 //    private static boolean HTTP_VERBOSE = true;
 
     /**
@@ -318,5 +318,36 @@ public class HttpUtils {
      */
     public static boolean isJsonResponse(String contentType) {
         return StringUtils.startsWith(contentType, YOP_HTTP_CONTENT_TYPE_JSON);
+    }
+
+    /**
+     * 构造规范uri(用于签名)
+     *
+     * @param path
+     * @return
+     */
+    public static String getCanonicalURIPath(String path) {
+        if (path == null) {
+            return "/";
+        } else {
+            return path.startsWith("/") ? normalizePath(path) : "/" + normalizePath(path);
+        }
+    }
+
+    /**
+     * 计算是否用采用空串("")作为签名时的CanonicalQueryString
+     *
+     *
+     * @param httpMethod 请求方法
+     * @param contentType 内容格式
+     * @return
+     */
+    public static boolean useEmptyAsCanonicalQueryString(String httpMethod, YopContentType contentType) {
+        boolean requestIsPost = StringUtils.equalsIgnoreCase(httpMethod, HttpMethodName.POST.name());
+        boolean requestIsForm = null != contentType && FORM_CONTENT_TYPES.contains(contentType);
+        if (requestIsPost && requestIsForm) {
+            return true;
+        }
+        return false;
     }
 }

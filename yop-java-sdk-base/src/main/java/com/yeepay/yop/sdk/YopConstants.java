@@ -33,6 +33,8 @@ public interface YopConstants {
 
     String DEFAULT_YOP_CERT_STORE_PATH = "/tmp/yop/certs";
 
+    String DEFAULT_YOP_PROTOCOL_VERSION = "yop-auth-v3";
+
     String SM2_PROTOCOL_PREFIX = "YOP-SM2-SM3";
 
     String YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO = "rsa";
@@ -69,6 +71,7 @@ public interface YopConstants {
     String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
     String YOP_HTTP_CONTENT_TYPE_MULTIPART_FORM = "multipart/form-data";
     String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
+    String YOP_HTTP_CONTENT_TYPE_TEXT = "text/plain;charset=UTF-8";
 
     String YOP_DEFAULT_APPKEY = "default";
 
@@ -106,5 +109,9 @@ public interface YopConstants {
 
     // 默认过期前72小时内开始刷新
     long DEFAULT_PERIOD_REFRESH_BEFORE_EXPIRE = 72 * 3600 * 1000;
+
+    // 商户通知
+    String SM4_CALLBACK_ALGORITHM = "AEAD_SM4_GCM";
+    String DEFAULT_YOP_CALLBACK_HANDLER = "default";
 
 }

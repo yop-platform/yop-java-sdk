@@ -34,6 +34,7 @@ import java.security.MessageDigest;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
 
 /**
  * title: YopPKISigner<br/>
@@ -48,8 +49,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class AbstractYopPKISigner implements YopSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractYopPKISigner.class);
-
-    private static final String YOP_PROTOCOL_VERSION = "yop-auth-v3";
 
     private static final Set<String> defaultHeadersToSign = Sets.newHashSet();
     private static final Joiner headerJoiner = Joiner.on('\n');
@@ -112,7 +111,7 @@ public abstract class AbstractYopPKISigner implements YopSigner {
     private String buildAuthString(YopCredentials<?> credentials, SignOptions options) {
         String appKey = credentials.getAppKey();
         Date timestamp = new Date();
-        return YOP_PROTOCOL_VERSION + "/"
+        return DEFAULT_YOP_PROTOCOL_VERSION + "/"
                 + appKey + "/"
                 + DateUtils.formatAlternateIso8601Date(timestamp) + "/"
                 + options.getExpirationInSeconds();

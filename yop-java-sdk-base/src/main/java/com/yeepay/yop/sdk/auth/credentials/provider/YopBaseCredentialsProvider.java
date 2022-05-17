@@ -45,7 +45,7 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
 
         PrivateKey privateKey = appConfig.loadPrivateKey(certType);
         if (null == privateKey) {
-            throw new YopClientException("No cert config found when buildCredentials, appKey:" + appConfig.getAppKey() + "certType:" + certType);
+            throw new YopClientException("No cert config found when buildCredentials, appKey:" + appConfig.getAppKey() + ", certType:" + certType);
         }
 
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, certType);
