@@ -46,11 +46,17 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
         if (BooleanUtils.isTrue(context.isSkipVerifySign()) || StringUtils.isBlank(metadata.getYopSign())) {
             return false;
         } else {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("response sign verify begin, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
+            }
             YopPlatformCredentials platformCredentials = getPlatformCredential(context.getSignOptions(), context.getAppKey(), metadata.getYopCertSerialNo());
             if (null != platformCredentials) {
                 context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), platformCredentials, context.getSignOptions());
             } else {
                 throw new YopClientException("yop platform credentials not found");
+            }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("response sign verify success, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
             }
         }
         return false;
