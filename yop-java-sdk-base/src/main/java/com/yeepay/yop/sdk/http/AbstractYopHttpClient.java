@@ -70,7 +70,8 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         } catch (YopClientException e) {
             throw e;
         } catch (Exception e) {
-            throw new YopClientException("Unable to execute HTTP request", e);
+            throw new YopClientException("Unable to execute HTTP request, requestId:"
+                    + request.getRequestId() + ", apiUri:" + request.getResourcePath(), e);
         } finally {
             postExecute(analyzedResponse, httpResponse);
         }
