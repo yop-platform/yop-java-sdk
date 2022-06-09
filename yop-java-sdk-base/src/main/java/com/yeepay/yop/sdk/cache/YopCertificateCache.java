@@ -53,7 +53,7 @@ public class YopCertificateCache {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopCertificateCache.class);
 
-    private static final String CERT_DOWNLOAD_API_URI = "/rest/v1.0/yop/yop-platform-cert-query/find-plain-cert";
+    private static final String CERT_DOWNLOAD_API_URI = "/rest/v2.0/yop/platform/certs";
     private static final String CERT_DOWNLOAD_API_METHOD = "GET";
     private static final String CERT_DOWNLOAD_API_SECURITY = "YOP-SM2-SM3";
     private static final String CERT_DOWNLOAD_API_PARAM_SERIAL_NO = "serialNo";
