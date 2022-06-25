@@ -15,6 +15,7 @@
         <module>yop-java-sdk-crypto-api</module>
         <module>yop-java-sdk-crypto-inter</module>
         <module>yop-java-sdk-crypto-gm</module>
+        <module>yop-java-sdk-test</module>
     </modules>
 
     <name>yop-java-sdk-parent</name>
