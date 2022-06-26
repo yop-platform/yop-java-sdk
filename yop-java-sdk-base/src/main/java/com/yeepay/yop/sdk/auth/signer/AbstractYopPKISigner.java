@@ -15,7 +15,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.digest.YopDigesterFactory;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
@@ -28,9 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -66,10 +63,6 @@ public abstract class AbstractYopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SM3);
         defaultHeadersToSign.add(Headers.YOP_ENCRYPT);
     }
-
-    private final ThreadLocal<Map<DigestAlgEnum, MessageDigest>> MESSAGE_DIGEST = ThreadLocal.withInitial(this::initMdInstance);
-
-    protected abstract Map<DigestAlgEnum, MessageDigest> initMdInstance();
 
     @Override
     public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
@@ -158,25 +151,10 @@ public abstract class AbstractYopPKISigner implements YopSigner {
     //TODO 请求重试时需要重新计算吗？
     private String calculateContentHash(Request<? extends BaseRequest> request, DigestAlgEnum digestAlg) {
         RestartableInputStream payloadStream = getBinaryRequestPayloadStream(request);
-        String contentHash = Encodes.encodeHex(hash(payloadStream, digestAlg));
+        String contentHash = Encodes.encodeHex(
+                YopDigesterFactory.getDigester(digestAlg.name()).digest(payloadStream, digestAlg.name()));
         payloadStream.restart();
         return contentHash;
-    }
-
-    private byte[] hash(InputStream input, DigestAlgEnum digestAlg) {
-        try {
-            MessageDigest md = getMessageDigestInstance(digestAlg);
-            DigestInputStream digestInputStream = new DigestInputStream(
-                    input, md);
-            byte[] buffer = new byte[1024];
-            while (digestInputStream.read(buffer) > -1) {
-            }
-            return digestInputStream.getMessageDigest().digest();
-        } catch (Exception e) {
-            throw new YopClientException(
-                    "Unable to compute hash while signing request: "
-                            + e.getMessage(), e);
-        }
     }
 
     private RestartableInputStream getBinaryRequestPayloadStream(Request<? extends BaseRequest> request) {
@@ -251,17 +229,6 @@ public abstract class AbstractYopPKISigner implements YopSigner {
         Collections.sort(headerStrings);
 
         return headerJoiner.join(headerStrings);
-    }
-
-    /**
-     * Returns the re-usable thread local version of MessageDigest.
-     *
-     * @return 摘要
-     */
-    private MessageDigest getMessageDigestInstance(DigestAlgEnum digestAlg) {
-        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
-        messageDigest.reset();
-        return messageDigest;
     }
 
 }

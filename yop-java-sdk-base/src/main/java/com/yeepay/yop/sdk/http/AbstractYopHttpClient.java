@@ -143,6 +143,13 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         encrypt(request, executionContext.getEncryptor(), executionContext.getEncryptOptions().get());
     }
 
+    /**
+     * 签名强求
+     *
+     * @param request          请求
+     * @param executionContext 执行上下文
+     * @param <Input>          请求类
+     */
     private <Input extends BaseRequest> void signRequest(Request<Input> request, ExecutionContext executionContext) {
         executionContext.getSigner().sign(request, executionContext.getYopCredentials(), executionContext.getSignOptions());
     }

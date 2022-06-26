@@ -106,8 +106,6 @@ public class RequestEncryptor {
 
         // 添加加密头
         request.addHeader(YOP_ENCRYPT, encryptHeader);
-        // 添加证书序列号
-        request.addHeader(YOP_SIGN_CERT_SERIAL_NO, platformSerialNo);
         return encryptHeader;
     }
 
