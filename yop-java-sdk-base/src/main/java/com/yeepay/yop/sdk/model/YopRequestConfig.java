@@ -71,6 +71,11 @@ public class YopRequestConfig {
      */
     private Boolean skipVerifySign;
 
+    /**
+     * 指定签名有效时间
+     */
+    private Integer signExpirationInSeconds;
+
     public String getAppKey() {
         return appKey;
     }
@@ -181,6 +186,15 @@ public class YopRequestConfig {
         return this;
     }
 
+    public Integer getSignExpirationInSeconds() {
+        return signExpirationInSeconds;
+    }
+
+    public YopRequestConfig setSignExpirationInSeconds(Integer signExpirationInSeconds) {
+        this.signExpirationInSeconds = signExpirationInSeconds;
+        return this;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -191,6 +205,7 @@ public class YopRequestConfig {
         private Boolean totalEncrypt;
         private String encryptAlg;
         private Boolean skipVerifySign;
+        private int signExpirationInSeconds;
 
         private Builder() {
         }
@@ -244,6 +259,11 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withSignExpirationInSeconds(int signExpirationInSeconds) {
+            this.signExpirationInSeconds = signExpirationInSeconds;
+            return this;
+        }
+
         public YopRequestConfig build() {
             return new YopRequestConfig().setAppKey(appKey)
                     .setSecurityReq(securityReq)
@@ -253,7 +273,8 @@ public class YopRequestConfig {
                     .setNeedEncrypt(needEncrypt)
                     .setTotalEncrypt(totalEncrypt)
                     .setEncryptAlg(encryptAlg)
-                    .setSkipVerifySign(skipVerifySign);
+                    .setSkipVerifySign(skipVerifySign)
+                    .setSignExpirationInSeconds(signExpirationInSeconds);
         }
     }
 }

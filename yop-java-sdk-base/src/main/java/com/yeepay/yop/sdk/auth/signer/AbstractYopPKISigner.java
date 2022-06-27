@@ -70,6 +70,10 @@ public abstract class AbstractYopPKISigner implements YopSigner {
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;
         }
+        final Integer signExpirationInSeconds = request.getOriginalRequestObject().getRequestConfig().getSignExpirationInSeconds();
+        if (null != signExpirationInSeconds && signExpirationInSeconds > 0) {
+            options.setExpirationInSeconds(signExpirationInSeconds);
+        }
 
         // A.构造认证字符串
         String authString = buildAuthString(credentials, options);

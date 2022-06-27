@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.service.common;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CertificateCredentials;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
