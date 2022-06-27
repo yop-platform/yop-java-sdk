@@ -26,14 +26,33 @@ public interface YopCredentialsProvider {
      * Returns Credentials which the caller can use to authorize an YOP request.
      * Each implementation of YOPCredentialsProvider can chose its own strategy for
      * loading credentials.  For example, an implementation might load credentials
-     * from an existing key management system, or load new credentials when
+     * from an existing key managemenYopSignProcessort system, or load new credentials when
      * credentials are rotated.
      *
-     * @param appKey         appKey
-     * @param credentialType credentialType
+     * 根据appKey与凭证类型(CertTypeEnum)，加载可用凭证，用于Yop请求的认证
+     * 商户可根据自身情况将凭证信息存储在安全的地方，可通过缓存提升性能
+     *
+     * @param appKey         appKey:应用标识
+     * @param credentialType credentialType:凭证类型(CertTypeEnum)
      * @return YOPCredentials which the caller can use to authorize an YOP request.
      */
     YopCredentials<?> getCredentials(String appKey, String credentialType);
+
+    /**
+     * 根据appKey获取应用下可用密钥类型
+     *
+     * @param appKey 应用标识
+     * @return 密钥类型列表
+     */
+    List<CertTypeEnum> getSupportCertTypes(String appKey);
+
+    /**
+     * 单应用时，用于加载默认配置
+     * 多应用时，用于指定默认应用(自定义provider时，须覆盖实现)
+     *
+     * @return appKey
+     */
+    String getDefaultAppKey();
 
     /**
      * Returns symmetrical keys for using when decrypt yop certs from remote
@@ -45,21 +64,5 @@ public interface YopCredentialsProvider {
      */
     @Deprecated
     List<YopCertConfig> getIsvEncryptKey(String appKey);
-
-    List<CertTypeEnum> getSupportCertTypes(String appKey);
-
-    /**
-     * 单应用时，用于加载默认配置
-     * 多应用时，用于指定默认应用(自定义provider时，须覆盖实现)
-     * @return
-     */
-    String getDefaultAppKey();
-
-    /**
-     * 移除SDK配置
-     *
-     * @param key key
-     */
-    void removeConfig(String key);
 
 }

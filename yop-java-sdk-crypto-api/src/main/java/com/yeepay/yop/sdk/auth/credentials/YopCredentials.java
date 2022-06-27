@@ -16,6 +16,11 @@ package com.yeepay.yop.sdk.auth.credentials;
  */
 public interface YopCredentials<T> {
 
+    /**
+     * 应用标识
+     *
+     * @return
+     */
     String getAppKey();
 
     /**

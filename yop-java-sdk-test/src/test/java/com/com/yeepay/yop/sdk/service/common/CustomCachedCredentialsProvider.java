@@ -59,10 +59,6 @@ public class CustomCachedCredentialsProvider extends YopCachedCredentialsProvide
     }
 
     @Override
-    public void removeConfig(String key) {
-    }
-
-    @Override
     public String getDefaultAppKey() {
         return DEFAULT_APPKEY;
     }

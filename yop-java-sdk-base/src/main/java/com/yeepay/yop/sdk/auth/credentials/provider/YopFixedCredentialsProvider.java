@@ -59,10 +59,4 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
         return getAppConfig(appKey).getIsvEncryptKey();
     }
 
-    @Override
-    public void removeConfig(String key) {
-        appConfigs.remove(key);
-        yopCredentialsMap.clear();
-    }
-
 }

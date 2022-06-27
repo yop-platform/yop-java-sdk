@@ -39,7 +39,6 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
 
     private final Map<String, YopAppConfig> appConfigs = Maps.newHashMap();
     private final Map<String, YopCredentials> yopCredentialsMap = Maps.newConcurrentMap();
-    private final Map<String, List<YopCredentials>> yopEncryptCredentialsMap = Maps.newConcurrentMap();
 
     @Override
     public YopCredentials<?> getCredentials(String appKey, String credentialType) {
@@ -76,15 +75,6 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
     @Override
     public String getDefaultAppKey() {
         return YopConstants.YOP_DEFAULT_APPKEY;
-    }
-
-    @Override
-    public void removeConfig(String key) {
-        appConfigs.remove(key);
-        yopCredentialsMap.clear();
-        if (null != key) {
-            yopEncryptCredentialsMap.remove(key);
-        }
     }
 
     private YopAppConfig getAppConfig(String appId) {
