@@ -38,7 +38,7 @@ public class Sm4Utils {
     public static final String ALGORITHM_NAME_GCM_NOPADDING = "SM4/GCM/NoPadding";
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     /**

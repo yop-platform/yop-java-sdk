@@ -10,7 +10,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptorAdaptor;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.bouncycastle.crypto.engines.SM2Engine;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
@@ -40,7 +40,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
     private static final String ENCRYPT_ALG = "SM2";
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     // mode 指定密文结构，旧标准的为C1C2C3，新的[《SM2密码算法使用规范》 GM/T 0009-2012]标准为C1C3C2

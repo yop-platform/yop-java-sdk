@@ -55,7 +55,7 @@ public class Sm2Utils {
     public static final int CURVE_LEN = getCurveLength(DOMAIN_PARAMS);
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     /**
@@ -92,7 +92,6 @@ public class Sm2Utils {
         } catch (Exception e) {
             throw new YopClientException(e.getMessage());
         }
-
     }
 
     /**

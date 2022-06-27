@@ -12,7 +12,7 @@ import com.yeepay.yop.sdk.crypto.YopPublicKey;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -35,7 +35,7 @@ public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements
         switch (certConfig.getStoreType()) {
             case STRING:
                 try {
-                    return new YopPublicKey(Sm2Utils.string2PublicKey(certConfig.getValue()));
+                    return new YopPublicKey(SmUtils.string2PublicKey(certConfig.getValue()));
                 } catch (Exception ex) {
                     throw new YopClientException("Can't init YOP public key!, cert_config:" + certConfig, ex);
                 }

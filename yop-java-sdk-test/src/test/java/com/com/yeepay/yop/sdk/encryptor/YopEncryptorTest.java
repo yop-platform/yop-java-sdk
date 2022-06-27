@@ -194,10 +194,10 @@ public class YopEncryptorTest extends BaseTest {
     @Test
     public void yopRequestGet() {
         YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
-        request.addParameter("string0", "le1");
-//        request.addEncryptParameter("string0", "le1");
+//        request.addParameter("string0", "le1");
+        request.addEncryptParameter("string0", "le1");
         request.getRequestConfig().setAppKey("app_15958159879157110002")
-                .setNeedEncrypt(true).setTotalEncrypt(true)
+//                .setNeedEncrypt(false).setTotalEncrypt(false)
         ;
         YopResponse response = yopClient.request(request);
         Assert.assertTrue(((Map) response.getResult()).get("id").equals(94));

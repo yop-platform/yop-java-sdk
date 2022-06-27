@@ -9,24 +9,22 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>yop-java-sdk-crypto-gm</artifactId>
+    <artifactId>yop-java-sdk-crypto-gm-base</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.yeepay.yop.sdk</groupId>
-            <artifactId>yop-java-sdk-crypto-gm-base</artifactId>
+            <artifactId>yop-java-sdk-base</artifactId>
         </dependency>
 
-        <!-- test dependencies -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
         </dependency>
     </dependencies>
 

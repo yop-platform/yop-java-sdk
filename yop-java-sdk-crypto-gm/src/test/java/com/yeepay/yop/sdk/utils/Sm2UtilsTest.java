@@ -5,9 +5,6 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-
 /**
  * title: <br>
  * description: 描述<br>
@@ -29,7 +26,7 @@ public class Sm2UtilsTest {
 
     @Test
     public void pubKey() {
-        BCECPublicKey pubKey = (BCECPublicKey)Sm2Utils.string2PublicKey("MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEd8OsYO4yIFNboF68nk1Yl9zquW/OuJSjGLz8Yu7ldV3ro9pGb5g079hWGeEZ+DqaHex3YzP7dVuQ9KV81pRa3w==");
+        BCECPublicKey pubKey = (BCECPublicKey)SmUtils.string2PublicKey("MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEd8OsYO4yIFNboF68nk1Yl9zquW/OuJSjGLz8Yu7ldV3ro9pGb5g079hWGeEZ+DqaHex3YzP7dVuQ9KV81pRa3w==");
         System.out.println(pubKey.getQ());
     }
 

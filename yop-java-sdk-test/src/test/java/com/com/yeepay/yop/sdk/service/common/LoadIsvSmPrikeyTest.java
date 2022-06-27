@@ -12,7 +12,7 @@ import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfigProvider;
 import com.yeepay.yop.sdk.crypto.YopCertCategory;
 import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.utils.Encodes;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class LoadIsvSmPrikeyTest extends BaseTest {
     public void testLoadSm2PrivateKey() {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
-        SmInitUtils.init();
+        SmUtils.init();
 
         String appKey = "app_100800095600038";
         YopFileSdkConfigProvider yopFileSdkConfigProvider = (YopFileSdkConfigProvider) YopSdkConfigProviderRegistry.getProvider();

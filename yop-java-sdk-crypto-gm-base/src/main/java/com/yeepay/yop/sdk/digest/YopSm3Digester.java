@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.digest;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class YopSm3Digester implements YopDigester {
     private final ThreadLocal<Map<String, MessageDigest>> MESSAGE_DIGEST = ThreadLocal.withInitial(YopSm3Digester::initMdInstance);
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     @Override

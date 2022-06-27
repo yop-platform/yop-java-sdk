@@ -21,7 +21,7 @@ import java.util.Arrays;
 public class Sm3Utils {
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     /**

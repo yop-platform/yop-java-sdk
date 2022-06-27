@@ -14,7 +14,7 @@ import com.yeepay.yop.sdk.security.encrypt.YopEncryptorAdaptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 import com.yeepay.yop.sdk.utils.Sm4Utils;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.io.CipherInputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -52,7 +52,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
     public static final int DECRYPT_MODE = 2;
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     private static final ThreadLocal<Map<String, Cipher>> cipherThreadLocal = new ThreadLocal<Map<String, Cipher>>() {

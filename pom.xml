@@ -14,6 +14,7 @@
         <module>yop-java-sdk-okhttp</module>
         <module>yop-java-sdk-crypto-api</module>
         <module>yop-java-sdk-crypto-inter</module>
+        <module>yop-java-sdk-crypto-gm-base</module>
         <module>yop-java-sdk-crypto-gm</module>
         <module>yop-java-sdk-test</module>
     </modules>
@@ -81,12 +82,22 @@
             </dependency>
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-crypto-gm-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk-crypto-gm</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk-crypto-inter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-test</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

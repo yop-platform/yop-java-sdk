@@ -20,7 +20,7 @@ import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class Sm2SignAndVerifyTest {
     static {
         System.setProperty("yop.sdk.http", "true");
         System.setProperty("yop.sdk.config.env", "qa");
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     public class YopTestSigner implements YopSigner {

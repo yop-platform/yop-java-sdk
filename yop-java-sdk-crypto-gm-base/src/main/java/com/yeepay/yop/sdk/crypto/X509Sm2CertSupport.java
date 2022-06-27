@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.crypto;
 
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class X509Sm2CertSupport implements X509CertSupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(X509Sm2CertSupport.class);
 
     static {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     @Override

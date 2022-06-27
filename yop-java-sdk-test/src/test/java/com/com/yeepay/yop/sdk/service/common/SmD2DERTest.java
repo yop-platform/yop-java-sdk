@@ -6,7 +6,7 @@
 package com.com.yeepay.yop.sdk.service.common;
 
 import com.yeepay.yop.sdk.utils.Encodes;
-import com.yeepay.yop.sdk.utils.SmInitUtils;
+import com.yeepay.yop.sdk.utils.SmUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.spec.OpenSSHPrivateKeySpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
@@ -47,7 +47,7 @@ public class SmD2DERTest {
 
     @Before
     public void setUp() throws Exception {
-        SmInitUtils.init();
+        SmUtils.init();
     }
 
     @Test
