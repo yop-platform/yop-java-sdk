@@ -21,6 +21,7 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.SignerTypeEnum;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
@@ -43,9 +44,9 @@ import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
  * @version 1.0.0
  * @since 2021/1/18 3:25 下午
  */
-public abstract class AbstractYopPKISigner implements YopSigner {
+public class YopPKISigner implements YopSigner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractYopPKISigner.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
 
     private static final Set<String> defaultHeadersToSign = Sets.newHashSet();
     private static final Joiner headerJoiner = Joiner.on('\n');
@@ -233,6 +234,13 @@ public abstract class AbstractYopPKISigner implements YopSigner {
         Collections.sort(headerStrings);
 
         return headerJoiner.join(headerStrings);
+    }
+
+
+
+    @Override
+    public List<String> supportSignerAlg() {
+        return Lists.newArrayList(SignerTypeEnum.SM2.name(), SignerTypeEnum.RSA.name());
     }
 
 }
