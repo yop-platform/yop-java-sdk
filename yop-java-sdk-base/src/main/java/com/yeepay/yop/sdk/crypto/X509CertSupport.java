@@ -4,8 +4,11 @@
  */
 package com.yeepay.yop.sdk.crypto;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -45,4 +48,12 @@ public interface X509CertSupport {
      * @return CertTypeEnum
      */
     String support();
+
+    /**
+     * 将证书写入文件
+     *
+     * @param cert 证书
+     * @param file 文件路径
+     */
+    void writeToFile(X509Certificate cert, File file) throws IOException, CertificateEncodingException;
 }

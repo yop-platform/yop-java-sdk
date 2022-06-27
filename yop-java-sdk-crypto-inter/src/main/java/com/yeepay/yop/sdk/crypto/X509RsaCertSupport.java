@@ -6,8 +6,11 @@ package com.yeepay.yop.sdk.crypto;
 
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -38,5 +41,10 @@ public class X509RsaCertSupport implements X509CertSupport {
     @Override
     public String support() {
         return CertTypeEnum.RSA2048.getValue();
+    }
+
+    @Override
+    public void writeToFile(X509Certificate cert, File file) throws IOException, CertificateEncodingException {
+        // TODO
     }
 }

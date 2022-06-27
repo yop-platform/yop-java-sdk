@@ -12,22 +12,19 @@ import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
+import com.yeepay.yop.sdk.crypto.X509CertSupportFactory;
 import com.yeepay.yop.sdk.crypto.YopCertCategory;
 import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.crypto.YopPublicKey;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.utils.StreamUtils;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-import org.bouncycastle.util.io.pem.PemObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 
@@ -89,13 +86,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
                     certStoreDir.mkdirs();
                 }
                 final File certFile = new File(certStoreDir, YOP_SM_PLATFORM_CERT_PREFIX + certificateEntry.getKey() + YOP_PLATFORM_CERT_POSTFIX);
-                JcaPEMWriter jcaPEMWriter = null;
-                try {
-                    jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile));
-                    jcaPEMWriter.writeObject(new PemObject("CERTIFICATE", certificateEntry.getValue().getEncoded()));
-                } finally {
-                    StreamUtils.closeQuietly(jcaPEMWriter);
-                }
+                X509CertSupportFactory.getSupport(CertTypeEnum.SM2.name()).writeToFile(certificateEntry.getValue(), certFile);
             } catch (Exception e) {
                 LOGGER.error("error when store yop cert, ex:", e);
             }

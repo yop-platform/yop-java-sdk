@@ -6,12 +6,19 @@ package com.yeepay.yop.sdk.crypto;
 
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.SmUtils;
+import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.util.io.pem.PemObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -48,5 +55,17 @@ public class X509Sm2CertSupport implements X509CertSupport {
     @Override
     public String support() {
         return CertTypeEnum.SM2.getValue();
+    }
+
+    @Override
+    public void writeToFile(X509Certificate cert, File file) throws IOException, CertificateEncodingException {
+        final File certFile = file;
+        JcaPEMWriter jcaPEMWriter = null;
+        try {
+            jcaPEMWriter = new JcaPEMWriter(new FileWriter(certFile));
+            jcaPEMWriter.writeObject(new PemObject("CERTIFICATE", cert.getEncoded()));
+        } finally {
+            StreamUtils.closeQuietly(jcaPEMWriter);
+        }
     }
 }
