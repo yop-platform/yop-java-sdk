@@ -49,9 +49,15 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("response sign verify begin, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
             }
-            YopPlatformCredentials platformCredentials = getPlatformCredential(context.getSignOptions(), context.getAppKey(), metadata.getYopCertSerialNo());
+            final SignOptions reqOptions = context.getSignOptions();
+            YopPlatformCredentials platformCredentials = getPlatformCredential(reqOptions, context.getAppKey(), metadata.getYopCertSerialNo());
             if (null != platformCredentials) {
-                context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), platformCredentials, context.getSignOptions());
+                // YOP响应签名非urlsafe
+                context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), platformCredentials,
+                        new SignOptions().withDigestAlg(reqOptions.getDigestAlg())
+                                .withProtocolPrefix(reqOptions.getProtocolPrefix())
+                                .withExpirationInSeconds(reqOptions.getExpirationInSeconds())
+                                .withUrlSafe(false));
             } else {
                 throw new YopClientException("yop platform credentials not found");
             }

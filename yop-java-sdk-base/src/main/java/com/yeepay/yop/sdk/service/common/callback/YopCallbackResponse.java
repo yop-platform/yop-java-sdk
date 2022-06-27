@@ -3,6 +3,8 @@ package com.yeepay.yop.sdk.service.common.callback;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.service.common.callback.enums.YopCallbackHandleStatus;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -113,5 +115,10 @@ public class YopCallbackResponse implements Serializable {
 
     public void setBody(String body) {
         this.body = body;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
     }
 }

@@ -6,6 +6,7 @@ package com.com.yeepay.yop.sdk.encryptor.signer.process;
 
 import com.com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
 import com.google.common.collect.ImmutableMap;
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcessor;
@@ -35,7 +36,7 @@ public class MockEncryptorSignProcessor implements YopSignProcessor {
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SM3;
 
     @Override
-    public String doSign(String content, CredentialsItem credentialsItem) {
+    public String doSign(String content, CredentialsItem credentialsItem, SignOptions options) {
         MockEncryptorCredentialsItem mockEncryptorCredentialsItem = (MockEncryptorCredentialsItem) credentialsItem;
         CertTypeEnum certType = credentialsItem.getCertType();
         if (certType == CertTypeEnum.SM2) {
@@ -56,7 +57,7 @@ public class MockEncryptorSignProcessor implements YopSignProcessor {
     }
 
     @Override
-    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
+    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem, SignOptions options) {
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
         YopSignProcessor signProcessor = softSignProcessors.get(pkiCredentialsItem.getCertType());
         return signProcessor.verify(content, signature, credentialsItem);

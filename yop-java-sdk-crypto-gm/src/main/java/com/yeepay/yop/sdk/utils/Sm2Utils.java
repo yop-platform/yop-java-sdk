@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.google.common.base.Charsets;
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.gm.GMNamedCurves;
@@ -133,8 +134,23 @@ public class Sm2Utils {
      * @return UR安全的base64编码后的签名
      */
     public static String sign(String data, BCECPrivateKey priKey) {
+        return sign(data, priKey, null);
+    }
+
+    /**
+     * sm2密钥进行签名
+     *
+     * @param data
+     * @param priKey
+     * @param options
+     * @return base64编码后的签名
+     */
+    public static String sign(String data, BCECPrivateKey priKey, SignOptions options) {
         try {
             byte[] dataByte = data.getBytes(Charsets.UTF_8);
+            if (null != options && !options.isUrlSafe()) {
+                return Encodes.encodeBase64(sign(priKey, dataByte));
+            }
             return Encodes.encodeUrlSafeBase64(sign(priKey, dataByte));
         } catch (CryptoException e) {
             throw new YopClientException("UnExpectedException occurred when sign content");

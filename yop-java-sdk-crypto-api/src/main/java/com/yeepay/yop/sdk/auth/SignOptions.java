@@ -31,6 +31,11 @@ public class SignOptions {
      */
     private int expirationInSeconds = DEFAULT_EXPIRATION_IN_SECONDS;
 
+    /**
+     * 是否做url安全编码
+     */
+    private boolean urlSafe = true;
+
     public DigestAlgEnum getDigestAlg() {
         return digestAlg;
     }
@@ -70,4 +75,12 @@ public class SignOptions {
         return this;
     }
 
+    public boolean isUrlSafe() {
+        return urlSafe;
+    }
+
+    public SignOptions withUrlSafe(boolean urlSafe) {
+        this.urlSafe = urlSafe;
+        return this;
+    }
 }

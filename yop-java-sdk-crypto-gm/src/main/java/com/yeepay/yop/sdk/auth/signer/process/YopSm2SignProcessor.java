@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
@@ -24,13 +25,14 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 public class YopSm2SignProcessor implements YopSignProcessor {
 
     @Override
-    public String doSign(String content, CredentialsItem credentialsItem) {
+    public String doSign(String content, CredentialsItem credentialsItem, SignOptions options) {
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
-        return Sm2Utils.sign(content, (BCECPrivateKey) pkiCredentialsItem.getPrivateKey());
+        return Sm2Utils.sign(content, (BCECPrivateKey) pkiCredentialsItem.getPrivateKey(), options);
     }
 
     @Override
-    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
+    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem, SignOptions options) {
+        // 软实现不关心urlSafe，加密机需要关心
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
         return Sm2Utils.verifySign(content, signature, (BCECPublicKey) pkiCredentialsItem.getPublicKey());
     }

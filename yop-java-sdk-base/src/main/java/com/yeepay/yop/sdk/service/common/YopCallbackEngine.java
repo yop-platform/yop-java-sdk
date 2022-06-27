@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 import static com.yeepay.yop.sdk.internal.RequestEncryptor.encrypt;
+import static com.yeepay.yop.sdk.utils.CharacterConstants.EMPTY;
 
 /**
  * title: Yop商户回调处理引擎<br>
@@ -87,7 +88,11 @@ public class YopCallbackEngine {
      * @return 解密后的通知参数
      */
     public static YopCallback parse(YopCallbackRequest request) {
-        return YopCallbackProtocolFactory.fromRequest(request).parse();
+        final YopCallback parsed = YopCallbackProtocolFactory.fromRequest(request).parse();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("YopCallbackRequest decrypted:{}", parsed);
+        }
+        return parsed;
     }
 
     /**
@@ -102,6 +107,9 @@ public class YopCallbackEngine {
     public static YopCallbackResponse handle(YopCallbackRequest request) {
         final YopCallbackProtocol protocol = YopCallbackProtocolFactory.fromRequest(request);
         final YopCallback callback = protocol.parse();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("YopCallbackRequest decrypted:{}", callback);
+        }
         YopCallbackResponse result;
 
         // 业务处理(是否可以异步？)
@@ -127,12 +135,19 @@ public class YopCallbackEngine {
             HashMap<String, String> headers = Maps.newHashMap();
             YopCredentials<?> credentials = YopCredentialsProviderRegistry.getProvider()
                     .getCredentials(callback.getAppKey(), CertTypeEnum.SM2.name());
+            // 与网关保持一致
+            final SignOptions signOptions = AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3")
+                    .getSignOptions().withUrlSafe(false);
             headers.put(Headers.YOP_SIGN, YopSignProcessorFactory.getSignProcessor(CertTypeEnum.SM2.name())
-                    .sign(response.getBody(), (CredentialsItem) credentials));
+                    .doSign(response.getBody().replaceAll("[ \t\n]", EMPTY),
+                            (CredentialsItem) credentials.getCredential(), signOptions));
             if (credentials instanceof CertificateCredentials) {
                 headers.put(Headers.YOP_SIGN_CERT_SERIAL_NO, ((CertificateCredentials) credentials).getSerialNo());
             }
             response.setHeaders(headers);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("YopCallbackResponse signed:{}", response);
+            }
         } catch (Throwable e) {
             LOGGER.warn("error when sign the YopCallbackResponse, ex:", e);
         }

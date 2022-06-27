@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.exception.YopClientException;
 
@@ -33,7 +34,11 @@ public interface YopSignProcessor {
         return doSign(content, credentialsItem);
     }
 
-    String doSign(String content, CredentialsItem credentialsItem);
+    default String doSign(String content, CredentialsItem credentialsItem) {
+        return doSign(content, credentialsItem, null);
+    }
+
+    String doSign(String content, CredentialsItem credentialsItem, SignOptions options);
 
     /**
      * 验签
@@ -50,7 +55,11 @@ public interface YopSignProcessor {
         throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
     }
 
-    boolean doVerify(String content, String signature, CredentialsItem credentialsItem);
+    default boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
+        return doVerify(content, signature, credentialsItem, null);
+    }
+
+    boolean doVerify(String content, String signature, CredentialsItem credentialsItem, SignOptions options);
 
     boolean isSupport(CredentialsItem credentialsItem);
 

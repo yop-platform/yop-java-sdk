@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
@@ -24,13 +25,13 @@ public class YopRsaSignProcessor implements YopSignProcessor {
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SHA256;
 
     @Override
-    public String doSign(String content, CredentialsItem credentialsItem) {
+    public String doSign(String content, CredentialsItem credentialsItem, SignOptions options) {
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
         return RSA.sign(content, pkiCredentialsItem.getPrivateKey(), DIGEST_ALG);
     }
 
     @Override
-    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
+    public boolean doVerify(String content, String signature, CredentialsItem credentialsItem, SignOptions options) {
         PKICredentialsItem pkiCredentialsItem = (PKICredentialsItem) credentialsItem;
         return RSA.verifySign(content, signature, pkiCredentialsItem.getPublicKey(), DIGEST_ALG);
     }

@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.security.rsa;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.utils.Encodes;
@@ -96,7 +97,22 @@ public class RSA {
      * @return String
      */
     public static String sign(String data, PrivateKey key, DigestAlgEnum digestAlg) {
+        return sign(data, key, digestAlg, null);
+    }
+
+    /**
+     * 签名
+     *
+     * @param data      数据
+     * @param key       密钥
+     * @param digestAlg 签名算法
+     * @return String
+     */
+    public static String sign(String data, PrivateKey key, DigestAlgEnum digestAlg, SignOptions options) {
         byte[] dataByte = data.getBytes(Charsets.UTF_8);
+        if (null != options && !options.isUrlSafe()) {
+            return Encodes.encodeBase64(sign(dataByte, key, digestAlg));
+        }
         return Encodes.encodeUrlSafeBase64(sign(dataByte, key, digestAlg));
     }
 
