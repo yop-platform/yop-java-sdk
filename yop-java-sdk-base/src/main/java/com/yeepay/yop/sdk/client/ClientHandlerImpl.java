@@ -1,9 +1,7 @@
 package com.yeepay.yop.sdk.client;
 
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
@@ -23,15 +21,13 @@ import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENCRYPT_ALG;
+import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 
 /**
  * title: 默认客户端处理器<br>
@@ -95,7 +91,7 @@ public class ClientHandlerImpl implements ClientHandler {
             // 仅国密请求支持加密
             YopEncryptor encryptor = null;
             Future<EncryptOptions> encryptOptions = null;
-            if (supportEncrypt(credential, requestConfig)) {
+            if (isEncryptSupported(credential, requestConfig)) {
                 encryptor = getEncryptor(requestConfig);
                 encryptOptions = EncryptOptionsCache.loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg());
             }
@@ -107,38 +103,6 @@ public class ClientHandlerImpl implements ClientHandler {
                     .withSignOptions(authorizationReq.getSignOptions());
             return builder.build();
         }
-    }
-
-    private boolean supportEncrypt(YopCredentials<?> credential, YopRequestConfig requestConfig) {
-        // 指定不加密、或者不支持加密，或者没有有效证书，则不进行加密
-        return !BooleanUtils.isFalse(requestConfig.getNeedEncrypt())
-                && !(credential instanceof YopPKICredentials &&
-                    CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType()))
-                && !(null == YopPlatformCredentialsProviderRegistry.getProvider()
-                    .getLatestAvailable(credential.getAppKey(), CertTypeEnum.SM2.getValue()));
-    }
-
-    private YopEncryptor getEncryptor(YopRequestConfig requestConfig) {
-        if (StringUtils.isBlank(requestConfig.getEncryptAlg())) {
-            requestConfig.setEncryptAlg(YOP_DEFAULT_ENCRYPT_ALG);
-        }
-        YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(requestConfig.getEncryptAlg());
-        if (null == encryptor) {
-            throw new YopClientException("not supported the encryptAlg: " + requestConfig.getEncryptAlg());
-        }
-        return encryptor;
-    }
-
-    private YopCredentials<?> getCredentials(YopRequestConfig requestConfig, AuthorizationReq authorizationReq) {
-        YopCredentials<?> credential = requestConfig.getCredentials();
-        if (null == credential) {
-            credential = yopCredentialsProvider.getCredentials(requestConfig.getAppKey()
-                    , authorizationReq.getCredentialType());
-        }
-        if (null == credential) {
-            throw new YopClientException("No credentials specified");
-        }
-        return credential;
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {

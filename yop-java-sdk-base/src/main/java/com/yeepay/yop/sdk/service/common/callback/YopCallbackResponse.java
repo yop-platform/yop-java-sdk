@@ -2,8 +2,10 @@ package com.yeepay.yop.sdk.service.common.callback;
 
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.service.common.callback.enums.YopCallbackHandleStatus;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * title: 通知结果<br>
@@ -31,6 +33,22 @@ public class YopCallbackResponse implements Serializable {
      */
     private String message;
 
+    /**
+     * 默认为text/plain，除此只为支持json仅此两种
+     */
+    private YopContentType contentType = YopContentType.TEXT_PLAIN;
+
+    /**
+     * 响应头
+     */
+    private Map<String, String> headers;
+
+    /**
+     * 响应体
+     */
+    private String body;
+
+
     public YopCallbackResponse(YopCallbackHandleStatus status) {
         this.status = status;
     }
@@ -56,13 +74,44 @@ public class YopCallbackResponse implements Serializable {
         return message;
     }
 
-    @Override
-    public String toString() {
+    public YopContentType getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(YopContentType contentType) {
+        this.contentType = contentType;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+    }
+
+    public String getBody() {
+        // 自定义
+        if (StringUtils.isNotBlank(body)) {
+            return body;
+        }
+
+        // 默认
+        String result;
         switch (status) {
             case Success:
-                return status.name();
+                result = status.name();
+                break;
             default:
-                return status.name() + ", cause:" + message;
+                result = status.name() + ", cause:" + message;
         }
+        if (YopContentType.JSON.equals(contentType)) {
+            return String.format("{\"result\":\"%s\"}", result);
+        }
+        return result;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 }

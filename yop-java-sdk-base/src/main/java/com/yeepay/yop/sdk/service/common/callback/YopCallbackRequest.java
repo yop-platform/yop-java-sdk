@@ -7,6 +7,8 @@ package com.yeepay.yop.sdk.service.common.callback;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.http.YopContentType;
+import com.yeepay.yop.sdk.internal.Request;
+import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -63,6 +65,15 @@ public class YopCallbackRequest implements Serializable {
     public YopCallbackRequest(String httpPath, String httpMethod) {
         this.httpPath = httpPath;
         this.httpMethod = httpMethod;
+    }
+
+    public static YopCallbackRequest fromYopRequest(Request<YopRequest> yopRequest) {
+        final YopRequest originRequest = yopRequest.getOriginalRequestObject();
+        final YopCallbackRequest callbackRequest = new YopCallbackRequest(originRequest.getApiUri(), originRequest.getHttpMethod());
+        callbackRequest.setContentType(yopRequest.getContentType());
+        callbackRequest.setHeaders(yopRequest.getHeaders());
+        callbackRequest.setContent(yopRequest.getContent());
+        return callbackRequest;
     }
 
     public String getHttpPath() {
