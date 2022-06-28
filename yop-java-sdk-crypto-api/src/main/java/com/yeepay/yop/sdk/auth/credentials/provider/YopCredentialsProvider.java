@@ -4,6 +4,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -28,7 +29,7 @@ public interface YopCredentialsProvider {
      * loading credentials.  For example, an implementation might load credentials
      * from an existing key managemenYopSignProcessort system, or load new credentials when
      * credentials are rotated.
-     *
+     * <p>
      * 根据appKey与凭证类型(CertTypeEnum)，加载可用凭证，用于Yop请求的认证
      * 商户可根据自身情况将凭证信息存储在安全的地方，可通过缓存提升性能
      *
@@ -50,19 +51,23 @@ public interface YopCredentialsProvider {
      * 单应用时，用于加载默认配置
      * 多应用时，用于指定默认应用(自定义provider时，须覆盖实现)
      *
-     * @return appKey
+     * @return appKey 默认应用
      */
-    String getDefaultAppKey();
+    default String getDefaultAppKey() {
+        return "default";
+    }
 
     /**
      * Returns symmetrical keys for using when decrypt yop certs from remote
      * may be different by appKey
      * may be not only one for retry
      *
-     * @param appKey
-     * @return
+     * @param appKey 应用标识
+     * @return 加密密钥
      */
     @Deprecated
-    List<YopCertConfig> getIsvEncryptKey(String appKey);
+    default List<YopCertConfig> getIsvEncryptKey(String appKey) {
+        return Collections.emptyList();
+    }
 
 }
