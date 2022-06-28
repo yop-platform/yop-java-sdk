@@ -50,7 +50,7 @@ public class YopSignUtils {
         String args[] = StringUtils.split(signature, "$");
         CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
         String serialNo = args.length == 4 ? args[3] : (CertTypeEnum.SM2.equals(certType) ? YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO : YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
-        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
+        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
         if (null != yopPlatformCredentials) {
             verify(data, signature, yopPlatformCredentials.getCredential());
         } else {

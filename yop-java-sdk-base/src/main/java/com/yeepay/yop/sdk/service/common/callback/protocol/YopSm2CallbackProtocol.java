@@ -136,7 +136,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         String[] args = sign.split("\\$");
         String plainText = preparePlainText();
         final YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
-                getYopPlatformCredentials(appKey, platformSerialNo);
+                getCredentials(appKey, platformSerialNo);
         YopSignProcessorFactory.getSignProcessor(certType.getValue()).verify(plainText, args[0], platformCredentials.getCredential());
     }
 

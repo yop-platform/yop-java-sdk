@@ -39,7 +39,7 @@ public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
         String credentialStr = sourceCredentials.getCredential();
         byte[] credentialBytes = Encodes.decodeBase64(credentialStr);
         final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider()
-                .getLatestAvailable(appKey, CertTypeEnum.SM2.getValue());
+                .getLatestCredentials(appKey, CertTypeEnum.SM2.getValue());
         source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialBytes,
                 new EncryptOptions(yopPlatformCredentials)));
         source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);

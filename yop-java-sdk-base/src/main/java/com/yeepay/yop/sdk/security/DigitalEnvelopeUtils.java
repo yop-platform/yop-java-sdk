@@ -109,7 +109,7 @@ public class DigitalEnvelopeUtils {
 
         //验证签名
         YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
-                getLatestAvailable(appKey, certType.getValue());
+                getLatestCredentials(appKey, certType.getValue());
 
         final YopSignProcessor yopSignProcess = YopSignProcessorFactory.getSignProcessor(SIGNER_MAP.get(digestAlg));
         boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, platformCredentials.getCredential());

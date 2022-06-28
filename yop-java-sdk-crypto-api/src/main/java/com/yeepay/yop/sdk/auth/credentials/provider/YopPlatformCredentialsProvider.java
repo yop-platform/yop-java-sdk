@@ -7,10 +7,9 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 
 import java.security.cert.X509Certificate;
-import java.util.List;
 
 /**
- * title: <br>
+ * title: Yop平台凭证提供方<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -28,22 +27,24 @@ public interface YopPlatformCredentialsProvider {
      * @param serialNo 证书序列号
      * @return
      */
-    YopPlatformCredentials getYopPlatformCredentials(String appKey, String serialNo);
+    YopPlatformCredentials getCredentials(String appKey, String serialNo);
 
     /**
      * 获取应用下某类型的最新可用平台凭证
      *
-     * @param appKey 应用标识
+     * @param appKey         应用标识
      * @param credentialType 凭证类型
      * @return YopPlatformCredentials
      */
-    YopPlatformCredentials getLatestAvailable(String appKey, String credentialType);
+    YopPlatformCredentials getLatestCredentials(String appKey, String credentialType);
 
     /**
-     * 存储应用下平台凭证
+     * 将应用下平台证书转换并存入加密机
      *
-     * @param appKey       应用标识
-     * @param certificates 平台证书
+     * @param appKey         应用标识
+     * @param credentialType 凭证类型
+     * @param certificate    平台证书
+     * @return YopPlatformCredentials
      */
-    void saveCertsIntoStore(String appKey, List<X509Certificate> certificates);
+    YopPlatformCredentials storeCredentials(String appKey, String credentialType, X509Certificate certificate);
 }

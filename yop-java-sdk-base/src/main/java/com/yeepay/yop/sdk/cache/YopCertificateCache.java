@@ -235,17 +235,19 @@ public class YopCertificateCache {
     }
 
     static {
-        try {
-            String cfcaRootFile = DEFAULT_CFCA_ROOT_FILE, yopInterFile = DEFAULT_YOP_INTER_FILE;
-            String yopPlatformRsaCertSerialNo = PRO_RSA_CERT_SERIAL_NO;
-            if (!EnvUtils.isProd()) {
-                String env = EnvUtils.currentEnv(),
-                        envPrefix = StringUtils.substringBefore(env, "_");
-                cfcaRootFile = envPrefix + "_" + DEFAULT_CFCA_ROOT_FILE;
-                yopInterFile = envPrefix + "_" + DEFAULT_YOP_INTER_FILE;
-                yopPlatformRsaCertSerialNo = QA_RSA_CERT_SERIAL_NO;
-            }
+        String cfcaRootFile = DEFAULT_CFCA_ROOT_FILE, yopInterFile = DEFAULT_YOP_INTER_FILE;
+        String yopPlatformRsaCertSerialNo = PRO_RSA_CERT_SERIAL_NO;
 
+        // 区分环境分别加载内置证书
+        if (!EnvUtils.isProd()) {
+            String env = EnvUtils.currentEnv(),
+                    envPrefix = StringUtils.substringBefore(env, "_");
+            cfcaRootFile = envPrefix + "_" + DEFAULT_CFCA_ROOT_FILE;
+            yopInterFile = envPrefix + "_" + DEFAULT_YOP_INTER_FILE;
+            yopPlatformRsaCertSerialNo = QA_RSA_CERT_SERIAL_NO;
+        }
+
+        try {
             // 根证书
             CFCA_ROOT_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + cfcaRootFile, CertTypeEnum.SM2);
             X509CertUtils.verifyCertificate(CertTypeEnum.SM2, null, CFCA_ROOT_CERT);
@@ -253,13 +255,19 @@ public class YopCertificateCache {
             // 中间证书
             YOP_INTER_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + yopInterFile, CertTypeEnum.SM2);
             X509CertUtils.verifyCertificate(CertTypeEnum.SM2, CFCA_ROOT_CERT.getPublicKey(), YOP_INTER_CERT);
+        } catch (Exception e) {
+            LOGGER.error("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:", e);
+        }
 
+        try {
             // YOP—RSA证书
             YOP_PLATFORM_RSA_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + YOP_RSA_PLATFORM_CERT_PREFIX +
                     yopPlatformRsaCertSerialNo + YOP_PLATFORM_CERT_POSTFIX, CertTypeEnum.RSA2048);
         } catch (Exception e) {
-            LOGGER.error("error when load parent certs, ex:", e);
+            LOGGER.warn("error when load yop rsa certs，if you dont use rsa just ignore it, ex:", e);
         }
+
+        // 该内置client用于YOP通信，实时更新拉取平台证书
         YOP_CLIENT = YopClientBuilder.builder().build();
     }
 

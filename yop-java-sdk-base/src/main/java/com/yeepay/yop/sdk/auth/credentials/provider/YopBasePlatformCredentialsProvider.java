@@ -7,9 +7,7 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.cache.YopCertificateCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -53,18 +51,18 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     protected Map<String, YopPlatformCredentials> credentialsMap = Maps.newConcurrentMap();
 
     @Override
-    public YopPlatformCredentials getYopPlatformCredentials(String appKey, String serialNo) {
+    public YopPlatformCredentials getCredentials(String appKey, String serialNo) {
         if (StringUtils.isBlank(serialNo)) {
             throw new YopClientException("serialNo is required");
         }
         YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
         if (null == foundCredentials) {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                foundCredentials = convertToCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
+                foundCredentials = storeCredentials(appKey, CertTypeEnum.RSA2048.name(), loadLocalRsaCert(appKey, serialNo));
             } else {
                 foundCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == foundCredentials) {
-                    foundCredentials = convertToCredentials(appKey, CertTypeEnum.SM2, loadRemoteSm2Cert(appKey, serialNo));
+                    foundCredentials = storeCredentials(appKey, CertTypeEnum.SM2.name(), loadRemoteSm2Cert(appKey, serialNo));
                 }
             }
         }
@@ -81,9 +79,9 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     /**
      * 从store加载证书
      *
-     * @param appKey 应用标识
+     * @param appKey   应用标识
      * @param serialNo 证书序列号
-     * @return
+     * @return YopPlatformCredentials
      */
     protected abstract YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo);
 
@@ -91,9 +89,9 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     /**
      * 从远端加载国密证书并存入store
      *
-     * @param appKey
-     * @param serialNo
-     * @return
+     * @param appKey   应用标识
+     * @param serialNo 证书序列号
+     * @return X509Certificate
      */
     protected X509Certificate loadRemoteSm2Cert(String appKey, String serialNo) {
         final List<X509Certificate> x509Certificates = YopCertificateCache.loadPlatformSm2Certs(appKey, serialNo);
@@ -102,35 +100,37 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             x509Certificates.forEach(p -> certificateMap.put(p.getSerialNumber().toString(), p));
 
             // 异步存入本地
-            saveCertsIntoStoreAsync(appKey, x509Certificates);
+            saveCertsIntoStoreAsync(appKey, CertTypeEnum.SM2.name(), x509Certificates);
             return certificateMap.get(serialNo);
         }
         return null;
     }
 
-    protected void saveCertsIntoStoreAsync(String appKey, List<X509Certificate> x509Certificates) {
+    protected void saveCertsIntoStoreAsync(String appKey, String credentialType, List<X509Certificate> x509Certificates) {
         THREAD_POOL.submit(() -> {
-            try {
-                saveCertsIntoStore(appKey, x509Certificates);
-            } catch (Exception e) {
-                LOGGER.warn("error when storeCerts, ex:", e);
+            for (X509Certificate x509Certificate : x509Certificates) {
+                try {
+                    storeCredentials(appKey, credentialType, x509Certificate);
+                } catch (Exception e) {
+                    LOGGER.warn("error when X509Certificate, ex:", e);
+                }
             }
         });
     }
 
     /**
-     * 读取内置证书
+     * 读取内置RSA证书
      *
-     * @param appKey
-     * @param serialNo
-     * @return
+     * @param appKey   应用标识
+     * @param serialNo 证书序列号
+     * @return X509Certificate
      */
     protected X509Certificate loadLocalRsaCert(String appKey, String serialNo) {
         return YopCertificateCache.getYopPlatformRsaCertFromLocal();
     }
 
     @Override
-    public YopPlatformCredentials getLatestAvailable(String appKey, String credentialType) {
+    public YopPlatformCredentials getLatestCredentials(String appKey, String credentialType) {
         try {
             switch (CertTypeEnum.parse(credentialType)) {
                 case SM2:
@@ -147,11 +147,11 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
                         latestCert = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY).get(0);
                     }
 
-                    YopPlatformCredentials credentials = convertToCredentials(appKey, CertTypeEnum.SM2, latestCert);
+                    YopPlatformCredentials credentials = storeCredentials(appKey, CertTypeEnum.SM2.name(), latestCert);
                     credentialsMap.put(credentials.getSerialNo(), credentials);
                     return credentials;
                 case RSA2048:
-                    return getYopPlatformCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
+                    return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
                 default:
                     return null;
             }
@@ -159,18 +159,5 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             LOGGER.warn("no YopPlatformCredentials found for appKey:{}, credentialType:{}", appKey, credentialType);
         }
         return null;
-    }
-
-    /**
-     * 将证书转换为凭证(加密机需要实现)
-     *
-     * @param certType
-     * @param cert 证书
-     * @return
-     */
-    protected YopPlatformCredentials convertToCredentials(String appKey, CertTypeEnum certType, X509Certificate cert) {
-        if (null == cert) return null;
-        return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType))
-                .withSerialNo(cert.getSerialNumber().toString()).withAppKey(appKey);
     }
 }

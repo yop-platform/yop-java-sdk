@@ -29,11 +29,11 @@ public class YopPlatformCredentialsProviderTest {
     @Ignore
     public void testPro() {
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
-        final CredentialsItem rsaPlatformCredentials = provider.getYopPlatformCredentials("", YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
+        final CredentialsItem rsaPlatformCredentials = provider.getCredentials("", YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
         Assert.assertNotNull(rsaPlatformCredentials);
         Assert.assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        final CredentialsItem sm2PlatformCredentials = provider.getYopPlatformCredentials("", "289782695477").getCredential();
+        final CredentialsItem sm2PlatformCredentials = provider.getCredentials("", "289782695477").getCredential();
         Assert.assertNotNull(sm2PlatformCredentials);
         Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }
@@ -43,12 +43,12 @@ public class YopPlatformCredentialsProviderTest {
         System.setProperty("yop.sdk.config.env", "qa");
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
-        final CredentialsItem rsaPlatformCredentials = provider.getYopPlatformCredentials("",
+        final CredentialsItem rsaPlatformCredentials = provider.getCredentials("",
                 YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
         Assert.assertNotNull(rsaPlatformCredentials);
         Assert.assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        final CredentialsItem sm2PlatformCredentials = provider.getYopPlatformCredentials("", "275550212193").getCredential();
+        final CredentialsItem sm2PlatformCredentials = provider.getCredentials("", "275550212193").getCredential();
         Assert.assertNotNull(sm2PlatformCredentials);
         Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }

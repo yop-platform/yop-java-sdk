@@ -77,7 +77,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             serialNo = YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
         }
 
-        return YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
+        return YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
     }
 
 }

@@ -6,7 +6,9 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.cache.YopCertificateCache;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
@@ -18,7 +20,6 @@ import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.crypto.YopPublicKey;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.security.cert.X509Certificate;
-import java.util.List;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_PLATFORM_CERT_POSTFIX;
@@ -60,7 +60,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
 
         if (MapUtils.isNotEmpty(localCerts)) {
             if (localCerts.containsKey(serialNo)) {
-                return convertToCredentials(appKey, CertTypeEnum.SM2, localCerts.get(serialNo));
+                return convertCredentials(appKey, CertTypeEnum.SM2.name(), localCerts.get(serialNo));
             }
         }
         LOGGER.debug("no available platform cert from store, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
@@ -68,32 +68,49 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
     }
 
     @Override
-    public void saveCertsIntoStore(String appKey, List<X509Certificate> certificates) {
-        saveCertsIntoStore(YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore(), certificates);
+    public YopPlatformCredentials storeCredentials(String appKey, String credentialType, X509Certificate cert) {
+        return doStore(appKey, credentialType, cert, YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore());
     }
 
-    private void saveCertsIntoStore(YopCertStore yopCertStore, List<X509Certificate> certificates) {
-        if (CollectionUtils.isEmpty(certificates)) {
-            return;
+    private YopPlatformCredentials doStore(String appKey, String credentialType, X509Certificate cert, YopCertStore yopCertStore) {
+        YopPlatformCredentials result = convertCredentials(appKey, credentialType, cert);
+
+        // 默认仅放内存，商户可配置存放磁盘
+        if (null == yopCertStore || !BooleanUtils.isTrue(yopCertStore.getEnable())) {
+            return result;
         }
 
-        // 存储指定目录
-        if (null == yopCertStore || !BooleanUtils.isTrue(yopCertStore.getEnable())) {
-            return;
+        // 创建存储目录
+        final File certStoreDir = createStoreDirIfNecessary(yopCertStore);
+        if (null != certStoreDir) {
+            writeCertToFileStore(certStoreDir, cert);
         }
-        for (X509Certificate certificate : certificates) {
-            try {
-                final File certStoreDir = new File(yopCertStore.getPath());
-                if (!certStoreDir.exists()) {
-                    certStoreDir.mkdirs();
-                }
-                final String serialNo = certificate.getSerialNumber().toString();
-                final File certFile = new File(certStoreDir, YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX);
-                X509CertSupportFactory.getSupport(CertTypeEnum.SM2.name()).writeToFile(certificate, certFile);
-            } catch (Exception e) {
-                LOGGER.error("error when store yop cert, ex:", e);
+
+        return result;
+    }
+
+    private void writeCertToFileStore(File certStoreDir, X509Certificate cert) {
+        try {
+            final String serialNo = cert.getSerialNumber().toString();
+            final File certFile = new File(certStoreDir, YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX);
+            X509CertSupportFactory.getSupport(CertTypeEnum.SM2.name()).writeToFile(cert, certFile);
+        } catch (Exception e) {
+            LOGGER.error("error when write yop cert to file, ex:", e);
+        }
+    }
+
+    private File createStoreDirIfNecessary(YopCertStore yopCertStore) {
+        try {
+            File certStoreDir = new File(yopCertStore.getPath());
+            if (!certStoreDir.exists() && !certStoreDir.mkdirs()) {
+                LOGGER.warn("fail when create yop cert store dir, {}", yopCertStore);
+            } else {
+                return certStoreDir;
             }
+        } catch (Exception e) {
+            LOGGER.error("error when create yop cert store dir, ex:", e);
         }
+        return null;
     }
 
     private Map<String, X509Certificate> loadAndVerify(YopCertStore yopCertStore, String serialNo, boolean absolutePath) {
@@ -124,5 +141,19 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
             }
         }
         return certMap;
+    }
+
+    /**
+     * 将证书转换为凭证
+     *
+     * @param credentialType 凭证类型
+     * @param cert           证书
+     * @return YopPlatformCredentials
+     */
+    protected YopPlatformCredentials convertCredentials(String appKey, String credentialType, X509Certificate cert) {
+        if (null == cert) return null;
+        final CertTypeEnum certType = CertTypeEnum.parse(credentialType);
+        return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType))
+                .withSerialNo(cert.getSerialNumber().toString()).withAppKey(appKey);
     }
 }
