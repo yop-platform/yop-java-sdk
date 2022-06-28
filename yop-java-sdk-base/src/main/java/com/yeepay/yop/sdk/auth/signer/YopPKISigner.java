@@ -99,8 +99,6 @@ public class YopPKISigner implements YopSigner {
     }
 
     private void additionalHeader(Request<? extends BaseRequest> request, SignOptions options) {
-        request.addHeader(Headers.HOST, HttpUtils.generateHostHeader(request.getEndpoint()));
-
         DigestAlgEnum digestAlg = options.getDigestAlg();
         String contentHash = calculateContentHash(request, digestAlg);
         request.addHeader(getDigestAlgHeaderName(digestAlg), contentHash);
