@@ -183,9 +183,9 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
             expirationInSeconds = Long.parseLong(authorizationHeaders[3]);
             signedHeaders = authorizationHeaders[4].toLowerCase();
             signature = authorizationHeaders[5];
-            platformSerialNo = request.getHeaders().get(Headers.YOP_CERT_SERIAL_NO);
-            if (StringUtils.isEmpty(platformSerialNo)) {
-                platformSerialNo = request.getHeaders().get(Headers.YOP_SIGN_CERT_SERIAL_NO);
+            platformSerialNo = request.getHeaders().get(Headers.YOP_SIGN_CERT_SERIAL_NO);
+            if (StringUtils.isBlank(platformSerialNo)) {
+                platformSerialNo = request.getHeaders().get(Headers.YOP_CERT_SERIAL_NO);
             }
             yopEncrypt = request.getHeaders().get(Headers.YOP_ENCRYPT);
             yopRequestId = request.getHeaders().get(Headers.YOP_REQUEST_ID);

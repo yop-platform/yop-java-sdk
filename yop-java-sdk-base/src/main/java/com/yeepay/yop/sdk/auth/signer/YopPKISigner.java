@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.SignOptions;
+import com.yeepay.yop.sdk.auth.credentials.CertificateCredentials;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
@@ -96,6 +97,11 @@ public class YopPKISigner implements YopSigner {
         String authorizationHeader = buildAuthzHeader(options, authString, headersToSign, signature);
         LOGGER.debug("Authorization:{}", authorizationHeader);
         request.addHeader(Headers.AUTHORIZATION, authorizationHeader);
+
+        // E.添加签名序列号
+        if (credentials instanceof CertificateCredentials) {
+            request.addHeader(Headers.YOP_SIGN_CERT_SERIAL_NO, ((CertificateCredentials) credentials).getSerialNo());
+        }
     }
 
     private void additionalHeader(Request<? extends BaseRequest> request, SignOptions options) {
