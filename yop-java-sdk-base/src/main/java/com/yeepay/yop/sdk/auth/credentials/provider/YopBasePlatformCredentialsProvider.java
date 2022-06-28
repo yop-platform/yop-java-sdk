@@ -60,11 +60,11 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
         if (null == foundCredentials) {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                foundCredentials = toCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
+                foundCredentials = convertToCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
             } else {
                 foundCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == foundCredentials) {
-                    foundCredentials = toCredentials(appKey, CertTypeEnum.SM2, loadRemoteSm2Cert(appKey, serialNo));
+                    foundCredentials = convertToCredentials(appKey, CertTypeEnum.SM2, loadRemoteSm2Cert(appKey, serialNo));
                 }
             }
         }
@@ -81,8 +81,8 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     /**
      * 从store加载证书
      *
-     * @param appKey
-     * @param serialNo
+     * @param appKey 应用标识
+     * @param serialNo 证书序列号
      * @return
      */
     protected abstract YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo);
@@ -102,16 +102,16 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             x509Certificates.forEach(p -> certificateMap.put(p.getSerialNumber().toString(), p));
 
             // 异步存入本地
-            saveCertsIntoStoreAsync(certificateMap);
+            saveCertsIntoStoreAsync(appKey, x509Certificates);
             return certificateMap.get(serialNo);
         }
         return null;
     }
 
-    protected void saveCertsIntoStoreAsync(Map<String, X509Certificate> certificateMap) {
+    protected void saveCertsIntoStoreAsync(String appKey, List<X509Certificate> x509Certificates) {
         THREAD_POOL.submit(() -> {
             try {
-                saveCertsIntoStore(certificateMap);
+                saveCertsIntoStore(appKey, x509Certificates);
             } catch (Exception e) {
                 LOGGER.warn("error when storeCerts, ex:", e);
             }
@@ -147,7 +147,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
                         latestCert = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY).get(0);
                     }
 
-                    YopPlatformCredentials credentials = toCredentials(appKey, CertTypeEnum.SM2, latestCert);
+                    YopPlatformCredentials credentials = convertToCredentials(appKey, CertTypeEnum.SM2, latestCert);
                     credentialsMap.put(credentials.getSerialNo(), credentials);
                     return credentials;
                 case RSA2048:
@@ -165,10 +165,10 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
      * 将证书转换为凭证(加密机需要实现)
      *
      * @param certType
-     * @param cert
+     * @param cert 证书
      * @return
      */
-    protected YopPlatformCredentials toCredentials(String appKey, CertTypeEnum certType, X509Certificate cert) {
+    protected YopPlatformCredentials convertToCredentials(String appKey, CertTypeEnum certType, X509Certificate cert) {
         if (null == cert) return null;
         return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType))
                 .withSerialNo(cert.getSerialNumber().toString()).withAppKey(appKey);

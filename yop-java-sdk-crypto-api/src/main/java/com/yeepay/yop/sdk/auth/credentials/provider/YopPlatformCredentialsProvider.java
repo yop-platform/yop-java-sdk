@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 
 import java.security.cert.X509Certificate;
-import java.util.Map;
+import java.util.List;
 
 /**
  * title: <br>
@@ -42,7 +42,8 @@ public interface YopPlatformCredentialsProvider {
     /**
      * 存储应用下平台凭证
      *
-     * @param certMap 序列号->平台证书
+     * @param appKey       应用标识
+     * @param certificates 平台证书
      */
-    void saveCertsIntoStore(Map<String, X509Certificate> certMap);
+    void saveCertsIntoStore(String appKey, List<X509Certificate> certificates);
 }
