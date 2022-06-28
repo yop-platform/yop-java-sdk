@@ -139,9 +139,11 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
      */
     @Override
     public void addHeader(String name, String value) {
-        if (!Headers.YOP_REQUEST_ID.equals(name)) {
-            headers.put(name, value);
+        // 支持指定请求id
+        if (Headers.YOP_REQUEST_ID.equals(name)) {
+            this.requestId = value;
         }
+        headers.put(name, value);
     }
 
     @Override
