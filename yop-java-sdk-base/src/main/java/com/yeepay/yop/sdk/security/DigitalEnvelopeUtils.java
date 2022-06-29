@@ -143,7 +143,7 @@ public class DigitalEnvelopeUtils {
         YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
                 .getCredentials(appKey, credentialType);
         PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
-        return decrypt(cipherText, pkiCredentialsItem.getPrivateKey());
+        return decrypt(cipherText, appKey, pkiCredentialsItem.getPrivateKey());
     }
 
     /**
