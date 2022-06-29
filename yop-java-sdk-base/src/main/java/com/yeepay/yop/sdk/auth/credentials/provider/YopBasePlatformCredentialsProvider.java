@@ -7,7 +7,9 @@ package com.yeepay.yop.sdk.auth.credentials.provider;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.cache.YopCertificateCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -58,7 +60,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
         if (null == foundCredentials) {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                foundCredentials = storeCredentials(appKey, CertTypeEnum.RSA2048.name(), loadLocalRsaCert(appKey, serialNo));
+                foundCredentials = convertRsaCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
             } else {
                 foundCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == foundCredentials) {
@@ -74,6 +76,11 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             }
         }
         return foundCredentials;
+    }
+
+    private YopPlatformCredentials convertRsaCredentials(String appKey, CertTypeEnum certType, X509Certificate cert) {
+        return new YopPlatformCredentialsHolder().withAppKey(appKey).withSerialNo(cert.getSerialNumber().toString())
+                .withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType));
     }
 
     /**
