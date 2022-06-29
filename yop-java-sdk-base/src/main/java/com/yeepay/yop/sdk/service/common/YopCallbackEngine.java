@@ -137,7 +137,7 @@ public class YopCallbackEngine {
                     .getCredentials(callback.getAppKey(), CertTypeEnum.SM2.name());
             // 与网关保持一致
             final SignOptions signOptions = AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3")
-                    .getSignOptions().withUrlSafe(false);
+                    .getSignOptions();
             headers.put(Headers.YOP_SIGN, YopSignProcessorFactory.getSignProcessor(CertTypeEnum.SM2.name())
                     .doSign(response.getBody().replaceAll("[ \t\n]", EMPTY),
                             (CredentialsItem) credentials.getCredential(), signOptions));
