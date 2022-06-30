@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.crypto;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +57,11 @@ public class YopCertParserFactory {
      * @return 解析器
      */
     public static YopCertParser getCertParser(String parserId) {
-        return YOP_CERT_PARSER_MAP.get(parserId);
+        final YopCertParser yopCertParser = YOP_CERT_PARSER_MAP.get(parserId);
+        if (null == yopCertParser) {
+            throw new YopClientException("YopCertParser not found, parserId:" + parserId);
+        }
+        return yopCertParser;
     }
 
     /**

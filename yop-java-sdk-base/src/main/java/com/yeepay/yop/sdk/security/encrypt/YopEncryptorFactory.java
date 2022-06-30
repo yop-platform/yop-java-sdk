@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.security.encrypt;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.util.List;
 import java.util.Map;
@@ -76,7 +77,11 @@ public class YopEncryptorFactory {
      * @return 加解密器
      */
     public static YopEncryptor getEncryptor(String encryptAlg) {
-        return YOP_ENCRYPTOR_MAP.get(encryptAlg);
+        final YopEncryptor yopEncryptor = YOP_ENCRYPTOR_MAP.get(encryptAlg);
+        if (null == yopEncryptor) {
+            throw new YopClientException("YopEncryptor not found, encryptAlg:" + encryptAlg);
+        }
+        return yopEncryptor;
     }
 
 }

@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.digest;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -54,7 +55,11 @@ public class YopDigesterFactory {
      * @return 摘要器
      */
     public static YopDigester getDigester(String alg) {
-        return YOP_DIGESTER_MAP.get(alg);
+        final YopDigester yopDigester = YOP_DIGESTER_MAP.get(alg);
+        if (null == yopDigester) {
+            throw new YopClientException("YopDigester not found, alg:" + alg);
+        }
+        return yopDigester;
     }
 
 }
