@@ -76,7 +76,11 @@ public class YopCallbackEngine {
             YopSignerFactory.getSigner(authorizationReq.getSignerType()).sign(marshalled, credential, authorizationReq.getSignOptions());
         }
 
-        return YopCallbackRequest.fromYopRequest(marshalled);
+        final YopCallbackRequest callbackRequest = YopCallbackRequest.fromYopRequest(marshalled);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("YopCallbackRequest build:{}", callbackRequest);
+        }
+        return callbackRequest;
     }
 
     /**
