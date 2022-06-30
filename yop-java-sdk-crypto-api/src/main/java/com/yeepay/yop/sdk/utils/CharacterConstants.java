@@ -30,4 +30,5 @@ public interface CharacterConstants {
     String DOLLAR = "$";
     String LEFT_BRACE = "{";
     String RIGHT_BRACE = "}";
+    String NULL_STRING = "null";
 }

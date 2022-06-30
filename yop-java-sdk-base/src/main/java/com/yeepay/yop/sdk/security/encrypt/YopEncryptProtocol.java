@@ -37,7 +37,7 @@ import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
 public enum YopEncryptProtocol {
 
     /**
-     * 加密协议头(请求)：yop-encrypt-v1/{平台证书序列号}/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必
+     * 加密协议头(请求)：yop-encrypt-v1/{服务端证书序列号}/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必
      * 填)}/{encryptHeaders}/{encryptParams}
      */
     YOP_ENCRYPT_PROTOCOL_V1_REQ(YOP_ENCRYPT_V1) {
