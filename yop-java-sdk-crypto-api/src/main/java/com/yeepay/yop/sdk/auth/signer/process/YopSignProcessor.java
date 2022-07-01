@@ -23,9 +23,9 @@ public interface YopSignProcessor {
     /**
      * 签名
      *
-     * @param content
-     * @param credentialsItem
-     * @return
+     * @param content         签名原文
+     * @param credentialsItem 签名密钥信息
+     * @return urlSafeBase64编码的字符串
      */
     default String sign(String content, CredentialsItem credentialsItem) {
         if (!isSupport(credentialsItem)) {
@@ -38,15 +38,23 @@ public interface YopSignProcessor {
         return doSign(content, credentialsItem, null);
     }
 
+    /**
+     * 签名
+     *
+     * @param content         签名原文
+     * @param credentialsItem 签名密钥信息
+     * @param options         签名选项
+     * @return base64编码的字符串(是否urlSafe ， 可在options中指定)
+     */
     String doSign(String content, CredentialsItem credentialsItem, SignOptions options);
 
     /**
      * 验签
      *
-     * @param content
-     * @param signature
-     * @param credentialsItem
-     * @return
+     * @param content 签名原文
+     * @param signature 签名
+     * @param credentialsItem 签名密钥信息
+     * @return true: 验签通过，false: 不通过
      */
     default boolean verify(String content, String signature, CredentialsItem credentialsItem) {
         if (isSupport(credentialsItem)) {
@@ -59,21 +67,36 @@ public interface YopSignProcessor {
         return doVerify(content, signature, credentialsItem, null);
     }
 
+    /**
+     * 验签
+     *
+     * @param content         签名原文
+     * @param signature       签名
+     * @param credentialsItem 签名密钥信息
+     * @param options         签名选项
+     * @return true: 验签通过，false: 不通过
+     */
     boolean doVerify(String content, String signature, CredentialsItem credentialsItem, SignOptions options);
 
+    /**
+     * 判断是否支持用该密钥进行签名/验签
+     *
+     * @param credentialsItem 密钥信息
+     * @return true: 支持，false：不支持
+     */
     boolean isSupport(CredentialsItem credentialsItem);
 
     /**
-     * 签名处理器名称
+     * 签名处理器标识
      *
-     * @return
+     * @return 签名器标识
      */
     String name();
 
     /**
      * 获取摘要算法
      *
-     * @return
+     * @return 摘要算法
      */
     String getDigestAlg();
 }
