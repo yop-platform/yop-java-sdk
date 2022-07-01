@@ -7,6 +7,7 @@ import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 
 import java.io.File;
@@ -120,6 +121,16 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
      */
     public DefaultRequest(String serviceName) {
         this(null, serviceName);
+    }
+
+    /**
+     * Constructs a new DefaultRequest with the original, user facing request object.
+     *
+     * @param @param originalRequest The original, user facing, AWS request being represented by
+     *                               this internal request object.
+     */
+    public DefaultRequest(T originalRequest) {
+        this(originalRequest, CharacterConstants.EMPTY);
     }
 
 

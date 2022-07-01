@@ -23,13 +23,13 @@ import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequest;
+import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequestMarshaller;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackResponse;
 import com.yeepay.yop.sdk.service.common.callback.handler.YopCallbackHandlerFactory;
 import com.yeepay.yop.sdk.service.common.callback.protocol.YopCallbackProtocol;
 import com.yeepay.yop.sdk.service.common.callback.protocol.YopCallbackProtocolFactory;
 import com.yeepay.yop.sdk.service.common.callback.protocol.YopSm2CallbackProtocol;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
-import com.yeepay.yop.sdk.service.common.request.YopRequestMarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,7 @@ public class YopCallbackEngine {
      * @return Yop回调请求
      */
     public static YopCallbackRequest build(YopRequest request) throws ExecutionException, InterruptedException, UnsupportedEncodingException {
-        Request<YopRequest> marshalled = YopRequestMarshaller.getInstance().marshall(request);
+        Request<YopRequest> marshalled = YopCallbackRequestMarshaller.getInstance().marshall(request);
         AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(request.getRequestConfig().getSecurityReq());
         if (null == authorizationReq) {
             throw new YopClientException("no authenticate req defined");
