@@ -15,6 +15,6 @@ package com.yeepay.yop.sdk.service.common.callback.enums;
  * @since 2019-06-13 23:05
  */
 public enum YopCallbackHandleStatus {
-    Success,
-    Fail;
+    SUCCESS,
+    FAIL;
 }
