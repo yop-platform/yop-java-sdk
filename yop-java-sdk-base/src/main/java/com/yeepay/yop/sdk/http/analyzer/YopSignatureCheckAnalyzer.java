@@ -52,12 +52,12 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             final SignOptions reqOptions = context.getSignOptions();
             YopPlatformCredentials platformCredentials = getPlatformCredential(reqOptions, context.getAppKey(), metadata.getYopCertSerialNo());
             if (null != platformCredentials) {
-                // YOP响应签名非urlsafe
+                // 目前 YOP响应签名非urlsafe
                 context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), platformCredentials,
                         new SignOptions().withDigestAlg(reqOptions.getDigestAlg())
                                 .withProtocolPrefix(reqOptions.getProtocolPrefix())
                                 .withExpirationInSeconds(reqOptions.getExpirationInSeconds())
-                                .withUrlSafe(false));
+                                .withUrlSafe(!StringUtils.containsAny(metadata.getYopSign(), '+', '/', '=')));
             } else {
                 throw new YopClientException("yop platform credentials not found");
             }
