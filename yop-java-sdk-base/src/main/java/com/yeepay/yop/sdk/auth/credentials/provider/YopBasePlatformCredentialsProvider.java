@@ -57,17 +57,19 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         if (StringUtils.isBlank(serialNo)) {
             throw new YopClientException("serialNo is required");
         }
-        YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
-        if (null == foundCredentials) {
+        YopPlatformCredentials foundCredentials = credentialsMap.computeIfAbsent(serialNo, p -> {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                foundCredentials = convertRsaCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
+                return convertRsaCredentials(appKey, CertTypeEnum.RSA2048, loadLocalRsaCert(appKey, serialNo));
             } else {
-                foundCredentials = loadCredentialsFromStore(appKey, serialNo);
-                if (null == foundCredentials) {
-                    foundCredentials = storeCredentials(appKey, CertTypeEnum.SM2.name(), loadRemoteSm2Cert(appKey, serialNo));
+                YopPlatformCredentials localCredentials = loadCredentialsFromStore(appKey, serialNo);
+                if (null == localCredentials) {
+                    return storeCredentials(appKey, CertTypeEnum.SM2.name(), loadRemoteSm2Cert(appKey, serialNo));
+                } else {
+                    return localCredentials;
                 }
             }
-        }
+        });
+
         if (null != foundCredentials) {
             String realSerialNo = foundCredentials.getSerialNo();
             credentialsMap.put(serialNo, foundCredentials);

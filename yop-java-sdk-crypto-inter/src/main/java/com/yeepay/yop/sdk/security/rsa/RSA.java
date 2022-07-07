@@ -31,7 +31,6 @@ public class RSA {
 
     static {
         SIGN_ALG_MAP.put(DigestAlgEnum.SHA256, "SHA256withRSA");
-        SIGN_ALG_MAP.put(DigestAlgEnum.SHA512, "SHA512withRSA");
     }
 
     /**

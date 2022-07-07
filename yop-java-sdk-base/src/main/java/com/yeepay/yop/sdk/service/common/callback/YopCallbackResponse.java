@@ -36,7 +36,7 @@ public class YopCallbackResponse implements Serializable {
     private String message;
 
     /**
-     * 默认为text/plain，除此只为支持json仅此两种
+     * 默认为text/plain，除此之外支持json，仅此两种
      */
     private YopContentType contentType = YopContentType.TEXT_PLAIN;
 

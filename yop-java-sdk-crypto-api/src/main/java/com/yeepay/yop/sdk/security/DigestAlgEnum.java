@@ -17,7 +17,6 @@ package com.yeepay.yop.sdk.security;
 public enum DigestAlgEnum {
 
     SHA256("sha-256摘要"),
-    SHA512("sha-512摘要"),
     SM3("SM3摘要算法");
 
     private final String value;

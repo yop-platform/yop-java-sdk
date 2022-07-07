@@ -36,7 +36,7 @@ public class YopShaDigester implements YopDigester {
 
     @Override
     public List<String> supportedAlgs() {
-        return Lists.newArrayList(DigestAlgEnum.SHA256.name(), DigestAlgEnum.SHA512.name());
+        return Lists.newArrayList(DigestAlgEnum.SHA256.name());
     }
 
     @Override
@@ -57,7 +57,6 @@ public class YopShaDigester implements YopDigester {
         try {
             Map<String, MessageDigest> algMap = Maps.newHashMap();
             algMap.put("SHA256", MessageDigest.getInstance("SHA-256"));
-            algMap.put("SHA512", MessageDigest.getInstance("SHA-512"));
             return algMap;
         } catch (Exception e) {
             LOGGER.warn("Unable to get Digest Function, will fail when use YopRSASigner for sign, ex", e);

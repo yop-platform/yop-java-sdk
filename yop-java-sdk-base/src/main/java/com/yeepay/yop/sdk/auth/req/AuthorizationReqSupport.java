@@ -40,12 +40,6 @@ public class AuthorizationReqSupport {
         DEFAULT_AUTH_REQS_FOR_API.add(rsaAuthReq);
 
         // 其他
-        SUPPORTED_AUTH_REQS.put("YOP-RSA2048-SHA512", buildAuthorizationReq(SignerTypeEnum.RSA.name(), "RSA2048",
-                "SHA512withRSA", DigestAlgEnum.SHA512, "YOP-RSA2048-SHA512"));
-        SUPPORTED_AUTH_REQS.put("YOP-RSA4096-SHA256", buildAuthorizationReq(SignerTypeEnum.RSA.name(), "RSA4096",
-                "SHA256withRSA", DigestAlgEnum.SHA256, "YOP-RSA4096-SHA256"));
-        SUPPORTED_AUTH_REQS.put("YOP-RSA4096-SHA512", buildAuthorizationReq(SignerTypeEnum.RSA.name(), "RSA4096",
-                "SHA512withRSA", DigestAlgEnum.SHA512, "YOP-RSA4096-SHA512"));
         SUPPORTED_AUTH_REQS.put("YOP-OAUTH2", buildAuthorizationReq(SignerTypeEnum.OAUTH2.name(), "TOKEN",
                 null, DigestAlgEnum.SHA256, "Bearer"));
     }
