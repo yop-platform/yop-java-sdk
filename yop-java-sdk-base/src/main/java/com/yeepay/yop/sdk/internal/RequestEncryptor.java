@@ -137,7 +137,7 @@ public class RequestEncryptor {
 
         Set<String> finalEncryptParams = Sets.newHashSetWithExpectedSize(encryptParams.size());
         Map<String, List<String>> parameters = request.getParameters();
-        encryptCommonParams(encryptor, finalEncryptParams, encryptParams, parameters, encryptOptions, totalEncrypt);
+        encryptSimpleParams(encryptor, finalEncryptParams, encryptParams, parameters, encryptOptions, totalEncrypt);
 
         Map<String, List<MultiPartFile>> multiPartFiles = request.getMultiPartFiles();
         encryptMultiPartParams(encryptor, finalEncryptParams, encryptParams, multiPartFiles, encryptOptions, totalEncrypt);
@@ -226,7 +226,7 @@ public class RequestEncryptor {
         });
     }
 
-    private static void encryptCommonParams(YopEncryptor encryptor, Set<String> finalEncryptParams, Set<String> encryptParams,
+    private static void encryptSimpleParams(YopEncryptor encryptor, Set<String> finalEncryptParams, Set<String> encryptParams,
                                             Map<String, List<String>> parameters, EncryptOptions encryptOptions, boolean totalEncrypt) {
         parameters.forEach((name, list) -> {
             if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {

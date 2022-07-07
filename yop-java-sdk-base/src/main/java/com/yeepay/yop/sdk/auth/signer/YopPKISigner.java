@@ -48,7 +48,7 @@ import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
 public class YopPKISigner implements YopSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
-
+ // 大写
     private static final Set<String> defaultHeadersToSign = Sets.newHashSet();
     private static final Joiner headerJoiner = Joiner.on('\n');
     private static final Joiner signedHeaderStringJoiner = Joiner.on(';');

@@ -63,7 +63,8 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             } else {
                 YopPlatformCredentials localCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == localCredentials) {
-                    return storeCredentials(appKey, CertTypeEnum.SM2.name(), loadRemoteSm2Cert(appKey, serialNo));
+                    final X509Certificate remoteCerts = loadRemoteSm2Cert(appKey, serialNo);
+                    return storeCredentials(appKey, CertTypeEnum.SM2.name(), remoteCerts);
                 } else {
                     return localCredentials;
                 }
