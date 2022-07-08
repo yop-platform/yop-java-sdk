@@ -59,7 +59,9 @@ public class YopMetadataResponseAnalyzer implements HttpResponseAnalyzer {
         metadata.setExpires(httpResponse.getHeaderAsRfc822Date(Headers.EXPIRES));
         metadata.setLastModified(httpResponse.getHeaderAsRfc822Date(Headers.LAST_MODIFIED));
         metadata.setServer(httpResponse.getHeader(Headers.SERVER));
-        metadata.setYopCertSerialNo(httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO));
+        final String certSerialNo = httpResponse.getHeader(Headers.YOP_SIGN_CERT_SERIAL_NO);
+        metadata.setYopCertSerialNo(StringUtils.defaultIfBlank(certSerialNo, httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO)));
+        metadata.setYopEncrypt(httpResponse.getHeader(Headers.YOP_ENCRYPT));
         handleYopResponseMetadata(metadata);
         return false;
     }

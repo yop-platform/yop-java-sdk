@@ -1,0 +1,17 @@
+{
+  "app_key": "app_15958159879157110002",
+  "isv_private_key": [
+    {
+      "store_type": "string",
+      "cert_type": "SM2",
+      "value": "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgB0DK/uNgBEVHoM4QSbVW5rZ6Jkni6XEZfqVE33hiq2SgCgYIKoEcz1UBgi2hRANCAAQQnyX/PqhRYBDdw2uK07m5GNyaBeXbxIPwaA4kxTj6tCSFsTkh2x2tJ4OyVzbJThSmUsvu8do2dWvSRml9tziw"
+    }
+  ],
+  "isv_encrypt_key": [
+    {
+      "store_type": "string",
+      "cert_type": "SM4",
+      "value": "JnhWelxyAaFlszR1ER2Upw=="
+    }
+  ]
+}

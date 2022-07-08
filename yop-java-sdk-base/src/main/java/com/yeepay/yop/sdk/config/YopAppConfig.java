@@ -5,12 +5,14 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
-import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
+import com.yeepay.yop.sdk.crypto.YopCertCategory;
+import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
+import java.security.PrivateKey;
 import java.util.List;
 import java.util.Map;
 
@@ -30,12 +32,9 @@ public class YopAppConfig implements Serializable {
 
     private String appKey;
 
-    private String aesSecretKey;
+    private Map<CertTypeEnum, Object> isvPrivateKeys = Maps.newHashMap();
 
-    private String encryptKey;
-
-    private Map<CertTypeEnum, String> isvPrivateKeys = Maps.newHashMap();
-
+    @Deprecated
     private List<YopCertConfig> isvEncryptKeys = Lists.newLinkedList();
 
     public String getAppKey() {
@@ -46,44 +45,32 @@ public class YopAppConfig implements Serializable {
         this.appKey = appKey;
     }
 
-    public String getAesSecretKey() {
-        return aesSecretKey;
-    }
-
-    public void setAesSecretKey(String aesSecretKey) {
-        this.aesSecretKey = aesSecretKey;
-    }
-
-    public String getEncryptKey() {
-        return encryptKey;
-    }
-
-    public void setEncryptKey(String encryptKey) {
-        this.encryptKey = encryptKey;
-    }
-
     public void setIsvPrivateKey(List<YopCertConfig> isvPrivateKeys) {
         if(CollectionUtils.isEmpty(isvPrivateKeys)){
             return;
         }
 
         for (YopCertConfig isvPrivateKey : isvPrivateKeys) {
-            this.isvPrivateKeys.put(isvPrivateKey.getCertType(), YopCertConfigUtils.loadPrivateKey(isvPrivateKey));
+            this.isvPrivateKeys.put(isvPrivateKey.getCertType(),
+                    YopCertParserFactory.getCertParser(YopCertCategory.PRIVATE, isvPrivateKey.getCertType())
+                            .parse(isvPrivateKey));
         }
     }
 
-    public Map<CertTypeEnum, String> getIsvPrivateKeys() {
+    public Map<CertTypeEnum, Object> getIsvPrivateKeys() {
         return this.isvPrivateKeys;
     }
 
-    public String loadPrivateKey(CertTypeEnum certType) {
-        return this.isvPrivateKeys.get(certType);
+    public PrivateKey loadPrivateKey(CertTypeEnum certType) {
+        return (PrivateKey) this.isvPrivateKeys.get(certType);
     }
 
+    @Deprecated
     public List<YopCertConfig> getIsvEncryptKey() {
         return isvEncryptKeys;
     }
 
+    @Deprecated
     public void setIsvEncryptKeyList(List<YopCertConfig> isvEncryptKeyList) {
         this.isvEncryptKeys = isvEncryptKeyList;
     }
@@ -94,6 +81,7 @@ public class YopAppConfig implements Serializable {
 
         private List<YopCertConfig> isvPrivateKeys;
 
+        @Deprecated
         private List<YopCertConfig> isvEncryptKeys;
 
         private YopFileSdkConfig yopFileSdkConfig;
@@ -115,6 +103,7 @@ public class YopAppConfig implements Serializable {
             return this;
         }
 
+        @Deprecated
         public Builder withIsvEncryptKeys(List<YopCertConfig> isvEncryptKeys) {
             this.isvEncryptKeys = isvEncryptKeys;
             return this;
@@ -131,7 +120,6 @@ public class YopAppConfig implements Serializable {
             }
             YopAppConfig yopAppConfig = new YopAppConfig();
             yopAppConfig.setAppKey(appKey);
-            yopAppConfig.setEncryptKey(yopFileSdkConfig.getEncryptKey());
             if (CollectionUtils.isEmpty(isvPrivateKeys)) {
                 isvPrivateKeys = yopFileSdkConfig.getIsvPrivateKey(appKey);
             }

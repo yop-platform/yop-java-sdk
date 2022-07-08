@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -19,7 +20,6 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
@@ -46,7 +46,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     private static final String SDK_CONFIG_DIR = "config";
     private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/yop_sdk_config_default.json";
 
-    private Map<String, YopFileSdkConfig> sdkConfigs = new HashMap<>();
+    private Map<String, YopFileSdkConfig> sdkConfigs = Maps.newHashMap();
 
     @Override
     protected YopSdkConfig loadSdkConfig() {
@@ -185,7 +185,6 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         yopSdkConfig.setProxy(yopFileSdkConfig.getProxy());
         yopSdkConfig.setRegion(yopFileSdkConfig.getRegion());
         yopSdkConfig.setYopHttpClientConfig(yopFileSdkConfig.getHttpClient());
-        yopSdkConfig.storeYopPublicKey(yopFileSdkConfig.getYopPublicKey());
         yopSdkConfig.setYopCertStore(yopFileSdkConfig.getYopCertStore());
         return yopSdkConfig;
     }

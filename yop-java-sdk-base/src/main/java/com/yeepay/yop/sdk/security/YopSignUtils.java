@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.security;
 
 import com.google.common.collect.ImmutableMap;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
@@ -49,9 +50,9 @@ public class YopSignUtils {
         String args[] = StringUtils.split(signature, "$");
         CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
         String serialNo = args.length == 4 ? args[3] : (CertTypeEnum.SM2.equals(certType) ? YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO : YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
-        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
+        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
         if (null != yopPlatformCredentials) {
-            verify(data, signature, yopPlatformCredentials.getPublicKey(certType));
+            verify(data, signature, yopPlatformCredentials.getCredential());
         } else {
             throw new YopClientException("can not load platform cert");
         }
@@ -68,12 +69,25 @@ public class YopSignUtils {
     public static void verify(String data, String signature, PublicKey publicKey) {
         validSignature(signature);
         String args[] = signature.split("\\$");
-        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(digestAlgANdCertTypeMap.get(args[1]).name());
+        final CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
+        verify(data, signature, new PKICredentialsItem(publicKey, certType));
+    }
+
+    /**
+     * 验证签名：验签失败则抛出异常
+     *
+     * @param data
+     * @param signature
+     * @param credentialsItem
+     */
+    public static void verify(String data, String signature, CredentialsItem credentialsItem) {
+        validSignature(signature);
+        YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(credentialsItem.getCertType().name());
         if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(null, publicKey, digestAlgANdCertTypeMap.get(args[1]));
-        if (!yopSignProcessor.verify(data, args[0], pkiCredentialsItem)) {
+        String args[] = signature.split("\\$");
+        if (!yopSignProcessor.verify(data, args[0], credentialsItem)) {
             throw new YopClientException("verify fail!");
         }
     }
@@ -106,7 +120,7 @@ public class YopSignUtils {
         if (null == yopSignProcessor) {
             throw new YopClientException("unsupported certType");
         }
-        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, null, CertTypeEnum.parse(certType));
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, CertTypeEnum.parse(certType));
         return yopSignProcessor.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcessor.getDigestAlg();
     }
 

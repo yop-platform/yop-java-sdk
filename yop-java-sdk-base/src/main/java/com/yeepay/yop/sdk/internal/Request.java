@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.internal;
 
 import com.yeepay.yop.sdk.http.HttpMethodName;
+import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 
 import java.io.File;
@@ -25,6 +26,27 @@ import java.util.Map;
  * @since 17/11/13 17:03
  */
 public interface Request<T extends BaseRequest> {
+
+    /**
+     * current request-id
+     *
+     * @return
+     */
+    String getRequestId();
+
+    /**
+     * http content-type
+     *
+     * @return the YopContentType
+     */
+    YopContentType getContentType();
+
+    /**
+     * set the http content-type
+     *
+     * @param contentType the YopContentType
+     */
+    void setContentType(YopContentType contentType);
 
     /**
      * Returns a map of all the headers included in this request.
@@ -111,6 +133,16 @@ public interface Request<T extends BaseRequest> {
      * @return A map of all multipart files in this request
      */
     Map<String, List<MultiPartFile>> getMultiPartFiles();
+
+    /**
+     * Sets multipart files, clearing any existing values.
+     * <p>
+     * Note that List values within the parameters Map must use an implementation that supports null
+     * values.
+     *
+     * @param multiPartFiles the request multipart files.
+     */
+    void setMultiPartFiles(Map<String, List<MultiPartFile>> multiPartFiles);
 
     /**
      * Adds the specified file to this request, and returns the uodated request object

@@ -1,12 +1,16 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * title: SDK配置(新版本)<br>
@@ -34,17 +38,7 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("sandbox_server_root")
     private String sandboxServerRoot;
 
-    @JsonProperty("aes_secret_key")
-    private String aesSecretKey;
-
-    @JsonProperty("yop_public_key")
-    private YopCertConfig[] yopPublicKey;
-
     private Map<String, List<YopCertConfig>> isvPrivateKeyMap;
-
-    @Deprecated
-    @JsonProperty("encrypt_key")
-    private String encryptKey;
 
     @JsonProperty("http_client")
     private YopHttpClientConfig httpClient;
@@ -59,6 +53,7 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("yop_cert_store")
     private YopCertStore yopCertStore;
 
+    @Deprecated
     private Map<String, List<YopCertConfig>> isvEncryptKeyMap;
 
     public String getAppKey() {
@@ -93,22 +88,6 @@ public final class YopFileSdkConfig implements Serializable {
         this.sandboxServerRoot = sandboxServerRoot;
     }
 
-    public String getAesSecretKey() {
-        return aesSecretKey;
-    }
-
-    public void setAesSecretKey(String aesSecretKey) {
-        this.aesSecretKey = aesSecretKey;
-    }
-
-    public YopCertConfig[] getYopPublicKey() {
-        return yopPublicKey;
-    }
-
-    public void setYopPublicKey(YopCertConfig[] yopPublicKey) {
-        this.yopPublicKey = yopPublicKey;
-    }
-
     public List<YopCertConfig> getIsvPrivateKey(String appKey) {
         if (null == isvPrivateKeyMap) {
             return Collections.emptyList();
@@ -119,26 +98,18 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("isv_private_key")
     public void setIsvPrivateKey(YopCertConfig[] isvPrivateKeys) {
         if (null == isvPrivateKeyMap) {
-            isvPrivateKeyMap = new HashMap<>(16);
+            isvPrivateKeyMap = Maps.newHashMap();
         }
         for (YopCertConfig isvPrivateKey : isvPrivateKeys) {
             String appKey = StringUtils.defaultString(isvPrivateKey.getAppKey(), getAppKey());
             if (isvPrivateKeyMap.containsKey(appKey)) {
                 isvPrivateKeyMap.get(appKey).add(isvPrivateKey);
             } else {
-                isvPrivateKeyMap.put(appKey, new LinkedList<YopCertConfig>() {{
-                    add(isvPrivateKey);
-                }});
+                List<YopCertConfig> list = Lists.newLinkedList();
+                list.add(isvPrivateKey);
+                isvPrivateKeyMap.put(appKey, list);
             }
         }
-    }
-
-    public String getEncryptKey() {
-        return encryptKey;
-    }
-
-    public void setEncryptKey(String encryptKey) {
-        this.encryptKey = encryptKey;
     }
 
     public YopHttpClientConfig getHttpClient() {
@@ -181,6 +152,7 @@ public final class YopFileSdkConfig implements Serializable {
         this.yopCertStore = yopCertStore;
     }
 
+    @Deprecated
     public List<YopCertConfig> getIsvEncryptKey(String appKey) {
         if (null == isvEncryptKeyMap) {
             return Collections.emptyList();
@@ -188,19 +160,20 @@ public final class YopFileSdkConfig implements Serializable {
         return isvEncryptKeyMap.get(appKey);
     }
 
+    @Deprecated
     @JsonProperty("isv_encrypt_key")
     public void setIsvEncryptKey(YopCertConfig[] isvEncryptKeys) {
         if (null == isvEncryptKeyMap) {
-            isvEncryptKeyMap = new HashMap<>(16);
+            isvEncryptKeyMap = Maps.newHashMap();
         }
         for (YopCertConfig isvEncryptKey : isvEncryptKeys) {
             String appKey = StringUtils.defaultString(isvEncryptKey.getAppKey(), getAppKey());
             if (isvEncryptKeyMap.containsKey(appKey)) {
                 isvEncryptKeyMap.get(appKey).add(isvEncryptKey);
             } else {
-                isvEncryptKeyMap.put(appKey, new LinkedList<YopCertConfig>() {{
-                    add(isvEncryptKey);
-                }});
+                List<YopCertConfig> list = Lists.newLinkedList();
+                list.add(isvEncryptKey);
+                isvEncryptKeyMap.put(appKey, list);
             }
         }
     }

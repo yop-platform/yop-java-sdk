@@ -10,12 +10,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.SignOptions;
+import com.yeepay.yop.sdk.auth.credentials.CertificateCredentials;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.digest.YopDigesterFactory;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
@@ -26,18 +27,13 @@ import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-import java.security.DigestInputStream;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.security.Security;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
 
 /**
  * title: YopPKISigner<br/>
@@ -52,11 +48,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class YopPKISigner implements YopSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
-
-    private static final ThreadLocal<Map<DigestAlgEnum, MessageDigest>> MESSAGE_DIGEST;
-
-    private static final String YOP_PROTOCOL_VERSION = "yop-auth-v3";
-
+ // 大写
     private static final Set<String> defaultHeadersToSign = Sets.newHashSet();
     private static final Joiner headerJoiner = Joiner.on('\n');
     private static final Joiner signedHeaderStringJoiner = Joiner.on(';');
@@ -71,38 +63,18 @@ public class YopPKISigner implements YopSigner {
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
         defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
         defaultHeadersToSign.add(Headers.YOP_CONTENT_SM3);
-
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-
-        MESSAGE_DIGEST = new ThreadLocal<Map<DigestAlgEnum, MessageDigest>>() {
-            @Override
-            protected Map<DigestAlgEnum, MessageDigest> initialValue() {
-                try {
-                    Map<DigestAlgEnum, MessageDigest> messageDigestMap = new HashMap<>(3);
-                    messageDigestMap.put(DigestAlgEnum.SM3, MessageDigest.getInstance("SM3", BouncyCastleProvider.PROVIDER_NAME));
-                    messageDigestMap.put(DigestAlgEnum.SHA256, MessageDigest.getInstance("SHA-256"));
-                    return messageDigestMap;
-                } catch (GeneralSecurityException e) {
-                    throw new YopClientException(
-                            "Unable to get Digest Function"
-                                    + e.getMessage(), e);
-                }
-            }
-        };
+        defaultHeadersToSign.add(Headers.YOP_ENCRYPT);
     }
 
     @Override
-    public List<String> supportSignerAlg() {
-        return Lists.newArrayList(SignerTypeEnum.SM2.name(), SignerTypeEnum.RSA.name());
-    }
-
-    @Override
-    public void sign(Request<? extends BaseRequest> request, YopCredentials credentials, SignOptions options) {
+    public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
         checkNotNull(request, "request should not be null.");
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;
+        }
+        final Integer signExpirationInSeconds = request.getOriginalRequestObject().getRequestConfig().getSignExpirationInSeconds();
+        if (null != signExpirationInSeconds && signExpirationInSeconds > 0) {
+            options.setExpirationInSeconds(signExpirationInSeconds);
         }
 
         // A.构造认证字符串
@@ -125,20 +97,23 @@ public class YopPKISigner implements YopSigner {
         String authorizationHeader = buildAuthzHeader(options, authString, headersToSign, signature);
         LOGGER.debug("Authorization:{}", authorizationHeader);
         request.addHeader(Headers.AUTHORIZATION, authorizationHeader);
+
+        // E.添加签名序列号
+        if (credentials instanceof CertificateCredentials) {
+            request.addHeader(Headers.YOP_SIGN_CERT_SERIAL_NO, ((CertificateCredentials) credentials).getSerialNo());
+        }
     }
 
     private void additionalHeader(Request<? extends BaseRequest> request, SignOptions options) {
-        request.addHeader(Headers.HOST, HttpUtils.generateHostHeader(request.getEndpoint()));
-
         DigestAlgEnum digestAlg = options.getDigestAlg();
         String contentHash = calculateContentHash(request, digestAlg);
         request.addHeader(getDigestAlgHeaderName(digestAlg), contentHash);
     }
 
-    private String buildAuthString(YopCredentials credentials, SignOptions options) {
+    private String buildAuthString(YopCredentials<?> credentials, SignOptions options) {
         String appKey = credentials.getAppKey();
         Date timestamp = new Date();
-        return YOP_PROTOCOL_VERSION + "/"
+        return DEFAULT_YOP_PROTOCOL_VERSION + "/"
                 + appKey + "/"
                 + DateUtils.formatAlternateIso8601Date(timestamp) + "/"
                 + options.getExpirationInSeconds();
@@ -185,25 +160,10 @@ public class YopPKISigner implements YopSigner {
     //TODO 请求重试时需要重新计算吗？
     private String calculateContentHash(Request<? extends BaseRequest> request, DigestAlgEnum digestAlg) {
         RestartableInputStream payloadStream = getBinaryRequestPayloadStream(request);
-        String contentHash = Encodes.encodeHex(hash(payloadStream, digestAlg));
+        String contentHash = Encodes.encodeHex(
+                YopDigesterFactory.getDigester(digestAlg.name()).digest(payloadStream, digestAlg.name()));
         payloadStream.restart();
         return contentHash;
-    }
-
-    private byte[] hash(InputStream input, DigestAlgEnum digestAlg) {
-        try {
-            MessageDigest md = getMessageDigestInstance(digestAlg);
-            DigestInputStream digestInputStream = new DigestInputStream(
-                    input, md);
-            byte[] buffer = new byte[1024];
-            while (digestInputStream.read(buffer) > -1) {
-            }
-            return digestInputStream.getMessageDigest().digest();
-        } catch (Exception e) {
-            throw new YopClientException(
-                    "Unable to compute hash while signing request: "
-                            + e.getMessage(), e);
-        }
     }
 
     private RestartableInputStream getBinaryRequestPayloadStream(Request<? extends BaseRequest> request) {
@@ -280,15 +240,11 @@ public class YopPKISigner implements YopSigner {
         return headerJoiner.join(headerStrings);
     }
 
-    /**
-     * Returns the re-usable thread local version of MessageDigest.
-     *
-     * @return 摘要
-     */
-    private static MessageDigest getMessageDigestInstance(DigestAlgEnum digestAlg) {
-        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
-        messageDigest.reset();
-        return messageDigest;
+
+
+    @Override
+    public List<String> supportSignerAlg() {
+        return Lists.newArrayList(SignerTypeEnum.SM2.name(), SignerTypeEnum.RSA.name());
     }
 
 }

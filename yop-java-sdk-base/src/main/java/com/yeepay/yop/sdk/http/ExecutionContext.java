@@ -1,10 +1,13 @@
 package com.yeepay.yop.sdk.http;
 
 
-import com.yeepay.yop.sdk.auth.Encryptor;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+
+import java.util.concurrent.Future;
 
 public class ExecutionContext {
 
@@ -12,15 +15,22 @@ public class ExecutionContext {
 
     private final SignOptions signOptions;
 
-    private final Encryptor encryptor;
+    private boolean encryptSupported;
 
-    private final YopCredentials yopCredentials;
+    private final YopEncryptor encryptor;
 
-    private ExecutionContext(YopSigner signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials) {
+    private final YopCredentials<?> yopCredentials;
+
+    private final Future<EncryptOptions> encryptOptions;
+
+    private ExecutionContext(YopSigner signer, SignOptions signOptions, YopCredentials<?> yopCredentials,
+                             YopEncryptor encryptor, Future<EncryptOptions> encryptOptions) {
         this.signer = signer;
         this.signOptions = signOptions;
         this.encryptor = encryptor;
         this.yopCredentials = yopCredentials;
+        this.encryptOptions = encryptOptions;
+        this.encryptSupported = null != encryptor && null != encryptOptions;
     }
 
     public YopSigner getSigner() {
@@ -31,19 +41,28 @@ public class ExecutionContext {
         return signOptions;
     }
 
-    public Encryptor getEncryptor() {
+    public boolean isEncryptSupported() {
+        return encryptSupported;
+    }
+
+    public YopEncryptor getEncryptor() {
         return encryptor;
     }
 
-    public YopCredentials getYopCredentials() {
+    public YopCredentials<?> getYopCredentials() {
         return yopCredentials;
+    }
+
+    public Future<EncryptOptions> getEncryptOptions() {
+        return encryptOptions;
     }
 
     public static final class Builder {
         private YopSigner signer;
         private SignOptions signOptions;
-        private Encryptor encryptor;
-        private YopCredentials yopCredentials;
+        private YopCredentials<?> yopCredentials;
+        private YopEncryptor encryptor;
+        private Future<EncryptOptions> encryptOptions;
 
         private Builder() {
         }
@@ -62,18 +81,23 @@ public class ExecutionContext {
             return this;
         }
 
-        public Builder withEncryptor(Encryptor encryptor) {
-            this.encryptor = encryptor;
-            return this;
-        }
-
-        public Builder withYopCredentials(YopCredentials yopCredentials) {
+        public Builder withYopCredentials(YopCredentials<?> yopCredentials) {
             this.yopCredentials = yopCredentials;
             return this;
         }
 
+        public Builder withEncryptor(YopEncryptor encryptor) {
+            this.encryptor = encryptor;
+            return this;
+        }
+
+        public Builder withEncryptOptions(Future<EncryptOptions> encryptOptions) {
+            this.encryptOptions = encryptOptions;
+            return this;
+        }
+
         public ExecutionContext build() {
-            return new ExecutionContext(signer, signOptions, encryptor, yopCredentials);
+            return new ExecutionContext(signer, signOptions, yopCredentials, encryptor, encryptOptions);
         }
     }
 }

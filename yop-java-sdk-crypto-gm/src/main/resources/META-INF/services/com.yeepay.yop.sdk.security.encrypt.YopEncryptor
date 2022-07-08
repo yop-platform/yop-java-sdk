@@ -1,0 +1,2 @@
+com.yeepay.yop.sdk.security.encrypt.impl.YopSm2Encryptor
+com.yeepay.yop.sdk.security.encrypt.impl.YopSm4Encryptor

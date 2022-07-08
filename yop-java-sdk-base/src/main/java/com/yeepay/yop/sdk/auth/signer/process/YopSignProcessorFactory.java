@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.auth.signer.process;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -31,7 +32,11 @@ public class YopSignProcessorFactory {
     }
 
     public static YopSignProcessor getSignProcessor(String certType) {
-        return YOP_SIGN_PROCESSOR_MAP.get(certType);
+        final YopSignProcessor yopSignProcessor = YOP_SIGN_PROCESSOR_MAP.get(certType);
+        if (null == yopSignProcessor) {
+            throw new YopClientException("YopSignProcessor not found, certType:" + certType);
+        }
+        return yopSignProcessor;
     }
 
     @Deprecated

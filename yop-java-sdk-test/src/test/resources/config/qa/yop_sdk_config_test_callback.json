@@ -1,0 +1,25 @@
+{
+  "app_key": "app_15958159879157110009",
+  "server_root": "http://ycetest.yeepay.com:30228/yop-center",
+  "yos_server_root": "http://ycetest.yeepay.com:30228/yop-center",
+  "isv_private_key": [
+    {
+      "store_type": "string",
+      "cert_type": "SM2",
+      "value": "MIICBQIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBDzCCAQsCAQEEICvBlu1mNV6jIA8FdkKlRSga9cwXa0m+IBx9ERwtO1ZcoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE="
+    },
+    {
+      "app_key": "app_Fe51qCyZWcEnDMtK",
+      "store_type": "string",
+      "cert_type": "RSA2048",
+      "value": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCFqza8OmK0drABjmphX3erNEoLJ6kCqaE/AWvqEReAq5K8+3btAVEJYBiMbEJUvZpV4YCITDhyJeRzdfLl2EGnsvI4lrhvrvGAjW9lB34b7GdJSMFFj+ExrTuCQ7zDeUgATlmhLyHxWZ6IAVwf1a3G5bk2GhUipFc0dL8HviVk25CSAgCWKL8LZ0V4ec+FF3/Z6orJUChQOuvpNlclH65pHbdQ4Mr3rQUI0z7WSaW1U1EZeXSctRPf/3JQYLi+RW/yogXG8t+6zn9jE/tGuWJV0bm/ZUDU2XydjZgU0E/NzMutmNVSSKpBy74vt5SCNXkK0BgjRTXP8HGvEgA7IYfLAgMBAAECggEAQNlOxcUBrBHE1Ax22eTKFvpYTc8g9NS9EOcsprNCFr+mgh7xlIxF92lyn3XKPHh8DtxHUljALcjqa4W2oQHo4GY1k3Sz6CMUsUxs1bPr37oyZeBxO8FQ/JvRuiIIy0DkyJk6bLOEISZcfhlCy4MMOumqkG/Y/ySB1kYpg6UhWStlGdQZbHEL7NUBW1QVQqaDAtSV8cgNNXbinQ08pIMlfqnH57DM8J7lx+687li41ZkQgCc/r/zkV5Tf5ABlhDxmZZbHmU7jsvlqh6zxm12r7A0gOwnb/wVd0ZrpIE2TfsDGOQckfEmaD4uhsabDAVO7I6IDM86hH3Sm285hkQ/2eQKBgQC6eNRpJQv6TfXMqEoNMf503WGskWF0RFSU0mU/5dSX8GELhLkyAtAhZFnrOKcseZJng/Z6grfS2wIG3Y17kXIlbi8Wprk0F9AsUOSEFPFRW/I7y7aUDvGf8Jz/TsiYEatSE0SJCWZbpaO8+WoczNybWNyyHapq2g6+xHSlyEp9nQKBgQC3gjOIF1dt67lrWSogVDX1eEpp6yLxKXC0usGV/0sB2FK5S9KqEh2Ul+rWwlxXxLpVYHhHFr1k7PyFrnwsTUxNHj2joCD1yOhMoxgMoRm0/z43cV/0TeTcLTQkxdCtwZ6pQwHIAHenLRpxpnD8Y8EplA3VS9Lno7eSC9VjqgFShwKBgF83vfcm1LPuxTnJIW8VfUK9nNeasPHGxo3r1YnIWUNwmo1gK5UO/KpgbM4A8tRyC8FSEDVEtIs2DBXnYgycG3ZjiiX94opoMoO+lsGfVA5gbhP8lPGLo/Qw0GpKF4IXW60ga5myNBNORIsFrRqhvXCR8rf9D/1Z9beR56KT4P29AoGAV986+dHjhbk4wpShvXVVmUOOroVv5/cmBwTeqgrjSfDiO+R47gNassrEIy5StZx4dWWKctAKxQdOLF1PDI+/F7aBYZbN8aPQyNHYNEP4YVlP25Col/2st1nV/D3VHT730KlLcw/2O9E3NnCy7ch+uIAy145FYbJdtst/1QeVNoUCgYEAtv3w9xNugsYl4/yNkC/DIXat9u/56sVjnYzxvwHZT8jtg4uo3qqlRqqm4OcUmzcsYodrsbn8upizq9ZS2NVdPrGIPFOZBgNUKWL1Ok/dJgfBcdpo72/UX4+KQ2/9c1ZrjjMs4sglsrzvZTXqkryXkPKxKk1EcjDaKiOExFnk6Y8="
+    }
+  ],
+  "isv_encrypt_key": [
+    {
+      "store_type": "string",
+      "cert_type": "SM4",
+      "value": "JnhWelxyAaFlszR1ER2Upw=="
+    }
+  ]
+}

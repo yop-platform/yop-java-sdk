@@ -27,6 +27,16 @@ public class PKICredentialsItem implements CredentialsItem {
 
     private CertTypeEnum certType;
 
+    public PKICredentialsItem(PrivateKey privateKey, CertTypeEnum certType) {
+        this.privateKey = privateKey;
+        this.certType = certType;
+    }
+
+    public PKICredentialsItem(PublicKey publicKey, CertTypeEnum certType) {
+        this.publicKey = publicKey;
+        this.certType = certType;
+    }
+
     public PKICredentialsItem(PrivateKey privateKey, PublicKey publicKey, CertTypeEnum certType) {
         this.privateKey = privateKey;
         this.publicKey = publicKey;

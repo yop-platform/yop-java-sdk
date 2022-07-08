@@ -5,15 +5,13 @@
 
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.credentials.YopAESCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.rsa.RSAKeyUtils;
-import com.yeepay.yop.sdk.utils.Sm2Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,30 +29,27 @@ import java.security.PrivateKey;
  * @since 2020/11/24 上午11:57
  */
 public abstract class YopBaseCredentialsProvider implements YopCredentialsProvider {
+    @Override
+    public String getDefaultAppKey() {
+        return YopConstants.YOP_DEFAULT_APPKEY;
+    }
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    protected final YopCredentials buildCredentials(YopAppConfig appConfig, String credentialType) {
-        if (appConfig == null) {
-            return null;
+    protected YopCredentials<?> buildCredentials(YopAppConfig appConfig, String credentialType) {
+        CertTypeEnum certType;
+        if (null == appConfig || StringUtils.isEmpty(credentialType) ||
+                (null == (certType = CertTypeEnum.parse(credentialType)))) {
+            throw new YopClientException("Illegal params when buildCredentials, credentialType:" + credentialType);
         }
-        CertTypeEnum certType = CertTypeEnum.parse(credentialType);
-        if (certType.isSymmetric()) {
-            return new YopAESCredentials(appConfig.getAppKey(), appConfig.getAesSecretKey());
-        } else {
-            PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(string2PrivateKey(appConfig.loadPrivateKey(certType), certType), null, certType);
-            return new YopPKICredentials(appConfig.getAppKey(), pkiCredentialsItem);
-        }
-    }
 
-    private PrivateKey string2PrivateKey(String privateKey, CertTypeEnum certType) {
-        switch (certType) {
-            case RSA2048:
-                return RSAKeyUtils.string2PrivateKey(privateKey);
-            case SM2:
-                return Sm2Utils.string2PrivateKey(privateKey);
+        PrivateKey privateKey = appConfig.loadPrivateKey(certType);
+        if (null == privateKey) {
+            throw new YopClientException("No cert config found when buildCredentials, appKey:" + appConfig.getAppKey() + ", certType:" + certType);
         }
-        throw new YopClientException("unsupported certType");
+
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, certType);
+        return new YopPKICredentials(appConfig.getAppKey(), pkiCredentialsItem);
     }
 
     protected String useDefaultIfBlank(String appKey) {

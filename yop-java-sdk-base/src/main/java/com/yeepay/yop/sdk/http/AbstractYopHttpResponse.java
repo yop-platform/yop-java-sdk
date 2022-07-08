@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.http;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.utils.DateUtils;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * title: <br>
@@ -32,6 +34,17 @@ public abstract class AbstractYopHttpResponse implements YopHttpResponse {
 
     protected InputStream content;
     protected String contentStr;
+    protected final Map<String, String> headers = Maps.newHashMap();
+
+    @Override
+    public String getHeader(String name) {
+        return headers.get(name);
+    }
+
+    @Override
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
 
     @Override
     public InputStream getContent() {
@@ -54,8 +67,12 @@ public abstract class AbstractYopHttpResponse implements YopHttpResponse {
     }
 
     @Override
-    public void setDecryptedContent(String decryptedContent) {
-        this.contentStr = decryptedContent;
+    public void setContent(Object content) {
+        if (content instanceof String) {
+            this.contentStr = (String) content;
+        } else {
+            this.content = (InputStream) content;
+        }
     }
 
     @Override

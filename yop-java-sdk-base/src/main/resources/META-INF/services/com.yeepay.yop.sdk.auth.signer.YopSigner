@@ -1,2 +1,2 @@
-com.yeepay.yop.sdk.auth.signer.YopPKISigner
 com.yeepay.yop.sdk.auth.signer.YopOauth2Signer
+com.yeepay.yop.sdk.auth.signer.YopPKISigner

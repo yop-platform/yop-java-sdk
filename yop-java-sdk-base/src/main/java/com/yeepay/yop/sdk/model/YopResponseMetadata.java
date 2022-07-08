@@ -43,6 +43,8 @@ public class YopResponseMetadata {
 
     private String yopCertSerialNo;
 
+    private String yopEncrypt;
+
     public String getYopRequestId() {
         return this.yopRequestId;
     }
@@ -187,6 +189,14 @@ public class YopResponseMetadata {
         this.yopCertSerialNo = yopCertSerialNo;
     }
 
+    public String getYopEncrypt() {
+        return yopEncrypt;
+    }
+
+    public void setYopEncrypt(String yopEncrypt) {
+        this.yopEncrypt = yopEncrypt;
+    }
+
     @Override
     public String toString() {
         return "YopResponseMetadata [\n  yopRequestId=" + yopRequestId
@@ -201,6 +211,7 @@ public class YopResponseMetadata {
                 + ", \n  expires=" + expires + ", \n  lastModified=" + lastModified
                 + ", \n  server=" + server + ", \n  location=" + location
                 + ", \n  yopCertSerialNo=" + yopCertSerialNo
+                + ", \n  yopEncrypt=" + yopEncrypt
                 + "]";
     }
 

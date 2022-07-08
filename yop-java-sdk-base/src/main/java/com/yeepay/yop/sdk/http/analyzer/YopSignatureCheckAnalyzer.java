@@ -1,8 +1,6 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -15,8 +13,6 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.security.PublicKey;
 
 import static com.yeepay.yop.sdk.YopConstants.SM2_PROTOCOL_PREFIX;
 import static com.yeepay.yop.sdk.YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
@@ -50,18 +46,29 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
         if (BooleanUtils.isTrue(context.isSkipVerifySign()) || StringUtils.isBlank(metadata.getYopSign())) {
             return false;
         } else {
-            PKICredentialsItem pkiCredentialsItem = getCredentialItem(context.getSignOptions(), context.getAppKey(), metadata.getYopCertSerialNo());
-            if (null != pkiCredentialsItem) {
-                YopPKICredentials credentials = new YopPKICredentials(context.getAppKey(), pkiCredentialsItem);
-                context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), credentials, context.getSignOptions());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("response sign verify begin, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
+            }
+            final SignOptions reqOptions = context.getSignOptions();
+            YopPlatformCredentials platformCredentials = getPlatformCredential(reqOptions, context.getAppKey(), metadata.getYopCertSerialNo());
+            if (null != platformCredentials) {
+                // 目前 YOP响应签名非urlsafe
+                context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), platformCredentials,
+                        new SignOptions().withDigestAlg(reqOptions.getDigestAlg())
+                                .withProtocolPrefix(reqOptions.getProtocolPrefix())
+                                .withExpirationInSeconds(reqOptions.getExpirationInSeconds())
+                                .withUrlSafe(!StringUtils.containsAny(metadata.getYopSign(), '+', '/', '=')));
             } else {
                 throw new YopClientException("yop platform credentials not found");
+            }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("response sign verify success, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
             }
         }
         return false;
     }
 
-    private PKICredentialsItem getCredentialItem(SignOptions signOptions, String appKey, String serialNo) {
+    private YopPlatformCredentials getPlatformCredential(SignOptions signOptions, String appKey, String serialNo) {
         CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
         if (certType == CertTypeEnum.RSA2048) {
             if (StringUtils.isNotBlank(serialNo)) {
@@ -70,14 +77,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             serialNo = YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
         }
 
-        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getYopPlatformCredentials(appKey, serialNo);
-        if (null != yopPlatformCredentials) {
-            PublicKey publicKey = yopPlatformCredentials.getPublicKey(certType);
-            if (null != publicKey) {
-                return new PKICredentialsItem(null, yopPlatformCredentials.getPublicKey(certType), certType);
-            }
-        }
-        return null;
+        return YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
     }
 
 }

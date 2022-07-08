@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -11,10 +12,15 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+
+import static com.yeepay.yop.sdk.YopConstants.TOTAL_ENCRYPT_PARAMS;
+import static com.yeepay.yop.sdk.utils.CharacterConstants.DOLLAR;
+import static com.yeepay.yop.sdk.utils.JsonUtils.isTotalEncrypt;
 
 /**
  * title: Yop请求<br>
- * description: <br>
+ * description: 用于封装请求参数<br>
  * Copyright: Copyright (c) 2020<br>
  * Company: 易宝支付(YeePay)<br>
  *
@@ -41,6 +47,12 @@ public class YopRequest extends BaseRequest {
         this.httpMethod = httpMethod;
     }
 
+    public YopRequest(String apiUri, String httpMethod, YopRequestConfig requestConfig) {
+        super(requestConfig);
+        this.apiUri = apiUri;
+        this.httpMethod = httpMethod;
+    }
+
     public String getApiUri() {
         return apiUri;
     }
@@ -62,34 +74,31 @@ public class YopRequest extends BaseRequest {
     }
 
     public YopRequest addParameter(String name, String value) {
-        if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("parameter name:" + name + " should not be empty.");
-        }
-        if (value == null) {
-            throw new YopClientException("parameter value for name:" + name + " can't be null.");
-        }
+        validateParameter(name, value);
         parameters.put(name, value);
         return this;
     }
 
+    public YopRequest addEncryptParameter(String name, String value) {
+        addParameter(name, value);
+        getRequestConfig().addEncryptParam(name);
+        return this;
+    }
+
     public YopRequest addParameters(String name, List<String> values) {
-        if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("parameter name:" + name + " should not be empty.");
-        }
-        if (values == null) {
-            throw new YopClientException("parameter value for name:" + name + " can't be null.");
-        }
+        validateParameter(name, values);
         parameters.putAll(name, values);
         return this;
     }
 
+    public YopRequest addEncryptParameters(String name, List<String> values) {
+        addParameters(name, values);
+        getRequestConfig().addEncryptParam(name);
+        return this;
+    }
+
     public YopRequest addParameter(String name, Object value) {
-        if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("parameter name:" + name + " should not be empty.");
-        }
-        if (value == null) {
-            throw new YopClientException("parameter value for name:" + name + " can't be null.");
-        }
+        validateParameter(name, value);
         if (value instanceof Collection) {
             for (Object o : (Collection) value) {
                 if (o != null) {
@@ -110,25 +119,33 @@ public class YopRequest extends BaseRequest {
         return this;
     }
 
+    public YopRequest addEncryptParameter(String name, Object value) {
+        addParameter(name, value);
+        getRequestConfig().addEncryptParam(name);
+        return this;
+    }
+
     public YopRequest addMutiPartFile(String name, File file) {
-        if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("parameter name:" + name + " should not be empty.");
-        }
-        if (file == null || !file.exists()) {
-            throw new YopClientException("file is null or file does not exist.");
-        }
+        validateParameter(name, file);
         multipartFiles.put(name, file);
         return this;
     }
 
+    public YopRequest addEncryptMutiPartFile(String name, File file) {
+        addMutiPartFile(name, file);
+        getRequestConfig().addEncryptParam(name);
+        return this;
+    }
+
     public YopRequest addMultiPartFile(String name, InputStream inputStream) {
-        if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("parameter name:" + name + " should not be empty.");
-        }
-        if (inputStream == null) {
-            throw new YopClientException("inputStream for name:" + name + " should not be null.");
-        }
+        validateParameter(name, inputStream);
         multipartFiles.put(name, inputStream);
+        return this;
+    }
+
+    public YopRequest addEncryptMultiPartFile(String name, InputStream inputStream) {
+        addMultiPartFile(name, inputStream);
+        getRequestConfig().addEncryptParam(name);
         return this;
     }
 
@@ -140,11 +157,31 @@ public class YopRequest extends BaseRequest {
         return this;
     }
 
+    public YopRequest setEncryptContent(String content) {
+        setContent(content);
+        getRequestConfig().addEncryptParam(DOLLAR).setTotalEncrypt(true);
+        return this;
+    }
+
+    public YopRequest setEncryptContent(String content, Set<String> jsonPaths) {
+        setContent(content);
+        boolean totalEncrypt = isTotalEncrypt(jsonPaths);
+        getRequestConfig().addEncryptParams(totalEncrypt ? TOTAL_ENCRYPT_PARAMS : jsonPaths)
+                .setTotalEncrypt(totalEncrypt);
+        return this;
+    }
+
     public YopRequest setStream(InputStream inputStream) {
         if (inputStream == null) {
             throw new YopClientException("inputStream for content should not be null");
         }
         this.content = inputStream;
+        return this;
+    }
+
+    public YopRequest setEncryptStream(InputStream inputStream) {
+        setStream(inputStream);
+        getRequestConfig().addEncryptParam(DOLLAR).setTotalEncrypt(true);
         return this;
     }
 
@@ -157,7 +194,6 @@ public class YopRequest extends BaseRequest {
         this.httpMethod = httpMethod;
         return this;
     }
-
 
     @Override
     public String getOperationId() {

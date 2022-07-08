@@ -1,5 +1,7 @@
 package com.yeepay.yop.sdk.http;
 
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
+
 /**
  * Common YOS HTTP header values used throughout the YOP YOS Java client.
  */
@@ -91,7 +93,12 @@ public interface Headers {
 
     String YOP_VIA = "x-yop-via";
 
-    String YOP_ENCRYPT_TYPE = "x-yop-encrypt-type";
+    /**
+     * 加密协议头
+     *
+     * @see YopEncryptProtocol#YOP_ENCRYPT_PROTOCOL_V1_REQ
+     */
+    String YOP_ENCRYPT = "x-yop-encrypt";
 
     /*
      * YOS HTTP Headers
@@ -112,5 +119,7 @@ public interface Headers {
     String YOP_OBJECT_TYPE = "x-yop-object-type";
 
     String YOP_CERT_SERIAL_NO = "x-yop-serial-no";
+
+    String YOP_SIGN_CERT_SERIAL_NO = "x-yop-sign-serial-no";
 
 }

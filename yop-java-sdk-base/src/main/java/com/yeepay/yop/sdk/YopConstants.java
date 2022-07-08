@@ -4,14 +4,20 @@
  */
 package com.yeepay.yop.sdk;
 
+import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
+import com.yeepay.yop.sdk.utils.CharacterConstants;
+
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Common constants used by the whole SDK.
  */
 public interface YopConstants {
 
-    String VERSION = "4.2.3";
+    String VERSION = "4.3.0";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -26,6 +32,8 @@ public interface YopConstants {
     String DEFAULT_SANDBOX_VIA = "sandbox";
 
     String DEFAULT_YOP_CERT_STORE_PATH = "/tmp/yop/certs";
+
+    String DEFAULT_YOP_PROTOCOL_VERSION = "yop-auth-v3";
 
     String SM2_PROTOCOL_PREFIX = "YOP-SM2-SM3";
 
@@ -61,8 +69,49 @@ public interface YopConstants {
 
     String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
     String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+    String YOP_HTTP_CONTENT_TYPE_MULTIPART_FORM = "multipart/form-data";
     String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
+    String YOP_HTTP_CONTENT_TYPE_TEXT = "text/plain;charset=UTF-8";
 
     String YOP_DEFAULT_APPKEY = "default";
+
+    /**
+     * 加密
+     */
+    String YOP_ENCRYPT_V1 = "yop-encrypt-v1";
+    String SM4_CBC_PKCS5PADDING = "SM4/CBC/PKCS5Padding";
+    String SM2 = "SM2";
+    String YOP_DEFAULT_ENCRYPT_ALG = SM4_CBC_PKCS5PADDING;
+    String YOP_CREDENTIALS_ENCRYPT_ALG_SM4 = SM4_CBC_PKCS5PADDING;
+    String YOP_CREDENTIALS_ENCRYPT_ALG_SM2 = SM2;
+    String YOP_CREDENTIALS_DEFAULT_ENCRYPT_ALG = YOP_CREDENTIALS_ENCRYPT_ALG_SM2;
+    String YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO = "YOP_SM2_CERT_SERIAL_NO";
+    String YOP_ENCRYPT_OPTIONS_YOP_SM4_MAIN_CREDENTIALS = "SM4_CERT_ID";
+    String YOP_JSON_CONTENT_FORMAT = "{\"result\":%s}";
+    String YOP_JSON_CONTENT_BIZ_KEY = "result";
+
+    /**
+     * jsonpath
+     */
+    String JSON_PATH_PREFIX = "$.";
+    Set<String> JSON_PATH_ROOT = Collections.unmodifiableSet(Sets.newHashSet("$", "$..*"));
+    Set<String> TOTAL_ENCRYPT_PARAMS = Sets.newHashSet(CharacterConstants.DOLLAR);
+
+    /**
+     * SDK内置证书
+     */
+    String DEFAULT_CERT_PATH = "config/certs";
+    String DEFAULT_CFCA_ROOT_FILE = "cfca_root.pem";
+    String DEFAULT_YOP_INTER_FILE = "yop_inter.pem";
+    YopCertStore DEFAULT_LOCAL_YOP_CERT_STORE = new YopCertStore(DEFAULT_CERT_PATH);
+    // 默认过期后24小时内可用
+    long DEFAULT_PERIOD_VALID_AFTER_EXPIRE = 24 * 3600 * 1000;
+
+    // 默认过期前72小时内开始刷新
+    long DEFAULT_PERIOD_REFRESH_BEFORE_EXPIRE = 72 * 3600 * 1000;
+
+    // 商户通知
+    String SM4_CALLBACK_ALGORITHM = "AEAD_SM4_GCM";
+    String DEFAULT_YOP_CALLBACK_HANDLER = "default";
 
 }

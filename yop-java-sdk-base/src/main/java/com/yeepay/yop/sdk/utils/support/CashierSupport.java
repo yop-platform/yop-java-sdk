@@ -5,12 +5,12 @@
 
 package com.yeepay.yop.sdk.utils.support;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PrivateKey;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,7 +32,7 @@ public final class CashierSupport {
     }
 
     public static String getPayUrl(PrivateKey privateKey, String appKey, String merchantNo, String token, String cashierUrl) {
-        Map<String, String> params = new HashMap<String, String>();
+        Map<String, String> params = Maps.newHashMap();
         params.put("appKey", appKey);
         //系统商商编
         params.put("merchantNo", merchantNo);
@@ -71,7 +71,7 @@ public final class CashierSupport {
     // 获取请求收银台的sign
     private static String signature(String plainText, PrivateKey privateKey) {
         CertTypeEnum certType = resolveCertType(privateKey);
-        return YopSignProcessorFactory.getSignProcessor(certType.name()).sign(plainText, new PKICredentialsItem(privateKey, null, certType));
+        return YopSignProcessorFactory.getSignProcessor(certType.name()).sign(plainText, new PKICredentialsItem(privateKey, certType));
     }
 
     private static CertTypeEnum resolveCertType(PrivateKey privateKey) {

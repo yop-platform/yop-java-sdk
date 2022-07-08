@@ -1,20 +1,27 @@
 package com.yeepay.yop.sdk.security;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.config.YopSdkConfig;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.rsa.RSA;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Map;
 
 /**
  * title: 数字证书工具类<br>
@@ -30,6 +37,28 @@ public class DigitalEnvelopeUtils {
 
     private static final String SEPARATOR = "$";
 
+    private static final Map<DigestAlgEnum, CertTypeEnum> CERT_TYPE_ENUM_MAP;
+    private static final Map<String, String> ENCRYPTOR_MAP;
+    private static final Map<DigestAlgEnum, String> SIGNER_MAP;
+
+    static {
+        CERT_TYPE_ENUM_MAP = Maps.newHashMap();
+        CERT_TYPE_ENUM_MAP.put(DigestAlgEnum.SM3, CertTypeEnum.SM2);
+        CERT_TYPE_ENUM_MAP.put(DigestAlgEnum.SHA256, CertTypeEnum.RSA2048);
+
+        ENCRYPTOR_MAP = Maps.newHashMap();
+        ENCRYPTOR_MAP.put(DigestAlgEnum.SHA256.name(), "RSA");
+        ENCRYPTOR_MAP.put(DigestAlgEnum.SM3.name(), "SM2");
+        ENCRYPTOR_MAP.put(SymmetricEncryptAlgEnum.AES.name(), "AES");
+        ENCRYPTOR_MAP.put(SymmetricEncryptAlgEnum.SM4.name(), "SM4/CBC/PKCS5Padding");
+
+        SIGNER_MAP = Maps.newHashMap();
+        SIGNER_MAP.put(DigestAlgEnum.SHA256, "RSA2048");
+        SIGNER_MAP.put(DigestAlgEnum.SM3, "SM2");
+    }
+
+
+
     /**
      * 拆开数字信封
      *
@@ -38,6 +67,18 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, PrivateKey privateKey) {
+        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), privateKey);
+    }
+
+    /**
+     * 拆开数字信封
+     *
+     * @param cipherText 待解密内容
+     * @param appKey     appKey
+     * @param privateKey 私钥（用于解密）
+     * @return 已解密内容
+     */
+    public static String decrypt(String cipherText, String appKey, PrivateKey privateKey) {
         //分解参数
         String[] args = cipherText.split("\\" + SEPARATOR);
         if (args.length != 4) {
@@ -47,26 +88,31 @@ public class DigitalEnvelopeUtils {
         String encryptedDataToBase64 = args[1];
         SymmetricEncryptAlgEnum symmetricEncryptAlg = SymmetricEncryptAlgEnum.parse(args[2]);
         DigestAlgEnum digestAlg = DigestAlgEnum.valueOf(args[3]);
+        CertTypeEnum certType = CERT_TYPE_ENUM_MAP.get(digestAlg);
 
-        Encryption unsymmetricEncryption = UnsymmetricEncryptionFactory.getUnsymmetricEncryption(digestAlg);
 
         //用私钥对随机密钥进行解密
-        byte[] randomKey = unsymmetricEncryption.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64), privateKey.getEncoded());
+        YopEncryptor unSymmetric = YopEncryptorFactory.getEncryptor(ENCRYPTOR_MAP.get(digestAlg.name()));
+        byte[] randomKey = unSymmetric.decrypt(Encodes.decodeBase64(encryptedRandomKeyToBase64),
+                new EncryptOptions(new YopPKICredentials(appKey, new PKICredentialsItem(privateKey, certType))));
 
-        Encryption encryption = SymmetricEncryptionFactory.getSymmetricEncryption(symmetricEncryptAlg);
-
-        //解密得到源数据
-        byte[] encryptedData = encryption.decrypt(Encodes.decodeBase64(encryptedDataToBase64), randomKey);
+        //用随机对称密钥，解密得到源数据
+        final String encryptAlg = ENCRYPTOR_MAP.get(symmetricEncryptAlg.name());
+        YopEncryptor symmetric = YopEncryptorFactory.getEncryptor(encryptAlg);
+        byte[] decryptedData = symmetric.decrypt(Encodes.decodeBase64(encryptedDataToBase64),
+                new EncryptOptions(new YopSymmetricCredentials(Encodes.encodeBase64(randomKey)), encryptAlg));
 
         //分解参数
-        String data = new String(encryptedData, Charsets.UTF_8);
+        String data = new String(decryptedData, Charsets.UTF_8);
         String sourceData = StringUtils.substringBeforeLast(data, "$");
         String signToBase64 = StringUtils.substringAfterLast(data, "$");
 
         //验证签名
-        PublicKey publicKey = getYopPublicKey(CertTypeEnum.RSA2048);
-        Signer signer = SignerFactory.getSigner(digestAlg);
-        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(), Encodes.decodeBase64(signToBase64));
+        YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
+                getLatestCredentials(appKey, certType.getValue());
+
+        final YopSignProcessor yopSignProcess = YopSignProcessorFactory.getSignProcessor(SIGNER_MAP.get(digestAlg));
+        boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, platformCredentials.getCredential());
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
         }
@@ -74,16 +120,11 @@ public class DigitalEnvelopeUtils {
         return sourceData;
     }
 
-    private static PublicKey getYopPublicKey(CertTypeEnum certType) {
-        YopSdkConfig yopSdkConfig = YopSdkConfigProviderRegistry.getProvider().getConfig();
-        return yopSdkConfig.loadYopPublicKey(certType);
-    }
-
     /**
      * 拆开数字信(使用默认sdk配置文件中的私钥）
      *
      * @param cipherText     待解密内容
-     * @param credentialType 证书类型（用于解密）"RSA2048"或者"RSA4096"
+     * @param credentialType 证书类型（用于解密）"RSA2048"
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String credentialType) {
@@ -95,18 +136,18 @@ public class DigitalEnvelopeUtils {
      *
      * @param cipherText     待解密内容
      * @param appKey         appKey
-     * @param credentialType 证书类型（用于解密）"RSA2048"或者"RSA4096"
+     * @param credentialType 证书类型（用于解密）"RSA2048"
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, String credentialType) {
         YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
                 .getCredentials(appKey, credentialType);
         PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
-        return decrypt(cipherText, pkiCredentialsItem.getPrivateKey());
+        return decrypt(cipherText, appKey, pkiCredentialsItem.getPrivateKey());
     }
 
     /**
-     * 验证签名
+     * 验证签名(rsa)
      *
      * @param content   签名内容
      * @param signature 签名
@@ -119,9 +160,10 @@ public class DigitalEnvelopeUtils {
             throw new VerifySignFailedException("Illegal format");
         }
         String signToBase64 = args[0];
-        DigestAlgEnum digestAlg = DigestAlgEnum.valueOf(args[1]);
         //验证签名
-        boolean verifySign = RSA.verifySign(content.replaceAll("[ \t\n]", ""), signToBase64, publicKey, digestAlg);
+        boolean verifySign = YopSignProcessorFactory.getSignProcessor(CertTypeEnum.RSA2048.getValue())
+                .verify(content.replaceAll("[ \t\n]", ""), signToBase64,
+                        new PKICredentialsItem(publicKey, CertTypeEnum.RSA2048));
         if (!verifySign) {
             throw new VerifySignFailedException("Unexpected signature");
         }

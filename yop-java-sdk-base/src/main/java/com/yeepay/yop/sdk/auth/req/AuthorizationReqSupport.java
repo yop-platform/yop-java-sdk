@@ -1,9 +1,12 @@
 package com.yeepay.yop.sdk.auth.req;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.SignerTypeEnum;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,56 +21,45 @@ import java.util.Map;
  */
 public class AuthorizationReqSupport {
 
-    private static final Map<String, AuthorizationReq> supportedAuthorizationReqs;
+    private static final Map<String, AuthorizationReq> SUPPORTED_AUTH_REQS;
+    private static final List<AuthorizationReq> DEFAULT_AUTH_REQS_FOR_API;
 
     static {
-        supportedAuthorizationReqs = new HashMap<String, AuthorizationReq>();
-        supportedAuthorizationReqs.put("YOP-SM2-SM3",
-                AuthorizationReq.Builder.anAuthorizationReq().withSignerType(SignerTypeEnum.SM2)
-                        .withCredentialType("SM2")
-                        .withSignatureAlg("SM3withSM2")
-                        .withDigestAlg(DigestAlgEnum.SM3)
-                        .withProtocolPrefix("YOP-SM2-SM3")
-                        .build());
-        supportedAuthorizationReqs.put("YOP-RSA2048-SHA256",
-                AuthorizationReq.Builder.anAuthorizationReq().withSignerType(SignerTypeEnum.RSA)
-                        .withCredentialType("RSA2048")
-                        .withSignatureAlg("SHA256withRSA")
-                        .withDigestAlg(DigestAlgEnum.SHA256)
-                        .withProtocolPrefix("YOP-RSA2048-SHA256")
-                        .build());
-        supportedAuthorizationReqs.put("YOP-RSA2048-SHA512",
-                AuthorizationReq.Builder.anAuthorizationReq().withSignerType(SignerTypeEnum.RSA)
-                        .withCredentialType("RSA2048")
-                        .withSignatureAlg("SHA512withRSA")
-                        .withDigestAlg(DigestAlgEnum.SHA512)
-                        .withProtocolPrefix("YOP-RSA2048-SHA512")
-                        .build());
+        SUPPORTED_AUTH_REQS = Maps.newHashMap();
+        DEFAULT_AUTH_REQS_FOR_API = Lists.newArrayList();
 
-        supportedAuthorizationReqs.put("YOP-RSA4096-SHA256",
-                AuthorizationReq.Builder.anAuthorizationReq().withSignerType(SignerTypeEnum.RSA)
-                        .withCredentialType("RSA4096")
-                        .withSignatureAlg("SHA256withRSA")
-                        .withDigestAlg(DigestAlgEnum.SHA256)
-                        .withProtocolPrefix("YOP-RSA4096-SHA256")
-                        .build());
-        supportedAuthorizationReqs.put("YOP-RSA4096-SHA512",
-                AuthorizationReq.Builder.anAuthorizationReq().withSignerType(SignerTypeEnum.RSA)
-                        .withCredentialType("RSA4096")
-                        .withSignatureAlg("SHA512withRSA")
-                        .withDigestAlg(DigestAlgEnum.SHA512)
-                        .withProtocolPrefix("YOP-RSA4096-SHA512")
-                        .build());
-        supportedAuthorizationReqs.put("YOP-OAUTH2",
-                AuthorizationReq.Builder.anAuthorizationReq().withSignerType(SignerTypeEnum.OAUTH2)
-                        .withCredentialType("TOKEN")
-                        .withDigestAlg(DigestAlgEnum.SHA256)
-                        .withProtocolPrefix("Bearer")
-                        .build());
+        // api默认
+        AuthorizationReq sm2AuthReq = buildAuthorizationReq(SignerTypeEnum.SM2.name(), "SM2",
+                "SM3withSM2", DigestAlgEnum.SM3, "YOP-SM2-SM3");
+        AuthorizationReq rsaAuthReq = buildAuthorizationReq(SignerTypeEnum.RSA.name(), "RSA2048",
+                "SHA256withRSA", DigestAlgEnum.SHA256, "YOP-RSA2048-SHA256");
+
+        SUPPORTED_AUTH_REQS.put("YOP-SM2-SM3", sm2AuthReq);
+        SUPPORTED_AUTH_REQS.put("YOP-RSA2048-SHA256", rsaAuthReq);
+        DEFAULT_AUTH_REQS_FOR_API.add(sm2AuthReq);
+        DEFAULT_AUTH_REQS_FOR_API.add(rsaAuthReq);
+
+        // 其他
+        SUPPORTED_AUTH_REQS.put("YOP-OAUTH2", buildAuthorizationReq(SignerTypeEnum.OAUTH2.name(), "TOKEN",
+                null, DigestAlgEnum.SHA256, "Bearer"));
     }
 
     public static AuthorizationReq getAuthorizationReq(String securityReq) {
-        return supportedAuthorizationReqs.get(securityReq);
+        return SUPPORTED_AUTH_REQS.get(securityReq);
+    }
+
+    public static List<AuthorizationReq> getDefaultAuthReqsForApi() {
+        return Collections.unmodifiableList(DEFAULT_AUTH_REQS_FOR_API);
+    }
+
+    public static AuthorizationReq buildAuthorizationReq(String signerType, String credentialType, String signatureAlg
+            , DigestAlgEnum digestAlg, String protocolPrefix) {
+        return AuthorizationReq.Builder.anAuthorizationReq().withSignerType(signerType)
+                .withCredentialType(credentialType)
+                .withSignatureAlg(signatureAlg)
+                .withDigestAlg(digestAlg)
+                .withProtocolPrefix(protocolPrefix)
+                .build();
     }
 
 }

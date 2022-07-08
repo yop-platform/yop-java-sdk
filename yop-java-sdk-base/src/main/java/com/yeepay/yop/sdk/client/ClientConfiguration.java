@@ -168,7 +168,7 @@ public class ClientConfiguration {
     /**
      * The YOP credentials used by the client to sign HTTP requests.
      */
-    private YopCredentials credentials = null;
+    private YopCredentials<?> credentials = null;
 
     /**
      * The http client impl
@@ -924,7 +924,7 @@ public class ClientConfiguration {
      *
      * @return the YOP credentials used by the client to sign HTTP requests.
      */
-    public YopCredentials getCredentials() {
+    public YopCredentials<?> getCredentials() {
         return this.credentials;
     }
 
@@ -934,7 +934,7 @@ public class ClientConfiguration {
      * @param credentials the YOP credentials used by the client to sign HTTP requests.
      * @throws NullPointerException if credentials is null.
      */
-    public void setCredentials(YopCredentials credentials) {
+    public void setCredentials(YopCredentials<?> credentials) {
         checkNotNull(credentials, "credentials should not be null.");
         this.credentials = credentials;
     }
@@ -947,7 +947,7 @@ public class ClientConfiguration {
      * @return the updated configuration instance.
      * @throws NullPointerException if credentials is null.
      */
-    public ClientConfiguration withCredentials(YopCredentials credentials) {
+    public ClientConfiguration withCredentials(YopCredentials<?> credentials) {
         this.setCredentials(credentials);
         return this;
     }
