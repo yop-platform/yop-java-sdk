@@ -6,7 +6,7 @@ package com.yeepay.yop.sdk;
 
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
@@ -30,8 +30,6 @@ public interface YopConstants {
     String DEFAULT_SANDBOX_SERVER_ROOT = "https://sandbox.yeepay.com/yop-center";
 
     String DEFAULT_SANDBOX_VIA = "sandbox";
-
-    String DEFAULT_YOP_CERT_STORE_PATH = "/tmp/yop/certs";
 
     String DEFAULT_YOP_PROTOCOL_VERSION = "yop-auth-v3";
 

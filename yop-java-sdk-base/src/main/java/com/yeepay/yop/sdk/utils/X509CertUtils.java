@@ -5,9 +5,9 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
-import com.yeepay.yop.sdk.crypto.X509CertSupportFactory;
+import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.io.ByteArrayInputStream;

@@ -12,9 +12,9 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
-import com.yeepay.yop.sdk.auth.signer.YopSignerFactory;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
-import com.yeepay.yop.sdk.cache.EncryptOptionsCache;
+import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 import static com.yeepay.yop.sdk.internal.RequestEncryptor.encrypt;
-import static com.yeepay.yop.sdk.utils.CharacterConstants.EMPTY;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 
 /**
  * title: Yop商户回调处理引擎<br>

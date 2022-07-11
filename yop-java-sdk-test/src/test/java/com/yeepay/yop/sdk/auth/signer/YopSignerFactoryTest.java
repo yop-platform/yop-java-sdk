@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.auth.signer;
 
-import com.yeepay.yop.sdk.auth.signer.YopSigner;
-import com.yeepay.yop.sdk.auth.signer.YopSignerFactory;
+import com.yeepay.yop.sdk.base.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.security.SignerTypeEnum;
 import org.junit.Assert;
 import org.junit.Test;

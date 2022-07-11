@@ -6,7 +6,7 @@
 package com.yeepay.yop.sdk.service.common;
 
 import com.yeepay.yop.sdk.utils.Encodes;
-import com.yeepay.yop.sdk.utils.SmUtils;
+import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.spec.OpenSSHPrivateKeySpec;
 import org.bouncycastle.jce.ECNamedCurveTable;

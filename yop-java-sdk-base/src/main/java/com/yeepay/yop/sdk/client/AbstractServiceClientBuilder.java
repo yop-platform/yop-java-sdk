@@ -7,7 +7,7 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;

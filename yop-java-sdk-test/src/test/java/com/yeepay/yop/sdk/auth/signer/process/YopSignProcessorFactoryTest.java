@@ -4,8 +4,7 @@
  */
 package com.yeepay.yop.sdk.auth.signer.process;
 
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -6,7 +6,7 @@ package com.yeepay.yop.sdk.utils;
 
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.cache.YopCertificateCache;
+import com.yeepay.yop.sdk.base.cache.YopCertificateCache;
 import org.junit.Assert;
 import org.junit.Test;
 

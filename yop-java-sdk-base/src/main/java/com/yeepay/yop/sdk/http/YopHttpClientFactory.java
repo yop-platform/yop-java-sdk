@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.util.Map;

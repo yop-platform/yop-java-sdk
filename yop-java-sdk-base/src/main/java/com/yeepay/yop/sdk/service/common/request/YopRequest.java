@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.TOTAL_ENCRYPT_PARAMS;
-import static com.yeepay.yop.sdk.utils.CharacterConstants.DOLLAR;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.DOLLAR;
 import static com.yeepay.yop.sdk.utils.JsonUtils.isTotalEncrypt;
 
 /**

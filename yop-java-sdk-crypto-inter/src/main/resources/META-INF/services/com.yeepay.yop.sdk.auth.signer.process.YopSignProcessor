@@ -1,1 +1,1 @@
-com.yeepay.yop.sdk.auth.signer.process.YopRsaSignProcessor
+com.yeepay.yop.sdk.inter.auth.signer.process.YopRsaSignProcessor
