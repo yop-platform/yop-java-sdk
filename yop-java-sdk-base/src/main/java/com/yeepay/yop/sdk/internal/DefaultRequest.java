@@ -7,7 +7,7 @@ import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 
 import java.io.File;

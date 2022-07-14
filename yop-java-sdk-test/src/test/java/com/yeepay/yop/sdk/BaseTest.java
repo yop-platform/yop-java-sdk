@@ -4,7 +4,7 @@
  */
 package com.yeepay.yop.sdk;
 
-import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfigProvider;
+import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
 import org.junit.After;
 import org.junit.Before;
 

@@ -6,11 +6,10 @@ package com.yeepay.yop.sdk.utils;
 
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.crypto.YopCertCategory;
-import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
-import com.yeepay.yop.sdk.crypto.YopPublicKey;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.YopSignUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;

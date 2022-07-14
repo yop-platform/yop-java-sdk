@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
 import com.yeepay.yop.sdk.BaseTest;
+import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
 import org.junit.Assert;
 import org.junit.Test;
 

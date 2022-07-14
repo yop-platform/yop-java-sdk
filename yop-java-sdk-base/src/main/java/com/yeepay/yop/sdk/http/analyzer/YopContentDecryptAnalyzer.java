@@ -9,7 +9,7 @@ import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;

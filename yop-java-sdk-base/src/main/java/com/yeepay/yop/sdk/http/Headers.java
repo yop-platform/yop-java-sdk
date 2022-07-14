@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 
 /**
  * Common YOS HTTP header values used throughout the YOP YOS Java client.

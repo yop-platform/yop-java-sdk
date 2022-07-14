@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.digest;
 
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.base.security.digest.YopDigesterFactory;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.junit.Assert;

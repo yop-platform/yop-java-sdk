@@ -13,7 +13,7 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 

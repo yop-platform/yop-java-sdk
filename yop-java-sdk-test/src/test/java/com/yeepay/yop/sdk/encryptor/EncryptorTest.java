@@ -8,7 +8,7 @@ import com.yeepay.yop.sdk.BaseTest;
 import com.yeepay.yop.sdk.encryptor.auth.credentials.provider.MockEncryptorCredentialsProvider;
 import com.yeepay.yop.sdk.encryptor.signer.process.MockEncryptorSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.YopClientImpl;

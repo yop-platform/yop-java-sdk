@@ -16,7 +16,7 @@ import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.JsonUtils;
@@ -37,8 +37,8 @@ import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
-import static com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
-import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
+import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
 import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 
 /**

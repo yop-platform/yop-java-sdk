@@ -13,19 +13,19 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.protocol.AuthenticateProtocolVersion;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequest;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import static com.yeepay.yop.sdk.utils.CharacterConstants.*;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
 import static com.yeepay.yop.sdk.utils.HttpUtils.useEmptyAsCanonicalQueryString;
 
 /**

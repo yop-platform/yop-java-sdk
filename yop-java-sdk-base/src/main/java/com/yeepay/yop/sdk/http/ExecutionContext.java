@@ -3,7 +3,7 @@ package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.base.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 

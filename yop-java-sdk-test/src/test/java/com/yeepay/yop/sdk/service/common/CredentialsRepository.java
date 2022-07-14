@@ -8,8 +8,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.crypto.YopCertCategory;
-import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PrivateKey;

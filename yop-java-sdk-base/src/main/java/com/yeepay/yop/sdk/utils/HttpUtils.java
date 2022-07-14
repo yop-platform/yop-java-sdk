@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;

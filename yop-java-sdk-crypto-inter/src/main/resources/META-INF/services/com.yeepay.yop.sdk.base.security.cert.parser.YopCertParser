@@ -1,0 +1,2 @@
+com.yeepay.yop.sdk.inter.security.cert.parser.YopRsa2048PrivateKeyParser
+com.yeepay.yop.sdk.inter.security.cert.parser.YopRsa2048PublicKeyParser

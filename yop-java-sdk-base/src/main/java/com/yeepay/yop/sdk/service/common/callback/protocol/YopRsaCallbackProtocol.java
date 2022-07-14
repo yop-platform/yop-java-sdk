@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.service.common.callback.protocol;
 
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.DigitalEnvelopeUtils;
+import com.yeepay.yop.sdk.utils.DigitalEnvelopeUtils;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 
 import java.util.Date;

@@ -6,8 +6,8 @@
 package com.yeepay.yop.sdk.service.common;
 
 import com.google.common.collect.Lists;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCachedCredentialsProvider;
-import com.yeepay.yop.sdk.config.YopAppConfig;
+import com.yeepay.yop.sdk.base.auth.credentials.provider.YopCachedCredentialsProvider;
+import com.yeepay.yop.sdk.base.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;

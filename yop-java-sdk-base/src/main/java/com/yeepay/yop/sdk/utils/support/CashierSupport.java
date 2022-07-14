@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.utils.support;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PrivateKey;

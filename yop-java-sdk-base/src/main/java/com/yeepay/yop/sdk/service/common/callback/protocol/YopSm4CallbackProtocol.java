@@ -11,7 +11,7 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;

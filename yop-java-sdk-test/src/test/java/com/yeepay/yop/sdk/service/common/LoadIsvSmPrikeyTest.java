@@ -5,14 +5,14 @@
 package com.yeepay.yop.sdk.service.common;
 
 import com.yeepay.yop.sdk.BaseTest;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
-import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfigProvider;
-import com.yeepay.yop.sdk.crypto.YopCertCategory;
-import com.yeepay.yop.sdk.crypto.YopCertParserFactory;
+import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.utils.Encodes;
-import com.yeepay.yop.sdk.utils.SmUtils;
+import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

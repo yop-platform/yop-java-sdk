@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.client.router;
 
 import com.google.common.collect.Sets;
-import com.yeepay.yop.sdk.config.enums.ModeEnum;
+import com.yeepay.yop.sdk.client.router.enums.ModeEnum;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
