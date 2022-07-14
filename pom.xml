@@ -40,7 +40,7 @@
         <jackson.version>[2.13.2,)</jackson.version>
         <joda-time.version>2.9.4</joda-time.version>
         <junit.version>4.13.2</junit.version>
-        <org.springframework>5.3.18</org.springframework>
+        <org.springframework>5.3.20</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
         <bouncycastle.version>1.67</bouncycastle.version>
