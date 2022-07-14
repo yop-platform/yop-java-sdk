@@ -14,27 +14,24 @@ import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.protocol.AuthenticateProtocolVersion;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequest;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
 import static com.yeepay.yop.sdk.utils.HttpUtils.useEmptyAsCanonicalQueryString;
@@ -167,10 +164,8 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
 
     private void initialize(YopCallbackRequest request) {
         try {
-            String authorization = request.getHeaders().get(Headers.AUTHORIZATION);
-            if (StringUtils.isBlank(authorization)) {
-                authorization = request.getHeaders().get(Headers.AUTHORIZATION.toLowerCase());
-            }
+            final Map<String, String> headers = request.getCanonicalHeaders();
+            String authorization = headers.get(Headers.AUTHORIZATION.toLowerCase());
             String[] protocol = authorization.split(CharacterConstants.SPACE);
             String protocolPrefix = protocol[0], protocolContent = protocol[1];
             String[] parts = protocolPrefix.split(CharacterConstants.DASH_LINE);
@@ -183,12 +178,12 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
             expirationInSeconds = Long.parseLong(authorizationHeaders[3]);
             signedHeaders = authorizationHeaders[4].toLowerCase();
             signature = authorizationHeaders[5];
-            platformSerialNo = request.getHeaders().get(Headers.YOP_SIGN_CERT_SERIAL_NO);
+            platformSerialNo = headers.get(Headers.YOP_SIGN_CERT_SERIAL_NO);
             if (StringUtils.isBlank(platformSerialNo)) {
-                platformSerialNo = request.getHeaders().get(Headers.YOP_CERT_SERIAL_NO);
+                platformSerialNo = headers.get(Headers.YOP_CERT_SERIAL_NO);
             }
-            yopEncrypt = request.getHeaders().get(Headers.YOP_ENCRYPT);
-            yopRequestId = request.getHeaders().get(Headers.YOP_REQUEST_ID);
+            yopEncrypt = headers.get(Headers.YOP_ENCRYPT);
+            yopRequestId = headers.get(Headers.YOP_REQUEST_ID);
         } catch (Exception e) {
             throw new YopClientException("error initialize YopSm2CallbackProtocol, ex:", e);
         }
@@ -230,11 +225,12 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         Set<String> headerNames = Sets.newHashSet(SIGNED_HEADER_STRING_SPLITTER.split(signedHeaders));
         List<String> kvs = Lists.newArrayList();
         for (String key : headerNames) {
-            String value = req.getHeaders().get(key);
+            final String canonicalKey = key.trim().toLowerCase();
+            String value = req.getCanonicalHeaders().get(canonicalKey);
             if (StringUtils.isBlank(value)) {
                 continue;
             }
-            kvs.add(HttpUtils.normalize(key) + COLON + HttpUtils.normalize(value.trim()));
+            kvs.add(HttpUtils.normalize(canonicalKey + COLON + HttpUtils.normalize(value.trim())));
         }
         Collections.sort(kvs);
         return HEADER_JOINER.join(kvs);

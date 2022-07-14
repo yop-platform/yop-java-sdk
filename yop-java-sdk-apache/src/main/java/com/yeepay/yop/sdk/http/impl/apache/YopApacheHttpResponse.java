@@ -17,14 +17,14 @@ public class YopApacheHttpResponse extends AbstractYopHttpResponse {
 
     public YopApacheHttpResponse(CloseableHttpResponse httpResponse) throws IOException {
         this.httpResponse = httpResponse;
+
+        for (Header header : this.httpResponse.getAllHeaders()) {
+            fillHeader(header.getName(), header.getValue());
+        }
+
         HttpEntity entity = httpResponse.getEntity();
         if (entity != null && entity.isStreaming()) {
-            super.content = entity.getContent();
-        } else {
-            super.content = null;
-        }
-        for (Header header : this.httpResponse.getAllHeaders()) {
-            headers.put(header.getName(), header.getValue());
+            setContent(entity.getContent());
         }
     }
 

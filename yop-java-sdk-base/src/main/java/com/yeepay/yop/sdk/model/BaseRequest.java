@@ -44,7 +44,7 @@ public abstract class BaseRequest implements Serializable, Cloneable {
 
     public BaseRequest addHeader(String name, String value) {
         validateParameter(name, value);
-        headers.put(name, value);
+        headers.put(StringUtils.lowerCase(name), value);
         return this;
     }
 
