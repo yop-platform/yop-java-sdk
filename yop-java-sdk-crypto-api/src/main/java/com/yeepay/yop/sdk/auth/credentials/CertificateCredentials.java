@@ -17,7 +17,7 @@ package com.yeepay.yop.sdk.auth.credentials;
 public interface CertificateCredentials {
 
     /**
-     * 证书序列号(十六进制字符串)
+     * 证书序列号(长度为10的16进制字符串)
      *
      * 比如，目前易宝证书序列号如下表示
      *   16进制表示为：4397139598

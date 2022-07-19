@@ -90,7 +90,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
      * 从store加载证书
      *
      * @param appKey   应用标识
-     * @param serialNo 证书序列号(十六进制字符串)
+     * @param serialNo 证书序列号(长度为10的16进制字符串)
      * @return YopPlatformCredentials
      */
     protected abstract YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo);
@@ -100,7 +100,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
      * 从远端加载指定序列号国密证书
      *
      * @param appKey   应用标识
-     * @param serialNo 证书序列号(十六进制字符串)
+     * @param serialNo 证书序列号(长度为10的16进制字符串)
      * @return X509Certificate
      */
     protected X509Certificate loadRemoteSm2Cert(String appKey, String serialNo) {
@@ -115,7 +115,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
      * 读取内置RSA证书
      *
      * @param appKey   应用标识
-     * @param serialNo 证书序列号(十六进制字符串)
+     * @param serialNo 证书序列号(长度为10的16进制字符串)
      * @return X509Certificate
      */
     protected X509Certificate loadLocalRsaCert(String appKey, String serialNo) {

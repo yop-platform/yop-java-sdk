@@ -104,12 +104,12 @@ public class X509CertUtils {
     }
 
     /**
-     * (CFCA证书在Windows操作系统解析出来的证书序列号是十六进制)将十进制转换成十六进制
+     * (CFCA证书在Windows操作系统解析出来的证书序列号是16进制)将10进制转换成16进制
      *
-     * @return 十六进制字符串
+     * @return 长度为10的16进制字符串
      */
     public static String parseToHex(String decimalSerialNo) {
-        // 十进制的证书序列号一定大于十位
+        // 10进制的证书序列号一定大于10位
         if (StringUtils.isEmpty(decimalSerialNo) || 10 >= decimalSerialNo.length()) {
             return decimalSerialNo;
         }
@@ -117,9 +117,9 @@ public class X509CertUtils {
     }
 
     /**
-     * (CFCA证书在Linux操作系统解析出来的证书序列号是十进制)将十六进制穿换成十进制
+     * (CFCA证书在Linux操作系统解析出来的证书序列号是10进制)将16进制穿换成10进制
      *
-     * @return 十进制字符串
+     * @return 10进制字符串
      */
     public static String parseToDecimal(String hexSerialNo) {
         // 十六进制的证书序列号一定大于十位
