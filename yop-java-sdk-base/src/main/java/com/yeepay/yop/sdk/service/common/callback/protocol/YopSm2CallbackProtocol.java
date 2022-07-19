@@ -27,6 +27,7 @@ import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequest;
 import com.yeepay.yop.sdk.utils.HttpUtils;
+import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,6 +183,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
             if (StringUtils.isBlank(platformSerialNo)) {
                 platformSerialNo = headers.get(Headers.YOP_CERT_SERIAL_NO);
             }
+            platformSerialNo = X509CertUtils.parseToHex(platformSerialNo);
             yopEncrypt = headers.get(Headers.YOP_ENCRYPT);
             yopRequestId = headers.get(Headers.YOP_REQUEST_ID);
         } catch (Exception e) {
