@@ -38,12 +38,9 @@ public class YopCallbackProtocolFactory {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("begin to build YopCallbackProtocol, request:{}", request);
         }
-        final Map<String, String> headers = request.getHeaders();
+        final Map<String, String> headers = request.getCanonicalHeaders();
         if (MapUtils.isNotEmpty(headers)) {
-            String authorization = headers.get(Headers.AUTHORIZATION);
-            if (StringUtils.isBlank(authorization)) {
-                authorization = headers.get(Headers.AUTHORIZATION.toLowerCase());
-            }
+            String authorization = headers.get(Headers.AUTHORIZATION.toLowerCase());
             // 目前只有国密有此认证头
             if (StringUtils.isNotBlank(authorization) && authorization.startsWith(YopConstants.SM2_PROTOCOL_PREFIX)) {
                 return new YopSm2CallbackProtocol(request);

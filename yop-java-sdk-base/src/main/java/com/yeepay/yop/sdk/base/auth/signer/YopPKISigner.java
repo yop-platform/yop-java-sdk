@@ -48,22 +48,21 @@ import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
 public class YopPKISigner implements YopSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
- // 大写
-    private static final Set<String> defaultHeadersToSign = Sets.newHashSet();
-    private static final Joiner headerJoiner = Joiner.on('\n');
-    private static final Joiner signedHeaderStringJoiner = Joiner.on(';');
+    private static final Set<String> DEFAULT_HEADERS_TO_SIGN = Sets.newHashSet();
+    private static final Joiner HEADER_JOINER = Joiner.on('\n');
+    private static final Joiner SIGNED_HEADER_STRING_JOINER = Joiner.on(';');
 
     static {
-        defaultHeadersToSign.add(Headers.CONTENT_LENGTH.toLowerCase());
-        defaultHeadersToSign.add(Headers.CONTENT_TYPE.toLowerCase());
-        defaultHeadersToSign.add(Headers.CONTENT_MD5.toLowerCase());
-        defaultHeadersToSign.add(Headers.YOP_REQUEST_ID);
-        defaultHeadersToSign.add(Headers.YOP_DATE);
-        defaultHeadersToSign.add(Headers.YOP_APPKEY);
-        defaultHeadersToSign.add(Headers.YOP_CONTENT_SHA256);
-        defaultHeadersToSign.add(Headers.YOP_HASH_CRC64ECMA);
-        defaultHeadersToSign.add(Headers.YOP_CONTENT_SM3);
-        defaultHeadersToSign.add(Headers.YOP_ENCRYPT);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.CONTENT_LENGTH.toLowerCase());
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.CONTENT_TYPE.toLowerCase());
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.CONTENT_MD5.toLowerCase());
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_REQUEST_ID);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_DATE);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_APPKEY);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_CONTENT_SHA256);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_HASH_CRC64ECMA);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_CONTENT_SM3);
+        DEFAULT_HEADERS_TO_SIGN.add(Headers.YOP_ENCRYPT);
     }
 
     @Override
@@ -83,7 +82,7 @@ public class YopPKISigner implements YopSigner {
 
         // B.获取规范请求串
         additionalHeader(request, options);
-        SortedMap<String, String> headersToSign = this.getHeadersToSign(request.getHeaders(), defaultHeadersToSign);
+        SortedMap<String, String> headersToSign = this.getHeadersToSign(request.getHeaders(), DEFAULT_HEADERS_TO_SIGN);
         String canonicalRequest = buildCanonicalRequest(request, authString, headersToSign);
         LOGGER.debug("canonicalRequest:{}", canonicalRequest.replace("\n", "[\\n]"));
 
@@ -138,7 +137,7 @@ public class YopPKISigner implements YopSigner {
                                     String authString,
                                     SortedMap<String, String> headersToSign,
                                     String signature) {
-        String signedHeaders = signedHeaderStringJoiner.join(headersToSign.keySet());
+        String signedHeaders = SIGNED_HEADER_STRING_JOINER.join(headersToSign.keySet());
         signedHeaders = signedHeaders.trim().toLowerCase();
         return options.getProtocolPrefix() + " " + authString + "/" + signedHeaders + "/" + signature;
     }
@@ -237,7 +236,7 @@ public class YopPKISigner implements YopSigner {
         }
         Collections.sort(headerStrings);
 
-        return headerJoiner.join(headerStrings);
+        return HEADER_JOINER.join(headerStrings);
     }
 
 

@@ -53,6 +53,11 @@ public class YopCallbackRequest implements Serializable {
     private Map<String, String> headers;
 
     /**
+     * 请求规范header
+     */
+    private Map<String, String> canonicalHeaders;
+
+    /**
      * 请求参数(query、form)
      */
     private Map<String, List<String>> params = Maps.newHashMap();
@@ -92,6 +97,10 @@ public class YopCallbackRequest implements Serializable {
         return headers;
     }
 
+    public Map<String, String> getCanonicalHeaders() {
+        return canonicalHeaders;
+    }
+
     public Map<String, List<String>> getParams() {
         return params;
     }
@@ -127,6 +136,11 @@ public class YopCallbackRequest implements Serializable {
 
     public YopCallbackRequest setHeaders(Map<String, String> headers) {
         this.headers = headers;
+        if (MapUtils.isNotEmpty(headers)) {
+            Map<String, String> canonicalHeaders = Maps.newHashMapWithExpectedSize(headers.size());
+            headers.forEach((k,v) -> canonicalHeaders.put(k.trim().toLowerCase(), v));
+            this.canonicalHeaders = canonicalHeaders;
+        }
         return this;
     }
 

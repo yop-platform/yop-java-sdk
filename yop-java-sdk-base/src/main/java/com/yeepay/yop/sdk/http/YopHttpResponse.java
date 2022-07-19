@@ -21,21 +21,76 @@ import java.util.Map;
  */
 public interface YopHttpResponse extends Closeable {
 
+    /**
+     * 获取指定响应头(string)
+     *
+     * @param name
+     * @return
+     */
     String getHeader(String name);
 
+    /**
+     * 获取指定响应头(number)
+     *
+     * @param name
+     * @return
+     */
     long getHeaderAsLong(String name);
 
+    /**
+     * 获取指定响应头(date)
+     *
+     * @param name
+     * @return
+     */
     Date getHeaderAsRfc822Date(String name);
 
+    /**
+     * 获取响应体
+     *
+     * @return
+     */
     InputStream getContent();
 
+    /**
+     * 读取响应体并转为字符串
+     *
+     * @return
+     */
     String readContent();
 
+    /**
+     * 重写响应体
+     *
+     * @param content
+     */
     void setContent(Object content);
 
+    /**
+     * 获取响应状态
+     *
+     * @return
+     */
     String getStatusText();
 
+    /**
+     * 获取响应状态码
+     *
+     * @return
+     */
     int getStatusCode();
 
+    /**
+     * 获取原始响应头
+     *
+     * @return
+     */
     Map<String, String> getHeaders();
+
+    /**
+     * 获取标准响应头(k转小写)
+     *
+     * @return
+     */
+    Map<String, String> getCanonicalHeaders();
 }

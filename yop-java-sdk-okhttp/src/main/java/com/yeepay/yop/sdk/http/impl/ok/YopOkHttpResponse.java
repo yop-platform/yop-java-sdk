@@ -16,14 +16,14 @@ public class YopOkHttpResponse extends AbstractYopHttpResponse {
 
     public YopOkHttpResponse(Response httpResponse) throws IOException {
         this.httpResponse = httpResponse;
+
+        for (Pair<? extends String, ? extends String> header : this.httpResponse.headers()) {
+            fillHeader(header.getFirst(), header.getSecond());
+        }
+
         final ResponseBody body = httpResponse.body();
         if (null != body) {
-            super.content = body.byteStream();
-        } else {
-            super.content = null;
-        }
-        for (Pair<? extends String, ? extends String> header : this.httpResponse.headers()) {
-            headers.put(header.getFirst(), header.getSecond());
+            setContent(body.byteStream());
         }
     }
 

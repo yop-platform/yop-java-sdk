@@ -181,7 +181,7 @@ public class YopRequestConfig {
     }
 
     public YopRequestConfig addEncryptHeader(String headerName) {
-        encryptHeaders.add(headerName);
+        encryptHeaders.add(StringUtils.lowerCase(headerName));
         needEncrypt = true;
         return this;
     }
