@@ -98,8 +98,8 @@ public class YopEncryptorTest extends BaseTest {
                     Collections.singletonList(new Sm2Enhancer(appKey)));
             encryptOptions = sm2OptionsEnhanced.get();
             specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), YopConstants.DEFAULT_ENCODING);
-            yopClient = YopClientBuilder.builder().withEndpoint("http://qak8s.iaas.yp:30228/yop-center")
-                    .withYosEndpoint("http://qak8s.iaas.yp:30228/yop-center").build();
+            yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30228/yop-center")
+                    .withYosEndpoint("http://ycetest.yeepay.com:30228/yop-center").build();
 //        yopClient = YopClientBuilder.builder().withEndpoint("http://localhost:8064/yop-center")
 //                .withYosEndpoint("http://localhost:8064/yop-center").build();
         } catch (Exception e) {

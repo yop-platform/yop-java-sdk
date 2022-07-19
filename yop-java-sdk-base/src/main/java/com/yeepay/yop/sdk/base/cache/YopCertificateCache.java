@@ -65,7 +65,7 @@ public class YopCertificateCache {
     private static YopClient YOP_CLIENT;
 
     private static X509Certificate CFCA_ROOT_CERT, YOP_INTER_CERT, YOP_PLATFORM_RSA_CERT;
-    private static final String QA_RSA_CERT_SERIAL_NO = "275718169735", PRO_RSA_CERT_SERIAL_NO = "290297451928";
+    private static final String QA_RSA_CERT_SERIAL_NO = "4032156487", PRO_RSA_CERT_SERIAL_NO = "4397139598";
 
     /**
      * 本地加载cfca根证书

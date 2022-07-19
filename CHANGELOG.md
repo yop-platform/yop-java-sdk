@@ -1,5 +1,6 @@
 | 版本 | 变更内容  |
 | --- | --- |
+| 4.3.1 | CFCA证书序列号约定为16进制表示 |
 | 4.3.0 | 支持报文加解密 |
 | 4.2.3 | 修复YopFixedCredentialsProvider#getSupportCertTypes并发问题、默认应用加载问题，影响范围：`[4.0.5~4.2.2]` |
 | 4.2.1 | 修复YopJsonResponseAnalyzer对响应体的校验问题 |

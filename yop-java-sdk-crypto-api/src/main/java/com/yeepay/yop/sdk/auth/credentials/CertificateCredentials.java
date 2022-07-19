@@ -17,8 +17,13 @@ package com.yeepay.yop.sdk.auth.credentials;
 public interface CertificateCredentials {
 
     /**
-     * 证书序列号
-     * @return
+     * 证书序列号(十六进制字符串)
+     *
+     * 比如，目前易宝证书序列号如下表示
+     *   16进制表示为：4397139598
+     *   10进制表示：290297451928
+     *
+     * @return 请将证书序列号转换为16进制表示，并返回
      */
     String getSerialNo();
 }

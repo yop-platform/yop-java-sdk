@@ -5,21 +5,23 @@
 package com.yeepay.yop.sdk.base.auth.credentials.provider.file;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.base.auth.credentials.provider.YopBasePlatformCredentialsProvider;
 import com.yeepay.yop.sdk.base.cache.YopCertificateCache;
-import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
-import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
-import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -30,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_PLATFORM_CERT_POSTFIX;
 import static com.yeepay.yop.sdk.YopConstants.YOP_SM_PLATFORM_CERT_PREFIX;
@@ -47,6 +51,10 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_SM_PLATFORM_CERT_PREFIX;
 public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentialsProvider {
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(YopFilePlatformCredentialsProvider.class);
+
+    protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
+            3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
+            new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
     protected YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo) {
@@ -81,18 +89,24 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
             return result;
         }
 
-        // 创建存储目录
-        final File certStoreDir = createStoreDirIfNecessary(yopCertStore);
-        if (null != certStoreDir) {
-            writeCertToFileStore(certStoreDir, cert);
-        }
+        // 异步存入本地
+        THREAD_POOL.submit(() -> {
+            try {
+                final File certStoreDir = createStoreDirIfNecessary(yopCertStore);
+                if (null != certStoreDir) {
+                    writeCertToFileStore(certStoreDir, cert);
+                }
+            } catch (Exception e) {
+                LOGGER.warn("error when X509Certificate, ex:", e);
+            }
+        });
 
         return result;
     }
 
     private void writeCertToFileStore(File certStoreDir, X509Certificate cert) {
         try {
-            final String serialNo = cert.getSerialNumber().toString();
+            final String serialNo = X509CertUtils.parseToHex(cert.getSerialNumber().toString());
             final File certFile = new File(certStoreDir, YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX);
             X509CertSupportFactory.getSupport(CertTypeEnum.SM2.name()).writeToFile(cert, certFile);
         } catch (Exception e) {
@@ -130,7 +144,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
                 yopCertConfig.setStoreType(CertStoreType.FILE_CER);
                 final X509Certificate cert =
                         ((YopPublicKey) YopCertParserFactory.getCertParser(YopCertCategory.PUBLIC, CertTypeEnum.SM2).parse(yopCertConfig)).getCert();
-                String realSerialNo = cert.getSerialNumber().toString();
+                String realSerialNo = X509CertUtils.parseToHex(cert.getSerialNumber().toString());
                 X509CertUtils.verifyCertificate(CertTypeEnum.SM2, YopCertificateCache.getYopInterCertFromLocal().getPublicKey(), cert);
                 if (!realSerialNo.equals(serialNo)) {
                     LOGGER.warn("wrong file name for sm2 cert, serialNo:{}, realSerialNo:{}", serialNo, realSerialNo);
@@ -155,6 +169,6 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
         if (null == cert) return null;
         final CertTypeEnum certType = CertTypeEnum.parse(credentialType);
         return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType))
-                .withSerialNo(cert.getSerialNumber().toString()).withAppKey(appKey);
+                .withSerialNo(X509CertUtils.parseToHex(cert.getSerialNumber().toString())).withAppKey(appKey);
     }
 }
