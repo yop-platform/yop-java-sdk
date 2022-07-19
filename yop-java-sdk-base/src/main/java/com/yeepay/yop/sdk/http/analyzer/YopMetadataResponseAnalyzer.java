@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
+import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,9 @@ public class YopMetadataResponseAnalyzer implements HttpResponseAnalyzer {
         metadata.setLastModified(httpResponse.getHeaderAsRfc822Date(Headers.LAST_MODIFIED));
         metadata.setServer(httpResponse.getHeader(Headers.SERVER));
         final String certSerialNo = httpResponse.getHeader(Headers.YOP_SIGN_CERT_SERIAL_NO);
-        metadata.setYopCertSerialNo(StringUtils.defaultIfBlank(certSerialNo, httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO)));
+        metadata.setYopCertSerialNo(X509CertUtils.parseToHex(
+                StringUtils.defaultIfBlank(certSerialNo,
+                        httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO))));
         metadata.setYopEncrypt(httpResponse.getHeader(Headers.YOP_ENCRYPT));
         handleYopResponseMetadata(metadata);
         return false;

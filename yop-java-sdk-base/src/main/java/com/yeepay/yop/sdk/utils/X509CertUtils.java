@@ -9,6 +9,7 @@ import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -100,6 +101,32 @@ public class X509CertUtils {
 
     private static YopCertStore globalCertStoreConfig() {
         return YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
+    }
+
+    /**
+     * (CFCA证书在Windows操作系统解析出来的证书序列号是16进制)将10进制转换成16进制
+     *
+     * @return 长度为10的16进制字符串
+     */
+    public static String parseToHex(String decimalSerialNo) {
+        // 10进制的证书序列号一定大于10位
+        if (StringUtils.isEmpty(decimalSerialNo) || 10 >= decimalSerialNo.length()) {
+            return decimalSerialNo;
+        }
+        return Long.toHexString(Long.parseLong(decimalSerialNo));
+    }
+
+    /**
+     * (CFCA证书在Linux操作系统解析出来的证书序列号是10进制)将16进制穿换成10进制
+     *
+     * @return 10进制字符串
+     */
+    public static String parseToDecimal(String hexSerialNo) {
+        // 十六进制的证书序列号一定大于十位
+        if (StringUtils.isEmpty(hexSerialNo) || 10 != hexSerialNo.length()) {
+            return hexSerialNo;
+        }
+        return Long.valueOf(hexSerialNo, 16).toString();
     }
 }
 
