@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.gm.security.cert.parser;
 
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.base.security.cert.parser.AbstractYopPrivateKeyParser;
+import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -31,6 +32,10 @@ import java.security.PrivateKey;
  * @since 2022/5/4
  */
 public class YopSm2PrivateKeyParser extends AbstractYopPrivateKeyParser implements YopCertParser {
+
+    static {
+        SmUtils.init();
+    }
 
     @Override
     public PrivateKey parse(YopCertConfig certConfig) {

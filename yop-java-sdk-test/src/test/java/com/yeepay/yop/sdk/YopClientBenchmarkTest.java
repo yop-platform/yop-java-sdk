@@ -61,6 +61,7 @@ public class YopClientBenchmarkTest {
     }
 
     @Test
+    @Ignore
     public void runBenchmarks() throws Exception {
         Options options = new OptionsBuilder()
                 .include(this.getClass().getName() + ".*")

@@ -43,7 +43,7 @@
         <org.springframework>5.3.20</org.springframework>
         <slf4j-api.version>1.7.21</slf4j-api.version>
         <swagger-annotations-version>1.5.15</swagger-annotations-version>
-        <bouncycastle.version>1.67</bouncycastle.version>
+        <bouncycastle.version>1.70</bouncycastle.version>
         <tika-core.version>[1.22,)</tika-core.version>
         <httpcore.version>4.4.13</httpcore.version>
         <httpcomponents.version>4.5.13</httpcomponents.version>
