@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -43,12 +44,14 @@ public class YopRequest extends BaseRequest {
     private Object content;
 
     public YopRequest(String apiUri, String httpMethod) {
+        CheckUtils.checkApiUri(apiUri);
         this.apiUri = apiUri;
         this.httpMethod = httpMethod;
     }
 
     public YopRequest(String apiUri, String httpMethod, YopRequestConfig requestConfig) {
         super(requestConfig);
+        CheckUtils.checkApiUri(apiUri);
         this.apiUri = apiUri;
         this.httpMethod = httpMethod;
     }
@@ -186,6 +189,7 @@ public class YopRequest extends BaseRequest {
     }
 
     public YopRequest withApiUri(String apiUri) {
+        CheckUtils.checkApiUri(apiUri);
         this.apiUri = apiUri;
         return this;
     }
