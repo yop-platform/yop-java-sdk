@@ -76,6 +76,14 @@ public class YopRequestConfig {
      */
     private Integer signExpirationInSeconds;
 
+    /**
+     * 指定服务器根路径(请求级别配置)
+     *
+     * 作为前缀，拼接apiUri，构造最终请求路径
+     * 如未指定，会默认从com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider#getConfig()获取全局配置
+     */
+    private String serverRoot;
+
     public String getAppKey() {
         return appKey;
     }
@@ -195,6 +203,15 @@ public class YopRequestConfig {
         return this;
     }
 
+    public String getServerRoot() {
+        return serverRoot;
+    }
+
+    public YopRequestConfig setServerRoot(String serverRoot) {
+        this.serverRoot = serverRoot;
+        return this;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -206,6 +223,7 @@ public class YopRequestConfig {
         private String encryptAlg;
         private Boolean skipVerifySign;
         private int signExpirationInSeconds;
+        private String serverRoot;
 
         private Builder() {
         }
@@ -264,6 +282,11 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withServerRoot(String serverRoot) {
+            this.serverRoot = serverRoot;
+            return this;
+        }
+
         public YopRequestConfig build() {
             return new YopRequestConfig().setAppKey(appKey)
                     .setSecurityReq(securityReq)
@@ -274,7 +297,8 @@ public class YopRequestConfig {
                     .setTotalEncrypt(totalEncrypt)
                     .setEncryptAlg(encryptAlg)
                     .setSkipVerifySign(skipVerifySign)
-                    .setSignExpirationInSeconds(signExpirationInSeconds);
+                    .setSignExpirationInSeconds(signExpirationInSeconds)
+                    .setServerRoot(serverRoot);
         }
     }
 }
