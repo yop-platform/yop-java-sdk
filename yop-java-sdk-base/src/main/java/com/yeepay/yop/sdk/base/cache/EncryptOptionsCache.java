@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.base.cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.yeepay.yop.sdk.base.security.encrypt.RsaEnhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm2Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -23,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
 
 /**
@@ -124,7 +126,7 @@ public class EncryptOptionsCache {
                     String[] split = cacheKey.split(COMMA);
                     String appKey = split[0], encryptAlg = split[1];
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
-                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new Sm2Enhancer(appKey));
+                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(getEnhancer(appKey, encryptAlg));
                     encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
                 } catch (Exception ex) {
                     LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);
@@ -132,6 +134,18 @@ public class EncryptOptionsCache {
                 return encryptOptions;
             }
         });
+    }
+
+    private static EncryptOptionsEnhancer getEnhancer(String appKey, String encryptAlg) {
+        switch (encryptAlg) {
+            case SM4_CBC_PKCS5PADDING:
+                return new Sm2Enhancer(appKey);
+            case AES:
+            case AES_CBC_PCK_ALG:
+                return new RsaEnhancer(appKey);
+            default:
+                throw new YopClientException("not supported encryptAlg:" + encryptAlg);
+        }
     }
 
 }

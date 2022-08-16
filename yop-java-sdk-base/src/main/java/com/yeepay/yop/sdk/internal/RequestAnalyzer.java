@@ -4,16 +4,16 @@
  */
 package com.yeepay.yop.sdk.internal;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -58,12 +58,23 @@ public class RequestAnalyzer {
      * @return true:支持，false:不支持
      */
     public static boolean isEncryptSupported(YopCredentials<?> credential, YopRequestConfig requestConfig) {
-        // 指定不加密、或者不支持加密，或者没有有效证书，则不进行加密
-        return !BooleanUtils.isFalse(requestConfig.getNeedEncrypt())
-                && !(credential instanceof YopPKICredentials &&
-                CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType()))
-                && !(null == YopPlatformCredentialsProviderRegistry.getProvider()
-                .getLatestCredentials(credential.getAppKey(), CertTypeEnum.SM2.getValue()));
+        // 指定不加密，则不进行加密
+        if (!BooleanUtils.isFalse(requestConfig.getNeedEncrypt())) {
+            // 调整默认加密算法
+            if (credential instanceof YopPKICredentials
+                    && CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType())
+                    && YOP_DEFAULT_ENCRYPT_ALG.equals(requestConfig.getEncryptAlg())) {
+                requestConfig.setEncryptAlg(YopConstants.AES_CBC_PCK_ALG);
+            }
+            return true;
+        }
+        return false;
+
+        // 不支持加密，或者没有有效证书，则不进行加密
+//                && !(credential instanceof YopPKICredentials &&
+//                CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType()))
+//                && !(null == YopPlatformCredentialsProviderRegistry.getProvider()
+//                .getLatestCredentials(credential.getAppKey(), CertTypeEnum.SM2.getValue()));
     }
 
     /**
