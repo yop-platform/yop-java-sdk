@@ -15,7 +15,7 @@ import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_CREDENTIALS_ENCRYPT_ALG_SM2;
-import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
+import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO;
 
 /**
  * title: sm2增强会话密钥<br>
@@ -74,7 +74,7 @@ public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
                 new EncryptOptions(platformCredentials)));
         source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
         source.setCredentials(new YopSymmetricCredentials(appKey, credentialStr));
-        source.enhance(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO, platformCredentials.getSerialNo());
+        source.enhance(YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO, platformCredentials.getSerialNo());
         return source;
     }
 }

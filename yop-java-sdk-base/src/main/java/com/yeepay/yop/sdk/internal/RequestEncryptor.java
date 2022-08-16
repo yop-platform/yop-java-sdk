@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
+import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
@@ -91,7 +91,7 @@ public class RequestEncryptor {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("request encrypted, requestId:{}, headers:{}, params:{}", request.getRequestId(), encryptHeaders, encryptParams);
         }
-        String platformSerialNo = (String) encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO);
+        String platformSerialNo = (String) encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO);
         if (StringUtils.isBlank(platformSerialNo) || StringUtils.equalsIgnoreCase(platformSerialNo, NULL_STRING)) {
             platformSerialNo = EMPTY;
         }
