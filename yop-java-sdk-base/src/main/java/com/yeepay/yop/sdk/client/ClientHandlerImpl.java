@@ -88,7 +88,6 @@ public class ClientHandlerImpl implements ClientHandler {
         } else {
             YopRequestConfig requestConfig = executionParams.getInput().getRequestConfig();
             YopCredentials<?> credential = getCredentials(requestConfig, authorizationReq);
-            // 仅国密请求支持加密
             YopEncryptor encryptor = null;
             Future<EncryptOptions> encryptOptions = null;
             if (isEncryptSupported(credential, requestConfig)) {

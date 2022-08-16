@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Collections;
 import java.util.Set;
 
-import static com.yeepay.yop.sdk.YopConstants.SM4_CBC_PKCS5PADDING;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENCRYPT_ALG;
 
 /**
  * title: Generic representation of request level configuration<br>
@@ -54,7 +54,7 @@ public class YopRequestConfig {
     /**
      * 加密算法
      */
-    private String encryptAlg = SM4_CBC_PKCS5PADDING;
+    private String encryptAlg = YOP_DEFAULT_ENCRYPT_ALG;
 
     /**
      * 待加密请求头

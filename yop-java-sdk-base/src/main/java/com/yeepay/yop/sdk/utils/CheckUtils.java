@@ -69,6 +69,18 @@ public class CheckUtils {
     }
 
     /**
+     * 校验callbackUri
+     *
+     * @param callbackUri 请求接口路径
+     */
+    public static void checkCallbackUri(String callbackUri) {
+        if (StringUtils.isNotBlank(callbackUri)) {
+            return;
+        }
+        throw new YopClientException("callbackUri is illegal, param:" + callbackUri);
+    }
+
+    /**
      * 校验serverRoot
      *
      * @param serverRoot 请求服务器根路径

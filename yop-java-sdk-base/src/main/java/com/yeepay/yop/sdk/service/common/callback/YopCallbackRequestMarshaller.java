@@ -4,6 +4,7 @@ import com.yeepay.yop.sdk.internal.DefaultRequest;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.transform.AbstractYopRequestMarshaller;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
+import com.yeepay.yop.sdk.utils.CheckUtils;
 
 /**
  * title: YopCallbackRequest序列化器<br>
@@ -26,6 +27,7 @@ public class YopCallbackRequestMarshaller extends AbstractYopRequestMarshaller {
 
     @Override
     protected Request<YopRequest> initRequest(YopRequest request) {
+        CheckUtils.checkCallbackUri(request.getApiUri());
         return new DefaultRequest<>(request);
     }
 }

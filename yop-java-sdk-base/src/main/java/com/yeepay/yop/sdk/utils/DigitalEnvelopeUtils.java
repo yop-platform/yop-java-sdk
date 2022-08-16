@@ -2,6 +2,7 @@ package com.yeepay.yop.sdk.utils;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
@@ -10,6 +11,8 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegist
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -17,8 +20,6 @@ import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.SymmetricEncryptAlgEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.PrivateKey;
@@ -49,14 +50,14 @@ public class DigitalEnvelopeUtils {
         CERT_TYPE_ENUM_MAP.put(DigestAlgEnum.SHA256, CertTypeEnum.RSA2048);
 
         ENCRYPTOR_MAP = Maps.newHashMap();
-        ENCRYPTOR_MAP.put(DigestAlgEnum.SHA256.name(), "RSA");
-        ENCRYPTOR_MAP.put(DigestAlgEnum.SM3.name(), "SM2");
-        ENCRYPTOR_MAP.put(SymmetricEncryptAlgEnum.AES.name(), "AES");
-        ENCRYPTOR_MAP.put(SymmetricEncryptAlgEnum.SM4.name(), "SM4/CBC/PKCS5Padding");
+        ENCRYPTOR_MAP.put(DigestAlgEnum.SHA256.name(), YopConstants.RSA);
+        ENCRYPTOR_MAP.put(DigestAlgEnum.SM3.name(), YopConstants.SM2);
+        ENCRYPTOR_MAP.put(SymmetricEncryptAlgEnum.AES.name(), YopConstants.AES);
+        ENCRYPTOR_MAP.put(SymmetricEncryptAlgEnum.SM4.name(), YopConstants.SM4_CBC_PKCS5PADDING);
 
         SIGNER_MAP = Maps.newHashMap();
-        SIGNER_MAP.put(DigestAlgEnum.SHA256, "RSA2048");
-        SIGNER_MAP.put(DigestAlgEnum.SM3, "SM2");
+        SIGNER_MAP.put(DigestAlgEnum.SHA256, CertTypeEnum.RSA2048.name());
+        SIGNER_MAP.put(DigestAlgEnum.SM3, CertTypeEnum.SM2.name());
     }
 
 

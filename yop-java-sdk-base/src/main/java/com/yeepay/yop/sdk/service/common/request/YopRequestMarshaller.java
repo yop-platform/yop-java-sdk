@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.service.common.request;
 import com.yeepay.yop.sdk.internal.DefaultRequest;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.transform.AbstractYopRequestMarshaller;
+import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -25,6 +26,7 @@ public class YopRequestMarshaller extends AbstractYopRequestMarshaller {
 
     @Override
     protected Request<YopRequest> initRequest(YopRequest request) {
+        CheckUtils.checkApiUri(request.getApiUri());
         String[] pathParts = StringUtils.split(request.getApiUri(), "/");
         Request<YopRequest> internalRequest = new DefaultRequest<YopRequest>(request, pathParts[2]);
         if (StringUtils.equals(pathParts[0], "yos")) {
