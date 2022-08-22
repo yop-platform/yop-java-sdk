@@ -10,13 +10,13 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.JsonUtils;
@@ -36,9 +36,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO;
-import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
+import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 
 /**
@@ -91,16 +91,12 @@ public class RequestEncryptor {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("request encrypted, requestId:{}, headers:{}, params:{}", request.getRequestId(), encryptHeaders, encryptParams);
         }
-        String platformSerialNo = (String) encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO);
-        if (StringUtils.isBlank(platformSerialNo) || StringUtils.equalsIgnoreCase(platformSerialNo, NULL_STRING)) {
-            platformSerialNo = EMPTY;
-        }
+
         String encryptHeader = YOP_ENCRYPT_PROTOCOL_V1_REQ.getProtocolPrefix() + SLASH +
-                platformSerialNo + SLASH +
+                getPlatformCertSerialNo(encryptOptions) + SLASH +
                 StringUtils.replace(encryptOptions.getAlg(), SLASH, UNDER_LINE) + SLASH +
                 encryptOptions.getEncryptedCredentials() + SLASH +
-                encryptOptions.getIv() + SEMICOLON +
-                encryptOptions.getAad() + SLASH +
+                getIvAAD(encryptOptions) + SLASH +
                 encryptOptions.getBigParamEncryptMode() + SLASH +
                 StringUtils.join(encryptHeaders, SEMICOLON) + SLASH +
                 Encodes.encodeUrlSafeBase64(StringUtils.join(encryptParams, SEMICOLON).getBytes(YopConstants.DEFAULT_ENCODING));
@@ -109,6 +105,28 @@ public class RequestEncryptor {
         // 添加加密头
         request.addHeader(YOP_ENCRYPT, encryptHeader);
         return encryptHeader;
+    }
+
+    private static String getPlatformCertSerialNo(EncryptOptions encryptOptions) {
+        String platformSerialNo = (String) encryptOptions.getEnhancerInfo().get(YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO);
+        if (StringUtils.isBlank(platformSerialNo) || StringUtils.equalsIgnoreCase(platformSerialNo, NULL_STRING)) {
+            platformSerialNo = EMPTY;
+        }
+        return platformSerialNo;
+    }
+
+    private static String getIvAAD(EncryptOptions encryptOptions) {
+        String iv = encryptOptions.getIv(), aad = encryptOptions.getAad();
+        if (StringUtils.isBlank(iv) && StringUtils.isBlank(aad)) {
+            return EMPTY;
+        }
+        if (StringUtils.isBlank(iv)) {
+            iv = EMPTY;
+        }
+        if (StringUtils.isBlank(aad)) {
+            aad = EMPTY;
+        }
+        return iv + SEMICOLON + aad;
     }
 
     private static Set<String> encryptHeaders(YopEncryptor encryptor, Set<String> encryptHeaders,

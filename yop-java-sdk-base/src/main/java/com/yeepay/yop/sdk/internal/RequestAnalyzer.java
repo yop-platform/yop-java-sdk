@@ -64,7 +64,7 @@ public class RequestAnalyzer {
             if (credential instanceof YopPKICredentials
                     && CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType())
                     && YOP_DEFAULT_ENCRYPT_ALG.equals(requestConfig.getEncryptAlg())) {
-                requestConfig.setEncryptAlg(YopConstants.AES_CBC_PCK_ALG);
+                requestConfig.setEncryptAlg(YopConstants.AES_ECB_PKCS5PADDING);
             }
             return true;
         }

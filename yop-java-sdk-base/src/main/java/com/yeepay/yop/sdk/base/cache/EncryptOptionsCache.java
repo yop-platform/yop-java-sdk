@@ -141,7 +141,7 @@ public class EncryptOptionsCache {
             case SM4_CBC_PKCS5PADDING:
                 return new Sm2Enhancer(appKey);
             case AES:
-            case AES_CBC_PCK_ALG:
+            case AES_ECB_PKCS5PADDING:
                 return new RsaEnhancer(appKey);
             default:
                 throw new YopClientException("not supported encryptAlg:" + encryptAlg);
