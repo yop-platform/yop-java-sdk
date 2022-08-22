@@ -86,7 +86,7 @@ public interface YopConstants {
     String SM4_CBC_PKCS5PADDING = "SM4/CBC/PKCS5Padding";
     String SM2 = "SM2";
     String AES = "AES";
-    String AES_CBC_PCK_ALG = "AES/CBC/PKCS5Padding";
+    String AES_ECB_PKCS5PADDING = "AES/ECB/PKCS5Padding";
     String RSA = "RSA";
     String YOP_DEFAULT_ENCRYPT_ALG = SM4_CBC_PKCS5PADDING;
     String YOP_CREDENTIALS_ENCRYPT_ALG_SM4 = SM4_CBC_PKCS5PADDING;
