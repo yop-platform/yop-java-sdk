@@ -45,7 +45,8 @@ public class RsaEnhancer extends AbstractEncryptOptionsEnhancer {
                 new EncryptOptions(yopPlatformCredentials)));
         source.setCredentialsAlg(YOP_CREDENTIALS_ENCRYPT_ALG_RSA);
         source.setCredentials(new YopSymmetricCredentials(appKey, credentialStr));
-        source.enhance(YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO, yopPlatformCredentials.getSerialNo());
+        // ！！！RSA目前不传证书序列号，
+        source.enhance(YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO, "");
         return source;
     }
 }

@@ -9,12 +9,10 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.Encodes;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.security.Key;
@@ -23,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.AES;
-import static com.yeepay.yop.sdk.YopConstants.AES_CBC_PCK_ALG;
+import static com.yeepay.yop.sdk.YopConstants.AES_ECB_PKCS5PADDING;
 
 /**
  * title: AES加密器<br>
@@ -37,14 +35,12 @@ import static com.yeepay.yop.sdk.YopConstants.AES_CBC_PCK_ALG;
  */
 public class YopAesEncryptor extends YopEncryptorAdaptor {
 
-    private static final byte[] AES_IV = initIv(AES_CBC_PCK_ALG);
-
     private static final ThreadLocal<Map<String, Cipher>> cipherThreadLocal = new ThreadLocal<Map<String, Cipher>>() {
         @Override
         protected Map<String, Cipher> initialValue() {
             Map<String, Cipher> map = Maps.newHashMap();
             try {
-                map.put(AES_CBC_PCK_ALG, Cipher.getInstance(AES_CBC_PCK_ALG));
+                map.put(AES_ECB_PKCS5PADDING, Cipher.getInstance(AES_ECB_PKCS5PADDING));
                 map.put(AES, Cipher.getInstance(AES));
             } catch (Exception e) {
                 throw new YopClientException("error happened when initial with AES alg", e);
@@ -55,7 +51,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
 
     @Override
     public List<String> supportedAlgs() {
-        return Lists.newArrayList(AES, AES_CBC_PCK_ALG);
+        return Lists.newArrayList(AES, AES_ECB_PKCS5PADDING);
     }
 
     @Override
@@ -64,8 +60,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
                 new YopSymmetricCredentials(Encodes.encodeUrlSafeBase64(generateRandomKey())),
                 YopConstants.RSA,
                 encryptAlg,
-                Encodes.encodeUrlSafeBase64(AES_IV),
-                Encodes.encodeUrlSafeBase64("yop".getBytes(YopConstants.DEFAULT_ENCODING)));
+                null,
+                null);
     }
 
     private byte[] generateRandomKey() throws NoSuchAlgorithmException {
@@ -115,33 +111,6 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
         return new CipherInputStream(cipher, getInitializedCipher(Cipher.DECRYPT_MODE, options, false));
     }
 
-    /**
-     * 初始向量的方法, 全部为0. 这里的写法适合于其它算法,针对AES算法的话,IV值一定是128位的(16字节).
-     *
-     * @param fullAlg 算法
-     * @return byte[]
-     */
-    private static byte[] initIv(String fullAlg) {
-
-        try {
-            Cipher cipher = Cipher.getInstance(fullAlg);
-            int blockSize = cipher.getBlockSize();
-            byte[] iv = new byte[blockSize];
-            for (int i = 0; i < blockSize; ++i) {
-                iv[i] = 0;
-            }
-            return iv;
-        } catch (Exception e) {
-
-            int blockSize = 16;
-            byte[] iv = new byte[blockSize];
-            for (int i = 0; i < blockSize; ++i) {
-                iv[i] = 0;
-            }
-            return iv;
-        }
-    }
-
     private Cipher getInitializedCipher(int mode, EncryptOptions encryptOptions) {
         return getInitializedCipher(mode, encryptOptions, true);
     }
@@ -152,12 +121,6 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             Cipher cipher = shareMode ? cipherThreadLocal.get().get(encryptOptions.getAlg()) :
                     Cipher.getInstance(encryptOptions.getAlg());
             Key secretKey = new SecretKeySpec(key, AES);
-            if (StringUtils.isNotEmpty(encryptOptions.getIv())) {
-                byte[] ivBytes = Encodes.decodeBase64(encryptOptions.getIv());
-                IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
-                cipher.init(mode, secretKey, ivParameterSpec);
-                return cipher;
-            }
             cipher.init(mode, secretKey);
             return cipher;
         } catch (Throwable throwable) {
