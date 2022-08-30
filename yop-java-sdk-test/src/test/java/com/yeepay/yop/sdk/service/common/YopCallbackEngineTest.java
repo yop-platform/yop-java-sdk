@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.service.common;
 import com.yeepay.yop.sdk.BaseTest;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequest;
@@ -14,6 +15,7 @@ import com.yeepay.yop.sdk.service.common.callback.YopCallbackResponse;
 import com.yeepay.yop.sdk.service.common.callback.enums.YopCallbackHandleStatus;
 import com.yeepay.yop.sdk.service.common.callback.handler.YopCallbackHandler;
 import com.yeepay.yop.sdk.service.common.callback.handler.YopCallbackHandlerFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +57,7 @@ public class YopCallbackEngineTest extends BaseTest {
                         .addParam("response", "ZIcrArlonH0mxIWCRejL2VQS2qeK5EFz2gALzdMbusIU8eqwnWNgJRWiTwJElSQEhnT42KkU3jXWZr2dd0A8-bZSjT-hvNCUI0aoJZkadRtJrWoe_ygGhOLegj7cTbk8y7GOzfFQteIFbB9ALae1CqWVHgfgyozbTLgsse4MfuYjio9r3DOkCJJSkW6mEHB0G4rTXSWFni0h_Uhtu5jsuCTU4vWDPKrBIZI17rr1AIqmyOd8C8oLCAplC1JT4KnLq5QCir4cnvZJrGYB5-bI00gPOdGX2_v4Az3VqMkh8PqqPSDriJ-PqDo9T2dnjR5njYkTSSzUpIXg6cfhLaTNIQ$0sn1fsX0zRYXv-bb0tV531Brbhb-fPORrXYqe8JzHbnL8NkAwIPRkSaTXfq3etJnmslkkBlPpZeTc7639TWQlBrl3eVW-aQKIjFX4bhfyythIh5ByjBAHw1RaYwoHw10kkpbBBk01K-6pzE9QzT6TvjZLsSsXZ6O3WJdvrB8dtpJA-PI-sOzm7DXkBqfKOSufkN1C1mRvexBlcN3ScSH2TKo5ZwKw3Fo_93GsYFD0hzYmHpC6yCyHXeY1PPlHYqd_KsqXVo_xBtXMCadoKnldYnMljXdhAQJLRdlkwTgeD8FX18SQSJ18O6Ag0w3IM9QXkcgZVgIo1-_ZUncc5AtNXyQCvfT4tNyaIRFsXlFqj5tCc5bekMz8OzYeRTPfmfCLKXmjvg4ICMw0aIRboX1tyZpCHdHU269u0-wX90pMDNRqBZsLag6glNDSzEG8RQaB4vGrjvxYy0ixeUnogwni2qqnnGX5Gfhkst7FPYubAsi5HweDT_aJIrmE6kMiBrpMAOcIGZ6slYK854FOH3ODO9-raz7n2P__NUTpziTF4t4Jru_erJevVoGyHH81qq_msIMvK7IRx2z1QoExRL08A$AES$SHA256");
         YopCallbackResponse response = YopCallbackEngine.handle(request);
         Assert.assertEquals(response.getStatus(), YopCallbackHandleStatus.SUCCESS);
+        Assert.assertTrue(null == response.getHeaders() || StringUtils.isBlank(response.getHeaders().get(Headers.YOP_SIGN)));
     }
 
     @Test
@@ -67,6 +70,7 @@ public class YopCallbackEngineTest extends BaseTest {
                         .addParam("algorithm", YopConstants.SM4_CALLBACK_ALGORITHM);
         YopCallbackResponse response = YopCallbackEngine.handle(request);
         Assert.assertEquals(response.getStatus(), YopCallbackHandleStatus.SUCCESS);
+        Assert.assertTrue(null == response.getHeaders() || StringUtils.isBlank(response.getHeaders().get(Headers.YOP_SIGN)));
     }
 
     @Test
@@ -86,6 +90,7 @@ public class YopCallbackEngineTest extends BaseTest {
                         .setContent("EZgjreIx_ZW-gIM2NtHoKSk2sMQ35eolEjZ76XPcCtEqbXRfv77Z2eUJHhfoN4TcAZjPykzzDJ2pH7FC8xbhXw");
         YopCallbackResponse response = YopCallbackEngine.handle(request);
         Assert.assertEquals(response.getStatus(), YopCallbackHandleStatus.SUCCESS);
+        Assert.assertTrue(StringUtils.isNotBlank(response.getHeaders().get(Headers.YOP_SIGN)));
     }
 
     private static class MockYopCallbackHandler implements YopCallbackHandler {

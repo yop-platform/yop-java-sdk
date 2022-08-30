@@ -23,8 +23,6 @@ public class YopCallbackResponse implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
-    private static final YopCallbackResponse SUCCESS_RESULT = new YopCallbackResponse(YopCallbackHandleStatus.SUCCESS);
-
     /**
      * 通知状态
      */
@@ -61,7 +59,7 @@ public class YopCallbackResponse implements Serializable {
     }
 
     public static YopCallbackResponse success() {
-        return SUCCESS_RESULT;
+        return new YopCallbackResponse(YopCallbackHandleStatus.SUCCESS);
     }
 
     public static YopCallbackResponse fail(String message) {
