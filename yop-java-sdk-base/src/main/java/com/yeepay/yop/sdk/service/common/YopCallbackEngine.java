@@ -104,6 +104,7 @@ public class YopCallbackEngine {
      * 1.@see #parse
      * 2.查找并处理商户业务
      * 3.组装响应参数
+     * 4.签名
      *
      * @param request 原始请求
      * @return Yop响应报文
