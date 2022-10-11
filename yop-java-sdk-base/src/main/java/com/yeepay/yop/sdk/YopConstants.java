@@ -17,7 +17,7 @@ import java.util.Set;
  */
 public interface YopConstants {
 
-    String VERSION = "4.3.1";
+    String VERSION = "4.3.2";
 
     String DEFAULT_ENCODING = "UTF-8";
 

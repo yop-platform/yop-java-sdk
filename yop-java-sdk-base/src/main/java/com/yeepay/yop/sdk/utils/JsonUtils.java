@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.Configuration;
@@ -50,6 +51,9 @@ public class JsonUtils {
         OBJECT_MAPPER.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
         OBJECT_MAPPER.registerModule(new JodaModule());
         OBJECT_MAPPER.registerModule(new DatetimeModule());
+        // 小数都用BigDecimal，默认的是Double
+        OBJECT_MAPPER.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+        OBJECT_MAPPER.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
 
         // 指定jsonpath provider
         Configuration.setDefaults(new Configuration.Defaults() {
