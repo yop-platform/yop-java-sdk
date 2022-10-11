@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.io.IOException;
@@ -33,10 +34,13 @@ public class JacksonJsonMarshaller {
         objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
         objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
         objectMapper.setSerializationInclusion(Include.NON_EMPTY);
         objectMapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector());
+        // 小数都用BigDecimal，默认的是Double
+        objectMapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+        objectMapper.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
     }
 
     public static <T> T unmarshal(String content, Class<T> objectType) {

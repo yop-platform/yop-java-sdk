@@ -3,7 +3,7 @@ package com.yeepay.yop.sdk.http.analyzer;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.yop.sdk.utils.json.JacksonJsonMarshaller;
 
 import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonResponse;
 
@@ -32,7 +32,7 @@ public class YopJsonResponseAnalyzer implements HttpResponseAnalyzer {
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         String content = context.getResponse().readContent();
         if (content != null && isJsonResponse(response.getMetadata().getContentType())) {
-            JsonUtils.load(content, response);
+            JacksonJsonMarshaller.load(content, response);
         }
         return true;
     }
