@@ -5,12 +5,12 @@
 
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * title: 固定的应用sdk配置提供方基类<br>
@@ -26,7 +26,7 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
 
     private YopAppConfig appConfig = null;
 
-    private final Map<String, YopCredentials> yopCredentialsMap = new ConcurrentHashMap<>();
+    private final Map<String, YopCredentials> yopCredentialsMap = Maps.newConcurrentMap();
 
     @Override
     public final YopCredentials getCredentials(String appKey, String credentialType) {

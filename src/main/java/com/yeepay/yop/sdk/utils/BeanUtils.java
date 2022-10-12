@@ -49,7 +49,9 @@ public final class BeanUtils {
                         && !"serialVersionUID".equals(sourceField.getName())) {
                     targetField.set(targetBean, sourceField.get(sourceBean));
                 }
-            } catch (IllegalArgumentException | IllegalAccessException e) {
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }

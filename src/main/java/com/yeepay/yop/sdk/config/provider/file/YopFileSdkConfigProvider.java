@@ -1,9 +1,11 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.utils.BeanUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -12,7 +14,6 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 /**
  * title: 文件sdk配置provider<br>
@@ -70,14 +71,20 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
             for (int i = resources.length - 1; i >= 0; i--) {
                 Resource resource = resources[i];
                 StringBuilder script = new StringBuilder();
-                try (InputStreamReader isr = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-                     BufferedReader bufferReader = new BufferedReader(isr)) {
+
+                BufferedReader bufferReader = null;
+                try {
+                    bufferReader = new BufferedReader(new InputStreamReader(resource.getInputStream(), YopConstants.DEFAULT_ENCODING));
                     String tempString;
                     while ((tempString = bufferReader.readLine()) != null) {
                         script.append(tempString).append("\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    if (null != bufferReader) {
+                        IOUtils.closeQuietly(bufferReader);
+                    }
                 }
 
                 if (script.length() > 0) {

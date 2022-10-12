@@ -41,14 +41,16 @@ import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.protocol.HttpContext;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.List;
 import java.util.Map;
 
@@ -206,6 +208,9 @@ public class YopHttpClient {
                 tlsVersion = "TLSv1.2";
             } else if (StringUtils.startsWith(javaVersion, "1.6")) {
                 tlsVersion = "TLSv1.1";
+                Security.addProvider(new BouncyCastleProvider());
+                Security.addProvider(new BouncyCastleJsseProvider());
+                Security.setProperty("ssl.SocketFactory.provider", "org.bouncycastle.jsse.provider.SSLSocketFactoryImpl");
             }
             SSLContext s;
             if (StringUtils.isNotEmpty(tlsVersion)) {
@@ -217,8 +222,10 @@ public class YopHttpClient {
             }
             sslSocketFactory = new SSLConnectionSocketFactory(s,
                     SSLConnectionSocketFactory.STRICT_HOSTNAME_VERIFIER);
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw new YopClientException("Fail to create SSLConnectionSocketFactory", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new YopClientException("Fail to create SSLConnectionSocketFactory，", e);
+        } catch (KeyManagementException e) {
+            throw new YopClientException("Fail to create SSLConnectionSocketFactory，", e);
         }
         Registry<ConnectionSocketFactory> registry =
                 RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTP.toString(), socketFactory)
