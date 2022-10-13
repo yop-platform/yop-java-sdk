@@ -190,7 +190,9 @@ public class JsonUtils {
                 }
             }
         }
-        encryptPaths.forEach(LOGGER::debug);
+        for (String encryptPath : encryptPaths) {
+            LOGGER.debug(encryptPath);
+        }
         return encryptPaths;
     }
 }

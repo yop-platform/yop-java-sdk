@@ -45,7 +45,7 @@ import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
  * @version 1.0.0
  * @since 2021/1/18 3:25 下午
  */
-public class YopPKISigner implements YopSigner {
+public class YopPKISigner extends YopBaseSigner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopPKISigner.class);
     private static final Set<String> DEFAULT_HEADERS_TO_SIGN = Sets.newHashSet();

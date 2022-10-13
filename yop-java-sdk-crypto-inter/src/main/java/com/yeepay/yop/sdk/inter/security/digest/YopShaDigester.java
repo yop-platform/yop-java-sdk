@@ -6,9 +6,9 @@ package com.yeepay.yop.sdk.inter.security.digest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.security.digest.YopDigester;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.digest.YopDigester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class YopShaDigester implements YopDigester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopShaDigester.class);
 
-    private final ThreadLocal<Map<String, MessageDigest>> MESSAGE_DIGEST = ThreadLocal.withInitial(YopShaDigester::initMdInstance);
+    private static final Map<String, MessageDigest> MESSAGE_DIGEST = YopShaDigester.initMdInstance();
 
     @Override
     public List<String> supportedAlgs() {
@@ -71,7 +71,10 @@ public class YopShaDigester implements YopDigester {
      * @return 摘要
      */
     private MessageDigest getMessageDigestInstance(String digestAlg) {
-        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
+        MessageDigest messageDigest = MESSAGE_DIGEST.get(digestAlg);
+        if (null == messageDigest) {
+            throw new YopClientException("digestAlg not supported, " + digestAlg);
+        }
         messageDigest.reset();
         return messageDigest;
     }

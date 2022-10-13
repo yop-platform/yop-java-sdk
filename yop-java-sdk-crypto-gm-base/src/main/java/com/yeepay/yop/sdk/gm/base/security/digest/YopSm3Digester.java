@@ -5,10 +5,10 @@
 package com.yeepay.yop.sdk.gm.base.security.digest;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.security.digest.YopDigester;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
+import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.digest.YopDigester;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +34,11 @@ public class YopSm3Digester implements YopDigester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopSm3Digester.class);
 
-    private final ThreadLocal<Map<String, MessageDigest>> MESSAGE_DIGEST = ThreadLocal.withInitial(YopSm3Digester::initMdInstance);
-
     static {
         SmUtils.init();
     }
+
+    private static final Map<String, MessageDigest> MESSAGE_DIGEST = initMdInstance();
 
     @Override
     public List<String> supportedAlgs() {
@@ -76,7 +76,10 @@ public class YopSm3Digester implements YopDigester {
      * @return 摘要
      */
     private MessageDigest getMessageDigestInstance(String digestAlg) {
-        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
+        MessageDigest messageDigest = MESSAGE_DIGEST.get(digestAlg);
+        if (null == messageDigest) {
+            throw new YopClientException("digestAlg not supported, " + digestAlg);
+        }
         messageDigest.reset();
         return messageDigest;
     }

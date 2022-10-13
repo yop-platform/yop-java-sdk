@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.base.config.provider.file;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.base.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
@@ -57,7 +57,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     public YopFileSdkConfig loadSdkConfig(String appKey) {
         appKey = StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY);
         if (!sdkConfigs.containsKey(appKey)) {
-            sdkConfigs.computeIfAbsent(appKey, k -> doLoadYopFileSdkConfig(k));
+            sdkConfigs.put(appKey, doLoadYopFileSdkConfig(appKey));
         }
         return sdkConfigs.get(appKey);
     }
@@ -135,7 +135,9 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                         && !"serialVersionUID".equals(sourceField.getName()) && targetField.get(targetBean) == null) {
                     targetField.set(targetBean, sourceField.get(sourceBean));
                 }
-            } catch (IllegalArgumentException | IllegalAccessException e) {
+            } catch (IllegalArgumentException e) {
+                LOGGER.error("error when fillNullConfig, ex:", e);
+            } catch (IllegalAccessException e) {
                 LOGGER.error("error when fillNullConfig, ex:", e);
             }
         }
@@ -155,7 +157,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
                 BufferedReader bufferReader = null;
                 try {
                     bufferReader = new BufferedReader(
-                            new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8));
+                            new InputStreamReader(resource.getInputStream(), YopConstants.DEFAULT_ENCODING));
                     String tempString;
                     while ((tempString = bufferReader.readLine()) != null) {
                         script.append(tempString).append("\n");

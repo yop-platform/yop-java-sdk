@@ -4,7 +4,6 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,9 +52,7 @@ public interface YopCredentialsProvider {
      *
      * @return appKey 默认应用
      */
-    default String getDefaultAppKey() {
-        return "default";
-    }
+    String getDefaultAppKey();
 
     /**
      * Returns symmetrical keys for using when decrypt yop certs from remote
@@ -66,8 +63,5 @@ public interface YopCredentialsProvider {
      * @return 加密密钥
      */
     @Deprecated
-    default List<YopCertConfig> getIsvEncryptKey(String appKey) {
-        return Collections.emptyList();
-    }
-
+    List<YopCertConfig> getIsvEncryptKey(String appKey);
 }

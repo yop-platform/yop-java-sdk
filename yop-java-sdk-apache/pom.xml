@@ -3,7 +3,7 @@
     <parent>
         <artifactId>yop-java-sdk-parent</artifactId>
         <groupId>com.yeepay.yop.sdk</groupId>
-        <version>4.3.3-SNAPSHOT</version>
+        <version>4.3.2-jdk6on-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -26,6 +26,24 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpmime</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bctls-jdk15on</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- test dependencies -->

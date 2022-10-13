@@ -4,15 +4,16 @@
  */
 package com.yeepay.yop.sdk.encryptor.signer.process;
 
-import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.inter.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.gm.auth.signer.process.YopSm2SignProcessor;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopBaseSignProcessor;
+import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.gm.auth.signer.process.YopSm2SignProcessor;
+import com.yeepay.yop.sdk.inter.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 
@@ -28,10 +29,15 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2021/12/23 10:23 上午
  */
-public class MockEncryptorSignProcessor implements YopSignProcessor {
+public class MockEncryptorSignProcessor extends YopBaseSignProcessor {
 
-    private static final Map<CertTypeEnum, YopSignProcessor> softSignProcessors = ImmutableMap
-            .of(CertTypeEnum.SM2, new YopSm2SignProcessor(), CertTypeEnum.RSA2048, new YopRsaSignProcessor());
+    private static final Map<CertTypeEnum, YopSignProcessor> softSignProcessors;
+
+    static {
+        softSignProcessors = Maps.newHashMap();
+        softSignProcessors.put(CertTypeEnum.SM2, new YopSm2SignProcessor());
+        softSignProcessors.put(CertTypeEnum.RSA2048, new YopRsaSignProcessor());
+    }
 
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SM3;
 

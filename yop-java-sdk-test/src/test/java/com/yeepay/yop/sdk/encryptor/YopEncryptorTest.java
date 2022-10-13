@@ -4,25 +4,25 @@
  */
 package com.yeepay.yop.sdk.encryptor;
 
-import com.yeepay.yop.sdk.BaseTest;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.yeepay.yop.sdk.BaseTest;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm2Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm4Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
@@ -31,13 +31,15 @@ import com.yeepay.yop.sdk.internal.RequestEncryptor;
 import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.encrypt.*;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.request.YopRequestMarshaller;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
@@ -92,10 +94,15 @@ public class YopEncryptorTest extends BaseTest {
             sm4Encryptor = YopEncryptorFactory.getEncryptor(YopConstants.SM4_CBC_PKCS5PADDING);
             sm2Encryptor = YopEncryptorFactory.getEncryptor(YopConstants.YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
             sm4Options = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING, null);
+            List<EncryptOptionsEnhancer> sm4EnhancerList = Lists.newArrayList();
+            sm4EnhancerList.add(new Sm4Enhancer(appKey));
+
+            List<EncryptOptionsEnhancer> sm2EnhancerList = Lists.newArrayList();
+            sm4EnhancerList.add(new Sm2Enhancer(appKey));
             sm4OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
-                    Collections.singletonList(new Sm4Enhancer(appKey)));
+                    sm4EnhancerList);
             sm2OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
-                    Collections.singletonList(new Sm2Enhancer(appKey)));
+                    sm2EnhancerList);
             encryptOptions = sm2OptionsEnhanced.get();
             specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), YopConstants.DEFAULT_ENCODING);
             yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30228/yop-center")
@@ -435,7 +442,7 @@ public class YopEncryptorTest extends BaseTest {
         DocumentContext ctx = JsonPath.parse(encryptJson);
         Map<Object, Object> originJsonMap = jsonMap();
         for (String encryptParam : encryptProtocol.getEncryptParams()) {
-            Assert.assertEquals(sm4Encryptor.decryptFromBase64(ctx.read(encryptParam), encryptOptions), originJsonMap.get(encryptParam));
+            Assert.assertEquals(sm4Encryptor.decryptFromBase64(String.valueOf(ctx.read(encryptParam)), encryptOptions), originJsonMap.get(encryptParam));
         }
     }
 
@@ -493,7 +500,7 @@ public class YopEncryptorTest extends BaseTest {
                 itemList.add(CharacterConstants.EMPTY);
             }
         }
-        return String.join(CharacterConstants.SLASH, itemList);
+        return StringUtils.join(itemList, CharacterConstants.SLASH);
     }
 
     private YopRequest aFormRequest() {

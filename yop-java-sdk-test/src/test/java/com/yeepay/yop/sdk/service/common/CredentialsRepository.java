@@ -6,11 +6,11 @@ package com.yeepay.yop.sdk.service.common;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 
 import java.security.PrivateKey;
 import java.util.Collection;
@@ -70,7 +70,9 @@ public class CredentialsRepository {
 
     public static Collection getApps() {
         List result = Lists.newLinkedList();
-        securityMap.forEach((k, v) -> result.add(new Object[]{k,v}));
+        for (String key : securityMap.keySet()) {
+            result.add(new Object[]{key, securityMap.get(key)});
+        }
         return result;
     }
 

@@ -138,14 +138,22 @@ public class YopCallbackRequest implements Serializable {
         this.headers = headers;
         if (MapUtils.isNotEmpty(headers)) {
             Map<String, String> canonicalHeaders = Maps.newHashMapWithExpectedSize(headers.size());
-            headers.forEach((k,v) -> canonicalHeaders.put(k.trim().toLowerCase(), v));
+            for (Map.Entry<String, String> kv : headers.entrySet()) {
+                String k = kv.getKey();
+                String v = kv.getValue();
+                canonicalHeaders.put(k.trim().toLowerCase(), v);
+            }
             this.canonicalHeaders = canonicalHeaders;
         }
         return this;
     }
 
     public YopCallbackRequest addParam(String name, String value) {
-        this.params.computeIfAbsent(name, p -> Lists.newLinkedList()).add(value);
+        if (!this.params.containsKey(name)) {
+            List<String> list = Lists.newLinkedList();
+            this.params.put(name, list);
+        }
+        this.params.get(name).add(value);
         return this;
     }
 
