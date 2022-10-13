@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.http.impl.ok;
 
 import com.yeepay.yop.sdk.http.AbstractYopHttpResponse;
-import kotlin.Pair;
+import okhttp3.Headers;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -17,8 +17,9 @@ public class YopOkHttpResponse extends AbstractYopHttpResponse {
     public YopOkHttpResponse(Response httpResponse) throws IOException {
         this.httpResponse = httpResponse;
 
-        for (Pair<? extends String, ? extends String> header : this.httpResponse.headers()) {
-            fillHeader(header.getFirst(), header.getSecond());
+        final Headers originHeaders = this.httpResponse.headers();
+        for (String name : originHeaders.names()) {
+            fillHeader(name, originHeaders.get(name));
         }
 
         final ResponseBody body = httpResponse.body();

@@ -8,9 +8,9 @@ package com.yeepay.yop.sdk.base.auth.credentials.provider.file;
 import com.yeepay.yop.sdk.base.auth.credentials.provider.YopFixedCredentialsProvider;
 import com.yeepay.yop.sdk.base.config.YopAppConfig;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
-import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;

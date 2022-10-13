@@ -26,6 +26,6 @@ public class YopCallbackRequestMarshaller extends AbstractYopRequestMarshaller {
 
     @Override
     protected Request<YopRequest> initRequest(YopRequest request) {
-        return new DefaultRequest<>(request);
+        return new DefaultRequest(request);
     }
 }

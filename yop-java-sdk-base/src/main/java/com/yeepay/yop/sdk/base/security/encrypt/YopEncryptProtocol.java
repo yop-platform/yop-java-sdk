@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.base.security.encrypt;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
@@ -17,11 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_V1;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
@@ -83,7 +82,12 @@ public enum YopEncryptProtocol {
                 } else {
                     itemStrDecoded = itemStr;
                 }
-                return Arrays.stream(itemStrDecoded.split(SEMICOLON)).collect(Collectors.toSet());
+                final String[] items = itemStrDecoded.split(SEMICOLON);
+                Set<String> result = Sets.newHashSetWithExpectedSize(items.length);
+                for (String item : items) {
+                    result.add(item);
+                }
+                return result;
             }
             return Collections.emptySet();
         } catch (UnsupportedEncodingException e) {

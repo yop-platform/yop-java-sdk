@@ -43,7 +43,10 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
     @Override
     public YopCredentials<?> getCredentials(String appKey, String credentialType) {
         String key = appKey + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appKey), credentialType));
+        if (!yopCredentialsMap.containsKey(key)) {
+            yopCredentialsMap.put(key, buildCredentials(getAppConfig(appKey), credentialType));
+        }
+        return yopCredentialsMap.get(key);
     }
 
     protected final YopCredentials<?> buildCredentials(YopAppConfig appConfig, String credentialType) {
@@ -79,7 +82,7 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
 
     private YopAppConfig getAppConfig(String appId) {
         if (!appConfigs.containsKey(appId)) {
-            appConfigs.computeIfAbsent(appId, k -> loadAppConfig(appId));
+            appConfigs.put(appId, loadAppConfig(appId));
         }
         return appConfigs.get(appId);
     }

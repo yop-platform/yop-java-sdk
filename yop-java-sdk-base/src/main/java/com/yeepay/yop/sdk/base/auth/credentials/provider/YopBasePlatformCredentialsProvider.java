@@ -50,26 +50,26 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         if (StringUtils.isBlank(serialNo)) {
             throw new YopClientException("serialNo is required");
         }
-        YopPlatformCredentials foundCredentials = credentialsMap.computeIfAbsent(serialNo, p -> {
+        YopPlatformCredentials foundCredentials = credentialsMap.get(serialNo);
+        if (null == foundCredentials) {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
                 X509Certificate rsaCert = loadLocalRsaCert(appKey, serialNo);
                 if (null == rsaCert) {
                     throw new YopClientException("loadLocalRsaCert fail, serialNo:" + serialNo);
                 }
-                return convertRsaCredentials(appKey, CertTypeEnum.RSA2048, rsaCert);
+                foundCredentials =  convertRsaCredentials(appKey, CertTypeEnum.RSA2048, rsaCert);
             } else {
-                YopPlatformCredentials localCredentials = loadCredentialsFromStore(appKey, serialNo);
-                if (null == localCredentials) {
+                foundCredentials = loadCredentialsFromStore(appKey, serialNo);
+                if (null == foundCredentials) {
                     X509Certificate remoteCert = loadRemoteSm2Cert(appKey, serialNo);
                     if (null == remoteCert) {
                         throw new YopClientException("loadRemoteSm2Cert fail, serialNo:" + serialNo);
                     }
-                    return storeCredentials(appKey, CertTypeEnum.SM2.name(), remoteCert);
-                } else {
-                    return localCredentials;
+                    foundCredentials = storeCredentials(appKey, CertTypeEnum.SM2.name(), remoteCert);
                 }
             }
-        });
+            credentialsMap.put(serialNo, foundCredentials);
+        }
 
         if (null != foundCredentials) {
             String realSerialNo = foundCredentials.getSerialNo();

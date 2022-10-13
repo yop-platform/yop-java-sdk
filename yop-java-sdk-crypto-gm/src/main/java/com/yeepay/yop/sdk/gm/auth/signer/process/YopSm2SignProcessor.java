@@ -7,9 +7,9 @@ package com.yeepay.yop.sdk.gm.auth.signer.process;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.base.auth.signer.process.YopBaseSignProcessor;
 import com.yeepay.yop.sdk.gm.utils.Sm2Utils;
+import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 
@@ -23,7 +23,7 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
  * @version 1.0.0
  * @since 2021/1/18 3:59 下午
  */
-public class YopSm2SignProcessor implements YopSignProcessor {
+public class YopSm2SignProcessor extends YopBaseSignProcessor {
 
     @Override
     public String doSign(String content, CredentialsItem credentialsItem, SignOptions options) {

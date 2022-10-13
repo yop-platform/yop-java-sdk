@@ -6,15 +6,9 @@ package com.yeepay.yop.sdk.base.auth.signer;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
-import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 
 import java.util.List;
 
@@ -51,16 +45,5 @@ public interface YopSigner {
      * @param httpResponse
      * @param signature
      */
-    default void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials<?> credentials, SignOptions options) {
-        String content = httpResponse.readContent();
-        final String requestId = httpResponse.getHeader(Headers.YOP_REQUEST_ID);
-        YopPlatformCredentials platformCredentials = (YopPlatformCredentials) credentials;
-        final CertTypeEnum certType = platformCredentials.getCredential().getCertType();
-        content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!YopSignProcessorFactory.getSignProcessor(certType.name()).doVerify(content, signature, platformCredentials.getCredential(), options)) {
-            throw new VerifySignFailedException(String.format("response sign verify failure, content:%s, signature:%s, platformSerialNo:%s, requestId:%s."
-                    , content, signature, platformCredentials.getSerialNo(), requestId));
-        }
-    }
-
+    void checkSignature(YopHttpResponse httpResponse, String signature, YopCredentials<?> credentials, SignOptions options);
 }

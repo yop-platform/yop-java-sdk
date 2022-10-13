@@ -10,13 +10,13 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.JsonUtils;
@@ -36,9 +36,9 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_SERIAL_NO;
-import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
+import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 
 /**
@@ -118,12 +118,14 @@ public class RequestEncryptor {
         }
         Set<String> finalEncryptHeaders = Sets.newHashSetWithExpectedSize(encryptHeaders.size());
         Map<String, String> headers = request.getHeaders();
-        headers.forEach((k, v) -> {
+        for (Map.Entry<String, String> kv : headers.entrySet()) {
+            String k = kv.getKey();
+            String v = kv.getValue();
             if (encryptHeaders.contains(k) && StringUtils.isNotBlank(v)) {
                 headers.put(k, encryptor.encryptToBase64(v, encryptOptions));
                 finalEncryptHeaders.add(k);
             }
-        });
+        }
         return finalEncryptHeaders;
     }
 
@@ -209,7 +211,9 @@ public class RequestEncryptor {
 
     private static void encryptMultiPartParams(YopEncryptor encryptor, Set<String> finalEncryptParams, Set<String> encryptParams,
                                                Map<String, List<MultiPartFile>> multiPartFiles, EncryptOptions encryptOptions, boolean totalEncrypt) {
-        multiPartFiles.forEach((name, list) -> {
+        for (Map.Entry<String, List<MultiPartFile>> fileList : multiPartFiles.entrySet()) {
+            String name = fileList.getKey();
+            final List<MultiPartFile> list = fileList.getValue();
             if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {
                 List<MultiPartFile> encryptedValues = Lists.newArrayListWithExpectedSize(list.size());
                 for (MultiPartFile value : list) {
@@ -223,12 +227,14 @@ public class RequestEncryptor {
                 multiPartFiles.put(name, encryptedValues);
                 finalEncryptParams.add(name);
             }
-        });
+        }
     }
 
     private static void encryptSimpleParams(YopEncryptor encryptor, Set<String> finalEncryptParams, Set<String> encryptParams,
                                             Map<String, List<String>> parameters, EncryptOptions encryptOptions, boolean totalEncrypt) {
-        parameters.forEach((name, list) -> {
+        for (Map.Entry<String, List<String>> paramList : parameters.entrySet()) {
+            String name = paramList.getKey();
+            final List<String> list = paramList.getValue();
             if (CollectionUtils.isNotEmpty(list) && (totalEncrypt || encryptParams.contains(name))) {
                 List<String> encryptedValues = Lists.newArrayListWithExpectedSize(list.size());
                 for (String value : list) {
@@ -237,6 +243,6 @@ public class RequestEncryptor {
                 parameters.put(name, encryptedValues);
                 finalEncryptParams.add(name);
             }
-        });
+        }
     }
 }

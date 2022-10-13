@@ -6,7 +6,6 @@ package com.yeepay.yop.sdk.auth.signer.process;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
-import com.yeepay.yop.sdk.exception.YopClientException;
 
 /**
  * title: YopSignProcessor<br/>
@@ -27,16 +26,9 @@ public interface YopSignProcessor {
      * @param credentialsItem 签名密钥信息
      * @return urlSafeBase64编码的字符串
      */
-    default String sign(String content, CredentialsItem credentialsItem) {
-        if (!isSupport(credentialsItem)) {
-            throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
-        }
-        return doSign(content, credentialsItem);
-    }
+    String sign(String content, CredentialsItem credentialsItem);
 
-    default String doSign(String content, CredentialsItem credentialsItem) {
-        return doSign(content, credentialsItem, null);
-    }
+    String doSign(String content, CredentialsItem credentialsItem);
 
     /**
      * 签名
@@ -56,16 +48,9 @@ public interface YopSignProcessor {
      * @param credentialsItem 签名密钥信息
      * @return true: 验签通过，false: 不通过
      */
-    default boolean verify(String content, String signature, CredentialsItem credentialsItem) {
-        if (isSupport(credentialsItem)) {
-            return doVerify(content, signature, credentialsItem);
-        }
-        throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
-    }
+    boolean verify(String content, String signature, CredentialsItem credentialsItem);
 
-    default boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
-        return doVerify(content, signature, credentialsItem, null);
-    }
+    boolean doVerify(String content, String signature, CredentialsItem credentialsItem);
 
     /**
      * 验签

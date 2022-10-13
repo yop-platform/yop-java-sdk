@@ -16,17 +16,13 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.utils.HttpUtils;
-import okhttp3.Credentials;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
+import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class YopHttpClient extends AbstractYopHttpClient {
 
-    private static final RequestBody EMPTY_BODY = RequestBody.create(new byte[0]);
+    private static final RequestBody EMPTY_BODY = RequestBody.create(null, new byte[0]);
     private static final OkLogInterceptor logInterceptor = OkLogInterceptor.builder()
             .withRequestHeaders(true).withResponseHeaders(true).build();
 
@@ -80,13 +76,16 @@ public class YopHttpClient extends AbstractYopHttpClient {
         int proxyPort = clientConfig.getProxyPort();
         if (proxyHost != null && proxyPort > 0) {
             httpClientBuilder.proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
-            String proxyUsername = clientConfig.getProxyUsername();
-            String proxyPassword = clientConfig.getProxyPassword();
+            final String proxyUsername = clientConfig.getProxyUsername();
+            final String proxyPassword = clientConfig.getProxyPassword();
             if (proxyUsername != null && proxyPassword != null) {
-                httpClientBuilder.proxyAuthenticator((route, response) -> {
-                    // 设置代理服务器用户名、密码
-                    final String credential = Credentials.basic(proxyUsername, proxyPassword, StandardCharsets.UTF_8);
-                    return response.request().newBuilder().header("Proxy-Authorization", credential).build();
+                httpClientBuilder.proxyAuthenticator(new Authenticator() {
+                    @Override
+                    public okhttp3.Request authenticate(Route route, Response response) throws IOException {
+                        // 设置代理服务器用户名、密码
+                        final String credential = Credentials.basic(proxyUsername, proxyPassword, YopConstants.DEFAULT_CHARSET);
+                        return response.request().newBuilder().header("Proxy-Authorization", credential).build();
+                    }
                 });
             }
         }
@@ -139,9 +138,9 @@ public class YopHttpClient extends AbstractYopHttpClient {
             // bodyParams
             RequestBody requestBody = EMPTY_BODY;
             if (hasBodyParams) {
-                requestBody = RequestBody.create(IOUtils.toByteArray(request.getContent()));
+                requestBody = RequestBody.create(null, IOUtils.toByteArray(request.getContent()));
             } else if (hasEncodedParams && !useQueryParams) {
-                requestBody = RequestBody.create(encodedParams.getBytes(YopConstants.DEFAULT_CHARSET));
+                requestBody = RequestBody.create(null, encodedParams.getBytes(YopConstants.DEFAULT_CHARSET));
             }
 
             // methods
@@ -197,7 +196,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
             String name = entry.getKey();
             for (MultiPartFile multiPartFile : entry.getValue()) {
                 bodyBuilder.addFormDataPart(name, multiPartFile.getFileName(),
-                        RequestBody.create(IOUtils.toByteArray(multiPartFile.getInputStream())));
+                        RequestBody.create(null, IOUtils.toByteArray(multiPartFile.getInputStream())));
             }
         }
         return bodyBuilder.build();

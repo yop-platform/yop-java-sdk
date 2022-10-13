@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +54,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
     protected static final Logger LOGGER = LoggerFactory.getLogger(YopFilePlatformCredentialsProvider.class);
 
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
-            3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
+            3, TimeUnit.MINUTES, new LinkedBlockingQueue(200),
             new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
@@ -81,7 +82,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
         return doStore(appKey, credentialType, cert, YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore());
     }
 
-    private YopPlatformCredentials doStore(String appKey, String credentialType, X509Certificate cert, YopCertStore yopCertStore) {
+    private YopPlatformCredentials doStore(String appKey, String credentialType, final X509Certificate cert, final YopCertStore yopCertStore) {
         YopPlatformCredentials result = convertCredentials(appKey, credentialType, cert);
 
         // 默认仅放内存，商户可配置存放磁盘
@@ -90,14 +91,17 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
         }
 
         // 异步存入本地
-        THREAD_POOL.submit(() -> {
-            try {
-                final File certStoreDir = createStoreDirIfNecessary(yopCertStore);
-                if (null != certStoreDir) {
-                    writeCertToFileStore(certStoreDir, cert);
+        THREAD_POOL.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final File certStoreDir = createStoreDirIfNecessary(yopCertStore);
+                    if (null != certStoreDir) {
+                        writeCertToFileStore(certStoreDir, cert);
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("error when X509Certificate, ex:", e);
                 }
-            } catch (Exception e) {
-                LOGGER.warn("error when X509Certificate, ex:", e);
             }
         });
 

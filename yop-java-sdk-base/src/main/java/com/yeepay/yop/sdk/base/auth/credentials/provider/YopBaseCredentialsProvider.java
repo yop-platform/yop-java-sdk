@@ -11,6 +11,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.base.config.YopAppConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PrivateKey;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * title: <br>
@@ -30,6 +33,7 @@ import java.security.PrivateKey;
  * @since 2020/11/24 上午11:57
  */
 public abstract class YopBaseCredentialsProvider implements YopCredentialsProvider {
+
     @Override
     public String getDefaultAppKey() {
         return YopConstants.YOP_DEFAULT_APPKEY;
@@ -57,4 +61,8 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
         return StringUtils.defaultIfBlank(appKey, getDefaultAppKey());
     }
 
+    @Override
+    public List<YopCertConfig> getIsvEncryptKey(String appKey) {
+        return Collections.emptyList();
+    }
 }

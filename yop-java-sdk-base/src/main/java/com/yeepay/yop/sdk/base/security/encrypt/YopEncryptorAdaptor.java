@@ -4,7 +4,6 @@
  */
 package com.yeepay.yop.sdk.base.security.encrypt;
 
-import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -16,10 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * title: 加解密适配器<br>
@@ -34,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class YopEncryptorAdaptor implements YopEncryptor {
 
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
-            3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
+            3, TimeUnit.MINUTES, new LinkedBlockingQueue(200),
             new ThreadFactoryBuilder().setNameFormat("yop-encryptor-task-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override

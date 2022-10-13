@@ -10,17 +10,17 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.base.auth.signer.YopSigner;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.base.auth.signer.YopBaseSigner;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,7 +50,7 @@ public class Sm2SignAndVerifyTest {
         SmUtils.init();
     }
 
-    public class YopTestSigner implements YopSigner {
+    public class YopTestSigner extends YopBaseSigner {
         @Override
         public List<String> supportSignerAlg() {
             return Lists.newArrayList("TEST");
@@ -85,7 +85,7 @@ public class Sm2SignAndVerifyTest {
 
     @Test
     public void testVerify() {
-        String serialNo = "275550212193";
+        String serialNo = "4028129061";
         String signature = "XoIZA9Z1YKr1lraNuq62CoBOdmvr3Ae2Q9Fu0na8ugKvfDjoBWIEZ8z65BiXG1Ju5qPQ1Xn+RJALBx0bsQ3AEw==";
         String content = "{\"requestId\":\"3dd63639-bf35-427b-9110-f691ef00c20a\",\"code\":\"40042\",\"message\":\"非法的参数\",\"subCode\":\"isv.service.not-exists\",\"subMessage\":\"服务不存在\",\"docUrl\":\"http://10.151.31.146/docs/v2/platform/sdk_guide/error_code/index.html#platform_isv_service_not-exists\"}";
         YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(CertTypeEnum.SM2.name());

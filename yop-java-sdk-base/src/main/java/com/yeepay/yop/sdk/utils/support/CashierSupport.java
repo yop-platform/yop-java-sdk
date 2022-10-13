@@ -75,13 +75,12 @@ public final class CashierSupport {
     }
 
     private static CertTypeEnum resolveCertType(PrivateKey privateKey) {
-        switch (privateKey.getAlgorithm()) {
-            case "RSA":
-                return CertTypeEnum.RSA2048;
-            case "EC":
-                return CertTypeEnum.SM2;
-            default:
-                throw new RuntimeException("sign algorithm(" + privateKey.getAlgorithm() + ") not supported");
+        if ("RSA".equals(privateKey.getAlgorithm())) {
+            return CertTypeEnum.RSA2048;
+        } else if ("EC".equals(privateKey.getAlgorithm())) {
+            return CertTypeEnum.SM2;
+        } else {
+            throw new RuntimeException("sign algorithm(" + privateKey.getAlgorithm() + ") not supported");
         }
     }
 

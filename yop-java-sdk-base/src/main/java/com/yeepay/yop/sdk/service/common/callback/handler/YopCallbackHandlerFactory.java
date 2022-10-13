@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.service.common.callback.handler;
 
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.service.common.callback.handler.impl.YopWildCardCallbackHandler;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CALLBACK_HANDLER;
 
@@ -20,7 +20,7 @@ import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CALLBACK_HANDLER;
  */
 public class YopCallbackHandlerFactory {
 
-    private static final Map<String, YopCallbackHandler> YOP_CALLBACK_HANDLERS = new ConcurrentHashMap<>();
+    private static final Map<String, YopCallbackHandler> YOP_CALLBACK_HANDLERS = Maps.newConcurrentMap();
 
     static {
         register(DEFAULT_YOP_CALLBACK_HANDLER, new YopWildCardCallbackHandler());
