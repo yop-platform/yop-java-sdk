@@ -4,12 +4,10 @@
 name: Maven Package
 
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
     branches:
       - main
-  release:
-    types: [published]
+      - develop
 
 jobs:
   build:
