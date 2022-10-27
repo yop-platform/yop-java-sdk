@@ -13,15 +13,15 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v3
       with:
-        java-version: 1.8
+        distribution: 'temurin'
+        java-version: '8'
 
     - name: Configuring Maven Cache
       uses: actions/cache@v1
@@ -31,18 +31,19 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-#    - name: Build with Maven
-#      run: mvn -B package --file pom.xml -DskipTests
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml -DskipTests
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -DskipTests
+      run: mvn deploy -Prelease -s $GITHUB_WORKSPACE/.github/settings-github.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Set up Apache Maven Central
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v3
       with: # running setup-java again overwrites the settings.xml
-        java-version: 1.8
+        distribution: 'temurin'
+        java-version: '8'
         server-id: sonatype-nexus-staging # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: MAVEN_USERNAME # env variable for username in deploy
         server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
@@ -50,7 +51,7 @@ jobs:
         gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
 
     - name: Publish to Apache Maven Central
-      run: mvn clean deploy -Prelease -DskipTests
+      run: mvn deploy -Prelease -s $GITHUB_WORKSPACE/.github/settings-maven.xml
       env:
         MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USER }}
         MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
