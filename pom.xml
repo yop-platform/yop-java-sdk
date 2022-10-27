@@ -5,7 +5,7 @@
     <artifactId>yop-java-sdk-parent</artifactId>
     <packaging>pom</packaging>
 
-    <version>4.2.3-jdk6on</version>
+    <version>4.2.3.1-jdk6on-SNAPSHOT</version>
 
     <modules>
         <module>yop-java-sdk-base</module>
@@ -165,6 +165,12 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bctls-jdk15on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
 

@@ -38,6 +38,9 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jsse.provider.BouncyCastleJsseProvider;
+import org.bouncycastle.jsse.provider.SSLSocketFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +50,7 @@ import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.util.List;
 import java.util.Map;
 
@@ -166,6 +170,9 @@ public class YopHttpClient extends AbstractYopHttpClient {
         if (StringUtils.startsWith(javaVersion, JDK_VERSION_1_8) || StringUtils.startsWith(javaVersion, JDK_VERSION_1_7)) {
             tlsVersion = TLS_VERSION_1_2;
         } else if (StringUtils.startsWith(javaVersion, JDK_VERSION_1_6)) {
+            Security.addProvider(new BouncyCastleProvider());
+            Security.addProvider(new BouncyCastleJsseProvider());
+            Security.setProperty("ssl.SocketFactory.provider", SSLSocketFactoryImpl.class.getName());
             tlsVersion = TLS_VERSION_1_1;
         }
 
