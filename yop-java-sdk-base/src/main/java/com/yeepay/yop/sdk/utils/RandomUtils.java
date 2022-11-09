@@ -27,13 +27,6 @@ public final class RandomUtils {
     }
 
     /**
-     * 返回无锁的ThreadLocalRandom
-     */
-    public static Random threadLocalRandom() {
-        return ThreadLocalRandom.current();
-    }
-
-    /**
      * 使用性能更好的SHA1PRNG, Tomcat的sessionId生成也用此算法.
      * 但JDK7中，需要在启动参数加入 -Djava.security=file:/dev/./urandom
      */
