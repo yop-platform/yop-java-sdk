@@ -5,13 +5,11 @@
 package com.yeepay.yop.sdk.inter.security.encrypt;
 
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.auth.credentials.*;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.inter.utils.RSA;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 
@@ -61,8 +59,12 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
     @Override
     public byte[] encrypt(byte[] plain, EncryptOptions options) {
         try {
-            return RSA.encrypt(plain, ((PKICredentialsItem) ((YopPlatformCredentials)
-                    options.getCredentials()).getCredential()).getPublicKey());
+            final CredentialsItem credential = ((YopPlatformCredentials) options.getCredentials()).getCredential();
+            if (credential instanceof CredentialsCollection) {
+                // 约定取第一个
+                return RSA.encrypt(plain, ((PKICredentialsItem) ((CredentialsCollection) credential).getItems().get(0)).getPublicKey());
+            }
+            return RSA.encrypt(plain, ((PKICredentialsItem) credential) .getPublicKey());
         } catch (Throwable e) {
             throw new YopClientException("error happened when encrypt with RSA alg", e);
         }

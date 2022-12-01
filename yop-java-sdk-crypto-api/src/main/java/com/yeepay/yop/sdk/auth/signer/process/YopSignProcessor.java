@@ -6,7 +6,6 @@ package com.yeepay.yop.sdk.auth.signer.process;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
-import com.yeepay.yop.sdk.exception.YopClientException;
 
 /**
  * title: YopSignProcessor<br/>
@@ -27,16 +26,7 @@ public interface YopSignProcessor {
      * @param credentialsItem 签名密钥信息
      * @return urlSafeBase64编码的字符串
      */
-    default String sign(String content, CredentialsItem credentialsItem) {
-        if (!isSupport(credentialsItem)) {
-            throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
-        }
-        return doSign(content, credentialsItem);
-    }
-
-    default String doSign(String content, CredentialsItem credentialsItem) {
-        return doSign(content, credentialsItem, null);
-    }
+    String sign(String content, CredentialsItem credentialsItem);
 
     /**
      * 签名
@@ -46,7 +36,7 @@ public interface YopSignProcessor {
      * @param options         签名选项
      * @return base64编码的字符串(是否urlSafe ， 可在options中指定)
      */
-    String doSign(String content, CredentialsItem credentialsItem, SignOptions options);
+    String signWithOptions(String content, CredentialsItem credentialsItem, SignOptions options);
 
     /**
      * 验签
@@ -56,16 +46,7 @@ public interface YopSignProcessor {
      * @param credentialsItem 签名密钥信息
      * @return true: 验签通过，false: 不通过
      */
-    default boolean verify(String content, String signature, CredentialsItem credentialsItem) {
-        if (isSupport(credentialsItem)) {
-            return doVerify(content, signature, credentialsItem);
-        }
-        throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
-    }
-
-    default boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {
-        return doVerify(content, signature, credentialsItem, null);
-    }
+    boolean verify(String content, String signature, CredentialsItem credentialsItem);
 
     /**
      * 验签
@@ -76,7 +57,7 @@ public interface YopSignProcessor {
      * @param options         签名选项
      * @return true: 验签通过，false: 不通过
      */
-    boolean doVerify(String content, String signature, CredentialsItem credentialsItem, SignOptions options);
+    boolean verifyWithOptions(String content, String signature, CredentialsItem credentialsItem, SignOptions options);
 
     /**
      * 判断是否支持用该密钥进行签名/验签

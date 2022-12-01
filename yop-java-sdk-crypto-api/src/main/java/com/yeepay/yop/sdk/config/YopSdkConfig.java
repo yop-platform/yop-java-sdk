@@ -1,12 +1,16 @@
 package com.yeepay.yop.sdk.config;
 
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 /**
  * title: SDK配置(新版本)<br>
@@ -37,6 +41,8 @@ public final class YopSdkConfig implements Serializable {
     private String region;
 
     private YopCertStore yopCertStore;
+
+    private Map<CertTypeEnum, List<YopCertConfig>> yopPublicKeys;
 
     public String getServerRoot() {
         return serverRoot;
@@ -100,6 +106,14 @@ public final class YopSdkConfig implements Serializable {
 
     public void setYopCertStore(YopCertStore yopCertStore) {
         this.yopCertStore = yopCertStore;
+    }
+
+    public Map<CertTypeEnum, List<YopCertConfig>> getYopPublicKeys() {
+        return yopPublicKeys;
+    }
+
+    public void setYopPublicKeys(Map<CertTypeEnum, List<YopCertConfig>> yopPublicKeys) {
+        this.yopPublicKeys = yopPublicKeys;
     }
 
     @Override

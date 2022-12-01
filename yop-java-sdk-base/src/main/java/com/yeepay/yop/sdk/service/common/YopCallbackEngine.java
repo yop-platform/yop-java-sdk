@@ -144,7 +144,7 @@ public class YopCallbackEngine {
             final SignOptions signOptions = AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3")
                     .getSignOptions();
             headers.put(Headers.YOP_SIGN, YopSignProcessorFactory.getSignProcessor(CertTypeEnum.SM2.name())
-                    .doSign(response.getBody().replaceAll("[ \t\n]", EMPTY),
+                    .signWithOptions(response.getBody().replaceAll("[ \t\n]", EMPTY),
                             (CredentialsItem) credentials.getCredential(), signOptions));
             if (credentials instanceof CertificateCredentials) {
                 headers.put(Headers.YOP_SIGN_CERT_SERIAL_NO, ((CertificateCredentials) credentials).getSerialNo());

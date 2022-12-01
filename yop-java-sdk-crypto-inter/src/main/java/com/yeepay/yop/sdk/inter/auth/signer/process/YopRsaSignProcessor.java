@@ -7,9 +7,9 @@ package com.yeepay.yop.sdk.inter.auth.signer.process;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessorAdaptor;
 import com.yeepay.yop.sdk.inter.utils.RSA;
+import com.yeepay.yop.sdk.security.DigestAlgEnum;
 
 /**
  * title: <br/>
@@ -21,7 +21,7 @@ import com.yeepay.yop.sdk.inter.utils.RSA;
  * @version 1.0.0
  * @since 2021/1/18 3:58 下午
  */
-public class YopRsaSignProcessor implements YopSignProcessor {
+public class YopRsaSignProcessor extends YopSignProcessorAdaptor {
 
     private static final DigestAlgEnum DIGEST_ALG = DigestAlgEnum.SHA256;
 

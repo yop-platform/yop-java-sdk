@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.config.provider.file;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -55,6 +56,8 @@ public final class YopFileSdkConfig implements Serializable {
 
     @Deprecated
     private Map<String, List<YopCertConfig>> isvEncryptKeyMap;
+
+    private Map<CertTypeEnum, List<YopCertConfig>> yopPublicKeys;
 
     public String getAppKey() {
         return appKey;
@@ -174,6 +177,27 @@ public final class YopFileSdkConfig implements Serializable {
                 List<YopCertConfig> list = Lists.newLinkedList();
                 list.add(isvEncryptKey);
                 isvEncryptKeyMap.put(appKey, list);
+            }
+        }
+    }
+
+    public Map<CertTypeEnum, List<YopCertConfig>> getYopPublicKeys() {
+        return yopPublicKeys;
+    }
+
+    @JsonProperty("yop_public_key")
+    public void setYopPublicKey(YopCertConfig[] yopPublicKey) {
+        if (null == this.yopPublicKeys) {
+            this.yopPublicKeys = Maps.newHashMap();
+        }
+        if (null == yopPublicKey || yopPublicKey.length == 0) {
+            return;
+        }
+        for (YopCertConfig yopCertConfig : yopPublicKey) {
+            if (yopPublicKeys.containsKey(yopCertConfig.getCertType())) {
+                yopPublicKeys.get(yopCertConfig.getCertType()).add(yopCertConfig);
+            } else {
+                yopPublicKeys.put(yopCertConfig.getCertType(), Lists.newArrayList(yopCertConfig));
             }
         }
     }

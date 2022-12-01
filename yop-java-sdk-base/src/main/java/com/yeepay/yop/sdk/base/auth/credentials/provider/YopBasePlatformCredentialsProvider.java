@@ -4,16 +4,21 @@
  */
 package com.yeepay.yop.sdk.base.auth.credentials.provider;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
+import com.yeepay.yop.sdk.auth.credentials.*;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
 import com.yeepay.yop.sdk.base.cache.YopCertificateCache;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +57,11 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         }
         YopPlatformCredentials foundCredentials = credentialsMap.computeIfAbsent(serialNo, p -> {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                X509Certificate rsaCert = loadLocalRsaCert(appKey, serialNo);
-                if (null == rsaCert) {
-                    throw new YopClientException("loadLocalRsaCert fail, serialNo:" + serialNo);
+                final List<YopPublicKey> yopPublicKeys = loadLocalRsaCert(appKey);
+                if (CollectionUtils.isEmpty(yopPublicKeys)) {
+                    throw new YopClientException("loadLocalRsaCert fail, appKey:" + appKey);
                 }
-                return convertRsaCredentials(appKey, CertTypeEnum.RSA2048, rsaCert);
+                return convertRsaCredentials(appKey, CertTypeEnum.RSA2048, yopPublicKeys);
             } else {
                 YopPlatformCredentials localCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == localCredentials) {
@@ -80,10 +85,14 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         return foundCredentials;
     }
 
-    private YopPlatformCredentials convertRsaCredentials(String appKey, CertTypeEnum certType, X509Certificate cert) {
+    protected YopPlatformCredentials convertRsaCredentials(String appKey, CertTypeEnum certType, List<YopPublicKey> yopPublicKeys) {
+        List<CredentialsItem> items = Lists.newArrayListWithExpectedSize(yopPublicKeys.size());
+        for (YopPublicKey yopPublicKey : yopPublicKeys) {
+            items.add(new PKICredentialsItem(yopPublicKey.getPublicKey(), certType));
+        }
         return new YopPlatformCredentialsHolder().withAppKey(appKey)
-                .withSerialNo(X509CertUtils.parseToHex(cert.getSerialNumber().toString()))
-                .withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType));
+                .withSerialNo(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)
+                .withCredentials(new CredentialsCollection(certType, items));
     }
 
     /**
@@ -112,14 +121,28 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     }
 
     /**
-     * 读取内置RSA证书
+     * 读取配置的RSA证书
      *
-     * @param appKey   应用标识
-     * @param serialNo 证书序列号(长度为10的16进制字符串)
+     * @param appKey   应用标识(暂时无用)
      * @return X509Certificate
      */
-    protected X509Certificate loadLocalRsaCert(String appKey, String serialNo) {
-        return YopCertificateCache.getYopPlatformRsaCertFromLocal();
+    protected List<YopPublicKey> loadLocalRsaCert(String appKey) {
+        final Map<CertTypeEnum, List<YopCertConfig>> yopPublicKeys = YopSdkConfigProviderRegistry.getProvider().getConfig().getYopPublicKeys();
+        List<YopCertConfig> certConfigs = null;
+        if (MapUtils.isEmpty(yopPublicKeys) || CollectionUtils.isEmpty(certConfigs = yopPublicKeys.get(CertTypeEnum.RSA2048))) {
+            throw new YopClientException("config wrong, key:yop_public_key");
+        }
+        List<YopPublicKey> result = Lists.newArrayListWithExpectedSize(certConfigs.size());
+        for (YopCertConfig certConfig : certConfigs) {
+            try {
+                final YopPublicKey parsed = (YopPublicKey) YopCertParserFactory
+                        .getCertParser(YopCertCategory.PUBLIC, CertTypeEnum.RSA2048).parse(certConfig);
+                result.add(parsed);
+            } catch (Exception e) {
+                LOGGER.warn("config wrong, yop_public_key:" + certConfig);
+            }
+        }
+        return result;
     }
 
     @Override

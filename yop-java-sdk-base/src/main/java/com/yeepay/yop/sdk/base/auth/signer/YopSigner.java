@@ -57,7 +57,7 @@ public interface YopSigner {
         YopPlatformCredentials platformCredentials = (YopPlatformCredentials) credentials;
         final CertTypeEnum certType = platformCredentials.getCredential().getCertType();
         content = content.replaceAll("[ \t\n]", CharacterConstants.EMPTY);
-        if (!YopSignProcessorFactory.getSignProcessor(certType.name()).doVerify(content, signature, platformCredentials.getCredential(), options)) {
+        if (!YopSignProcessorFactory.getSignProcessor(certType.name()).verifyWithOptions(content, signature, platformCredentials.getCredential(), options)) {
             throw new VerifySignFailedException(String.format("response sign verify failure, content:%s, signature:%s, platformSerialNo:%s, requestId:%s."
                     , content, signature, platformCredentials.getSerialNo(), requestId));
         }

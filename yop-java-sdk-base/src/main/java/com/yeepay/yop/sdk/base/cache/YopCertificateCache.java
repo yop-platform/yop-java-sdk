@@ -11,14 +11,14 @@ import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
-import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.model.cert.YopPlatformCertQueryResult;
 import com.yeepay.yop.sdk.model.cert.YopPlatformPlainCert;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
@@ -28,6 +28,7 @@ import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,8 +65,7 @@ public class YopCertificateCache {
 
     private static YopClient YOP_CLIENT;
 
-    private static X509Certificate CFCA_ROOT_CERT, YOP_INTER_CERT, YOP_PLATFORM_RSA_CERT;
-    private static final String QA_RSA_CERT_SERIAL_NO = "4032156487", PRO_RSA_CERT_SERIAL_NO = "4397139598";
+    private static X509Certificate CFCA_ROOT_CERT, YOP_INTER_CERT;
 
     /**
      * 本地加载cfca根证书
@@ -83,15 +83,6 @@ public class YopCertificateCache {
      */
     public static X509Certificate getYopInterCertFromLocal() {
         return YOP_INTER_CERT;
-    }
-
-    /**
-     * 本地加载YOP平台RSA证书
-     *
-     * @return X509Certificate
-     */
-    public static X509Certificate getYopPlatformRsaCertFromLocal() {
-        return YOP_PLATFORM_RSA_CERT;
     }
 
     /**
@@ -236,7 +227,6 @@ public class YopCertificateCache {
 
     static {
         String cfcaRootFile = DEFAULT_CFCA_ROOT_FILE, yopInterFile = DEFAULT_YOP_INTER_FILE;
-        String yopPlatformRsaCertSerialNo = PRO_RSA_CERT_SERIAL_NO;
 
         // 区分环境分别加载内置证书
         if (!EnvUtils.isProd()) {
@@ -244,7 +234,6 @@ public class YopCertificateCache {
                     envPrefix = StringUtils.substringBefore(env, "_");
             cfcaRootFile = envPrefix + "_" + DEFAULT_CFCA_ROOT_FILE;
             yopInterFile = envPrefix + "_" + DEFAULT_YOP_INTER_FILE;
-            yopPlatformRsaCertSerialNo = QA_RSA_CERT_SERIAL_NO;
         }
 
         try {
@@ -256,15 +245,10 @@ public class YopCertificateCache {
             YOP_INTER_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + yopInterFile, CertTypeEnum.SM2);
             X509CertUtils.verifyCertificate(CertTypeEnum.SM2, CFCA_ROOT_CERT.getPublicKey(), YOP_INTER_CERT);
         } catch (Exception e) {
-            LOGGER.error("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:", e);
-        }
-
-        try {
-            // YOP—RSA证书
-            YOP_PLATFORM_RSA_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + YOP_RSA_PLATFORM_CERT_PREFIX +
-                    yopPlatformRsaCertSerialNo + YOP_PLATFORM_CERT_POSTFIX, CertTypeEnum.RSA2048);
-        } catch (Exception e) {
-            LOGGER.warn("error when load yop rsa certs，if you dont use rsa just ignore it, ex:", e);
+            if (LOGGER.isDebugEnabled()) {// 不愿意看到这个错！！
+                LOGGER.debug("load sm2 certs, ex:", e);
+            }
+            LOGGER.warn("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:{}", ExceptionUtils.getMessage(e));
         }
 
         // 该内置client用于YOP通信，实时更新拉取平台证书
