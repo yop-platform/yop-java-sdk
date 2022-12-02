@@ -5,6 +5,18 @@
     "enable":true,
     "lazy":false
   },
+  "yop_public_key": [
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "config/certs/yop_platform_rsa_cert_4397139598.cer"
+    },
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "config/certs/yop_platform_rsa_cert_4032156487.cer"
+    }
+  ],
   "http_client": {
     "connect_timeout": 10000,
     "connect_request_timeout": 10000,
