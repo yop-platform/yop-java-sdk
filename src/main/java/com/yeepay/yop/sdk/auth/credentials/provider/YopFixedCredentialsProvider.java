@@ -42,9 +42,15 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
         String key = appKey + ":" + credentialType;
         YopCredentials found = yopCredentialsMap.get(key);
         if (null == found) {
-            yopCredentialsMap.put(key, buildCredentials(appConfig, credentialType));
+            synchronized (yopCredentialsMap) {
+                found = yopCredentialsMap.get(key);
+                if (null == found) {
+                    found = buildCredentials(appConfig, credentialType);
+                    yopCredentialsMap.put(key, found);
+                }
+            }
         }
-        return yopCredentialsMap.get(key);
+        return found;
     }
 
     /**
