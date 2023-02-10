@@ -49,7 +49,7 @@
         <okhttp.version>3.12.6</okhttp.version>
         <oklog-java.version>2.3.0</oklog-java.version>
         <jmh.version>1.33</jmh.version>
-        <json-path.version>2.7.0</json-path.version>
+        <json-path.version>2.3.0</json-path.version>
     </properties>
 
     <dependencyManagement>
