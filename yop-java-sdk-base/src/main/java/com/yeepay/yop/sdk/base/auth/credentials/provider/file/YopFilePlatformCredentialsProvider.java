@@ -54,7 +54,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
 
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
             3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
-            new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").build(), new ThreadPoolExecutor.CallerRunsPolicy());
+            new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
     protected YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo) {
@@ -129,10 +129,10 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
     }
 
     private Map<String, X509Certificate> loadAndVerify(YopCertStore yopCertStore, String serialNo, boolean absolutePath) {
-        LOGGER.debug("begin load sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
         Map<String, X509Certificate> certMap = Maps.newHashMap();
-        if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
+        if (null != yopCertStore && StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
             try {
+                LOGGER.debug("begin load sm2 cert from local, path:{}, serialNo:{}", yopCertStore.getPath(), serialNo);
                 String filename = yopCertStore.getPath() + "/" + YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX;
                 if (absolutePath && !new File(filename).exists()) {
                     LOGGER.warn("wrong file path for sm2 cert, serialNo:{}, path:{}", serialNo, filename);
