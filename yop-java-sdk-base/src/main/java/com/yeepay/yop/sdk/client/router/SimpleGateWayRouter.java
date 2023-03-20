@@ -2,9 +2,11 @@ package com.yeepay.yop.sdk.client.router;
 
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.client.router.enums.ModeEnum;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
@@ -39,10 +41,20 @@ public class SimpleGateWayRouter implements GateWayRouter {
         this.systemMode = StringUtils.isEmpty(systemModeConfig) ? null : ModeEnum.valueOf(systemModeConfig);
     }
 
+    /**
+     * 动态指定请求服务器地址
+     *
+     * @param appKey  appKey
+     * @param request 请求
+     * @return 服务器地址
+     */
     @Override
     public URI route(String appKey, Request request) {
+        final YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
         URI serverRoot;
-        if (isAppInSandbox(appKey)) {
+        if (StringUtils.isNotBlank(requestConfig.getServerRoot())) {
+            serverRoot = CheckUtils.checkServerRoot(requestConfig.getServerRoot());
+        } else if (isAppInSandbox(appKey)) {
             serverRoot = space.getSandboxServerRoot();
         } else {
             serverRoot = request.isYosRequest() ? space.getYosServerRoot() : space.getServerRoot();

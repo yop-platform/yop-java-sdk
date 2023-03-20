@@ -205,4 +205,25 @@ public class YopClientTest {
         }
     }
 
+    @Test
+    public void requestWithPreferredServer() {
+        System.setProperty("yop.sdk.config.env", "qa");
+        YopClient yopClient = YopClientBuilder.builder().build();
+
+        YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
+
+        // 编码指定appkey和密钥
+        YopRequestConfig requestConfig = request.getRequestConfig();
+        PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(CredentialsRepository.getPrivateKey(appId), CredentialsRepository.getSupportCertType(appId));
+        YopPKICredentials yopPKICredentials = new YopPKICredentials(appId, pkiCredentialsItem);
+        requestConfig.setSecurityReq(securityReq);
+        requestConfig.setCredentials(yopPKICredentials);
+
+        // 指定serverRoot
+        requestConfig.setServerRoot("http://qak8s.iaas.yp:30228/yop-center");
+
+        YopResponse response = yopClient.request(request);
+        System.out.println(response);
+    }
+
 }
