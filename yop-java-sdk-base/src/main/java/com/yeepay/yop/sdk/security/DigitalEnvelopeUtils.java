@@ -66,7 +66,7 @@ public class DigitalEnvelopeUtils {
         //验证签名
         PublicKey publicKey = getYopPublicKey(CertTypeEnum.RSA2048);
         Signer signer = SignerFactory.getSigner(digestAlg);
-        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(), Encodes.decodeBase64(signToBase64));
+        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(Charsets.UTF_8), Encodes.decodeBase64(signToBase64));
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
         }

@@ -113,7 +113,7 @@ public class Sm4Utils {
         GCMParameterSpec spec = new GCMParameterSpec(DEFAULT_KEY_SIZE, nonceBytes);
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, spec);
         if (StringUtils.isNotBlank(associatedData)) {
-            cipher.updateAAD(associatedData.getBytes());
+            cipher.updateAAD(associatedData.getBytes(Charsets.UTF_8));
         }
         return cipher.doFinal(Encodes.decodeBase64(ciphertext));
     }
