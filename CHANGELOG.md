@@ -1,5 +1,6 @@
 | 版本 | 变更内容  |
 | --- | --- |
+| 4.2.4 | 商户通知解析默认字符集指定UTF-8 |
 | 4.2.3 | 修复YopFixedCredentialsProvider#getSupportCertTypes并发问题、默认应用加载问题，影响范围：`[4.0.5~4.2.2]` |
 | 4.2.1 | 修复YopJsonResponseAnalyzer对响应体的校验问题 |
 | 4.2.0 | 支持okhttp |
