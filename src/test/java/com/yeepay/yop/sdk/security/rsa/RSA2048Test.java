@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.security.rsa;
 
+import com.google.common.base.Charsets;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.junit.Test;
 
@@ -28,7 +29,7 @@ public class RSA2048Test {
         String signToBase64 = "wvcwYtqBexLi5Dt+OPyLFOjqkRaV3zJf1dl7Q558ja5ZKCTONc/yqwbDXosLmBuuprIKQ5bptIVaeP0xXh9/x2LeJOMLeFL0HGLJH+hzlajf4rer+RXbkZGOPYpyoFsUKAOtGMic0FuhSvLh1+kaLgJKisMUOkAri9Yp9wsxYLlfQXfYPg6E3WDCu0R90kqYGRQuSu0PxKsdCt0HeIvam7cZ/3kLUDBQdHAKcbgdJPPyv0Q2Tfi/A71B7RzrJ2fvtcH3fVzWXE/sPyeSl1wl7iszgYyw3AnywlNbdjPEH5U0oLZGa58uvR4CoeND6vcBjFBeuPjl7c1GLXq1MwLYjg==";
 
         RSA2048 rsa2048 = new RSA2048();
-        boolean verifySign = rsa2048.verifySign(publicKey, sourceData.getBytes(), Encodes.decodeBase64(signToBase64));
+        boolean verifySign = rsa2048.verifySign(publicKey, sourceData.getBytes(Charsets.UTF_8), Encodes.decodeBase64(signToBase64));
 
         assertTrue(verifySign);
     }
