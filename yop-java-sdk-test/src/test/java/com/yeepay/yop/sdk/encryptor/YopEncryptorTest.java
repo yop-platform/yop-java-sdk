@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.encryptor;
 
+import com.google.common.base.Charsets;
 import com.yeepay.yop.sdk.BaseTest;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -260,7 +261,7 @@ public class YopEncryptorTest extends BaseTest {
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(tmpFile);
-            IOUtils.copy(new ByteArrayInputStream("hello".getBytes()), out);
+            IOUtils.copy(new ByteArrayInputStream("hello".getBytes(Charsets.UTF_8)), out);
         } finally {
             StreamUtils.closeQuietly(out);
         }
