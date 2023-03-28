@@ -39,7 +39,9 @@ public class ClientConfigurationSupport {
                     .withConnectionRequestTimeoutInMillis(yopHttpClientConfig.getConnectRequestTimeout())
                     .withSocketTimeoutInMillis(yopHttpClientConfig.getReadTimeout())
                     .withMaxConnectionsPerRoute(yopHttpClientConfig.getMaxConnPerRoute())
-                    .withClientImpl(yopHttpClientConfig.getClientImpl());
+                    .withClientImpl(yopHttpClientConfig.getClientImpl())
+                    .withMaxRetryCount(yopHttpClientConfig.getMaxRetryCount())
+                    .withRetryExceptions(yopHttpClientConfig.getRetryExceptions());
         }
         return clientConfiguration;
     }

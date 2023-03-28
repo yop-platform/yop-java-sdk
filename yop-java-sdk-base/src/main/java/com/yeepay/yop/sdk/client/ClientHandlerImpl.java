@@ -64,6 +64,8 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final AuthorizationReqRegistry authorizationReqRegistry;
 
+    private final ClientConfiguration clientConfiguration;
+
     private final YopHttpClient client;
 
     private final GateWayRouter gateWayRouter;
@@ -75,6 +77,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
                 handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
         this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
+        this.clientConfiguration = handlerParams.getClientParams().getClientConfiguration();
         this.client = buildHttpClient(handlerParams);
     }
 
@@ -99,7 +102,11 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private <Input extends BaseRequest, Output extends BaseResponse> Output executeWithRetry(ClientExecutionParams<Input, Output> executionParams,
                                                                                              ExecutionContext executionContext, List<URI> endPoints) {
+        int retryCount = 0;
         for (URI endPoint : endPoints) {
+            if (retryCount++ > clientConfiguration.getMaxRetryCount()) {
+                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount());
+            }
             Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
             request.setEndpoint(endPoint);
             if (LOGGER.isDebugEnabled()) {
@@ -175,7 +182,7 @@ public class ClientHandlerImpl implements ClientHandler {
                     throw e;
                 }
                 // 当笔重试 (连接异常)
-                if (RETRY_EXCEPTIONS.contains(rootCause.getClass().getCanonicalName())) {
+                if (clientConfiguration.getRetryExceptions().contains(rootCause.getClass().getCanonicalName())) {
                     throw new YopHostException("Need Change Host, ", e);
                 }
 

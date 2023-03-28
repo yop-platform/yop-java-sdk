@@ -1,14 +1,17 @@
 package com.yeepay.yop.sdk.client;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.Region;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.http.RetryPolicy;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.InetAddress;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -169,6 +172,10 @@ public class ClientConfiguration {
      * The http client impl
      */
     private String clientImpl = YOP_HTTP_CLIENT_IMPL_DEFAULT;
+
+    private int maxRetryCount = 3;
+
+    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException");
 
     // Initialize DEFAULT_USER_AGENT
     static {
@@ -908,6 +915,36 @@ public class ClientConfiguration {
         return this;
     }
 
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        if (maxRetryCount > 0) {
+            this.maxRetryCount = maxRetryCount;
+        }
+    }
+
+    public ClientConfiguration withMaxRetryCount(int maxRetryCount) {
+        setMaxRetryCount(maxRetryCount);
+        return this;
+    }
+
+    public Set<String> getRetryExceptions() {
+        return retryExceptions;
+    }
+
+    public void setRetryExceptions(Set<String> retryExceptions) {
+        if (CollectionUtils.isNotEmpty(retryExceptions)) {
+            this.retryExceptions = retryExceptions;
+        }
+    }
+
+    public ClientConfiguration withRetryExceptions(Set<String> retryExceptions) {
+        setRetryExceptions(retryExceptions);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "ClientConfiguration [ \n  userAgent=" + userAgent
@@ -924,7 +961,9 @@ public class ClientConfiguration {
                 + connectionTimeoutInMillis + ", \n  socketBufferSizeInBytes="
                 + socketBufferSizeInBytes + ", \n  region="
                 + region + ", \n  credentials=" + credentials
-                + ", \n  clientImpl=" + clientImpl + "]\n";
+                + ", \n  clientImpl=" + clientImpl
+                + ", \n  maxRetryCount=" + maxRetryCount
+                + ", \n  retryExceptions=" + retryExceptions + "]\n";
     }
 
 }
