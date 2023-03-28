@@ -54,6 +54,9 @@ public final class YopHttpClientConfig implements Serializable {
     @JsonProperty("max_retry_count")
     private int maxRetryCount;
 
+    @JsonProperty("hystrix")
+    private YopHystrixConfig hystrix;
+
     public int getConnectTimeout() {
         return connectTimeout;
     }
@@ -116,6 +119,14 @@ public final class YopHttpClientConfig implements Serializable {
 
     public void setMaxRetryCount(int maxRetryCount) {
         this.maxRetryCount = maxRetryCount;
+    }
+
+    public YopHystrixConfig getHystrix() {
+        return hystrix;
+    }
+
+    public void setHystrix(YopHystrixConfig hystrix) {
+        this.hystrix = hystrix;
     }
 
     @Override

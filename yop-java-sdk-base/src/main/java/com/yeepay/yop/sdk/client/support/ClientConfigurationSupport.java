@@ -41,7 +41,8 @@ public class ClientConfigurationSupport {
                     .withMaxConnectionsPerRoute(yopHttpClientConfig.getMaxConnPerRoute())
                     .withClientImpl(yopHttpClientConfig.getClientImpl())
                     .withMaxRetryCount(yopHttpClientConfig.getMaxRetryCount())
-                    .withRetryExceptions(yopHttpClientConfig.getRetryExceptions());
+                    .withRetryExceptions(yopHttpClientConfig.getRetryExceptions())
+                    .withHystrixConfig(yopHttpClientConfig.getHystrix());
         }
         return clientConfiguration;
     }

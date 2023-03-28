@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.Region;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.config.provider.file.YopHystrixConfig;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.http.RetryPolicy;
 import org.apache.commons.collections4.CollectionUtils;
@@ -177,6 +178,8 @@ public class ClientConfiguration {
 
     private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException");
 
+    private YopHystrixConfig hystrixConfig = YopHystrixConfig.DEFAULT_CONFIG;
+
     // Initialize DEFAULT_USER_AGENT
     static {
         String language = System.getProperty("user.language");
@@ -227,6 +230,9 @@ public class ClientConfiguration {
         this.region = other.region;
         this.credentials = other.credentials;
         this.clientImpl = other.clientImpl;
+        this.maxRetryCount = other.maxRetryCount;
+        this.retryExceptions = other.retryExceptions;
+        this.hystrixConfig = other.hystrixConfig;
     }
 
     /**
@@ -945,6 +951,21 @@ public class ClientConfiguration {
         return this;
     }
 
+    public YopHystrixConfig getHystrixConfig() {
+        return hystrixConfig;
+    }
+
+    public void setHystrixConfig(YopHystrixConfig hystrixConfig) {
+        if (null != hystrixConfig) {
+            this.hystrixConfig = hystrixConfig;
+        }
+    }
+
+    public ClientConfiguration withHystrixConfig(YopHystrixConfig hystrixConfig) {
+        setHystrixConfig(hystrixConfig);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "ClientConfiguration [ \n  userAgent=" + userAgent
@@ -960,10 +981,12 @@ public class ClientConfiguration {
                 + socketTimeoutInMillis + ", \n  connectionTimeoutInMillis="
                 + connectionTimeoutInMillis + ", \n  socketBufferSizeInBytes="
                 + socketBufferSizeInBytes + ", \n  region="
-                + region + ", \n  credentials=" + credentials
-                + ", \n  clientImpl=" + clientImpl
-                + ", \n  maxRetryCount=" + maxRetryCount
-                + ", \n  retryExceptions=" + retryExceptions + "]\n";
+                + region + ", \n  credentials="
+                + credentials + ", \n  clientImpl="
+                + clientImpl + ", \n  maxRetryCount="
+                + maxRetryCount + ", \n  retryExceptions="
+                + retryExceptions + ", \n  hystrixConfig="
+                + hystrixConfig + "]\n";
     }
 
 }
