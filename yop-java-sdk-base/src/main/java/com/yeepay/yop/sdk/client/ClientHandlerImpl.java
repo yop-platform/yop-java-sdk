@@ -100,7 +100,6 @@ public class ClientHandlerImpl implements ClientHandler {
     private <Input extends BaseRequest, Output extends BaseResponse> Output executeWithRetry(ClientExecutionParams<Input, Output> executionParams,
                                                                                              ExecutionContext executionContext, List<URI> endPoints) {
         for (URI endPoint : endPoints) {
-            // TODO 重复marshall，multipart 是否可读
             Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
             request.setEndpoint(endPoint);
             if (LOGGER.isDebugEnabled()) {
