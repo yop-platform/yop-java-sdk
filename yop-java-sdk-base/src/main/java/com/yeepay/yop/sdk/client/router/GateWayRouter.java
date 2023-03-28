@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.client.router;
 import com.yeepay.yop.sdk.internal.Request;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * title: 网关路由<br>
@@ -23,6 +24,15 @@ public interface GateWayRouter {
      * @param request 请求
      * @return serverRoot URI
      */
-    URI route(String appKey, Request request);
+    @Deprecated
+    URI route(String appKey, Request<?> request);
+
+    /**
+     * 路由
+     *
+     * @param appKey  appKey
+     * @return serverRoot URI
+     */
+    List<URI> routes(String appKey, Request<?> request);
 
 }

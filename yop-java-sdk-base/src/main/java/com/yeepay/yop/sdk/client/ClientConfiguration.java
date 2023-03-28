@@ -155,11 +155,6 @@ public class ClientConfiguration {
     private int socketBufferSizeInBytes = 0;
 
     /**
-     * The service endpoint URL to which the client will connect.
-     */
-    private String endpoint = null;
-
-    /**
      * The region of service. This value is used by the client to construct the endpoint URL automatically, and is
      * ignored if endpoint is not null.
      */
@@ -216,37 +211,6 @@ public class ClientConfiguration {
         this.proxyPassword = other.proxyPassword;
         this.proxyPort = other.proxyPort;
         this.proxyScheme = other.proxyScheme;
-        this.proxyUsername = other.proxyUsername;
-        this.proxyWorkstation = other.proxyWorkstation;
-        this.proxyPreemptiveAuthenticationEnabled = other.proxyPreemptiveAuthenticationEnabled;
-        this.socketTimeoutInMillis = other.socketTimeoutInMillis;
-        this.userAgent = other.userAgent;
-        this.socketBufferSizeInBytes = other.socketBufferSizeInBytes;
-        this.endpoint = other.endpoint;
-        this.region = other.region;
-        this.credentials = other.credentials;
-        this.clientImpl = other.clientImpl;
-    }
-
-    /**
-     * Constructs a new ClientConfiguration instance with the same settings as the specified configuration.
-     * This constructor is used to create a client configuration from one SDK to another SDK. e.g. from VOD to YOS.
-     * In this case endpoint should be changed while other attributes keep same.
-     *
-     * @param other    the configuration to copy settings from.
-     * @param endpoint the endpoint
-     */
-    public ClientConfiguration(ClientConfiguration other, String endpoint) {
-        this.endpoint = endpoint;
-        this.connectionTimeoutInMillis = other.connectionTimeoutInMillis;
-        this.maxConnections = other.maxConnections;
-        this.retryPolicy = other.retryPolicy;
-        this.localAddress = other.localAddress;
-        this.protocol = other.protocol;
-        this.proxyDomain = other.proxyDomain;
-        this.proxyHost = other.proxyHost;
-        this.proxyPassword = other.proxyPassword;
-        this.proxyPort = other.proxyPort;
         this.proxyUsername = other.proxyUsername;
         this.proxyWorkstation = other.proxyWorkstation;
         this.proxyPreemptiveAuthenticationEnabled = other.proxyPreemptiveAuthenticationEnabled;
@@ -843,47 +807,6 @@ public class ClientConfiguration {
     }
 
     /**
-     * Returns the service endpoint URL to which the client will connect.
-     *
-     * @return the service endpoint URL to which the client will connect.
-     */
-    public String getEndpoint() {
-        String url = this.endpoint;
-        // if the set endpoint does not contain a protocol, append protocol to head of it
-        if (this.endpoint != null && this.endpoint.length() > 0
-                && endpoint.indexOf("://") < 0) {
-            url = protocol.toString().toLowerCase() + "://" + endpoint;
-        }
-        return url;
-    }
-
-    /**
-     * Sets the service endpoint URL to which the client will connect.
-     *
-     * @param endpoint the service endpoint URL to which the client will connect.
-     * @throws IllegalArgumentException if endpoint is not a valid URL.
-     * @throws NullPointerException     if endpoint is null.
-     */
-    public void setEndpoint(String endpoint) {
-        checkNotNull(endpoint, "endpoint should not be null.");
-
-        this.endpoint = endpoint;
-    }
-
-    /**
-     * Sets the service endpoint URL to which the client will connect, and returns the updated configuration instance.
-     *
-     * @param endpoint the service endpoint URL to which the client will connect.
-     * @return the updated configuration instance.
-     * @throws IllegalArgumentException if endpoint is not a valid URL.
-     * @throws NullPointerException     if endpoint is null.
-     */
-    public ClientConfiguration withEndpoint(String endpoint) {
-        this.setEndpoint(endpoint);
-        return this;
-    }
-
-    /**
      * Returns the region of service. This value is used by the client to construct the endpoint URL automatically, and
      * is ignored if endpoint is not null.
      *
@@ -999,8 +922,8 @@ public class ClientConfiguration {
                 + maxConnections + ", \n  socketTimeoutInMillis="
                 + socketTimeoutInMillis + ", \n  connectionTimeoutInMillis="
                 + connectionTimeoutInMillis + ", \n  socketBufferSizeInBytes="
-                + socketBufferSizeInBytes + ", \n  endpoint=" + endpoint
-                + ", \n  region=" + region + ", \n  credentials=" + credentials
+                + socketBufferSizeInBytes + ", \n  region="
+                + region + ", \n  credentials=" + credentials
                 + ", \n  clientImpl=" + clientImpl + "]\n";
     }
 

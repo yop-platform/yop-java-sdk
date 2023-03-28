@@ -35,6 +35,12 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("yos_server_root")
     private String yosServerRoot;
 
+    @JsonProperty("preferred_server_roots")
+    private List<String> preferredServerRoots;
+
+    @JsonProperty("preferred_yos_server_roots")
+    private List<String> preferredYosServerRoots;
+
     @JsonProperty("sandbox_server_root")
     private String sandboxServerRoot;
 
@@ -78,6 +84,46 @@ public final class YopFileSdkConfig implements Serializable {
 
     public void setYosServerRoot(String yosServerRoot) {
         this.yosServerRoot = yosServerRoot;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    @JsonProperty("preferred_server_roots")
+    public void setPreferredServerRoots(String[] serverRoots) {
+        if (null == preferredServerRoots) {
+            preferredServerRoots = Lists.newArrayList();
+        }
+        if (null == serverRoots || serverRoots.length == 0) {
+            return;
+        }
+        for (String server : serverRoots) {
+            if (StringUtils.isBlank(server)) {
+                continue;
+            }
+            preferredServerRoots.add(server.trim());
+        }
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    @JsonProperty("preferred_yos_server_roots")
+    public void setPreferredYosServerRoots(String[] yosServerRoots) {
+        if (null == preferredYosServerRoots) {
+            preferredYosServerRoots = Lists.newArrayList();
+        }
+        if (null == yosServerRoots || yosServerRoots.length == 0) {
+            return;
+        }
+        for (String server : yosServerRoots) {
+            if (StringUtils.isBlank(server)) {
+                continue;
+            }
+            preferredYosServerRoots.add(server.trim());
+        }
     }
 
     public String getSandboxServerRoot() {

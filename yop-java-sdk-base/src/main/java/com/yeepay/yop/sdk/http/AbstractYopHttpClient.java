@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.http;
 import com.google.common.collect.ImmutableSet;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
@@ -70,7 +71,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         } catch (YopClientException e) {
             throw e;
         } catch (Exception e) {
-            throw new YopClientException("Unable to execute HTTP request, requestId:"
+            throw new YopHttpException("Unable to execute HTTP request, requestId:"
                     + request.getRequestId() + ", apiUri:" + request.getResourcePath(), e);
         } finally {
             postExecute(analyzedResponse, httpResponse);

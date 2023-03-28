@@ -4,13 +4,16 @@ import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 /**
  * title: 服务客户端builder<br>
@@ -47,6 +50,10 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                 .withClientConfiguration(clientConfiguration == null ? ClientConfigurationSupport.getClientConfiguration(yopSdkConfig) : clientConfiguration)
                 .withEndPoint(endpoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT)) : URI.create(endpoint))
                 .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
+                .withPreferredEndPoint(CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredServerRoots()) ?
+                        yopSdkConfig.getPreferredServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList())
+                .withPreferredYosEndPoint(CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredYosServerRoots())
+                        ? yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) :Collections.emptyList())
                 .withSandboxEndPoint(sandboxEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT)) : URI.create(sandboxEndPoint))
                 .withAuthorizationReqRegistry(authorizationReqRegistry())
                 .build();
