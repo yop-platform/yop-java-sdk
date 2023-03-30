@@ -224,6 +224,12 @@
                 <groupId>com.netflix.hystrix</groupId>
                 <artifactId>hystrix-core</artifactId>
                 <version>${hystrix-core.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- test dependencies -->
@@ -413,6 +419,14 @@
                                     <relocation>
                                         <pattern>org.springframework</pattern>
                                         <shadedPattern>com.yeepay.shade.org.springframework</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>com.jayway</pattern>
+                                        <shadedPattern>com.yeepay.shade.com.jayway</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>com.netflix</pattern>
+                                        <shadedPattern>com.yeepay.shade.com.netflix</shadedPattern>
                                     </relocation>
                                 </relocations>
                                 <transformers>
