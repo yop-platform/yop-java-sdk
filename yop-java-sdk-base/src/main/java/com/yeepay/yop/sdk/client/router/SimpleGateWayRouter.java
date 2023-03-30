@@ -8,9 +8,11 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.utils.CheckUtils;
+import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -101,14 +103,20 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
             // 非独立网关
             if (request.isYosRequest()) {
-                result.addAll(space.getPreferredYosEndPoint());
+                result.addAll(getRandomServer(space.getPreferredYosEndPoint()));
                 result.add(space.getYosServerRoot());
             } else {
-                result.addAll(space.getPreferredEndPoint());
+                result.addAll(getRandomServer(space.getPreferredEndPoint()));
                 result.add(space.getServerRoot());
             }
         }
         return result;
+    }
+
+    public List<URI> getRandomServer(List<URI> servers) {
+        List<URI> tmpServers = new ArrayList<>(servers);
+        Collections.shuffle(tmpServers, RandomUtils.secureRandom());
+        return tmpServers;
     }
 
     private boolean isAppInSandbox(String appKey) {
