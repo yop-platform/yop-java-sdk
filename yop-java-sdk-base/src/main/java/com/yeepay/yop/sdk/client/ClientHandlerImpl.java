@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.client;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.netflix.hystrix.*;
 import com.netflix.hystrix.exception.HystrixBadRequestException;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 
 /**
@@ -139,12 +141,14 @@ public class ClientHandlerImpl implements ClientHandler {
                 }
             } catch (Exception e) {// 其他异常
                 handleUnExpectedError(e);
-            } finally {
-                // report
             }
         }
-        // 理论上不会到这里
-        throw new YopClientException("All Hosts Not Available, value:" + endPoints);
+        LOGGER.warn("All Hosts Not Available, value:{}, And Will Try With The 1st One More Time",  endPoints);
+
+        // 再尝试一次
+        Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
+        request.setEndpoint(endPoints.get(0));
+        return doExecute(request, executionContext, executionParams.getResponseHandler());
     }
 
     private void handleUnExpectedError(Exception ex) {
@@ -171,15 +175,15 @@ public class ClientHandlerImpl implements ClientHandler {
         @Override
         protected Output run() throws Exception {
             try {
-                return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
-                        executionContext, responseHandler);
+                return doExecute(request, executionContext, responseHandler);
             } catch (YopHttpException e) {
                 final Throwable rootCause = ExceptionUtils.getRootCause(e);
                 if (null == rootCause) {
                     throw e;
                 }
                 // 当笔重试 (连接异常)
-                if (clientConfiguration.getRetryExceptions().contains(rootCause.getClass().getCanonicalName())) {
+                final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
+                if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), Lists.newArrayList(exType, exType + COLON + exMsg))) {
                     throw new YopHostException("Need Change Host, ", e);
                 }
 
@@ -191,6 +195,11 @@ public class ClientHandlerImpl implements ClientHandler {
             }
         }
 
+    }
+
+    private <Output extends BaseResponse, Input extends BaseRequest> Output doExecute(Request<Input> request, ExecutionContext executionContext, HttpResponseHandler<Output> responseHandler) {
+        return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
+                executionContext, responseHandler);
     }
 
     private HystrixCommand.Setter configToSetter(YopHystrixConfig config, String commandKey) {

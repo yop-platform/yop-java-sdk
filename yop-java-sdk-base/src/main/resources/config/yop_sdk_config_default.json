@@ -12,7 +12,8 @@
     "max_conn_total": 200,
     "max_conn_per_route": 100,
     "retry_exceptions": [
-      "java.net.UnknownHostException"
+      "java.net.UnknownHostException",
+      "java.net.SocketTimeoutException:connect timed out"
     ],
     "max_retry_count": 2,
     "hystrix": {
