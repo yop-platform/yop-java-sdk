@@ -55,7 +55,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
 
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
             3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
-            new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").build(), new ThreadPoolExecutor.CallerRunsPolicy());
+            new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
     protected YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo) {
