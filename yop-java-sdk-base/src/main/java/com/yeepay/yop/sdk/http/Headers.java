@@ -122,4 +122,6 @@ public interface Headers {
 
     String YOP_SIGN_CERT_SERIAL_NO = "x-yop-sign-serial-no";
 
+    String YOP_SERVER_IP = "x-yop-server-ip";
+
 }

@@ -32,5 +32,18 @@
         }
       ]
     }
+  },
+  "yop_report": {
+    "enable": true,
+    "enable_success": true,
+    "min_interval_in_milliseconds": 2000,
+    "interval_in_milliseconds": 30000,
+    "stat_interval_in_milliseconds": 5000,
+    "exclude_exceptions": [],
+    "max_queue_size": 1000,
+    "max_fail_count": 10,
+    "max_fail_count_per_exception": 3,
+    "max_elapsed_time_in_milliseconds": 15000,
+    "max_packet_size": 50
   }
 }

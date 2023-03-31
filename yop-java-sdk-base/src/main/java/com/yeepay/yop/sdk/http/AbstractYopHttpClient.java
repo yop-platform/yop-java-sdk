@@ -6,6 +6,12 @@ package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.ImmutableSet;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
+import com.yeepay.yop.sdk.client.ClientReporter;
+import com.yeepay.yop.sdk.client.metric.event.api.YopHostReqFailEvent;
+import com.yeepay.yop.sdk.client.metric.event.api.YopHostReqSuccessEvent;
+import com.yeepay.yop.sdk.client.metric.event.api.YopHostRequestEvent;
+import com.yeepay.yop.sdk.client.metric.report.api.YopFailDetailItem;
+import com.yeepay.yop.sdk.client.metric.report.api.YopHostRequestStatus;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.internal.Request;
@@ -14,6 +20,7 @@ import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.utils.HttpUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +67,12 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                                                                                    HttpResponseHandler<Output> responseHandler) {
         Output analyzedResponse = null;
         YopHttpResponse httpResponse = null;
+        long beginTime = System.currentTimeMillis();
+        Exception serverEx = null;
         try {
             preExecute(request, executionContext);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Sending Request: {}", request);
+                LOGGER.debug("Sending Request: {}, preElapsed:{}ms", request, System.currentTimeMillis() - beginTime);
             }
             httpResponse = doExecute(request, yopRequestConfig);
             analyzedResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, executionContext));
@@ -71,11 +80,65 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         } catch (YopClientException | YopHttpException e) {
             throw e;
         } catch (Exception e) {
+            serverEx = e;
             throw new YopHttpException("Unable to execute HTTP request, requestId:"
                     + request.getRequestId() + ", apiUri:" + request.getResourcePath(), e);
         } finally {
-            postExecute(analyzedResponse, httpResponse);
+            postExecute(beginTime, request, analyzedResponse, httpResponse, serverEx);
         }
+    }
+
+    /**
+     * 请求后置处理(关闭response)
+     *
+     * @param beginTime 请求开始时间
+     * @param request 请求对象
+     * @param analyzedResponse 响应对象
+     * @param httpResponse http响应
+     * @param serverEx 服务端异常
+     * @param <Input> 请求
+     * @param <Output> 响应
+     */
+    protected <Input extends BaseRequest, Output extends BaseResponse> void postExecute(long beginTime, Request<Input> request, Output analyzedResponse,
+                                                                                      YopHttpResponse httpResponse, Exception serverEx) {
+        try {
+            if (null == serverEx) {
+                ClientReporter.reportHostRequest(toSuccessRequest(request, httpResponse, System.currentTimeMillis() - beginTime));
+            } else {
+                ClientReporter.reportHostRequest(toFailRequest(request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+            }
+            if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
+                httpResponse.close();
+            }
+        } catch (IOException e) {
+            LOGGER.error("error when postExecute, ex:", e);
+        }
+    }
+
+    private <Input extends BaseRequest> YopHostReqSuccessEvent toSuccessRequest(Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
+        final YopHostReqSuccessEvent successEvent = new YopHostReqSuccessEvent();
+        setBasic(successEvent, request, httpResponse, elapsedTime);
+        successEvent.setStatus(YopHostRequestStatus.SUCCESS);
+        successEvent.setData("");
+        return successEvent;
+    }
+
+    private <Input extends BaseRequest> YopHostReqFailEvent toFailRequest(Request<Input> request, YopHttpResponse httpResponse, Exception ex, long elapsedTime) {
+        final YopHostReqFailEvent failEvent = new YopHostReqFailEvent();
+        setBasic(failEvent, request, httpResponse, elapsedTime);
+        failEvent.setStatus(YopHostRequestStatus.FAIL);
+        failEvent.setData(new YopFailDetailItem(ex));
+        return failEvent;
+    }
+
+    private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
+        event.setServerHost(HttpUtils.generateHostHeader(request.getEndpoint()));
+        String serverIp = "";
+        if (null != httpResponse) {
+            serverIp = httpResponse.getHeader(Headers.YOP_SERVER_IP);
+        }
+        event.setServerIp(StringUtils.defaultString(serverIp, ""));
+        event.setElapsedMillis(elapsedTime);
     }
 
     /**
@@ -86,22 +149,6 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      * @return
      */
     protected abstract <Input extends BaseRequest> YopHttpResponse doExecute(Request<Input> request, YopRequestConfig yopRequestConfig) throws IOException;
-
-    /**
-     * 请求后置处理(关闭response)
-     * @param analyzedResponse
-     * @param httpResponse
-     * @param <Output>
-     */
-    protected <Output extends BaseResponse> void postExecute(Output analyzedResponse, YopHttpResponse httpResponse) {
-        try {
-            if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
-                httpResponse.close();
-            }
-        } catch (IOException e) {
-            LOGGER.error("error when postExecute, ex:", e);
-        }
-    }
 
     /**
      * 加密&签名请求
