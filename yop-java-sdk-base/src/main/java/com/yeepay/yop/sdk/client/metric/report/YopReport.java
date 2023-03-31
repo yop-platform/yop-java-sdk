@@ -30,7 +30,7 @@ public interface YopReport extends Serializable {
      *
      * @return string
      */
-    String getVersion();
+    int getVersion();
 
     /**
      * 内容明细
