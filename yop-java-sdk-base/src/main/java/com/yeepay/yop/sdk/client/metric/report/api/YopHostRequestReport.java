@@ -24,7 +24,7 @@ public class YopHostRequestReport implements YopReport {
 
     private String type = "YopHostRequestReport";
 
-    private String version = "1.0.0";
+    private int version = 1;
 
     private YopHostRequestPayload payload;
 
@@ -42,11 +42,11 @@ public class YopHostRequestReport implements YopReport {
     }
 
     @Override
-    public String getVersion() {
+    public int getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
+    public void setVersion(int version) {
         this.version = version;
     }
 
