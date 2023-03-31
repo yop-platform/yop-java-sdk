@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.config;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -42,6 +43,8 @@ public final class YopSdkConfig implements Serializable {
     private String region;
 
     private YopCertStore yopCertStore;
+
+    private YopReportConfig yopReportConfig = new YopReportConfig();
 
     public String getServerRoot() {
         return serverRoot;
@@ -121,6 +124,16 @@ public final class YopSdkConfig implements Serializable {
 
     public void setYopCertStore(YopCertStore yopCertStore) {
         this.yopCertStore = yopCertStore;
+    }
+
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        if (null != yopReportConfig) {
+            this.yopReportConfig = yopReportConfig;
+        }
     }
 
     @Override
