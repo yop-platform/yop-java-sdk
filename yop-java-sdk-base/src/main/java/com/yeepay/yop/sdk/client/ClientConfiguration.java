@@ -176,7 +176,7 @@ public class ClientConfiguration {
 
     private int maxRetryCount = 3;
 
-    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException","java.net.SocketTimeoutException:connect timed out");
+    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException");
 
     private YopHystrixConfig hystrixConfig = YopHystrixConfig.DEFAULT_CONFIG;
 

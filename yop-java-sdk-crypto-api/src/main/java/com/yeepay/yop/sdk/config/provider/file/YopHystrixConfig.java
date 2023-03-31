@@ -5,10 +5,12 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * title: 熔断配置<br>
@@ -222,6 +224,14 @@ public class YopHystrixConfig implements Serializable {
     @JsonProperty("tp_metrics_rolling_stats_num_buckets")
     private int tpMetricsRollingStatsNumBuckets = 10;
     // endregion
+
+    // region yop扩展
+    /**
+     * 非短路异常
+     */
+    @JsonProperty("yop_exclude_exceptions")
+    private Set<String> excludeExceptions = Sets.newHashSet("java.net.SocketTimeoutException:Read timed out");
+    // endRegion
 
 
     public String getCommandKey() {
@@ -462,6 +472,16 @@ public class YopHystrixConfig implements Serializable {
 
     public void setTpMetricsRollingStatsNumBuckets(int tpMetricsRollingStatsNumBuckets) {
         this.tpMetricsRollingStatsNumBuckets = tpMetricsRollingStatsNumBuckets;
+    }
+
+    public Set<String> getExcludeExceptions() {
+        return excludeExceptions;
+    }
+
+    public void setExcludeExceptions(Set<String> excludeExceptions) {
+        if (null != excludeExceptions && excludeExceptions.size() > 0) {
+            this.excludeExceptions = excludeExceptions;
+        }
     }
 
     @Override

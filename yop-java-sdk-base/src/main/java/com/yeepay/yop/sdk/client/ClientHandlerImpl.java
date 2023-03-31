@@ -13,6 +13,7 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
+import com.yeepay.yop.sdk.client.router.RouteUtils;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
 import com.yeepay.yop.sdk.config.provider.file.YopHystrixConfig;
@@ -147,7 +148,7 @@ public class ClientHandlerImpl implements ClientHandler {
 
         // 再尝试一次
         Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-        request.setEndpoint(endPoints.get(0));
+        request.setEndpoint(RouteUtils.randomOne(endPoints));
         return doExecute(request, executionContext, executionParams.getResponseHandler());
     }
 
@@ -181,10 +182,16 @@ public class ClientHandlerImpl implements ClientHandler {
                 if (null == rootCause) {
                     throw e;
                 }
-                // 当笔重试 (连接异常)
+                // 当笔重试 (域名异常)
                 final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
-                if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), Lists.newArrayList(exType, exType + COLON + exMsg))) {
+                final List<String> curException = Lists.newArrayList(exType, exType + COLON + exMsg);
+                if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), curException)) {
                     throw new YopHostException("Need Change Host, ", e);
+                }
+
+                // 不重试，不计入短路
+                if (CollectionUtils.containsAny(clientConfiguration.getHystrixConfig().getExcludeExceptions(), curException)) {
+                    throw new HystrixBadRequestException(getCommandKey() + " Fail, ", e);
                 }
 
                 // 其他异常，计入短路
