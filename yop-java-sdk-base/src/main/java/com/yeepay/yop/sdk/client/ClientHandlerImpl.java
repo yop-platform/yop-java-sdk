@@ -123,9 +123,16 @@ public class ClientHandlerImpl implements ClientHandler {
                 switch (e.getFailureType()) {
                     // 当笔切换，重试
                     case SHORTCIRCUIT:
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Host ShortCircuit, value:{}", endPoint);
+                        }
+                        continue;
                     case REJECTED_THREAD_EXECUTION:
                     case REJECTED_SEMAPHORE_FALLBACK:
                     case REJECTED_SEMAPHORE_EXECUTION:
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("Host CommandRejected, value:{}, reason:{}", endPoint, e.getFailureType());
+                        }
                         continue;
                     case BAD_REQUEST_EXCEPTION:
                         throw new YopClientException(ExceptionUtils.getMessage(e), ExceptionUtils.getRootCause(e));
