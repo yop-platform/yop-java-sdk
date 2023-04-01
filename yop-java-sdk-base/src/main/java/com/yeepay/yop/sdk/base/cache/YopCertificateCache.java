@@ -11,16 +11,16 @@ import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.client.YopGlobalClient;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
-import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.model.cert.YopPlatformCertQueryResult;
 import com.yeepay.yop.sdk.model.cert.YopPlatformPlainCert;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.service.common.YopClient;
-import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.EnvUtils;
@@ -268,7 +268,7 @@ public class YopCertificateCache {
         }
 
         // 该内置client用于YOP通信，实时更新拉取平台证书
-        YOP_CLIENT = YopClientBuilder.builder().build();
+        YOP_CLIENT = YopGlobalClient.getClient();
     }
 
     private static X509Certificate getX509Cert(String certPath, CertTypeEnum certType) {

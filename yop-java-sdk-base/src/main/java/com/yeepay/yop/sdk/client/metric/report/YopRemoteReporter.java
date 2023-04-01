@@ -4,6 +4,14 @@
  */
 package com.yeepay.yop.sdk.client.metric.report;
 
+import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.client.YopGlobalClient;
+import com.yeepay.yop.sdk.service.common.YopClient;
+import com.yeepay.yop.sdk.service.common.request.YopRequest;
+import com.yeepay.yop.sdk.utils.JsonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 /**
@@ -18,18 +26,32 @@ import java.util.List;
  */
 public class YopRemoteReporter implements YopReporter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopRemoteReporter.class);
     public static final YopReporter INSTANCE = new YopRemoteReporter();
     private static final YopReporter BACKUP_REPORTER = YopLocalReporter.INSTANCE;
+    private static final YopClient YOP_CLIENT = YopGlobalClient.getClient();
+    private static final String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
 
     @Override
     public void report(YopReport report) throws YopReportException {
-        // TODO 调用远端
-        BACKUP_REPORTER.report(report);
+        batchReport(Lists.newArrayList(report));
+    }
+
+    private void doRemoteReport(List<YopReport> report) throws Exception {
+        YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
+        // 跳过验签、加解密，使用默认appKey发起请求
+        request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false);
+        request.setContent(JsonUtils.toJsonString(report));
+        YOP_CLIENT.request(request);
     }
 
     @Override
-    public void batchReport(List<YopReport> report) throws YopReportException {
-        // TODO 调用远端
-        BACKUP_REPORTER.batchReport(report);
+    public void batchReport(List<YopReport> reports) throws YopReportException {
+        try {
+            doRemoteReport(reports);
+        } catch (Exception e) {
+            LOGGER.error("Fail To Report Remote, ex:", e);
+            BACKUP_REPORTER.batchReport(reports);
+        }
     }
 }
