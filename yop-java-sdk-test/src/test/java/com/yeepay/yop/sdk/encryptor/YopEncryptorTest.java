@@ -5,25 +5,25 @@
 package com.yeepay.yop.sdk.encryptor;
 
 import com.google.common.base.Charsets;
-import com.yeepay.yop.sdk.BaseTest;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.yeepay.yop.sdk.BaseTest;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm2Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm4Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
@@ -32,13 +32,14 @@ import com.yeepay.yop.sdk.internal.RequestEncryptor;
 import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.security.encrypt.*;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.request.YopRequestMarshaller;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
@@ -46,6 +47,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.slf4j.Logger;
@@ -85,7 +87,8 @@ public class YopEncryptorTest extends BaseTest {
     String specialCharacters;
     YopClient yopClient;
 
-    public YopEncryptorTest() {
+    @Before
+    public void init() {
         try {
             System.setProperty("yop.sdk.config.env", "qa");
             System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
@@ -96,7 +99,7 @@ public class YopEncryptorTest extends BaseTest {
             sm4OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
                     Collections.singletonList(new Sm4Enhancer(appKey)));
             sm2OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
-                    Collections.singletonList(new Sm2Enhancer(appKey)));
+                    Collections.singletonList(new Sm2Enhancer(appKey, "4028129061")));
             encryptOptions = sm2OptionsEnhanced.get();
             specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), YopConstants.DEFAULT_ENCODING);
             yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30228/yop-center")
@@ -198,14 +201,14 @@ public class YopEncryptorTest extends BaseTest {
 
     @Test
     public void yopRequestGet() {
-        YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
-//        request.addParameter("string0", "le1");
-        request.addEncryptParameter("string0", "le1");
+        YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test-param-parse/obj-result", "GET");
+//        request.addParameter("string0", "test_wdc");
+        request.addEncryptParameter("strParam", "xxx");
         request.getRequestConfig().setAppKey("app_15958159879157110002")
 //                .setNeedEncrypt(false).setTotalEncrypt(false)
         ;
         YopResponse response = yopClient.request(request);
-        Assert.assertTrue(((Map) response.getResult()).get("id").equals(94));
+        Assert.assertEquals("你好", response.getResult());
     }
 
     @Test
@@ -307,8 +310,8 @@ public class YopEncryptorTest extends BaseTest {
 
     @Test
     public void yopRequestRsa() {
-        YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
-        request.addParameter("string0", "le1");
+        YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test-param-parse/obj-result", "GET");
+        request.addParameter("strParam", "hello");
         request.getRequestConfig().setAppKey("app_100400394480007").setSecurityReq("YOP-RSA2048-SHA256")
                 .setCredentials(new YopPKICredentials("app_100400394480007", new PKICredentialsItem((PrivateKey)
                         YopCertParserFactory.getCertParser(YopCertParserFactory.getParserId(YopCertCategory.PRIVATE, CertTypeEnum.RSA2048)).parse(
@@ -316,7 +319,7 @@ public class YopEncryptorTest extends BaseTest {
                                 .withValue("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCBNpSF9EonuJIGGroquixMHf1dZqqfdf+Y5/9mQF2oNWDd7sdSIszPs7VV3FrMxJzEuER5SSgMhUY2wbnGoWjUqWu4NwRn+WPSsAgmKOl3WimSSaa857BO/VQEZb8HlOcgixDAoBc7Zaao9YniL7wBS7X3GtQ4efUYa/vmKMGM7cKXzuXM+2PxEfq43iSwfluoxhc3kDgv7t0DUciBm4TiSrIgRHCb0VlCtfuAo13DHdovis/sgtdUtUIuFrw5kSzNomJn47RdFEQrHMnoA1LgDvadd9CEG6N6o8FakC/fZUXYXW/JNWygqT7FI6JMdTZcFgxP1UhsjmE+kkTJ5bqJAgMBAAECggEAOpyngpvth1cR5fL5v6fzsBNqepO3kd3Us2eJUrifw01zQzis8XUXsp+yAeCSz4/gDNwJM3sbz5Ik53G484EELHMticJrHT7jKQ7wo16riJg9gz4lhEsUjsAa/GOq46WHshti3f3AjBDwKHQ4t4EvpubRA+YHnha0Nv/EpAKYyXPmBCnmHM8eSUcqZCPU7JBC/ukv7/iXjT9gMA/Oe6gL/Mzx7mlPjIk7Mq7CH/Fak8pCqKpM0LuY7DBhDCl4PcqgHxGmhjLUwYuOSMnijXRBXg4YkZ/k8FFY8SldIqkDqGT7BlcgNhvUXH5LNgMHBiAXpMMKoPgm3oRPjGtMzxYAAQKBgQDq3pphzj7YiUAgI5FaTLXjcKb3GcKElePFG8GfXGumOOYTVDlhMuQkthHWbBZfAauMVi3EIv05eEhNdsWyBmNWzdT73+48mdP7cm9zCS1ROotHM8/pV/8vwcDFrwnk35opOzln7f0xzlZenkz0thPYJ1gx6fYzmr3C5HWU9bGnAQKBgQCM1o210IjH0d2IpJvwAEJpNULSML57D4Mfw1OMhosEGMg/fdLcyxcGSiTuHcCSsJhqEb4is64KpGfhu1wGR4vSVVmdcFFGQtXHlOvLglNCzDxlAzXme0gv6V3DE1wTvHsrHw0aNIluaxoK9wsPnBseO60vyeCqzq/7Esj5LXZbiQKBgBxFuY3Gdvg35Vk5Dtkw3MBJIkAigLDXHjju82rMhETZGpD/FX0m1CG7LQCDuFmtaMoW4aF3mMXfPczdXETm0fR0CIxdU19GISdmihXt59+cTYG/sepj5lsIVr01Kdq8M+F8uJdTJaRmMy1mntriRBdD/TDc+f8SRH9+Ys0QmlcBAoGAJGSg09WiMrhZXaDjpr36a0NXFAeCgTw97uxDX7G4pINe44E5BtL4DSkFp/5KL92wVOBm2ILDu35GVb9bhUfhqqVhddx7NAO7SEqEL99qcn1iMdwFhpxex/quvuT2yybOURNCCH6A8OZ+IU07L3pwS3yyQQISqzCjquZsxm7oAbkCgYEAl3B1K3m5DxTWmcmjidhyJhWLwBKLh2lgpdtuWoAs6qwfI9ycZmGy3e/drOI86nrqlOyoP6xsV7V9DK1Pu4xCE4h2YXKtNvtYHN2bCFRA5PqbtiSEHYJsV2j33VuMkyXZP7yTO0tPuntI+8xd5vBn7E1hKyF+4F+Ts2N/ZHA0q9g=")),
                         CertTypeEnum.RSA2048)));
         YopResponse response = yopClient.request(request);
-        Assert.assertTrue(((Map) response.getResult()).get("id").equals(94));
+        Assert.assertEquals("你好", response.getResult());
     }
 
     private void formSingleParamEncrypt() throws Exception {

@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * @since 2018/8/17 15:48
  */
 public class CheckUtils {
-    private static final Pattern API_URI_PATTERN = Pattern.compile("/(rest|yos)/.+");
+    private static final Pattern API_URI_PATTERN = Pattern.compile("/((rest|yos)/.+)?");
 
     /**
      * 校验sdk配置
