@@ -22,7 +22,6 @@ import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.security.cert.YopPublicKey;
-import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -135,7 +134,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
         if (StringUtils.isNotBlank(yopCertStore.getPath()) && BooleanUtils.isTrue(yopCertStore.getEnable())) {
             try {
                 String filename = yopCertStore.getPath() + "/" + YOP_SM_PLATFORM_CERT_PREFIX + serialNo + YOP_PLATFORM_CERT_POSTFIX;
-                if ((absolutePath && !new File(filename).exists())) {
+                if (absolutePath && !new File(filename).exists()) {
                     LOGGER.warn("wrong file path for sm2 cert, serialNo:{}, path:{}", serialNo, filename);
                     return certMap;
                 }

@@ -1,7 +1,6 @@
 package com.yeepay.yop.sdk.client;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.netflix.hystrix.*;
 import com.netflix.hystrix.exception.HystrixBadRequestException;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
@@ -40,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
@@ -143,8 +141,7 @@ public class ClientHandlerImpl implements ClientHandler {
                         if (e.getCause() instanceof YopHttpException) {
                             throw (YopHttpException) e.getCause();
                         }
-                    case TIMEOUT:// 超时、或其他未知异常不再重试
-                    default:
+                    default: // 超时、或其他未知异常不再重试
                         handleUnExpectedError(e);
                 }
             } catch (Exception e) {// 其他异常
@@ -163,8 +160,6 @@ public class ClientHandlerImpl implements ClientHandler {
         LOGGER.error("UnExpected Error, ex:", ex);
         throw new YopServerException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
     }
-
-    private static Set<String> RETRY_EXCEPTIONS = Sets.newHashSet("java.net.UnknownHostException");
 
     public class ClientExecuteCommand<Input extends BaseRequest, Output extends BaseResponse> extends HystrixCommand<Output> {
 
