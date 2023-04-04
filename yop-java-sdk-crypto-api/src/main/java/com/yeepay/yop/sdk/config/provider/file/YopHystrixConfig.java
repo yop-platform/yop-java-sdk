@@ -28,20 +28,7 @@ public class YopHystrixConfig implements Serializable {
 
     public static final YopHystrixConfig DEFAULT_CONFIG = new YopHystrixConfig();
 
-    public YopHystrixConfig() {
-    }
-
-    public YopHystrixConfig(String commandKey) {
-        this.commandKey = commandKey;
-    }
-
     // 命令、分组、线程池
-    /**
-     * 命令键：该值会关联到断路器
-     */
-    @JsonProperty("command_key")
-    private String commandKey = "ALL_SERVER_ROOTS";
-
     /**
      * 命令分组
      */
@@ -59,7 +46,7 @@ public class YopHystrixConfig implements Serializable {
      * 隔离策略：线程(与调用线程隔离)
      */
     @JsonProperty("execution_isolation_strategy")
-    private String executionIsolationStrategy = "THREAD";
+    private String executionIsolationStrategy = "SEMAPHORE";
 
     /**
      * 启用超时熔断
@@ -91,7 +78,7 @@ public class YopHystrixConfig implements Serializable {
      * 默认10
      */
     @JsonProperty("execution_isolation_semaphore_max_concurrent_requests")
-    private int executionIsolationSemaphoreMaxConcurrentRequests = 100;
+    private int executionIsolationSemaphoreMaxConcurrentRequests = 2000;
     // endregion
 
     // region 断路器
@@ -232,15 +219,6 @@ public class YopHystrixConfig implements Serializable {
     @JsonProperty("yop_exclude_exceptions")
     private Set<String> excludeExceptions = Sets.newHashSet("java.net.SocketTimeoutException:Read timed out");
     // endRegion
-
-
-    public String getCommandKey() {
-        return commandKey;
-    }
-
-    public void setCommandKey(String commandKey) {
-        this.commandKey = commandKey;
-    }
 
     public String getGroupKey() {
         return groupKey;

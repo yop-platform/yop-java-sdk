@@ -101,9 +101,10 @@ public class ClientHandlerImpl implements ClientHandler {
     private <Input extends BaseRequest, Output extends BaseResponse> Output executeWithRetry(ClientExecutionParams<Input, Output> executionParams,
                                                                                              ExecutionContext executionContext, List<URI> endPoints) {
         int retryCount = 0;
+        Exception lastEx = null;
         for (URI endPoint : endPoints) {
             if (retryCount++ > clientConfiguration.getMaxRetryCount()) {
-                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount());
+                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount(), lastEx);
             }
             Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
             request.setEndpoint(endPoint);
@@ -115,9 +116,14 @@ public class ClientHandlerImpl implements ClientHandler {
                         configToSetter(clientConfiguration.getHystrixConfig(), StringUtils.substringBefore(endPoint.toString(), "?")),
                         executionContext, request, executionParams.getResponseHandler()).execute();
             } catch (HystrixBadRequestException e) {// 客户端异常
+                lastEx = e;
                 LOGGER.error("Client Error, ex:", e);
-                throw (YopClientException) e.getCause();
+                if (e.getCause() instanceof YopClientException) {
+                    throw (YopClientException) e.getCause();
+                }
+                throw e;
             } catch (HystrixRuntimeException e) {// Hystrix异常
+                lastEx = e;
                 switch (e.getFailureType()) {
                     // 当笔切换，重试
                     case SHORTCIRCUIT:
@@ -145,10 +151,11 @@ public class ClientHandlerImpl implements ClientHandler {
                         handleUnExpectedError(e);
                 }
             } catch (Exception e) {// 其他异常
+                lastEx = e;
                 handleUnExpectedError(e);
             }
         }
-        LOGGER.warn("All Hosts Not Available, value:{}, And Will Try With The 1st One More Time",  endPoints);
+        LOGGER.warn("All Hosts Not Available, value:{}, And Will Try One More Time Randomly",  endPoints);
 
         // 再尝试一次
         Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
