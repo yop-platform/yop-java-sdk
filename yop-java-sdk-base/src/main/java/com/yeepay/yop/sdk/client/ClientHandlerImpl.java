@@ -134,10 +134,8 @@ public class ClientHandlerImpl implements ClientHandler {
                     case REJECTED_THREAD_EXECUTION:
                     case REJECTED_SEMAPHORE_FALLBACK:
                     case REJECTED_SEMAPHORE_EXECUTION:
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("Host CommandRejected, value:{}, reason:{}", endPoint, e.getFailureType());
-                        }
-                        continue;
+                        // 理论上不会到这里
+                        throw new YopClientException("Host CommandRejected, value:" + endPoint, e);
                     case BAD_REQUEST_EXCEPTION:
                         throw new YopClientException(ExceptionUtils.getMessage(e), ExceptionUtils.getRootCause(e));
                     case COMMAND_EXCEPTION:
