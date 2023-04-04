@@ -1,14 +1,18 @@
 package com.yeepay.yop.sdk.client.router;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.client.router.enums.ModeEnum;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,10 +43,20 @@ public class SimpleGateWayRouter implements GateWayRouter {
         this.systemMode = StringUtils.isEmpty(systemModeConfig) ? null : ModeEnum.valueOf(systemModeConfig);
     }
 
+    /**
+     * 动态指定请求服务器地址
+     *
+     * @param appKey  appKey
+     * @param request 请求
+     * @return 服务器地址
+     */
     @Override
-    public URI route(String appKey, Request request) {
+    public URI route(String appKey, Request<?> request) {
+        final YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
         URI serverRoot;
-        if (isAppInSandbox(appKey)) {
+        if (StringUtils.isNotBlank(requestConfig.getServerRoot())) {
+            serverRoot = CheckUtils.checkServerRoot(requestConfig.getServerRoot());
+        } else if (isAppInSandbox(appKey)) {
             serverRoot = space.getSandboxServerRoot();
         } else {
             serverRoot = request.isYosRequest() ? space.getYosServerRoot() : space.getServerRoot();
@@ -59,6 +73,42 @@ public class SimpleGateWayRouter implements GateWayRouter {
             }
         }
         return serverRoot;
+    }
+
+    @Override
+    public List<URI> routes(String appKey, Request<?> request) {
+        final YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
+        List<URI> result = Lists.newArrayList();
+        if (StringUtils.isNotBlank(requestConfig.getServerRoot())) {
+            URI serverRoot = CheckUtils.checkServerRoot(requestConfig.getServerRoot());
+            result.add(serverRoot);
+        } else if (isAppInSandbox(appKey)) {
+            URI serverRoot = space.getSandboxServerRoot();
+            result.add(serverRoot);
+        } else {
+            //独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原
+            String apiGroup = request.getServiceName().toLowerCase().replace(CharacterConstants.UNDER_LINE, CharacterConstants.DASH_LINE);
+            if (independentApiGroups.contains(apiGroup)) {
+                try {
+                    URI serverRoot = request.isYosRequest() ? space.getYosServerRoot() : space.getServerRoot();
+                    return Lists.newArrayList(new URI(serverRoot.getScheme(), serverRoot.getUserInfo(),
+                            getIndependentApiGroupHost(apiGroup, serverRoot.getHost(), request.isYosRequest()),
+                            serverRoot.getPort(), serverRoot.getPath(), serverRoot.getQuery(), serverRoot.getFragment()));
+                } catch (Exception ex) {
+                    throw new YopClientException("route request failure", ex);
+                }
+            }
+
+            // 非独立网关
+            if (request.isYosRequest()) {
+                result.addAll(RouteUtils.randomList(space.getPreferredYosEndPoint()));
+                result.add(space.getYosServerRoot());
+            } else {
+                result.addAll(RouteUtils.randomList(space.getPreferredEndPoint()));
+                result.add(space.getServerRoot());
+            }
+        }
+        return result;
     }
 
     private boolean isAppInSandbox(String appKey) {

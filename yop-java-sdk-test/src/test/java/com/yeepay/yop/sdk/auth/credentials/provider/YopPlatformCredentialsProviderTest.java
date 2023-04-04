@@ -48,7 +48,11 @@ public class YopPlatformCredentialsProviderTest {
         Assert.assertNotNull(rsaPlatformCredentials);
         Assert.assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        final CredentialsItem sm2PlatformCredentials = provider.getCredentials("", "275550212193").getCredential();
+        CredentialsItem sm2PlatformCredentials = provider.getCredentials("", "4028129061").getCredential();
+        Assert.assertNotNull(sm2PlatformCredentials);
+        Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
+
+        sm2PlatformCredentials = provider.getCredentials("", "4052988765").getCredential();
         Assert.assertNotNull(sm2PlatformCredentials);
         Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }

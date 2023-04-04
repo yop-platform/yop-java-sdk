@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
-import com.yeepay.yop.sdk.exception.YopServiceException;
+import com.yeepay.yop.sdk.exception.YopCallbackException;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.Encodes;
@@ -87,7 +87,7 @@ public enum YopEncryptProtocol {
             }
             return Collections.emptySet();
         } catch (UnsupportedEncodingException e) {
-            throw new YopServiceException("error when parse encrypt protocol, ex:", e);
+            throw new YopCallbackException("error when parse encrypt protocol, ex:", e);
         }
     }
 

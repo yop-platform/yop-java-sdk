@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * title: <br>
@@ -46,6 +47,15 @@ public final class YopHttpClientConfig implements Serializable {
 
     @JsonProperty("client_impl")
     private String clientImpl;
+
+    @JsonProperty("retry_exceptions")
+    private Set<String> retryExceptions;
+
+    @JsonProperty("max_retry_count")
+    private int maxRetryCount;
+
+    @JsonProperty("hystrix")
+    private YopHystrixConfig hystrix;
 
     public int getConnectTimeout() {
         return connectTimeout;
@@ -93,6 +103,30 @@ public final class YopHttpClientConfig implements Serializable {
 
     public void setClientImpl(String clientImpl) {
         this.clientImpl = clientImpl;
+    }
+
+    public Set<String> getRetryExceptions() {
+        return retryExceptions;
+    }
+
+    public void setRetryExceptions(Set<String> retryExceptions) {
+        this.retryExceptions = retryExceptions;
+    }
+
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
+    }
+
+    public YopHystrixConfig getHystrix() {
+        return hystrix;
+    }
+
+    public void setHystrix(YopHystrixConfig hystrix) {
+        this.hystrix = hystrix;
     }
 
     @Override

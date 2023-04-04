@@ -1,14 +1,18 @@
 package com.yeepay.yop.sdk.client;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.Region;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.config.provider.file.YopHystrixConfig;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.http.RetryPolicy;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.InetAddress;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -155,11 +159,6 @@ public class ClientConfiguration {
     private int socketBufferSizeInBytes = 0;
 
     /**
-     * The service endpoint URL to which the client will connect.
-     */
-    private String endpoint = null;
-
-    /**
      * The region of service. This value is used by the client to construct the endpoint URL automatically, and is
      * ignored if endpoint is not null.
      */
@@ -174,6 +173,12 @@ public class ClientConfiguration {
      * The http client impl
      */
     private String clientImpl = YOP_HTTP_CLIENT_IMPL_DEFAULT;
+
+    private int maxRetryCount = 3;
+
+    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException");
+
+    private YopHystrixConfig hystrixConfig = YopHystrixConfig.DEFAULT_CONFIG;
 
     // Initialize DEFAULT_USER_AGENT
     static {
@@ -222,40 +227,12 @@ public class ClientConfiguration {
         this.socketTimeoutInMillis = other.socketTimeoutInMillis;
         this.userAgent = other.userAgent;
         this.socketBufferSizeInBytes = other.socketBufferSizeInBytes;
-        this.endpoint = other.endpoint;
         this.region = other.region;
         this.credentials = other.credentials;
         this.clientImpl = other.clientImpl;
-    }
-
-    /**
-     * Constructs a new ClientConfiguration instance with the same settings as the specified configuration.
-     * This constructor is used to create a client configuration from one SDK to another SDK. e.g. from VOD to YOS.
-     * In this case endpoint should be changed while other attributes keep same.
-     *
-     * @param other    the configuration to copy settings from.
-     * @param endpoint the endpoint
-     */
-    public ClientConfiguration(ClientConfiguration other, String endpoint) {
-        this.endpoint = endpoint;
-        this.connectionTimeoutInMillis = other.connectionTimeoutInMillis;
-        this.maxConnections = other.maxConnections;
-        this.retryPolicy = other.retryPolicy;
-        this.localAddress = other.localAddress;
-        this.protocol = other.protocol;
-        this.proxyDomain = other.proxyDomain;
-        this.proxyHost = other.proxyHost;
-        this.proxyPassword = other.proxyPassword;
-        this.proxyPort = other.proxyPort;
-        this.proxyUsername = other.proxyUsername;
-        this.proxyWorkstation = other.proxyWorkstation;
-        this.proxyPreemptiveAuthenticationEnabled = other.proxyPreemptiveAuthenticationEnabled;
-        this.socketTimeoutInMillis = other.socketTimeoutInMillis;
-        this.userAgent = other.userAgent;
-        this.socketBufferSizeInBytes = other.socketBufferSizeInBytes;
-        this.region = other.region;
-        this.credentials = other.credentials;
-        this.clientImpl = other.clientImpl;
+        this.maxRetryCount = other.maxRetryCount;
+        this.retryExceptions = other.retryExceptions;
+        this.hystrixConfig = other.hystrixConfig;
     }
 
     /**
@@ -843,47 +820,6 @@ public class ClientConfiguration {
     }
 
     /**
-     * Returns the service endpoint URL to which the client will connect.
-     *
-     * @return the service endpoint URL to which the client will connect.
-     */
-    public String getEndpoint() {
-        String url = this.endpoint;
-        // if the set endpoint does not contain a protocol, append protocol to head of it
-        if (this.endpoint != null && this.endpoint.length() > 0
-                && endpoint.indexOf("://") < 0) {
-            url = protocol.toString().toLowerCase() + "://" + endpoint;
-        }
-        return url;
-    }
-
-    /**
-     * Sets the service endpoint URL to which the client will connect.
-     *
-     * @param endpoint the service endpoint URL to which the client will connect.
-     * @throws IllegalArgumentException if endpoint is not a valid URL.
-     * @throws NullPointerException     if endpoint is null.
-     */
-    public void setEndpoint(String endpoint) {
-        checkNotNull(endpoint, "endpoint should not be null.");
-
-        this.endpoint = endpoint;
-    }
-
-    /**
-     * Sets the service endpoint URL to which the client will connect, and returns the updated configuration instance.
-     *
-     * @param endpoint the service endpoint URL to which the client will connect.
-     * @return the updated configuration instance.
-     * @throws IllegalArgumentException if endpoint is not a valid URL.
-     * @throws NullPointerException     if endpoint is null.
-     */
-    public ClientConfiguration withEndpoint(String endpoint) {
-        this.setEndpoint(endpoint);
-        return this;
-    }
-
-    /**
      * Returns the region of service. This value is used by the client to construct the endpoint URL automatically, and
      * is ignored if endpoint is not null.
      *
@@ -985,6 +921,51 @@ public class ClientConfiguration {
         return this;
     }
 
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        if (maxRetryCount > 0) {
+            this.maxRetryCount = maxRetryCount;
+        }
+    }
+
+    public ClientConfiguration withMaxRetryCount(int maxRetryCount) {
+        setMaxRetryCount(maxRetryCount);
+        return this;
+    }
+
+    public Set<String> getRetryExceptions() {
+        return retryExceptions;
+    }
+
+    public void setRetryExceptions(Set<String> retryExceptions) {
+        if (CollectionUtils.isNotEmpty(retryExceptions)) {
+            this.retryExceptions = retryExceptions;
+        }
+    }
+
+    public ClientConfiguration withRetryExceptions(Set<String> retryExceptions) {
+        setRetryExceptions(retryExceptions);
+        return this;
+    }
+
+    public YopHystrixConfig getHystrixConfig() {
+        return hystrixConfig;
+    }
+
+    public void setHystrixConfig(YopHystrixConfig hystrixConfig) {
+        if (null != hystrixConfig) {
+            this.hystrixConfig = hystrixConfig;
+        }
+    }
+
+    public ClientConfiguration withHystrixConfig(YopHystrixConfig hystrixConfig) {
+        setHystrixConfig(hystrixConfig);
+        return this;
+    }
+
     @Override
     public String toString() {
         return "ClientConfiguration [ \n  userAgent=" + userAgent
@@ -999,9 +980,13 @@ public class ClientConfiguration {
                 + maxConnections + ", \n  socketTimeoutInMillis="
                 + socketTimeoutInMillis + ", \n  connectionTimeoutInMillis="
                 + connectionTimeoutInMillis + ", \n  socketBufferSizeInBytes="
-                + socketBufferSizeInBytes + ", \n  endpoint=" + endpoint
-                + ", \n  region=" + region + ", \n  credentials=" + credentials
-                + ", \n  clientImpl=" + clientImpl + "]\n";
+                + socketBufferSizeInBytes + ", \n  region="
+                + region + ", \n  credentials="
+                + credentials + ", \n  clientImpl="
+                + clientImpl + ", \n  maxRetryCount="
+                + maxRetryCount + ", \n  retryExceptions="
+                + retryExceptions + ", \n  hystrixConfig="
+                + hystrixConfig + "]\n";
     }
 
 }

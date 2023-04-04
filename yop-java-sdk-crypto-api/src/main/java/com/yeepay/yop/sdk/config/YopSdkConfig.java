@@ -7,6 +7,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * title: SDK配置(新版本)<br>
@@ -25,6 +26,10 @@ public final class YopSdkConfig implements Serializable {
     private String serverRoot;
 
     private String yosServerRoot;
+
+    private List<String> preferredServerRoots;
+
+    private List<String> preferredYosServerRoots;
 
     private String sandboxServerRoot;
 
@@ -52,6 +57,22 @@ public final class YopSdkConfig implements Serializable {
 
     public void setYosServerRoot(String yosServerRoot) {
         this.yosServerRoot = yosServerRoot;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    public void setPreferredServerRoots(List<String> preferredServerRoots) {
+        this.preferredServerRoots = preferredServerRoots;
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    public void setPreferredYosServerRoots(List<String> preferredYosServerRoots) {
+        this.preferredYosServerRoots = preferredYosServerRoots;
     }
 
     public String getSandboxServerRoot() {

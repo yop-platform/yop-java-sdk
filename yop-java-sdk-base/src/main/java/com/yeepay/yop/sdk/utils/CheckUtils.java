@@ -1,12 +1,15 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.exception.config.MissingConfigException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.util.regex.Pattern;
 
 /**
  * title: 校验工具<br>
@@ -19,6 +22,7 @@ import java.net.URL;
  * @since 2018/8/17 15:48
  */
 public class CheckUtils {
+    private static final Pattern API_URI_PATTERN = Pattern.compile("/((rest|yos)/.+)?");
 
     /**
      * 校验sdk配置
@@ -50,6 +54,39 @@ public class CheckUtils {
                 throw new IllegalConfigFormatException("sandboxServerRoot", "sandboxServerRoot is illegal");
             }
         }
+    }
+
+    /**
+     * 校验apiUri
+     *
+     * @param apiUri 请求接口路径
+     */
+    public static void checkApiUri(String apiUri) {
+        if (StringUtils.isNotBlank(apiUri) && API_URI_PATTERN.matcher(apiUri).matches()) {
+            return;
+        }
+        throw new YopClientException("apiUri is illegal, param:" + apiUri);
+    }
+
+    /**
+     * 校验serverRoot
+     *
+     * @param serverRoot 请求服务器根路径
+     */
+    public static URI checkServerRoot(String serverRoot) {
+        if (null == serverRoot) {
+            return null;
+        }
+        final URI uri;
+        try {
+            uri = new URI(serverRoot);
+        } catch (Exception e) {
+            throw new YopClientException("request serverRoot is illegal, value:" + serverRoot);
+        }
+        if (!StringUtils.equalsAny(uri.getScheme(), "http", "https")) {
+            throw new YopClientException("unsupported request scheme, value:" + uri.getScheme());
+        }
+        return uri;
     }
 
 }

@@ -29,8 +29,8 @@ public class YopCertificateCacheTest {
         System.setProperty("yop.sdk.config.env", "qa");
         System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
         final YopCredentialsProvider provider = YopCredentialsProviderRegistry.getProvider();
-        final X509Certificate byAppKey = YopCertificateCache.loadPlatformSm2Certs("app_15958159879157110002", "").get(0);
-        final X509Certificate byDefault = YopCertificateCache.loadPlatformSm2Certs(provider.getDefaultAppKey(), "").get(0);
+        final X509Certificate byAppKey = YopCertificateCache.loadPlatformSm2Certs("app_15958159879157110002", "4028129061").get(0);
+        final X509Certificate byDefault = YopCertificateCache.loadPlatformSm2Certs(provider.getDefaultAppKey(), "4028129061").get(0);
         Assert.assertNotNull(byAppKey);
         Assert.assertNotNull(byDefault);
         Assert.assertEquals(byAppKey, byDefault);

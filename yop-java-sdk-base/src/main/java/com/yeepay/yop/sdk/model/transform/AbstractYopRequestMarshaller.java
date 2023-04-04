@@ -52,6 +52,7 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
                     if (value instanceof File) {
                         internalRequest.addMultiPartFile(name, (File) value);
                     } else if (value instanceof InputStream) {
+                        resetStreamIfNecessary((InputStream) value);
                         internalRequest.addMultiPartFile(name, (InputStream) value);
                     } else {
                         throw new YopClientException("Unexpected file parameter type, name:" + name + ", type:" + value.getClass() + ".");
@@ -68,7 +69,9 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
                 internalRequest.setContentType(YopContentType.JSON);
             } else if (request.getContent() instanceof InputStream) {
                 //3、单文件流式上传
-                internalRequest.setContent((InputStream) request.getContent());
+                final InputStream content = (InputStream) request.getContent();
+                resetStreamIfNecessary((InputStream) request.getContent());
+                internalRequest.setContent(content);
                 internalRequest.setContentType(YopContentType.OCTET_STREAM);
             }
         } else {
@@ -81,6 +84,12 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
             internalRequest.addHeader(Headers.CONTENT_TYPE, internalRequest.getContentType().getValue());
         }
         return internalRequest;
+    }
+
+    private void resetStreamIfNecessary(InputStream content) {
+        if (content instanceof RestartableInputStream) {
+            ((RestartableInputStream) content).restart();
+        }
     }
 
     protected abstract Request<YopRequest> initRequest(YopRequest request);
