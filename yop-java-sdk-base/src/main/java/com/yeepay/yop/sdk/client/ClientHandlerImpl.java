@@ -19,7 +19,7 @@ import com.yeepay.yop.sdk.config.provider.file.YopHystrixConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHostException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
-import com.yeepay.yop.sdk.exception.YopServerException;
+import com.yeepay.yop.sdk.exception.YopUnknownException;
 import com.yeepay.yop.sdk.http.ExecutionContext;
 import com.yeepay.yop.sdk.http.HttpResponseHandler;
 import com.yeepay.yop.sdk.http.YopHttpClient;
@@ -104,33 +104,60 @@ public class ClientHandlerImpl implements ClientHandler {
         Exception lastEx = null;
         for (URI endPoint : endPoints) {
             if (retryCount++ > clientConfiguration.getMaxRetryCount()) {
-                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount(), lastEx);
+                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount() + ",lastEx:", lastEx);
             }
+            try {
+                return new YopHystrixCircuitBreaker().execute(endPoint, executionParams, executionContext);
+            } catch (YopHostException e) {
+                lastEx = e;
+                continue;
+            }
+        }
+
+        // 再尝试一次
+        LOGGER.warn("All Hosts Not Available, value:{}, And Will Try One More Time Randomly",  endPoints);
+        Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
+        request.setEndpoint(RouteUtils.randomOne(endPoints));
+        return doExecute(request, executionContext, executionParams.getResponseHandler());
+    }
+
+    private interface YopCircuitBreaker {
+
+        <Input extends BaseRequest, Output extends BaseResponse> Output execute(URI endPoint,
+                                                                                ClientExecutionParams<Input, Output> executionParams,
+                                                                                ExecutionContext executionContext);
+    }
+
+    private class YopHystrixCircuitBreaker implements YopCircuitBreaker {
+
+        @Override
+        public <Input extends BaseRequest, Output extends BaseResponse> Output execute(URI endPoint,
+                                                                                               ClientExecutionParams<Input, Output> executionParams,
+                                                                                               ExecutionContext executionContext) {
             Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
             request.setEndpoint(endPoint);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Trying Host, value:{}", endPoint);
             }
+
             try {
                 return new ClientExecuteCommand<Input, Output>(
                         configToSetter(clientConfiguration.getHystrixConfig(), StringUtils.substringBefore(endPoint.toString(), "?")),
                         executionContext, request, executionParams.getResponseHandler()).execute();
             } catch (HystrixBadRequestException e) {// 客户端异常
-                lastEx = e;
                 LOGGER.error("Client Error, ex:", e);
                 if (e.getCause() instanceof YopClientException) {
                     throw (YopClientException) e.getCause();
                 }
-                throw e;
+                throw new YopClientException("Client Error, ex:", e);
             } catch (HystrixRuntimeException e) {// Hystrix异常
-                lastEx = e;
                 switch (e.getFailureType()) {
                     // 当笔切换，重试
                     case SHORTCIRCUIT:
                         if (LOGGER.isDebugEnabled()) {
                             LOGGER.debug("Host ShortCircuit, value:{}", endPoint);
                         }
-                        continue;
+                        throw new YopHostException("Host ShortCircuit, ex:", e);
                     case REJECTED_THREAD_EXECUTION:
                     case REJECTED_SEMAPHORE_FALLBACK:
                     case REJECTED_SEMAPHORE_EXECUTION:
@@ -140,7 +167,7 @@ public class ClientHandlerImpl implements ClientHandler {
                         throw new YopClientException(ExceptionUtils.getMessage(e), ExceptionUtils.getRootCause(e));
                     case COMMAND_EXCEPTION:
                         if (e.getCause() instanceof YopHostException) {
-                            continue;
+                            throw (YopHostException) e.getCause();
                         }
                         if (e.getCause() instanceof YopHttpException) {
                             throw (YopHttpException) e.getCause();
@@ -149,21 +176,15 @@ public class ClientHandlerImpl implements ClientHandler {
                         handleUnExpectedError(e);
                 }
             } catch (Exception e) {// 其他异常
-                lastEx = e;
                 handleUnExpectedError(e);
             }
+            return null;
         }
-        LOGGER.warn("All Hosts Not Available, value:{}, And Will Try One More Time Randomly",  endPoints);
-
-        // 再尝试一次
-        Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-        request.setEndpoint(RouteUtils.randomOne(endPoints));
-        return doExecute(request, executionContext, executionParams.getResponseHandler());
     }
 
     private void handleUnExpectedError(Exception ex) {
         LOGGER.error("UnExpected Error, ex:", ex);
-        throw new YopServerException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
+        throw new YopUnknownException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
     }
 
     public class ClientExecuteCommand<Input extends BaseRequest, Output extends BaseResponse> extends HystrixCommand<Output> {
