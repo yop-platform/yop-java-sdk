@@ -32,6 +32,11 @@ public class YopHystrixConfig implements Serializable {
     /**
      * 命令分组
      */
+    @JsonProperty("circuit_breaker")
+    private String circuitBreaker = "sentinel";
+    /**
+     * 命令分组
+     */
     @JsonProperty("group_key")
     private String groupKey = "YOP_SERVER_ROOT";
 
@@ -101,6 +106,12 @@ public class YopHystrixConfig implements Serializable {
      */
     @JsonProperty("circuit_breaker_error_threshold_percentage")
     private int circuitBreakerErrorThresholdPercentage = 50;
+
+    /**
+     * 错误量阈值(达到该值，进入熔断)
+     */
+    @JsonProperty("circuit_breaker_error_threshold_count")
+    private int circuitBreakerErrorThresholdCount = 3;
 
     /**
      * 熔断时长(毫秒，该窗口期后，会进入半开)
@@ -220,6 +231,15 @@ public class YopHystrixConfig implements Serializable {
     private Set<String> excludeExceptions = Sets.newHashSet("java.net.SocketTimeoutException:Read timed out");
     // endRegion
 
+
+    public String getCircuitBreaker() {
+        return circuitBreaker;
+    }
+
+    public void setCircuitBreaker(String circuitBreaker) {
+        this.circuitBreaker = circuitBreaker;
+    }
+
     public String getGroupKey() {
         return groupKey;
     }
@@ -306,6 +326,14 @@ public class YopHystrixConfig implements Serializable {
 
     public void setCircuitBreakerErrorThresholdPercentage(int circuitBreakerErrorThresholdPercentage) {
         this.circuitBreakerErrorThresholdPercentage = circuitBreakerErrorThresholdPercentage;
+    }
+
+    public int getCircuitBreakerErrorThresholdCount() {
+        return circuitBreakerErrorThresholdCount;
+    }
+
+    public void setCircuitBreakerErrorThresholdCount(int circuitBreakerErrorThresholdCount) {
+        this.circuitBreakerErrorThresholdCount = circuitBreakerErrorThresholdCount;
     }
 
     public int getCircuitBreakerSleepWindowInMilliseconds() {

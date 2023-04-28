@@ -1,5 +1,9 @@
 package com.yeepay.yop.sdk.client;
 
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.Tracer;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
 import com.netflix.hystrix.*;
 import com.netflix.hystrix.exception.HystrixBadRequestException;
@@ -11,6 +15,7 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
+import com.yeepay.yop.sdk.base.cache.YopDegradeRuleWrapper;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.RouteUtils;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
@@ -38,9 +43,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CIRCUIT_BREAKER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 
@@ -68,6 +75,8 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final GateWayRouter gateWayRouter;
 
+    private final YopCircuitBreaker circuitBreaker;
+
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
@@ -77,6 +86,12 @@ public class ClientHandlerImpl implements ClientHandler {
         this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
         this.clientConfiguration = handlerParams.getClientParams().getClientConfiguration();
         this.client = buildHttpClient(handlerParams);
+        final YopHystrixConfig hystrixConfig = this.clientConfiguration.getHystrixConfig();
+        if (DEFAULT_YOP_CIRCUIT_BREAKER.equalsIgnoreCase(hystrixConfig.getCircuitBreaker())) {
+            this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace, hystrixConfig);
+        } else {
+            this.circuitBreaker = new YopHystrixCircuitBreaker();
+        }
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
@@ -101,17 +116,16 @@ public class ClientHandlerImpl implements ClientHandler {
     private <Input extends BaseRequest, Output extends BaseResponse> Output executeWithRetry(ClientExecutionParams<Input, Output> executionParams,
                                                                                              ExecutionContext executionContext, List<URI> endPoints) {
         int retryCount = 0;
-        Exception lastEx = null;
+        Exception lastError = null;
         for (URI endPoint : endPoints) {
             if (retryCount++ > clientConfiguration.getMaxRetryCount()) {
-                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount() + ",lastEx:", lastEx);
+                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount() + ",lastEx:", lastError);
             }
             try {
-                return new YopHystrixCircuitBreaker().execute(endPoint, executionParams, executionContext);
-            } catch (YopHostException e) {
-                lastEx = e;
-                continue;
-            }
+                return circuitBreaker.execute(endPoint, executionParams, executionContext);
+            } catch (YopHostException hostError) {//域名异常
+                lastError = hostError;
+            } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
         }
 
         // 再尝试一次
@@ -182,6 +196,66 @@ public class ClientHandlerImpl implements ClientHandler {
         }
     }
 
+    private class YopSentinelCircuitBreaker implements YopCircuitBreaker {
+
+        public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace, YopHystrixConfig hystrixConfig) {
+            final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getServerRoot(),
+                    serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
+            if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
+                serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
+            }
+            if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredYosEndPoint())) {
+                serverRoots.addAll(serverRootSpace.getPreferredYosEndPoint());
+            }
+            YopDegradeRuleWrapper.initDegradeRule(serverRoots, hystrixConfig);
+        }
+
+        @Override
+        public <Input extends BaseRequest, Output extends BaseResponse> Output execute(URI endPoint,
+                                                                                       ClientExecutionParams<Input, Output> executionParams,
+                                                                                       ExecutionContext executionContext) {
+            Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
+            request.setEndpoint(endPoint);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Trying Host, value:{}", endPoint);
+            }
+            final String host = StringUtils.substringBefore(endPoint.toString(), "?");
+
+            Entry entry = null;
+            Throwable serverError = null;
+            try {
+                entry = SphU.entry(host);
+                return doExecute(request, executionContext, executionParams.getResponseHandler());
+            } catch (YopClientException clientError) {//客户端异常&业务异常
+                throw clientError;
+            } catch (YopHttpException serverEx) {// 调用YOP异常
+                final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx, clientConfiguration);
+                if (analyzedEx.isServerError()) {
+                    serverError = serverEx;
+                }
+                if (analyzedEx.isNeedRetry()) {//域名异常
+                    throw new YopHostException("Need Change Host, ex:", serverEx);
+                }
+                throw new YopClientException("Client Error, ex:", serverEx);
+            } catch (Exception ex) {//熔断异常&未知异常
+                if (BlockException.isBlockException(ex)) {
+                    throw new YopHostException("Need Change Host, ex:", ex);
+                } else {
+                    serverError = ex;
+                    handleUnExpectedError(ex);
+                }
+            } finally {
+                if (entry != null) {
+                    if (null != serverError) {
+                        Tracer.trace(serverError);
+                    }
+                    entry.exit();
+                }
+            }
+            throw new YopUnknownException("UnExpected Situation, Cant Be Here.");
+        }
+    }
+
     private void handleUnExpectedError(Exception ex) {
         LOGGER.error("UnExpected Error, ex:", ex);
         throw new YopUnknownException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
@@ -206,30 +280,69 @@ public class ClientHandlerImpl implements ClientHandler {
             try {
                 return doExecute(request, executionContext, responseHandler);
             } catch (YopHttpException e) {
-                final Throwable rootCause = ExceptionUtils.getRootCause(e);
-                if (null == rootCause) {
-                    throw e;
-                }
-                // 当笔重试 (域名异常)
-                final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
-                final List<String> curException = Lists.newArrayList(exType, exType + COLON + exMsg);
-                if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), curException)) {
+                final AnalyzeException analyzedEx = AnalyzeException.analyze(e, clientConfiguration);
+                if (analyzedEx.isNeedRetry()) {
                     throw new YopHostException("Need Change Host, ", e);
                 }
-
-                // 不重试，不计入短路
-                if (CollectionUtils.containsAny(clientConfiguration.getHystrixConfig().getExcludeExceptions(), curException)) {
+                if (analyzedEx.isServerError()) {
+                    throw e;
+                } else {
                     throw new HystrixBadRequestException(getCommandKey() + " Fail, ", e);
                 }
-
-                // 其他异常，计入短路
-                throw e;
             } catch (YopClientException e) {
                 // 不计入短路
                 throw new HystrixBadRequestException(getCommandKey() + " Fail, ", e);
             }
         }
 
+    }
+
+    private static class AnalyzeException {
+
+        private boolean needRetry;
+        private boolean serverError = true;
+
+        public boolean isNeedRetry() {
+            return needRetry;
+        }
+
+        public void setNeedRetry(boolean needRetry) {
+            this.needRetry = needRetry;
+        }
+
+        public boolean isServerError() {
+            return serverError;
+        }
+
+        public void setServerError(boolean serverError) {
+            this.serverError = serverError;
+        }
+
+        public static AnalyzeException analyze(Throwable e, ClientConfiguration clientConfiguration) {
+            final AnalyzeException result = new AnalyzeException();
+            final Throwable rootCause = ExceptionUtils.getRootCause(e);
+            if (null == rootCause) {
+                return result;
+            }
+
+            // 当笔重试 (域名异常)
+            final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
+            final List<String> curException = Lists.newArrayList(exType, exType + COLON + exMsg);
+
+            if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), curException)) {
+                result.setNeedRetry(true);
+                return result;
+            }
+
+            // 不重试，不计入短路
+            if (CollectionUtils.containsAny(clientConfiguration.getHystrixConfig().getExcludeExceptions(), curException)) {
+                result.setServerError(false);
+                return result;
+            }
+
+            // 其他异常，计入短路
+            return result;
+        }
     }
 
     private <Output extends BaseResponse, Input extends BaseRequest> Output doExecute(Request<Input> request, ExecutionContext executionContext, HttpResponseHandler<Output> responseHandler) {

@@ -112,4 +112,6 @@ public interface YopConstants {
     String SM4_CALLBACK_ALGORITHM = "AEAD_SM4_GCM";
     String DEFAULT_YOP_CALLBACK_HANDLER = "default";
 
+    String DEFAULT_YOP_CIRCUIT_BREAKER = "sentinel";
+
 }

@@ -16,6 +16,7 @@
     ],
     "max_retry_count": 2,
     "hystrix": {
+      "circuit_breaker": "sentinel",
       "group_key": "YOP_SERVER_ROOT",
       "thread_pool_key": "YopClientExecutePool",
       "execution_isolation_strategy": "SEMAPHORE",
@@ -27,6 +28,7 @@
       "circuit_breaker_enabled": true,
       "circuit_breaker_request_volume_threshold": 10,
       "circuit_breaker_error_threshold_percentage": 50,
+      "circuit_breaker_error_threshold_count": 3,
       "circuit_breaker_sleep_window_in_milliseconds": 5000,
       "circuit_breaker_force_open": false,
       "circuit_breaker_force_closed": false,

@@ -52,6 +52,7 @@
         <jmh.version>1.33</jmh.version>
         <json-path.version>2.7.0</json-path.version>
         <hystrix-core.version>1.5.18</hystrix-core.version>
+        <sentinel.version>1.8.6</sentinel.version>
     </properties>
 
     <dependencyManagement>
@@ -230,6 +231,12 @@
                         <artifactId>commons-logging</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-core</artifactId>
+                <version>${sentinel.version}</version>
             </dependency>
 
             <!-- test dependencies -->
