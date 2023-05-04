@@ -110,7 +110,7 @@ public class YopDegradeRuleHelper {
         }
 
         Set<DegradeRule> rules = Sets.newHashSet();
-        final double errRatio = ((double) circuitBreakerConfig.getErrorRatioThreshold()) / 100.00;
+        final double errRatio = circuitBreakerConfig.getErrorRatioThreshold();
         DegradeRule errRatioRule = new DegradeRule(resource)
                 .setGrade(CircuitBreakerStrategy.ERROR_RATIO.getType())
                 .setCount(errRatio)

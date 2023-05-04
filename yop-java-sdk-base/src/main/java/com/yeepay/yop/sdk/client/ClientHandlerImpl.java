@@ -170,6 +170,7 @@ public class ClientHandlerImpl implements ClientHandler {
             Entry entry = null;
             Throwable serverError = null;
             try {
+                YopDegradeRuleHelper.addDegradeRule(endPoint, circuitBreakerConfig);
                 entry = SphU.entry(host);
                 return doExecute(request, executionContext, executionParams.getResponseHandler());
             } catch (YopClientException clientError) {//客户端异常&业务异常
