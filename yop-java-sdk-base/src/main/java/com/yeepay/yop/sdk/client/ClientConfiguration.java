@@ -5,7 +5,7 @@ import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.Region;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.config.provider.file.YopHystrixConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.http.RetryPolicy;
 import org.apache.commons.collections4.CollectionUtils;
@@ -178,7 +178,7 @@ public class ClientConfiguration {
 
     private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException");
 
-    private YopHystrixConfig hystrixConfig = YopHystrixConfig.DEFAULT_CONFIG;
+    private YopCircuitBreakerConfig circuitBreakerConfig = YopCircuitBreakerConfig.DEFAULT_CONFIG;
 
     // Initialize DEFAULT_USER_AGENT
     static {
@@ -232,7 +232,7 @@ public class ClientConfiguration {
         this.clientImpl = other.clientImpl;
         this.maxRetryCount = other.maxRetryCount;
         this.retryExceptions = other.retryExceptions;
-        this.hystrixConfig = other.hystrixConfig;
+        this.circuitBreakerConfig = other.circuitBreakerConfig;
     }
 
     /**
@@ -951,18 +951,18 @@ public class ClientConfiguration {
         return this;
     }
 
-    public YopHystrixConfig getHystrixConfig() {
-        return hystrixConfig;
+    public YopCircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
     }
 
-    public void setHystrixConfig(YopHystrixConfig hystrixConfig) {
-        if (null != hystrixConfig) {
-            this.hystrixConfig = hystrixConfig;
+    public void setCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
+        if (null != circuitBreakerConfig) {
+            this.circuitBreakerConfig = circuitBreakerConfig;
         }
     }
 
-    public ClientConfiguration withHystrixConfig(YopHystrixConfig hystrixConfig) {
-        setHystrixConfig(hystrixConfig);
+    public ClientConfiguration withCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
+        setCircuitBreakerConfig(circuitBreakerConfig);
         return this;
     }
 
@@ -985,8 +985,8 @@ public class ClientConfiguration {
                 + credentials + ", \n  clientImpl="
                 + clientImpl + ", \n  maxRetryCount="
                 + maxRetryCount + ", \n  retryExceptions="
-                + retryExceptions + ", \n  hystrixConfig="
-                + hystrixConfig + "]\n";
+                + retryExceptions + ", \n  circuitBreakerConfig="
+                + circuitBreakerConfig + "]\n";
     }
 
 }

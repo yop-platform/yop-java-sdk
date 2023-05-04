@@ -5,9 +5,6 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
-import com.netflix.hystrix.*;
-import com.netflix.hystrix.exception.HystrixBadRequestException;
-import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
@@ -15,12 +12,12 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
-import com.yeepay.yop.sdk.base.cache.YopDegradeRuleWrapper;
+import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.RouteUtils;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
-import com.yeepay.yop.sdk.config.provider.file.YopHystrixConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHostException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
@@ -47,7 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CIRCUIT_BREAKER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 
@@ -75,7 +71,10 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final GateWayRouter gateWayRouter;
 
+    private final YopCircuitBreakerConfig circuitBreakerConfig;
+
     private final YopCircuitBreaker circuitBreaker;
+
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
@@ -86,12 +85,8 @@ public class ClientHandlerImpl implements ClientHandler {
         this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
         this.clientConfiguration = handlerParams.getClientParams().getClientConfiguration();
         this.client = buildHttpClient(handlerParams);
-        final YopHystrixConfig hystrixConfig = this.clientConfiguration.getHystrixConfig();
-        if (DEFAULT_YOP_CIRCUIT_BREAKER.equalsIgnoreCase(hystrixConfig.getCircuitBreaker())) {
-            this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace, hystrixConfig);
-        } else {
-            this.circuitBreaker = new YopHystrixCircuitBreaker();
-        }
+        this.circuitBreakerConfig = this.clientConfiguration.getCircuitBreakerConfig();
+        this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace, this.circuitBreakerConfig);
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
@@ -110,7 +105,12 @@ public class ClientHandlerImpl implements ClientHandler {
         ExecutionContext executionContext = getExecutionContext(executionParams);
         Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
         List<URI> endPoints = gateWayRouter.routes(executionContext.getYopCredentials().getAppKey(), request);
-        return executeWithRetry(executionParams, executionContext, endPoints);
+        if (null != circuitBreakerConfig && circuitBreakerConfig.isEnable()) {
+            return executeWithRetry(executionParams, executionContext, endPoints);
+        } else {
+            request.setEndpoint(RouteUtils.randomOne(endPoints));
+            return doExecute(request, executionContext, executionParams.getResponseHandler());
+        }
     }
 
     private <Input extends BaseRequest, Output extends BaseResponse> Output executeWithRetry(ClientExecutionParams<Input, Output> executionParams,
@@ -142,63 +142,9 @@ public class ClientHandlerImpl implements ClientHandler {
                                                                                 ExecutionContext executionContext);
     }
 
-    private class YopHystrixCircuitBreaker implements YopCircuitBreaker {
-
-        @Override
-        public <Input extends BaseRequest, Output extends BaseResponse> Output execute(URI endPoint,
-                                                                                               ClientExecutionParams<Input, Output> executionParams,
-                                                                                               ExecutionContext executionContext) {
-            Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-            request.setEndpoint(endPoint);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Trying Host, value:{}", endPoint);
-            }
-
-            try {
-                return new ClientExecuteCommand<Input, Output>(
-                        configToSetter(clientConfiguration.getHystrixConfig(), StringUtils.substringBefore(endPoint.toString(), "?")),
-                        executionContext, request, executionParams.getResponseHandler()).execute();
-            } catch (HystrixBadRequestException e) {// 客户端异常
-                LOGGER.error("Client Error, ex:", e);
-                if (e.getCause() instanceof YopClientException) {
-                    throw (YopClientException) e.getCause();
-                }
-                throw new YopClientException("Client Error, ex:", e);
-            } catch (HystrixRuntimeException e) {// Hystrix异常
-                switch (e.getFailureType()) {
-                    // 当笔切换，重试
-                    case SHORTCIRCUIT:
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("Host ShortCircuit, value:{}", endPoint);
-                        }
-                        throw new YopHostException("Host ShortCircuit, ex:", e);
-                    case REJECTED_THREAD_EXECUTION:
-                    case REJECTED_SEMAPHORE_FALLBACK:
-                    case REJECTED_SEMAPHORE_EXECUTION:
-                        // 理论上不会到这里
-                        throw new YopClientException("Host CommandRejected, value:" + endPoint, e);
-                    case BAD_REQUEST_EXCEPTION:
-                        throw new YopClientException(ExceptionUtils.getMessage(e), ExceptionUtils.getRootCause(e));
-                    case COMMAND_EXCEPTION:
-                        if (e.getCause() instanceof YopHostException) {
-                            throw (YopHostException) e.getCause();
-                        }
-                        if (e.getCause() instanceof YopHttpException) {
-                            throw (YopHttpException) e.getCause();
-                        }
-                    default: // 超时、或其他未知异常不再重试
-                        handleUnExpectedError(e);
-                }
-            } catch (Exception e) {// 其他异常
-                handleUnExpectedError(e);
-            }
-            return null;
-        }
-    }
-
     private class YopSentinelCircuitBreaker implements YopCircuitBreaker {
 
-        public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace, YopHystrixConfig hystrixConfig) {
+        public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace, YopCircuitBreakerConfig circuitBreakerConfig) {
             final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getServerRoot(),
                     serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
             if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
@@ -207,7 +153,7 @@ public class ClientHandlerImpl implements ClientHandler {
             if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredYosEndPoint())) {
                 serverRoots.addAll(serverRootSpace.getPreferredYosEndPoint());
             }
-            YopDegradeRuleWrapper.initDegradeRule(serverRoots, hystrixConfig);
+            YopDegradeRuleHelper.initDegradeRule(serverRoots, circuitBreakerConfig);
         }
 
         @Override
@@ -219,7 +165,7 @@ public class ClientHandlerImpl implements ClientHandler {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Trying Host, value:{}", endPoint);
             }
-            final String host = StringUtils.substringBefore(endPoint.toString(), "?");
+            final String host = endPoint.toString();
 
             Entry entry = null;
             Throwable serverError = null;
@@ -245,7 +191,7 @@ public class ClientHandlerImpl implements ClientHandler {
                     handleUnExpectedError(ex);
                 }
             } finally {
-                if (entry != null) {
+                if (null != entry) {
                     if (null != serverError) {
                         Tracer.trace(serverError);
                     }
@@ -259,42 +205,6 @@ public class ClientHandlerImpl implements ClientHandler {
     private void handleUnExpectedError(Exception ex) {
         LOGGER.error("UnExpected Error, ex:", ex);
         throw new YopUnknownException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
-    }
-
-    public class ClientExecuteCommand<Input extends BaseRequest, Output extends BaseResponse> extends HystrixCommand<Output> {
-
-        private ExecutionContext executionContext;
-        private Request<Input> request;
-        private HttpResponseHandler<Output> responseHandler;
-
-        public ClientExecuteCommand(Setter setter, ExecutionContext executionContext,
-                                    Request<Input> request, HttpResponseHandler<Output> responseHandler) {
-            super(setter);
-            this.executionContext = executionContext;
-            this.request = request;
-            this.responseHandler = responseHandler;
-        }
-
-        @Override
-        protected Output run() throws Exception {
-            try {
-                return doExecute(request, executionContext, responseHandler);
-            } catch (YopHttpException e) {
-                final AnalyzeException analyzedEx = AnalyzeException.analyze(e, clientConfiguration);
-                if (analyzedEx.isNeedRetry()) {
-                    throw new YopHostException("Need Change Host, ", e);
-                }
-                if (analyzedEx.isServerError()) {
-                    throw e;
-                } else {
-                    throw new HystrixBadRequestException(getCommandKey() + " Fail, ", e);
-                }
-            } catch (YopClientException e) {
-                // 不计入短路
-                throw new HystrixBadRequestException(getCommandKey() + " Fail, ", e);
-            }
-        }
-
     }
 
     private static class AnalyzeException {
@@ -335,7 +245,7 @@ public class ClientHandlerImpl implements ClientHandler {
             }
 
             // 不重试，不计入短路
-            if (CollectionUtils.containsAny(clientConfiguration.getHystrixConfig().getExcludeExceptions(), curException)) {
+            if (CollectionUtils.containsAny(clientConfiguration.getCircuitBreakerConfig().getExcludeExceptions(), curException)) {
                 result.setServerError(false);
                 return result;
             }
@@ -348,43 +258,6 @@ public class ClientHandlerImpl implements ClientHandler {
     private <Output extends BaseResponse, Input extends BaseRequest> Output doExecute(Request<Input> request, ExecutionContext executionContext, HttpResponseHandler<Output> responseHandler) {
         return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
                 executionContext, responseHandler);
-    }
-
-    private HystrixCommand.Setter configToSetter(YopHystrixConfig config, String commandKey) {
-        return HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(config.getGroupKey()))
-                .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey))
-                .andCommandPropertiesDefaults(HystrixCommandProperties.defaultSetter()
-                        .withCircuitBreakerEnabled(config.isCircuitBreakerEnabled())
-                        .withCircuitBreakerRequestVolumeThreshold(config.getCircuitBreakerRequestVolumeThreshold())
-                        .withCircuitBreakerErrorThresholdPercentage(config.getCircuitBreakerErrorThresholdPercentage())
-                        .withCircuitBreakerSleepWindowInMilliseconds(config.getCircuitBreakerSleepWindowInMilliseconds())
-                        .withCircuitBreakerForceClosed(config.isCircuitBreakerForceClosed())
-                        .withCircuitBreakerForceOpen(config.isCircuitBreakerForceOpen())
-                        .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.valueOf(config.getExecutionIsolationStrategy()))
-                        .withExecutionTimeoutEnabled(config.isExecutionTimeoutEnabled())
-                        .withExecutionTimeoutInMilliseconds(config.getExecutionIsolationThreadTimeoutInMilliseconds())
-                        .withExecutionIsolationSemaphoreMaxConcurrentRequests(config.getExecutionIsolationSemaphoreMaxConcurrentRequests())
-                        .withExecutionIsolationThreadInterruptOnFutureCancel(config.isExecutionIsolationThreadInterruptOnCancel())
-                        .withExecutionIsolationThreadInterruptOnTimeout(config.isExecutionIsolationThreadInterruptOnTimeout())
-                        .withFallbackEnabled(false)
-                        .withMetricsRollingStatisticalWindowInMilliseconds(config.getCbMetricsRollingStatsTimeInMilliseconds())
-                        .withMetricsRollingStatisticalWindowBuckets(config.getCbMetricsRollingStatsNumBuckets())
-                        .withMetricsRollingPercentileEnabled(config.isCbMetricsRollingPercentileEnabled())
-                        .withMetricsRollingPercentileWindowInMilliseconds(config.getCbMetricsRollingPercentileTimeInMilliseconds())
-                        .withMetricsRollingPercentileWindowBuckets(config.getCbMetricsRollingPercentileNumBuckets())
-                        .withMetricsRollingPercentileBucketSize(config.getCbMetricsRollingPercentileBucketSize())
-                        .withMetricsHealthSnapshotIntervalInMilliseconds(config.getCbMetricsHealthSnapshotIntervalInMilliseconds()))
-                .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey(config.getThreadPoolKey()))
-                .andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.defaultSetter()
-                        .withCoreSize(config.getCoreSize())
-                        .withMaximumSize(config.getMaximumSize())
-                        .withMaxQueueSize(config.getMaxQueueSize())
-                        .withAllowMaximumSizeToDivergeFromCoreSize(config.isAllowMaximumSizeToDivergeFromCoreSize())
-                        .withQueueSizeRejectionThreshold(config.getQueueSizeRejectionThreshold())
-                        .withKeepAliveTimeMinutes(config.getKeepAliveTimeMinutes())
-                        .withMetricsRollingStatisticalWindowInMilliseconds(config.getTpMetricsRollingStatsTimeInMilliseconds())
-                        .withMetricsRollingStatisticalWindowBuckets(config.getTpMetricsRollingStatsNumBuckets())
-                );
     }
 
     private <Output extends BaseResponse, Input extends BaseRequest> ExecutionContext getExecutionContext(

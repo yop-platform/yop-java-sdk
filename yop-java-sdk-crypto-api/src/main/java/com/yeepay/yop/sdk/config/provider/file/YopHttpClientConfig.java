@@ -54,8 +54,8 @@ public final class YopHttpClientConfig implements Serializable {
     @JsonProperty("max_retry_count")
     private int maxRetryCount;
 
-    @JsonProperty("hystrix")
-    private YopHystrixConfig hystrix;
+    @JsonProperty("circuit_breaker")
+    private YopCircuitBreakerConfig circuitBreakerConfig;
 
     public int getConnectTimeout() {
         return connectTimeout;
@@ -121,12 +121,12 @@ public final class YopHttpClientConfig implements Serializable {
         this.maxRetryCount = maxRetryCount;
     }
 
-    public YopHystrixConfig getHystrix() {
-        return hystrix;
+    public YopCircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
     }
 
-    public void setHystrix(YopHystrixConfig hystrix) {
-        this.hystrix = hystrix;
+    public void setCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
+        this.circuitBreakerConfig = circuitBreakerConfig;
     }
 
     @Override

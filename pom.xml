@@ -51,7 +51,6 @@
         <oklog-java.version>2.3.0</oklog-java.version>
         <jmh.version>1.33</jmh.version>
         <json-path.version>2.7.0</json-path.version>
-        <hystrix-core.version>1.5.18</hystrix-core.version>
         <sentinel.version>1.8.6</sentinel.version>
     </properties>
 
@@ -219,18 +218,6 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j-api.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.netflix.hystrix</groupId>
-                <artifactId>hystrix-core</artifactId>
-                <version>${hystrix-core.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
