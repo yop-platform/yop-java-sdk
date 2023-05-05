@@ -2,8 +2,8 @@
   "server_root": "https://openapi.yeepay.com/yop-center",
   "yos_server_root": "https://yos.yeepay.com/yop-center",
   "yop_cert_store": {
-    "enable":true,
-    "lazy":false
+    "enable": true,
+    "lazy": false
   },
   "http_client": {
     "connect_timeout": 10000,
@@ -17,13 +17,16 @@
     "max_retry_count": 2,
     "circuit_breaker": {
       "enable": true,
-      "min_request_count_threshold": 10,
-      "error_ratio_threshold": 50,
-      "error_count_threshold": 3,
-      "metrics_window_in_milliseconds": 1000,
-      "sleep_window_in_milliseconds": 5000,
       "yop_exclude_exceptions": [
         "java.net.SocketTimeoutException:Read timed out"
+      ],
+      "rules": [
+        {
+          "grade": 2,
+          "count": 3,
+          "time_window": 5,
+          "stat_interval_ms": 30000
+        }
       ]
     }
   }

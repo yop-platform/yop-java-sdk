@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,45 +29,17 @@ public class YopCircuitBreakerConfig implements Serializable {
 
     public static final YopCircuitBreakerConfig DEFAULT_CONFIG = new YopCircuitBreakerConfig();
 
-    // region 断路器
-
     /**
      * 启用断路器
      */
     @JsonProperty("enable")
-    private boolean enable = true;
+    private boolean enable = false;
 
     /**
-     * 请求量阈值(达到该数量，才会检查健康数据，进而熔断)
-     * 默认10
+     * 熔断规则
      */
-    @JsonProperty("min_request_count_threshold")
-    private int minRequestCountThreshold = 10;
-
-    /**
-     * 错误率阈值(达到该值，进入熔断)
-     */
-    @JsonProperty("error_ratio_threshold")
-    private double errorRatioThreshold = 0.5;
-
-    /**
-     * 错误量阈值(达到该值，进入熔断)
-     */
-    @JsonProperty("error_count_threshold")
-    private int errorCountThreshold = 3;
-
-    /**
-     * 统计窗口时长(毫秒，失败率会在该窗口内汇总计算)
-     */
-    @JsonProperty("metrics_window_in_milliseconds")
-    private int metricsWindowInMilliseconds = 1000;
-
-    /**
-     * 熔断时长(毫秒，该窗口期后，会进入半开)
-     */
-    @JsonProperty("sleep_window_in_milliseconds")
-    private int sleepWindowInMilliseconds = 5000;
-    // endregion
+    @JsonProperty("rules")
+    private List<YopCircuitBreakerRuleConfig> rules;
 
     // region yop扩展
     /**
@@ -84,44 +57,12 @@ public class YopCircuitBreakerConfig implements Serializable {
         this.enable = enable;
     }
 
-    public int getMinRequestCountThreshold() {
-        return minRequestCountThreshold;
+    public List<YopCircuitBreakerRuleConfig> getRules() {
+        return rules;
     }
 
-    public void setMinRequestCountThreshold(int minRequestCountThreshold) {
-        this.minRequestCountThreshold = minRequestCountThreshold;
-    }
-
-    public double getErrorRatioThreshold() {
-        return errorRatioThreshold;
-    }
-
-    public void setErrorRatioThreshold(double errorRatioThreshold) {
-        this.errorRatioThreshold = errorRatioThreshold;
-    }
-
-    public int getErrorCountThreshold() {
-        return errorCountThreshold;
-    }
-
-    public void setErrorCountThreshold(int errorCountThreshold) {
-        this.errorCountThreshold = errorCountThreshold;
-    }
-
-    public int getSleepWindowInMilliseconds() {
-        return sleepWindowInMilliseconds;
-    }
-
-    public void setSleepWindowInMilliseconds(int sleepWindowInMilliseconds) {
-        this.sleepWindowInMilliseconds = sleepWindowInMilliseconds;
-    }
-
-    public int getMetricsWindowInMilliseconds() {
-        return metricsWindowInMilliseconds;
-    }
-
-    public void setMetricsWindowInMilliseconds(int metricsWindowInMilliseconds) {
-        this.metricsWindowInMilliseconds = metricsWindowInMilliseconds;
+    public void setRules(List<YopCircuitBreakerRuleConfig> rules) {
+        this.rules = rules;
     }
 
     public Set<String> getExcludeExceptions() {

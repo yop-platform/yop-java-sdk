@@ -9,6 +9,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreakerStrategy;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerRuleConfig;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,8 @@ public class YopDegradeRuleHelper {
             return;
         }
 
-        if (CollectionUtils.isEmpty(serverRoots) || null == circuitBreakerConfig) {
+        if (CollectionUtils.isEmpty(serverRoots) || null == circuitBreakerConfig
+                || CollectionUtils.isEmpty(circuitBreakerConfig.getRules())) {
             return;
         }
 
@@ -75,21 +77,20 @@ public class YopDegradeRuleHelper {
 
     private static Set<DegradeRule> initDegradeRuleForResource(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
         Set<DegradeRule> result = Sets.newHashSet();
-        final double errRatio = circuitBreakerConfig.getErrorRatioThreshold();
-        DegradeRule errRatioRule = new DegradeRule(resource)
-                .setGrade(CircuitBreakerStrategy.ERROR_RATIO.getType())
-                .setCount(errRatio)
-                .setMinRequestAmount(circuitBreakerConfig.getMinRequestCountThreshold())
-                .setStatIntervalMs(circuitBreakerConfig.getMetricsWindowInMilliseconds())
-                .setTimeWindow(circuitBreakerConfig.getSleepWindowInMilliseconds());
-        result.add(errRatioRule);
-
-        DegradeRule exCountRule = new DegradeRule(resource)
-                .setGrade(CircuitBreakerStrategy.ERROR_COUNT.getType())
-                .setCount(circuitBreakerConfig.getErrorCountThreshold())
-                .setStatIntervalMs(circuitBreakerConfig.getMetricsWindowInMilliseconds())
-                .setTimeWindow(circuitBreakerConfig.getSleepWindowInMilliseconds());
-        result.add(exCountRule);
+        if (CollectionUtils.isEmpty(circuitBreakerConfig.getRules())) {
+            return result;
+        }
+        for (YopCircuitBreakerRuleConfig configRule : circuitBreakerConfig.getRules()) {
+            DegradeRule degradeRule = new DegradeRule(resource)
+                    .setGrade(configRule.getGrade())
+                    .setCount(configRule.getCount())
+                    .setStatIntervalMs(configRule.getStatIntervalMs())
+                    .setTimeWindow(configRule.getTimeWindow());
+            if (CircuitBreakerStrategy.ERROR_COUNT.getType() != configRule.getGrade()) {
+                degradeRule.setMinRequestAmount(configRule.getMinRequestAmount());
+            }
+            result.add(degradeRule);
+        }
         return result;
     }
 
@@ -109,23 +110,10 @@ public class YopDegradeRuleHelper {
             return;
         }
 
-        Set<DegradeRule> rules = Sets.newHashSet();
-        final double errRatio = circuitBreakerConfig.getErrorRatioThreshold();
-        DegradeRule errRatioRule = new DegradeRule(resource)
-                .setGrade(CircuitBreakerStrategy.ERROR_RATIO.getType())
-                .setCount(errRatio)
-                .setMinRequestAmount(circuitBreakerConfig.getMinRequestCountThreshold())
-                .setStatIntervalMs(circuitBreakerConfig.getMetricsWindowInMilliseconds())
-                .setTimeWindow(circuitBreakerConfig.getSleepWindowInMilliseconds());
-        rules.add(errRatioRule);
-
-        DegradeRule exCountRule = new DegradeRule(resource)
-                .setGrade(CircuitBreakerStrategy.ERROR_COUNT.getType())
-                .setCount(circuitBreakerConfig.getErrorCountThreshold())
-                .setStatIntervalMs(circuitBreakerConfig.getMetricsWindowInMilliseconds())
-                .setTimeWindow(circuitBreakerConfig.getSleepWindowInMilliseconds());
-        rules.add(exCountRule);
-        DegradeRuleManager.setRulesForResource(resource, rules);
+        Set<DegradeRule> rules = initDegradeRuleForResource(resource, circuitBreakerConfig);
+        if (CollectionUtils.isNotEmpty(rules)) {
+            DegradeRuleManager.setRulesForResource(resource, rules);
+        }
         LOGGER.info("DegradeRule Added, rules:{}", rules);
     }
 
