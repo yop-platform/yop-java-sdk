@@ -14,14 +14,10 @@ import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
-import com.yeepay.yop.sdk.client.router.RouteUtils;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.exception.YopHostException;
-import com.yeepay.yop.sdk.exception.YopHttpException;
-import com.yeepay.yop.sdk.exception.YopUnknownException;
+import com.yeepay.yop.sdk.exception.*;
 import com.yeepay.yop.sdk.http.ExecutionContext;
 import com.yeepay.yop.sdk.http.HttpResponseHandler;
 import com.yeepay.yop.sdk.http.YopHttpClient;
@@ -41,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -104,35 +101,44 @@ public class ClientHandlerImpl implements ClientHandler {
             ClientExecutionParams<Input, Output> executionParams) {
         ExecutionContext executionContext = getExecutionContext(executionParams);
         Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-        List<URI> endPoints = gateWayRouter.routes(executionContext.getYopCredentials().getAppKey(), request);
+        URI serverRoot = gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, Collections.emptyList());
         if (null != circuitBreakerConfig && circuitBreakerConfig.isEnable()) {
-            return executeWithRetry(executionParams, executionContext, endPoints);
+            return executeWithRetry(executionParams, executionContext, serverRoot, request);
         } else {
-            request.setEndpoint(RouteUtils.randomOne(endPoints));
+            request.setEndpoint(serverRoot);
             return doExecute(request, executionContext, executionParams.getResponseHandler());
         }
     }
 
     private <Input extends BaseRequest, Output extends BaseResponse> Output executeWithRetry(ClientExecutionParams<Input, Output> executionParams,
-                                                                                             ExecutionContext executionContext, List<URI> endPoints) {
-        int retryCount = 0;
+                                                                                             ExecutionContext executionContext, URI serverRoot,
+                                                                                             Request<Input> request) {
+        URI lastServerRoot = serverRoot;
         Exception lastError = null;
-        for (URI endPoint : endPoints) {
-            if (retryCount++ > clientConfiguration.getMaxRetryCount()) {
-                throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount() + ",lastEx:", lastError);
-            }
+        List<URI> excludeServerRoots = Lists.newArrayList();
+        int blockedCount = 1;
+        for (int i = 0; i < clientConfiguration.getMaxRetryCount(); i++) {
             try {
-                return circuitBreaker.execute(endPoint, executionParams, executionContext);
+                return circuitBreaker.execute(lastServerRoot, executionParams, executionContext);
             } catch (YopHostException hostError) {//域名异常
                 lastError = hostError;
+                excludeServerRoots.add(lastServerRoot);
+                lastServerRoot = gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, excludeServerRoots);
+                // 域名熔断异常
+                if (hostError instanceof YopHostBlockException) {
+                    blockedCount++;
+                }
             } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
         }
 
-        // 再尝试一次
-        LOGGER.warn("All Hosts Not Available, value:{}, And Will Try One More Time Randomly",  endPoints);
-        Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-        request.setEndpoint(RouteUtils.randomOne(endPoints));
-        return doExecute(request, executionContext, executionParams.getResponseHandler());
+        // 如果所有域名均熔断，则用主域名兜底
+        if (blockedCount == clientConfiguration.getMaxRetryCount()) {
+            Request<Input> marshalled = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
+            marshalled.setEndpoint(gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, Collections.emptyList()));
+            return doExecute(request, executionContext, executionParams.getResponseHandler());
+        }
+
+        throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount() + ",lastEx:", lastError);
     }
 
     private interface YopCircuitBreaker {
@@ -157,44 +163,38 @@ public class ClientHandlerImpl implements ClientHandler {
         }
 
         @Override
-        public <Input extends BaseRequest, Output extends BaseResponse> Output execute(URI endPoint,
+        public <Input extends BaseRequest, Output extends BaseResponse> Output execute(URI serverRoot,
                                                                                        ClientExecutionParams<Input, Output> executionParams,
                                                                                        ExecutionContext executionContext) {
             Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-            request.setEndpoint(endPoint);
+            request.setEndpoint(serverRoot);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Trying Host, value:{}", endPoint);
+                LOGGER.debug("Trying ServerRoot, value:{}", serverRoot);
             }
-            final String host = endPoint.toString();
+            final String host = serverRoot.toString();
 
             Entry entry = null;
-            Throwable serverError = null;
+            Throwable degradeError = null;
             try {
-                YopDegradeRuleHelper.addDegradeRule(endPoint, circuitBreakerConfig);
+                YopDegradeRuleHelper.addDegradeRule(serverRoot, circuitBreakerConfig);
                 entry = SphU.entry(host);
                 return doExecute(request, executionContext, executionParams.getResponseHandler());
             } catch (YopClientException clientError) {//客户端异常&业务异常
                 throw clientError;
-            } catch (YopHttpException serverEx) {// 调用YOP异常
-                final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx, clientConfiguration);
-                if (analyzedEx.isServerError()) {
-                    serverError = serverEx;
-                }
-                if (analyzedEx.isNeedRetry()) {//域名异常
-                    throw new YopHostException("Need Change Host, ex:", serverEx);
-                }
-                throw new YopClientException("Client Error, ex:", serverEx);
-            } catch (Exception ex) {//熔断异常&未知异常
+            } catch (YopHostException | YopUnknownException serverError) {//域名异常&未知异常
+                degradeError = serverError;
+                throw serverError;
+            } catch (Exception ex) {//熔断异常&其他未知异常
                 if (BlockException.isBlockException(ex)) {
-                    throw new YopHostException("Need Change Host, ex:", ex);
+                    throw new YopHostBlockException("ServerRoot Blocked, ex:", ex);
                 } else {
-                    serverError = ex;
+                    degradeError = ex;
                     handleUnExpectedError(ex);
                 }
             } finally {
                 if (null != entry) {
-                    if (null != serverError) {
-                        Tracer.trace(serverError);
+                    if (null != degradeError) {
+                        Tracer.trace(degradeError);
                     }
                     entry.exit();
                 }
@@ -256,9 +256,37 @@ public class ClientHandlerImpl implements ClientHandler {
         }
     }
 
-    private <Output extends BaseResponse, Input extends BaseRequest> Output doExecute(Request<Input> request, ExecutionContext executionContext, HttpResponseHandler<Output> responseHandler) {
-        return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
-                executionContext, responseHandler);
+    /**
+     * 调用httpClient 并封装异常，区分客户端、业务异常、未知异常(域名异常、其他未知……)
+     *
+     * @param request          请求包装类
+     * @param executionContext 上下文
+     * @param responseHandler  响应处理器
+     * @param <Output>         响应对象
+     * @param <Input>          请求对象
+     * @return
+     */
+    private <Output extends BaseResponse, Input extends BaseRequest> Output doExecute(Request<Input> request,
+                                                                                      ExecutionContext executionContext,
+                                                                                      HttpResponseHandler<Output> responseHandler) {
+        try {
+            return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
+                    executionContext, responseHandler);
+        } catch (YopClientException clientError) {//客户端异常&业务异常
+            throw clientError;
+        } catch (YopHttpException serverEx) {// 调用YOP异常
+            final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx, clientConfiguration);
+            if (analyzedEx.isNeedRetry()) {//域名异常
+                throw new YopHostException("Need Change Host, ex:", serverEx);
+            }
+            if (analyzedEx.isServerError()) {
+                handleUnExpectedError(serverEx);
+            }
+            throw new YopClientException("Client Error, ex:", serverEx);
+        } catch (Exception ex) {//未知异常
+            handleUnExpectedError(ex);
+        }
+        throw new YopUnknownException("UnExpected Situation, Cant Be Here.");
     }
 
     private <Output extends BaseResponse, Input extends BaseRequest> ExecutionContext getExecutionContext(
