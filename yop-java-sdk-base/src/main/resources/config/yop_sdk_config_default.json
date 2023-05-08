@@ -14,7 +14,7 @@
     "retry_exceptions": [
       "java.net.UnknownHostException"
     ],
-    "max_retry_count": 2,
+    "max_retry_count": 3,
     "circuit_breaker": {
       "enable": true,
       "yop_exclude_exceptions": [
