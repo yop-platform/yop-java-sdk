@@ -32,7 +32,7 @@ public class YopJsonResponseAnalyzer implements HttpResponseAnalyzer {
     @Override
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         String content = context.getResponse().readContent();
-        if (isJsonResponse(response.getMetadata().getContentType())) {
+        if (!isJsonResponse(response.getMetadata().getContentType())) {
             throw new YopHttpException("Response Error, contentType:" + response.getMetadata().getContentType() + ", content:" + content);
         }
         if (null != content) {
