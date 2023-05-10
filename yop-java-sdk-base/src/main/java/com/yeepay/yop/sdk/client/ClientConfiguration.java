@@ -36,7 +36,7 @@ public class ClientConfiguration {
     /**
      * The default timeout for reading from a connected socket.
      */
-    public static final int DEFAULT_SOCKET_TIMEOUT_IN_MILLIS = 50 * 1000;
+    public static final int DEFAULT_SOCKET_TIMEOUT_IN_MILLIS = 30 * 1000;
 
     /**
      * The default max connection pool size.
@@ -46,7 +46,7 @@ public class ClientConfiguration {
     /**
      * The default max connections per route
      */
-    public static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 0;
+    public static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 100;
 
     /**
      * The default User-Agent header value when sending requests to the target service. Initialized in the static
