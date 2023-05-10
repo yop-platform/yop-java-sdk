@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.client.router;
 
+import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * title: 简单网关路由<br>
@@ -38,6 +40,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<ServerRootType, CopyOnWriteArrayList<URI>> ALL_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
+    private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
 
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
@@ -74,10 +77,35 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private static boolean addServerRoot(URI serverRoot, ServerRootType serverRootType) {
         if (null != serverRoot) {
+            monitorServerRoot(serverRoot, serverRootType);
             final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.computeIfAbsent(serverRootType, p -> Lists.newCopyOnWriteArrayList());
             return serverRoots.addIfAbsent(serverRoot);
         }
         return false;
+    }
+
+    private static void monitorServerRoot(URI serverRoot, ServerRootType serverRootType) {
+        if (null == serverRoot || null == serverRootType) {
+            return;
+        }
+        EventObserverRegistry.getInstance().addStateChangeObserver(serverRoot.toString(),
+                (prevState, newState, rule, snapshotValue) -> {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
+                    }
+                    switch (newState) {
+                        case OPEN:
+                            BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>()).add(serverRoot);
+                            break;
+                        case CLOSED:
+                            final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
+                            if (null != blockedServers) {
+                                blockedServers.remove(serverRoot);
+                            }
+                            break;
+                        default:
+                    }
+                });
     }
 
     @Override
@@ -139,10 +167,15 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 }
             }
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("No Backup ServerRoot Config, type:{}, value:{}", serverRootType, mainServer);
+            // 备用域名故障，选用最早故障的域名
+            final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
+            URI oldestFailServer = null;
+            if (null != failedServers && !failedServers.isEmpty()) {
+                oldestFailServer =  failedServers.peek();
             }
-            return mainServer;
+
+            // 主域名兜底
+            return null != oldestFailServer ? oldestFailServer : mainServer;
         }
     }
 

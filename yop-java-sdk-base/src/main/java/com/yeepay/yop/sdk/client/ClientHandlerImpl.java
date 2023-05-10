@@ -114,31 +114,24 @@ public class ClientHandlerImpl implements ClientHandler {
                                                                                              ExecutionContext executionContext, URI serverRoot,
                                                                                              Request<Input> request) {
         URI lastServerRoot = serverRoot;
-        Exception lastError = null;
         List<URI> excludeServerRoots = Lists.newArrayList();
-        int blockedCount = 1;
-        for (int i = 0; i < clientConfiguration.getMaxRetryCount(); i++) {
+        while (!excludeServerRoots.contains(lastServerRoot)) {
             try {
                 return circuitBreaker.execute(lastServerRoot, executionParams, executionContext);
             } catch (YopHostException hostError) {//域名异常
-                lastError = hostError;
                 excludeServerRoots.add(lastServerRoot);
                 lastServerRoot = gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, excludeServerRoots);
-                // 域名熔断异常
-                if (hostError instanceof YopHostBlockException) {
-                    blockedCount++;
-                }
             } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
         }
 
-        // 如果所有域名均熔断，则用主域名兜底
-        if (blockedCount == clientConfiguration.getMaxRetryCount()) {
-            Request<Input> marshalled = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-            marshalled.setEndpoint(gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, Collections.emptyList()));
-            return doExecute(request, executionContext, executionParams.getResponseHandler());
+        // 如果所有域名均熔断，则用最早熔断域名兜底
+        lastServerRoot = gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, excludeServerRoots);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("All ServerRoots Unavailable, Last Try, tried:{}, last:{}", excludeServerRoots, lastServerRoot);
         }
-
-        throw new YopClientException("MaxRetryCount Hit, value:" + clientConfiguration.getMaxRetryCount() + ",lastEx:", lastError);
+        Request<Input> marshalled = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
+        marshalled.setEndpoint(lastServerRoot);
+        return doExecute(request, executionContext, executionParams.getResponseHandler());
     }
 
     private interface YopCircuitBreaker {
