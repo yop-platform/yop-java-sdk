@@ -65,7 +65,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 addServerRoot(uri, ServerRootType.COMMON);
             }
         }
-        addServerRoot(space.getYosServerRoot(), ServerRootType.COMMON);
+        addServerRoot(space.getServerRoot(), ServerRootType.COMMON);
 
         if (CollectionUtils.isNotEmpty(space.getPreferredYosEndPoint())) {
             for (URI uri : space.getPreferredYosEndPoint()) {
