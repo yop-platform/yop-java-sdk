@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -12,6 +13,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+
+import static com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerRuleConfig.DEFAULT_ERROR_COUNT_CONFIG;
 
 /**
  * title: 熔断配置<br>
@@ -33,13 +36,13 @@ public class YopCircuitBreakerConfig implements Serializable {
      * 启用断路器
      */
     @JsonProperty("enable")
-    private boolean enable = false;
+    private boolean enable = true;
 
     /**
      * 熔断规则
      */
     @JsonProperty("rules")
-    private List<YopCircuitBreakerRuleConfig> rules;
+    private List<YopCircuitBreakerRuleConfig> rules = Lists.newArrayList(DEFAULT_ERROR_COUNT_CONFIG);
 
     // region yop扩展
     /**
@@ -62,7 +65,9 @@ public class YopCircuitBreakerConfig implements Serializable {
     }
 
     public void setRules(List<YopCircuitBreakerRuleConfig> rules) {
-        this.rules = rules;
+        if (null != rules && rules.size() > 0) {
+            this.rules = rules;
+        }
     }
 
     public Set<String> getExcludeExceptions() {
