@@ -131,7 +131,7 @@ public class ClientHandlerImpl implements ClientHandler {
         }
         Request<Input> marshalled = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
         marshalled.setEndpoint(lastServerRoot);
-        return doExecute(request, executionContext, executionParams.getResponseHandler());
+        return doExecute(marshalled, executionContext, executionParams.getResponseHandler());
     }
 
     private interface YopCircuitBreaker {
