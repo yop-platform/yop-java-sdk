@@ -12,10 +12,10 @@ import java.io.StringReader;
 import java.lang.reflect.Field;
 
 /**
- * title: 保留Json对象为raw string的形式，不尝试解析它<br>
- * description: 描述<br>
- * Copyright: Copyright (c)2014<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 保留Json对象为raw string的形式，不尝试解析它<br/>
+ * description: 描述<br/>
+ * Copyright: Copyright (c)2014<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author wenkang.zhang
  * @version 1.0.0

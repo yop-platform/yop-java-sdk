@@ -8,10 +8,10 @@ import java.io.InputStream;
 import java.net.SocketException;
 
 /**
- * title: Yos下载流<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Yos下载流<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

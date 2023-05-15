@@ -1,15 +1,15 @@
 package com.yeepay.yop.sdk.service.common;
 
-import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
-import com.yeepay.yop.sdk.service.common.request.YopRequest;
-import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.YosDownloadResponse;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.request.YopRequest;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.response.YopResponse;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.response.YosUploadResponse;
 
 /**
- * title: Yop通用client<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Yop通用client<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

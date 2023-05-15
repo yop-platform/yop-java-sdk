@@ -1,4 +1,4 @@
-package com.yeepay.yop.sdk.config.provider.file;
+package com.yeepay.yop.sdk.config;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -6,16 +6,16 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import java.io.Serializable;
 
 /**
- * title: 代理配置<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 代理配置<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
  * @since 17/9/15 17:27
  */
-public class YopProxyConfig implements Serializable {
+public class ProxyConfig implements Serializable {
 
     private static final long serialVersionUID = 6323172665244717695L;
 

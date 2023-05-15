@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.security.aes;
 
-import com.yeepay.yop.sdk.security.SymmetricEncryption;
+import com.yeepay.g3.core.yop.sdk.sample.security.SymmetricEncryption;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;

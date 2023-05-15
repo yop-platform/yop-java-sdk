@@ -1,22 +1,16 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
-import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
-import com.yeepay.yop.sdk.config.YopSdkConfig;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
-import org.apache.commons.lang3.StringUtils;
+import com.yeepay.g3.core.yop.sdk.sample.auth.AuthorizationReqRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentialsProvider;
+import com.yeepay.g3.core.yop.sdk.sample.client.support.ClientParamsSupport;
 
 import java.net.URI;
 
 /**
- * title: 服务客户端builder<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 服务客户端builder<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -25,8 +19,6 @@ import java.net.URI;
 public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServiceClientBuilder, ServiceInterfaceToBuild> {
 
     private YopCredentialsProvider credentialsProvider;
-
-    private YopSdkConfigProvider yopSdkConfigProvider;
 
     private String endpoint;
 
@@ -37,17 +29,13 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
     private ClientConfiguration clientConfiguration;
 
     public final ServiceInterfaceToBuild build() {
-        if (null == yopSdkConfigProvider) {
-            yopSdkConfigProvider = YopSdkConfigProviderRegistry.getProvider();
-        }
-        YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
-        ClientParams clientParams = ClientParams.Builder.builder()
-                .withCredentialsProvider(credentialsProvider == null ? YopCredentialsProviderRegistry.getProvider() : credentialsProvider)
-                .withYopSdkConfigProvider(yopSdkConfigProvider)
-                .withClientConfiguration(clientConfiguration == null ? ClientConfigurationSupport.getClientConfiguration(yopSdkConfig) : clientConfiguration)
-                .withEndPoint(endpoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT)) : URI.create(endpoint))
-                .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
-                .withSandboxEndPoint(sandboxEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT)) : URI.create(sandboxEndPoint))
+        ClientParams defaultClientParams = ClientParamsSupport.getDefaultClientParams();
+        ClientParams clientParams = ClientParams.Builder.aClientParams()
+                .withCredentialsProvider(credentialsProvider == null ? defaultClientParams.getCredentialsProvider() : credentialsProvider)
+                .withClientConfiguration(clientConfiguration == null ? defaultClientParams.getClientConfiguration() : clientConfiguration)
+                .withEndPoint(endpoint == null ? defaultClientParams.getEndPoint() : URI.create(endpoint))
+                .withYosEndPoint(yosEndPoint == null ? defaultClientParams.getYosEndPoint() : URI.create(yosEndPoint))
+                .withSandboxEndPoint(sandboxEndPoint == null ? defaultClientParams.getSandboxEndPoint() : URI.create(sandboxEndPoint))
                 .withAuthorizationReqRegistry(authorizationReqRegistry())
                 .build();
         return build(clientParams);
@@ -60,11 +48,6 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     public SubClass withCredentialsProvider(YopCredentialsProvider credentialsProvider) {
         this.credentialsProvider = credentialsProvider;
-        return getSubclass();
-    }
-
-    public SubClass withYopSdkConfigProvider(YopSdkConfigProvider yopSdkConfigProvider) {
-        this.yopSdkConfigProvider = yopSdkConfigProvider;
         return getSubclass();
     }
 

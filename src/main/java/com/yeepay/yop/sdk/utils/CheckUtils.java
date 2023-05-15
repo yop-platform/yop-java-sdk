@@ -1,18 +1,18 @@
 package com.yeepay.yop.sdk.utils;
 
-import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
-import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
-import com.yeepay.yop.sdk.exception.config.MissingConfigException;
+import com.yeepay.g3.core.yop.sdk.sample.config.SDKConfig;
+import com.yeepay.g3.core.yop.sdk.sample.exception.config.IllegalConfigFormatException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.config.MissingConfigException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * title: 校验工具<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 校验工具<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -23,29 +23,29 @@ public class CheckUtils {
     /**
      * 校验sdk配置
      *
-     * @param yopFileSdkConfig sdk配置
+     * @param sdkConfig sdk配置
      */
-    public static void checkCustomSDKConfig(YopFileSdkConfig yopFileSdkConfig) {
-        if (StringUtils.isEmpty(yopFileSdkConfig.getAppKey())) {
+    public static void checkCustomSDKConfig(SDKConfig sdkConfig) {
+        if (StringUtils.isEmpty(sdkConfig.getAppKey())) {
             throw new MissingConfigException("appKey", "appKey is empty");
         }
-        if (StringUtils.isNotEmpty(yopFileSdkConfig.getServerRoot())) {
+        if (StringUtils.isNotEmpty(sdkConfig.getServerRoot())) {
             try {
-                new URL(yopFileSdkConfig.getServerRoot());
+                new URL(sdkConfig.getServerRoot());
             } catch (MalformedURLException e) {
                 throw new IllegalConfigFormatException("serverRoot", "serverRoot is illegal");
             }
         }
-        if (StringUtils.isNotEmpty(yopFileSdkConfig.getYosServerRoot())) {
+        if (StringUtils.isNotEmpty(sdkConfig.getYosServerRoot())) {
             try {
-                new URL(yopFileSdkConfig.getYosServerRoot());
+                new URL(sdkConfig.getYosServerRoot());
             } catch (MalformedURLException e) {
                 throw new IllegalConfigFormatException("yosServerRoot", "yosServerRoot is illegal");
             }
         }
-        if (StringUtils.isNotEmpty(yopFileSdkConfig.getSandboxServerRoot())) {
+        if (StringUtils.isNotEmpty(sdkConfig.getSandboxServerRoot())) {
             try {
-                new URL(yopFileSdkConfig.getSandboxServerRoot());
+                new URL(sdkConfig.getSandboxServerRoot());
             } catch (MalformedURLException e) {
                 throw new IllegalConfigFormatException("sandboxServerRoot", "sandboxServerRoot is illegal");
             }

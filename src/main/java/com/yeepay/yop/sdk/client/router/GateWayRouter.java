@@ -1,14 +1,14 @@
 package com.yeepay.yop.sdk.client.router;
 
-import com.yeepay.yop.sdk.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
 
 import java.net.URI;
 
 /**
- * title: 网关路由<br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 网关路由<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

@@ -1,14 +1,14 @@
 package com.yeepay.yop.sdk.utils;
 
-import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
-import com.yeepay.yop.sdk.exception.YopServiceException;
+import com.yeepay.g3.core.yop.sdk.sample.config.SDKConfig;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopServiceException;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * title:校验工具类 <br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title:校验工具类 <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -19,14 +19,14 @@ public class ValidateUtils {
     /**
      * 校验客户SDK配置
      *
-     * @param customYopFileSdkConfig 客户SDK配置
+     * @param customSDKConfig 客户SDK配置
      */
-    public static void checkCustomSDKConfig(YopFileSdkConfig customYopFileSdkConfig) {
-        if (StringUtils.isEmpty(customYopFileSdkConfig.getAppKey())) {
+    public static void checkCustomSDKConfig(SDKConfig customSDKConfig) {
+        if (StringUtils.isEmpty(customSDKConfig.getAppKey())) {
             throw new YopServiceException("Custom SDKConfig must specify appKey.");
         }
-        if (StringUtils.isEmpty(customYopFileSdkConfig.getAesSecretKey())
-                && (customYopFileSdkConfig.getIsvPrivateKey() == null || customYopFileSdkConfig.getIsvPrivateKey().length == 0)) {
+        if (StringUtils.isEmpty(customSDKConfig.getAesSecretKey())
+                && (customSDKConfig.getIsvPrivateKey() == null || customSDKConfig.getIsvPrivateKey().length == 0)) {
             throw new YopServiceException("Custom SDKConfig must specify AesSecretKey or IsvPrivateKey.");
         }
     }

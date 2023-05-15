@@ -1,25 +1,24 @@
 package com.yeepay.yop.sdk.security;
 
 import com.google.common.base.Charsets;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
-import com.yeepay.yop.sdk.config.YopSdkConfig;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
-import com.yeepay.yop.sdk.utils.Encodes;
+import com.yeepay.g3.core.yop.sdk.sample.config.AppSdkConfig;
+import com.yeepay.g3.core.yop.sdk.sample.config.AppSdkConfigProviderRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.config.support.BackUpAppSdkConfigManager;
+import com.yeepay.g3.core.yop.sdk.sample.exception.VerifySignFailedException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.security.rsa.RSA;
+import com.yeepay.g3.core.yop.sdk.sample.utils.CharacterConstants;
+import com.yeepay.g3.core.yop.sdk.sample.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 /**
- * title: 数字证书工具类<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 数字证书工具类<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -61,7 +60,7 @@ public class DigitalEnvelopeUtils {
         String signToBase64 = StringUtils.substringAfterLast(data, "$");
 
         //验证签名
-        PublicKey publicKey = getYopPublicKey(CertTypeEnum.RSA2048);
+        PublicKey publicKey = getDefaultYopPublicKey();
         boolean verifySign = RSA.verifySign(sourceData, signToBase64, publicKey, digestAlg);
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
@@ -70,10 +69,12 @@ public class DigitalEnvelopeUtils {
         return sourceData;
     }
 
-    private static PublicKey getYopPublicKey(CertTypeEnum certType) {
-        YopSdkConfig yopSdkConfig = YopSdkConfigProviderRegistry.getProvider().getConfig();
-        return yopSdkConfig.loadYopPublicKey(certType);
+    private static PublicKey getDefaultYopPublicKey() {
+        AppSdkConfig appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getDefaultConfig();
+        return appSdkConfig == null ? BackUpAppSdkConfigManager.getBackUpConfig().getDefaultYopPublicKey() :
+                appSdkConfig.getDefaultYopPublicKey();
     }
+
 
     /**
      * 拆开数字信(使用默认sdk配置文件中的私钥）
@@ -83,8 +84,30 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String credentialType) {
-        return decrypt(cipherText, "default", credentialType);
+        return decrypt(cipherText, CertTypeEnum.parse(credentialType));
     }
+
+
+    /**
+     * 拆开数字信封(使用默认sdk配置文件中的私钥)
+     *
+     * @param cipherText 待解密内容
+     * @param certType   证书类型（用于解密）"RSA2048"或者"RSA4096"
+     * @return 已解密内容
+     */
+    public static String decrypt(String cipherText, CertTypeEnum certType) {
+        AppSdkConfig appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getDefaultConfig();
+        if (appSdkConfig == null) {
+            throw new YopClientException("No default appSdkConfig configured");
+        }
+        PrivateKey privateKey = appSdkConfig.loadPrivateKey(certType);
+        if (privateKey != null) {
+            return decrypt(cipherText, privateKey);
+        } else {
+            throw new YopClientException("No PrivateKey of Type:" + certType + " configured for default appSdkConfig.");
+        }
+    }
+
 
     /**
      * 拆开数字信封(使用指定appKey配置文件中的私钥)
@@ -95,10 +118,29 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, String credentialType) {
-        YopRSACredentials yopCredentials = (YopRSACredentials) YopCredentialsProviderRegistry.getProvider()
-                .getCredentials(appKey, credentialType);
-        PrivateKey privateKey = yopCredentials.getPrivateKey();
-        return decrypt(cipherText, privateKey);
+        return decrypt(cipherText, appKey, CertTypeEnum.parse(credentialType));
+    }
+
+
+    /**
+     * 拆开数字信封(使用指定appKey配置文件中的私钥)
+     *
+     * @param cipherText 待解密内容
+     * @param appKey     appKey
+     * @param certType   证书类型（用于解密）"RSA2048"或者"RSA4096"
+     * @return 已解密内容
+     */
+    public static String decrypt(String cipherText, String appKey, CertTypeEnum certType) {
+        AppSdkConfig appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getConfig(appKey);
+        if (appSdkConfig == null) {
+            throw new YopClientException("No SDKConfig configured for appKey:" + appKey + ".");
+        }
+        PrivateKey privateKey = appSdkConfig.loadPrivateKey(certType);
+        if (privateKey != null) {
+            return decrypt(cipherText, privateKey);
+        } else {
+            throw new YopClientException("No PrivateKey of Type:" + certType + " configured for SDKConfig with appKey:" + appKey + ".");
+        }
     }
 
     /**

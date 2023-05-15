@@ -1,9 +1,9 @@
 package com.yeepay.yop.sdk.internal;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.HttpMethodName;
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpMethodName;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.utils.JsonUtils;
 
 import java.io.File;
 import java.io.InputStream;
@@ -11,7 +11,7 @@ import java.net.URI;
 import java.util.*;
 
 /**
- * Default implementation of the {@linkplain com.yeepay.yop.sdk.internal.Request} interface.
+ * Default implementation of the {@linkplain com.yeepay.g3.core.yop.sdk.sample.internal.Request interface.
  * <p>
  * This class is only intended for internal use inside the AWS client libraries.
  * Callers shouldn't ever interact directly with objects of this class.
@@ -33,17 +33,17 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
      * Lists values in this Map must use an implementation that allows
      * null values to be present.
      */
-    private final Map<String, List<String>> parameters = new LinkedHashMap<String, List<String>>();
+    private Map<String, List<String>> parameters = new LinkedHashMap<String, List<String>>();
 
     /**
      * Map of the files being sent as part of this request
      */
-    private final Map<String, List<MultiPartFile>> multiPartFiles = new LinkedHashMap<String, List<MultiPartFile>>();
+    private Map<String, List<MultiPartFile>> multiPartFiles = new LinkedHashMap<String, List<MultiPartFile>>();
 
     /**
      * Map of the headers included in this request
      */
-    private final Map<String, String> headers = new HashMap<String, String>();
+    private Map<String, String> headers = new HashMap<String, String>();
 
     /**
      * The service endpoint to which this request should be sent
@@ -53,7 +53,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     /**
      * The name of the service to which this request is being sent
      */
-    private final String serviceName;
+    private String serviceName;
 
     /**
      * The original, user facing request object which this internal request
@@ -183,7 +183,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     }
 
     /**
-     * @see Request#withParameter(java.lang.String, java.lang.String)
+     * @see Request#withParameter(String, String)
      */
     @Override
     public Request<T> withParameter(String name, String value) {
@@ -247,7 +247,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     }
 
     /**
-     * @see Request#setEndpoint(java.net.URI)
+     * @see Request#setEndpoint(URI)
      */
     @Override
     public void setEndpoint(URI endpoint) {
@@ -287,7 +287,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     }
 
     /**
-     * @see Request#setHeaders(java.util.Map)
+     * @see Request#setHeaders(Map)
      */
     @Override
     public void setHeaders(Map<String, String> headers) {
@@ -296,7 +296,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
     }
 
     /**
-     * @see Request#setParameters(java.util.Map)
+     * @see Request#setParameters(Map)
      */
     @Override
     public void setParameters(Map<String, List<String>> parameters) {

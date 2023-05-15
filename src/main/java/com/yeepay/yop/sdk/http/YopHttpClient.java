@@ -1,14 +1,14 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.client.ClientConfiguration;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.internal.MultiPartFile;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.RequestConfig;
-import com.yeepay.yop.sdk.utils.HttpUtils;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentials;
+import com.yeepay.g3.core.yop.sdk.sample.client.ClientConfiguration;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.internal.MultiPartFile;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.RequestConfig;
+import com.yeepay.g3.core.yop.sdk.sample.utils.HttpUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -65,10 +65,10 @@ import java.util.concurrent.Future;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: Yop http客户端<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Yop http客户端<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -91,16 +91,16 @@ public class YopHttpClient {
     /**
      * Internal client for sending HTTP requests
      */
-    private final CloseableHttpClient httpClient;
+    private CloseableHttpClient httpClient;
 
     /**
      * Client configuration options, such as proxy settings, max retries, etc.
      */
     private final ClientConfiguration config;
 
-    private final HttpClientConnectionManager connectionManager;
+    private HttpClientConnectionManager connectionManager;
 
-    private final org.apache.http.client.config.RequestConfig.Builder requestConfigBuilder;
+    private org.apache.http.client.config.RequestConfig.Builder requestConfigBuilder;
     private CredentialsProvider credentialsProvider;
     private HttpHost proxyHttpHost;
 
@@ -149,6 +149,7 @@ public class YopHttpClient {
                                                                                    RequestConfig requestConfig,
                                                                                    ExecutionContext executionContext,
                                                                                    HttpResponseHandler<Output> responseHandler) {
+
         YopCredentials yopCredentials = executionContext.getYopCredentials();
         setAppKey(request, yopCredentials);
         setUserAgent(request);
@@ -176,6 +177,9 @@ public class YopHttpClient {
             HttpUtils.printRequest(httpRequest);
             return responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, requestConfig, executionContext));
         } catch (Exception e) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Unable to execute HTTP request", e);
+            }
             YopClientException yop;
             if (e instanceof YopClientException) {
                 yop = (YopClientException) e;

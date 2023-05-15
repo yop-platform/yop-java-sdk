@@ -23,11 +23,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class RestartableMultiByteArrayInputStream extends RestartableInputStream {
 
-    private final List<byte[]> byteArrayList;
+    private List<byte[]> byteArrayList;
 
     private long pos = 0;
-    private final int blockSize;
-    private final long length;
+    private int blockSize;
+    private long length;
 
     public RestartableMultiByteArrayInputStream(List<byte[]> byteArrayList, long length) {
         checkNotNull(byteArrayList, "byteArrayList should not be null.");

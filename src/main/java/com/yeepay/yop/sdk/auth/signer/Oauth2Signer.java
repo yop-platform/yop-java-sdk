@@ -4,19 +4,19 @@
  */
 package com.yeepay.yop.sdk.auth.signer;
 
-import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
-import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.g3.core.yop.sdk.sample.auth.SignOptions;
+import com.yeepay.g3.core.yop.sdk.sample.auth.Signer;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentials;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentialsWithoutSign;
+import com.yeepay.g3.core.yop.sdk.sample.auth.credentials.YopOauth2Credentials;
+import com.yeepay.g3.core.yop.sdk.sample.exception.VerifySignFailedException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpResponse;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.security.rsa.RSA;
+import com.yeepay.g3.core.yop.sdk.sample.utils.CharacterConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

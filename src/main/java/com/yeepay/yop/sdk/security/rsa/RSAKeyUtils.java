@@ -1,8 +1,8 @@
 package com.yeepay.yop.sdk.security.rsa;
 
 
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.utils.Encodes;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.utils.Encodes;
 
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -28,12 +28,13 @@ public class RSAKeyUtils {
      *
      * @param pubKey pubKey
      * @return PublicKey
+     * @throws InvalidKeySpecException
      */
-    public static PublicKey string2PublicKey(String pubKey) {
+    public static PublicKey string2PublicKey(String pubKey) throws InvalidKeySpecException {
         try {
             return KeyFactory.getInstance(RSA).generatePublic(
                     new X509EncodedKeySpec(Encodes.decodeBase64(pubKey)));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new YopClientException("No such algorithm.", e);
         }
     }
@@ -43,14 +44,20 @@ public class RSAKeyUtils {
      *
      * @param priKey 私钥字符串
      * @return 私钥
+     * @throws InvalidKeySpecException
      */
-    public static PrivateKey string2PrivateKey(String priKey) {
+    public static PrivateKey string2PrivateKey(String priKey) throws InvalidKeySpecException {
+
         try {
             return KeyFactory.getInstance(RSA).generatePrivate(
                     new PKCS8EncodedKeySpec(Encodes.decodeBase64(priKey)));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new YopClientException("No such algorithm.", e);
         }
+    }
+
+    public static String key2String(Key key) {
+        return Encodes.encodeBase64(key.getEncoded());
     }
 
 }

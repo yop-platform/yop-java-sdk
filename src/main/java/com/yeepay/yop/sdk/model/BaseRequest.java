@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 
 /**
- * title: 请求基础类<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 请求基础类<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -16,7 +16,7 @@ import java.io.Serializable;
  */
 public abstract class BaseRequest implements Serializable, Cloneable {
 
-    private RequestConfig requestConfig = RequestConfig.Builder.builder().build();
+    private RequestConfig requestConfig = RequestConfig.Builder.aRequestConfig().build();
 
     @JsonIgnore
     public RequestConfig getRequestConfig() {

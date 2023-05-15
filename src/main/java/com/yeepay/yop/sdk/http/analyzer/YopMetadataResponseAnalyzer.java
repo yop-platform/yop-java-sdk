@@ -1,23 +1,23 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
 import com.google.common.base.CharMatcher;
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
-import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.YopResponseMetadata;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzer;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandleContext;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.YopResponseMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * title: YopMetadataResponseAnalyzer<br>
+ * title: YopMetadataResponseAnalyzer<br/>
  * description: HTTP response handler for YOP responses. Provides common utilities that other specialized YOP response
- * handlers need to share such as pulling common response metadata (ex: request IDs) out of headers.<br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * handlers need to share such as pulling common response metadata (ex: request IDs) out of headers.<br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

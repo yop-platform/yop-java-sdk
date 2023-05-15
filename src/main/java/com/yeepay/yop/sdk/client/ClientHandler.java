@@ -1,13 +1,13 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
 
 /**
- * title: 客户端处理器接口<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 客户端处理器接口<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

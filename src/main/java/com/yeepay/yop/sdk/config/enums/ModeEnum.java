@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.config.enums;
 
 /**
- * title: 运行模式<br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 运行模式<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -21,9 +21,9 @@ public enum ModeEnum {
      */
     sandbox("sandbox", "沙箱");
 
-    private final String code;
+    private String code;
 
-    private final String name;
+    private String name;
 
     ModeEnum(String code, String name) {
         this.code = code;
@@ -34,8 +34,15 @@ public enum ModeEnum {
         return code;
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
 }

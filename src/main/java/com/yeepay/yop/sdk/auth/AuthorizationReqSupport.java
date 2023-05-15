@@ -1,15 +1,15 @@
-package com.yeepay.yop.sdk.auth.req;
+package com.yeepay.yop.sdk.auth;
 
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.g3.core.yop.sdk.sample.security.DigestAlgEnum;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * title: 认证需求support<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 认证需求support<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

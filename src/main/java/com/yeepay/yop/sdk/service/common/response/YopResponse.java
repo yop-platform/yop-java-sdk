@@ -3,19 +3,19 @@ package com.yeepay.yop.sdk.service.common.response;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.utils.JsonUtils;
-import com.yeepay.yop.sdk.utils.json.KeepAsRawStringDeserializer;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.utils.JsonUtils;
+import com.yeepay.g3.core.yop.sdk.sample.utils.json.KeepAsRawStringDeserializer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 
 /**
- * title: 通用YopResponse<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 通用YopResponse<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

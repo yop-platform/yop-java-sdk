@@ -12,7 +12,7 @@
  */
 package com.yeepay.yop.sdk.internal;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class RestartableFileInputStream extends RestartableInputStream {
 
-    private final File file;
+    private File file;
 
     private FileInputStream input;
 

@@ -1,4 +1,4 @@
-package com.yeepay.yop.sdk.config.enums;
+package com.yeepay.yop.sdk.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -23,8 +23,8 @@ public enum CertStoreType {
 
     private static final Map<String, CertStoreType> VALUE_MAP = Maps.newHashMap();
 
-    private final String value;
-    private final String displayName;
+    private String value;
+    private String displayName;
 
     static {
         for (CertStoreType item : CertStoreType.values()) {

@@ -13,7 +13,7 @@
 package com.yeepay.yop.sdk.internal;
 
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * The Restartable InputStream can Reset.
  */
 public class RestartableResettableInputStream extends RestartableInputStream {
-    private final InputStream input;
+    private InputStream input;
 
     public RestartableResettableInputStream(InputStream input) {
         checkNotNull(input, "input should not be null.");

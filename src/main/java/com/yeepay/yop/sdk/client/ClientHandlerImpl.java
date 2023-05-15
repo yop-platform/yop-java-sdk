@@ -1,42 +1,33 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.auth.SignerSupport;
-import com.yeepay.yop.sdk.auth.cipher.DefaultEncryptor;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
-import com.yeepay.yop.sdk.client.router.GateWayRouter;
-import com.yeepay.yop.sdk.client.router.ServerRootSpace;
-import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
-import com.yeepay.yop.sdk.config.YopSdkConfig;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.ExecutionContext;
-import com.yeepay.yop.sdk.http.YopHttpClient;
-import com.yeepay.yop.sdk.http.YopHttpClientFactory;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.RequestConfig;
+import com.yeepay.g3.core.yop.sdk.sample.auth.*;
+import com.yeepay.g3.core.yop.sdk.sample.auth.cipher.DefaultEncryptor;
+import com.yeepay.g3.core.yop.sdk.sample.auth.credentials.YopRSACredentials;
+import com.yeepay.g3.core.yop.sdk.sample.client.router.GateWayRouter;
+import com.yeepay.g3.core.yop.sdk.sample.client.router.ServerRootSpace;
+import com.yeepay.g3.core.yop.sdk.sample.client.router.SimpleGateWayRouter;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.ExecutionContext;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpClient;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpClientFactory;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.RequestConfig;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * title: 默认客户端处理器<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 默认客户端处理器<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
  * @since 17/11/14 11:36
  */
 public class ClientHandlerImpl implements ClientHandler {
-
-    private final YopSdkConfigProvider yopSdkConfigProvider;
 
     private final YopCredentialsProvider yopCredentialsProvider;
 
@@ -47,7 +38,6 @@ public class ClientHandlerImpl implements ClientHandler {
     private final GateWayRouter gateWayRouter;
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
-        this.yopSdkConfigProvider = handlerParams.getClientParams().getYopSdkConfigProvider();
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
         ServerRootSpace serverRootSpace = new ServerRootSpace(handlerParams.getClientParams().getEndPoint(),
@@ -57,13 +47,8 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
-        YopHttpClient yopHttpClient = null;
-        if (null == handlerParams) {
-            yopHttpClient = YopHttpClientFactory.getDefaultClient();
-        } else {
-            yopHttpClient = YopHttpClientFactory.getClient(handlerParams.getClientParams().getClientConfiguration());
-        }
-        return yopHttpClient;
+        return YopHttpClientFactory.getDefaultClient();
+//        return new YopHttpClient(handlerParams.getClientParams().getClientConfiguration());
     }
 
     @Override
@@ -84,17 +69,15 @@ public class ClientHandlerImpl implements ClientHandler {
         if (authorizationReq == null) {
             throw new YopClientException("no authenticate req defined");
         } else {
-            YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
                     .withSigner(SignerSupport.getSigner(authorizationReq.getSignerType()))
                     .withSignOptions(authorizationReq.getSignOptions())
-                    .withYopPublicKey(yopSdkConfig.loadYopPublicKey(authorizationReq.getCredentialType()));
-
+                    .withYopPublicKey(yopCredentialsProvider.getYopPublicKey(authorizationReq.getCredentialType()));
             YopCredentials credential = executionParams.getInput().getRequestConfig().getCredentials();
             if (credential == null) {
                 String appKey = executionParams.getInput().getRequestConfig().getAppKey();
                 if (StringUtils.isEmpty(appKey)) {
-                    credential = yopCredentialsProvider.getCredentials("default", authorizationReq.getCredentialType());
+                    credential = yopCredentialsProvider.getDefaultAppCredentials(authorizationReq.getCredentialType());
                 } else {
                     credential = yopCredentialsProvider.getCredentials(appKey, authorizationReq.getCredentialType());
                 }
@@ -103,7 +86,6 @@ public class ClientHandlerImpl implements ClientHandler {
                 throw new YopClientException("No credentials specified");
             }
             builder.withYopCredentials(credential);
-
             RequestConfig requestConfig = executionParams.getInput().getRequestConfig();
             if (requestConfig != null && BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
                 if (credential instanceof YopRSACredentials) {

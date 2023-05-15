@@ -1,4 +1,4 @@
-package com.yeepay.yop.sdk.config.provider.file;
+package com.yeepay.yop.sdk.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -16,7 +16,7 @@ import java.io.Serializable;
  * @version 1.0.0
  * @since 2016/12/26 下午3:50
  */
-public final class YopHttpClientConfig implements Serializable {
+public final class HttpClientConfig implements Serializable {
 
     private static final long serialVersionUID = -6377916283927611130L;
 

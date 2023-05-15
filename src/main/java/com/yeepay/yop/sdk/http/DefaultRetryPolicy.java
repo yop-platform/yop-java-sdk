@@ -1,9 +1,8 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.ErrorCode;
-import com.yeepay.yop.sdk.client.ClientConfiguration;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.exception.YopServiceException;
+import com.yeepay.g3.core.yop.sdk.sample.ErrorCode;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopServiceException;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,14 +12,14 @@ import java.io.IOException;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Retry policy that can be configured on a specific service client using {@link ClientConfiguration}. This class is
+ * Retry policy that can be configured on a specific service client using {@link com.yeepay.g3.core.yop.sdk.sample.client.ClientConfiguration}. This class is
  * immutable, therefore safe to be shared by multiple clients.
  *
- * @see ClientConfiguration
+ * @see com.yeepay.g3.core.yop.sdk.sample.client.ClientConfiguration
  */
 public class DefaultRetryPolicy implements RetryPolicy {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultRetryPolicy.class);
+    private static Logger logger = LoggerFactory.getLogger(DefaultRetryPolicy.class);
 
     /**
      * Base sleep time (milliseconds) for general exceptions. *
@@ -30,12 +29,12 @@ public class DefaultRetryPolicy implements RetryPolicy {
     /**
      * Non-negative integer indicating the max retry count.
      */
-    private final int maxErrorRetry;
+    private int maxErrorRetry;
 
     /**
      * Max delay time in millis.
      */
-    private final long maxDelayInMillis;
+    private long maxDelayInMillis;
 
     /**
      * Constructs a new DefaultRetryPolicy.
@@ -49,7 +48,7 @@ public class DefaultRetryPolicy implements RetryPolicy {
      *
      * @param maxErrorRetry    Maximum number of retry attempts for failed requests.
      * @param maxDelayInMillis Maximum delay time (in milliseconds) before next retry attempt.
-     * @see ClientConfiguration
+     * @see com.yeepay.g3.core.yop.sdk.sample.client.ClientConfiguration
      */
     public DefaultRetryPolicy(int maxErrorRetry, long maxDelayInMillis) {
         checkArgument(maxErrorRetry >= 0, "maxErrorRetry should be a non-negative.");

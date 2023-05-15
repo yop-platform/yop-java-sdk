@@ -1,10 +1,12 @@
 package com.yeepay.yop.sdk.client.router;
 
 import com.google.common.collect.Sets;
-import com.yeepay.yop.sdk.config.enums.ModeEnum;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
+import com.yeepay.g3.core.yop.sdk.sample.config.AppSdkConfig;
+import com.yeepay.g3.core.yop.sdk.sample.config.AppSdkConfigProviderRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.config.enums.ModeEnum;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.utils.CharacterConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
@@ -12,10 +14,10 @@ import java.util.Collections;
 import java.util.Set;
 
 /**
- * title: 简单网关路由<br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 简单网关路由<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -24,7 +26,6 @@ import java.util.Set;
 public class SimpleGateWayRouter implements GateWayRouter {
 
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
-    private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
 
     private final ServerRootSpace space;
 
@@ -63,7 +64,11 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private boolean isAppInSandbox(String appKey) {
         if (systemMode == null) {
-            return StringUtils.startsWith(appKey, SANDBOX_APP_ID_PREFIX);
+            AppSdkConfig appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getConfig(appKey);
+            if (appSdkConfig == null) {
+                return false;
+            }
+            return appSdkConfig.getMode() == ModeEnum.sandbox;
         }
         return systemMode == ModeEnum.sandbox;
     }

@@ -8,12 +8,12 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import java.io.Serializable;
 
 /**
- * title: BaseResponse<br>
+ * title: BaseResponse<br/>
  * description: Represents the response from an YOP service, including the result payload and any response metadata. YOP response
  * metadata consists primarily of the YOP request ID, which can be used for debugging purposes when services aren't
- * acting as expected.<br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * acting as expected.<br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

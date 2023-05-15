@@ -1,17 +1,16 @@
 package com.yeepay.yop.sdk.auth;
 
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpResponse;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
 
 import java.security.PublicKey;
 
 /**
- * title: 签名器<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 签名器<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -29,6 +28,8 @@ public interface Signer {
         public void checkSignature(YopHttpResponse httpResponse, String signature, PublicKey publicKey, SignOptions options) {
             //do nothing
         }
+
+
     };
 
     /**

@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.security.rsa;
 
 import com.google.common.base.Charsets;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.Constants;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
-import com.yeepay.yop.sdk.utils.Encodes;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.security.Constants;
+import com.yeepay.g3.core.yop.sdk.sample.security.DigestAlgEnum;
+import com.yeepay.g3.core.yop.sdk.sample.utils.Encodes;
 
 import javax.crypto.Cipher;
 import java.security.Key;

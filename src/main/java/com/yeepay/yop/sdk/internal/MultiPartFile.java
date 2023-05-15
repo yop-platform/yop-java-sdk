@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.internal;
 
-import com.yeepay.yop.sdk.utils.FileUtils;
-import com.yeepay.yop.sdk.utils.checksum.CRC64;
+import com.yeepay.g3.core.yop.sdk.sample.utils.FileUtils;
+import com.yeepay.g3.core.yop.sdk.sample.utils.checksum.CRC64;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -9,10 +9,10 @@ import java.io.*;
 import java.util.zip.CheckedInputStream;
 
 /**
- * title: MultiPartFile<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: MultiPartFile<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -81,4 +81,6 @@ public class MultiPartFile implements Serializable {
         return new ImmutablePair<String, CheckedInputStream>(fileName, new CheckedInputStream(sequenceInputStream,
                 new CRC64()));
     }
+
+
 }

@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
 
 /**
  * Responsible for handling an HTTP response and returning an object of type T.

@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.exception.config;
 
 /**
- * title: 配置丢失<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 配置丢失<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

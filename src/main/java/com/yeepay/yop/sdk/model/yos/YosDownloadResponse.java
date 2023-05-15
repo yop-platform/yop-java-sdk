@@ -1,15 +1,15 @@
 package com.yeepay.yop.sdk.model.yos;
 
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.YopResponseMetadata;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.YopResponseMetadata;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
- * title: Yos下载response<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Yos下载response<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

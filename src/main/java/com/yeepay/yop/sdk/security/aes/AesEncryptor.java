@@ -1,17 +1,18 @@
 package com.yeepay.yop.sdk.security.aes;
 
-import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.GeneralSecurityException;
 
 /**
- * title: AES加密器<br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: AES加密器<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -77,8 +78,9 @@ public class AesEncryptor {
     /**
      * 初始向量的方法, 全部为0. 这里的写法适合于其它算法,针对AES算法的话,IV值一定是128位的(16字节).
      *
-     * @param fullAlg 算法
-     * @return byte[]
+     * @param fullAlg
+     * @return
+     * @throws GeneralSecurityException
      */
     private static byte[] initIv(String fullAlg) {
 

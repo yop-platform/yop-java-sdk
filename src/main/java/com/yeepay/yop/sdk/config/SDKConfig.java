@@ -1,6 +1,7 @@
-package com.yeepay.yop.sdk.config.provider.file;
+package com.yeepay.yop.sdk.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.yeepay.g3.core.yop.sdk.sample.config.enums.ModeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -16,7 +17,7 @@ import java.io.Serializable;
  * @version 1.0.0
  * @since 2016/12/26 下午3:50
  */
-public final class YopFileSdkConfig implements Serializable {
+public final class SDKConfig implements Serializable {
 
     private static final long serialVersionUID = 2181419124446854272L;
 
@@ -36,23 +37,28 @@ public final class YopFileSdkConfig implements Serializable {
     private String aesSecretKey;
 
     @JsonProperty("yop_public_key")
-    private YopCertConfig[] yopPublicKey;
+    private CertConfig[] yopPublicKey;
 
     @JsonProperty("isv_private_key")
-    private YopCertConfig[] isvPrivateKey;
+    private CertConfig[] isvPrivateKey;
 
     @JsonProperty("encrypt_key")
     private String encryptKey;
 
     @JsonProperty("http_client")
-    private YopHttpClientConfig httpClient;
+    private HttpClientConfig httpClient;
 
     @JsonProperty("trust_all_certs")
     private Boolean trustAllCerts;
 
-    private YopProxyConfig proxy;
+    private ProxyConfig proxy;
 
     private String region;
+
+    @JsonProperty("default")
+    private Boolean defaulted;
+
+    private ModeEnum mode;
 
     public String getAppKey() {
         return appKey;
@@ -94,19 +100,19 @@ public final class YopFileSdkConfig implements Serializable {
         this.aesSecretKey = aesSecretKey;
     }
 
-    public YopCertConfig[] getYopPublicKey() {
+    public CertConfig[] getYopPublicKey() {
         return yopPublicKey;
     }
 
-    public void setYopPublicKey(YopCertConfig[] yopPublicKey) {
+    public void setYopPublicKey(CertConfig[] yopPublicKey) {
         this.yopPublicKey = yopPublicKey;
     }
 
-    public YopCertConfig[] getIsvPrivateKey() {
+    public CertConfig[] getIsvPrivateKey() {
         return isvPrivateKey;
     }
 
-    public void setIsvPrivateKey(YopCertConfig[] isvPrivateKey) {
+    public void setIsvPrivateKey(CertConfig[] isvPrivateKey) {
         this.isvPrivateKey = isvPrivateKey;
     }
 
@@ -118,11 +124,11 @@ public final class YopFileSdkConfig implements Serializable {
         this.encryptKey = encryptKey;
     }
 
-    public YopHttpClientConfig getHttpClient() {
+    public HttpClientConfig getHttpClient() {
         return httpClient;
     }
 
-    public void setHttpClient(YopHttpClientConfig httpClient) {
+    public void setHttpClient(HttpClientConfig httpClient) {
         this.httpClient = httpClient;
     }
 
@@ -134,11 +140,11 @@ public final class YopFileSdkConfig implements Serializable {
         this.trustAllCerts = trustAllCerts;
     }
 
-    public YopProxyConfig getProxy() {
+    public ProxyConfig getProxy() {
         return proxy;
     }
 
-    public void setProxy(YopProxyConfig proxy) {
+    public void setProxy(ProxyConfig proxy) {
         this.proxy = proxy;
     }
 
@@ -148,6 +154,22 @@ public final class YopFileSdkConfig implements Serializable {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public Boolean getDefaulted() {
+        return defaulted;
+    }
+
+    public void setDefaulted(Boolean defaulted) {
+        this.defaulted = defaulted;
+    }
+
+    public ModeEnum getMode() {
+        return mode;
+    }
+
+    public void setMode(ModeEnum mode) {
+        this.mode = mode;
     }
 
     @Override

@@ -2,13 +2,13 @@ package com.yeepay.yop.sdk.utils;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.HttpMethodName;
-import com.yeepay.yop.sdk.http.Protocol;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpMethodName;
+import com.yeepay.g3.core.yop.sdk.sample.http.Protocol;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.http.Header;
 import org.apache.http.NameValuePair;
@@ -31,11 +31,11 @@ public class HttpUtils {
 
     private static final String DEFAULT_ENCODING = "UTF-8";
 
-    private static final BitSet URI_UNRESERVED_CHARACTERS = new BitSet();
-    private static final String[] PERCENT_ENCODED_STRINGS = new String[256];
+    private static BitSet URI_UNRESERVED_CHARACTERS = new BitSet();
+    private static String[] PERCENT_ENCODED_STRINGS = new String[256];
 
     private static final Joiner queryStringJoiner = Joiner.on('&');
-    private static final boolean HTTP_VERBOSE = Boolean.parseBoolean(System.getProperty("yop.sdk.http", "false"));
+    private static boolean HTTP_VERBOSE = Boolean.parseBoolean(System.getProperty("yop.sdk.http", "false"));
 //    private static boolean HTTP_VERBOSE = true;
 
     /**
@@ -299,7 +299,7 @@ public class HttpUtils {
      * Creates an encoded query string from all the parameters in the specified
      * request.
      *
-     * @param request      The request containing the parameters to encode.
+     * @param request The request containing the parameters to encode.
      * @param forSignature forSignature.
      * @return Null if no parameters were present, otherwise the encoded query
      * string for the parameters present in the specified request.

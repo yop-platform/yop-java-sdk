@@ -1,16 +1,15 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
+import com.yeepay.g3.core.yop.sdk.sample.auth.AuthorizationReqRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentialsProvider;
 
 import java.net.URI;
 
 /**
- * title: client参数<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: client参数<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -30,19 +29,14 @@ public class ClientParams {
 
     private final YopCredentialsProvider credentialsProvider;
 
-    private final YopSdkConfigProvider yopSdkConfigProvider;
-
-    private ClientParams(URI endPoint, URI yosEndPoint, URI sandboxEndPoint,
-                         ClientConfiguration clientConfiguration,
-                         AuthorizationReqRegistry authorizationReqRegistry,
-                         YopCredentialsProvider credentialsProvider, YopSdkConfigProvider yopSdkConfigProvider) {
+    private ClientParams(URI endPoint, URI yosEndPoint, URI sandboxEndPoint, ClientConfiguration clientConfiguration,
+                         AuthorizationReqRegistry authorizationReqRegistry, YopCredentialsProvider credentialsProvider) {
         this.endPoint = endPoint;
         this.yosEndPoint = yosEndPoint;
         this.sandboxEndPoint = sandboxEndPoint;
         this.clientConfiguration = clientConfiguration;
         this.authorizationReqRegistry = authorizationReqRegistry;
         this.credentialsProvider = credentialsProvider;
-        this.yopSdkConfigProvider = yopSdkConfigProvider;
     }
 
     public URI getEndPoint() {
@@ -69,10 +63,6 @@ public class ClientParams {
         return credentialsProvider;
     }
 
-    public YopSdkConfigProvider getYopSdkConfigProvider() {
-        return yopSdkConfigProvider;
-    }
-
     public static final class Builder {
         private URI endPoint;
         private URI yosEndPoint;
@@ -80,12 +70,11 @@ public class ClientParams {
         private ClientConfiguration clientConfiguration;
         private AuthorizationReqRegistry authorizationReqRegistry;
         private YopCredentialsProvider credentialsProvider;
-        private YopSdkConfigProvider yopSdkConfigProvider;
 
         private Builder() {
         }
 
-        public static Builder builder() {
+        public static Builder aClientParams() {
             return new Builder();
         }
 
@@ -119,15 +108,8 @@ public class ClientParams {
             return this;
         }
 
-        public Builder withYopSdkConfigProvider(YopSdkConfigProvider yopSdkConfigProvider) {
-            this.yopSdkConfigProvider = yopSdkConfigProvider;
-            return this;
-        }
-
         public ClientParams build() {
-            return new ClientParams(endPoint, yosEndPoint, sandboxEndPoint,
-                    clientConfiguration, authorizationReqRegistry,
-                    credentialsProvider, yopSdkConfigProvider);
+            return new ClientParams(endPoint, yosEndPoint, sandboxEndPoint, clientConfiguration, authorizationReqRegistry, credentialsProvider);
         }
     }
 }

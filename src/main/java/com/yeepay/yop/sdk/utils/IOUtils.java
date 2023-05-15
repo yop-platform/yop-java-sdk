@@ -1,8 +1,8 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.google.common.primitives.UnsignedLong;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.utils.checksum.CRC64;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.utils.checksum.CRC64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,10 +11,10 @@ import java.io.FileInputStream;
 import java.util.zip.CheckedInputStream;
 
 /**
- * title: <br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

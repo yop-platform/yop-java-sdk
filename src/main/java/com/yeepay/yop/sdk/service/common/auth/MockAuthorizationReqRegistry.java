@@ -1,14 +1,14 @@
 package com.yeepay.yop.sdk.service.common.auth;
 
-import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
+import com.yeepay.g3.core.yop.sdk.sample.auth.AuthorizationReq;
+import com.yeepay.g3.core.yop.sdk.sample.auth.AuthorizationReqRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.auth.AuthorizationReqSupport;
 
 /**
- * title: Mock认证注册中心<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Mock认证注册中心<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

@@ -1,15 +1,15 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
-import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzer;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandleContext;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.utils.JsonUtils;
 
 /**
- * title: YopJsonResponseAnalyzer<br>
- * description: HTTP body json response handler for YOP responses.<br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: YopJsonResponseAnalyzer<br/>
+ * description: HTTP body json response handler for YOP responses.<br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

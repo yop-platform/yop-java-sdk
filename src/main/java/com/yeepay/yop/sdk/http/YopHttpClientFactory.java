@@ -1,15 +1,13 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.client.ClientConfiguration;
-import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.client.ClientConfiguration;
+import com.yeepay.g3.core.yop.sdk.sample.client.support.ClientParamsSupport;
 
 /**
- * title: YopHttpClient工厂<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: YopHttpClient工厂<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -23,8 +21,7 @@ public class YopHttpClientFactory {
         if (defaultClient == null) {
             synchronized (YopHttpClientFactory.class) {
                 if (defaultClient == null) {
-                    YopSdkConfigProvider yopSdkConfigProvider = YopSdkConfigProviderRegistry.getProvider();
-                    ClientConfiguration clientConfiguration = ClientConfigurationSupport.getClientConfiguration(yopSdkConfigProvider.getConfig());
+                    ClientConfiguration clientConfiguration = ClientParamsSupport.getDefaultClientParams().getClientConfiguration();
                     defaultClient = getClient(clientConfiguration);
                 }
             }

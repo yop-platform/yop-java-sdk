@@ -1,7 +1,6 @@
 package com.yeepay.yop.sdk.utils;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.HttpHeaders;
 import org.apache.tika.metadata.Metadata;
@@ -24,14 +23,14 @@ import java.util.HashMap;
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
  *
- * @author dreambt
+ * @author baitao.ji
  * @version 1.0.0
  * @since 2018/6/28 下午1:22
  */
-public final class FileUtils {
+public class FileUtils {
 
     public static String getFileName(InputStream file) {
-        String fileName;
+        String fileName = "";
 //        if (file instanceof FileInputStream) {
 //             TODO
 //            fileName = "";
@@ -115,18 +114,6 @@ public final class FileUtils {
             e.printStackTrace();
         }
         return fileExt;
-    }
-
-    public static InputStream getResourceAsStream(String resource) {
-        if (StringUtils.startsWith(resource, "/")) {
-            resource = StringUtils.substring(resource, 1);
-        }
-        final InputStream in = getContextClassLoader().getResourceAsStream(resource);
-        return in == null ? getResourceAsStream("/" + resource) : in;
-    }
-
-    public static ClassLoader getContextClassLoader() {
-        return Thread.currentThread().getContextClassLoader();
     }
 
 }

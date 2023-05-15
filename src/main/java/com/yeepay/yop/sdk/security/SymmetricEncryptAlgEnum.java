@@ -12,16 +12,16 @@ public enum SymmetricEncryptAlgEnum {
     AES("AES", "aes加密算法");
 
     private static final Map<String, SymmetricEncryptAlgEnum> VALUE_MAP = new HashMap();
-    private final String value;
-    private final String displayName;
+    private String value;
+    private String displayName;
 
-    SymmetricEncryptAlgEnum(String value, String displayName) {
+    private SymmetricEncryptAlgEnum(String value, String displayName) {
         this.value = value;
         this.displayName = displayName;
     }
 
     public static SymmetricEncryptAlgEnum parse(String value) {
-        return VALUE_MAP.get(value);
+        return (SymmetricEncryptAlgEnum)VALUE_MAP.get(value);
     }
 
     public String getValue() {
@@ -40,7 +40,7 @@ public enum SymmetricEncryptAlgEnum {
         SymmetricEncryptAlgEnum[] var0 = values();
         int var1 = var0.length;
 
-        for (int var2 = 0; var2 < var1; ++var2) {
+        for(int var2 = 0; var2 < var1; ++var2) {
             SymmetricEncryptAlgEnum item = var0[var2];
             VALUE_MAP.put(item.value, item);
         }

@@ -1,14 +1,14 @@
 package com.yeepay.yop.sdk.model.yos;
 
-import com.yeepay.yop.sdk.model.YopResponseMetadata;
+import com.yeepay.g3.core.yop.sdk.sample.model.YopResponseMetadata;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
- * title: yos下载返回元数据<br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: yos下载返回元数据<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -16,7 +16,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  */
 public class YosDownloadResponseMetadata extends YopResponseMetadata {
 
-    private static final long serialVersionUID = -1L;
+    private static final long serialVersionUID = -8745748615766958625L;
 
     private long instanceLength = -1;
 

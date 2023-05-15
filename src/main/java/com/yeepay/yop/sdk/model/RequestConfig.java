@@ -1,19 +1,19 @@
 package com.yeepay.yop.sdk.model;
 
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentials;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * title: Generic representation of request level configuration<br>
+ * title: Generic representation of request level configuration<br/>
  * description:
  * <p>
  * The customer interface for specifying
  * request level configuration is a base request class with configuration methods.
  * </p>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -114,7 +114,7 @@ public class RequestConfig {
         private Builder() {
         }
 
-        public static Builder builder() {
+        public static Builder aRequestConfig() {
             return new Builder();
         }
 
@@ -153,7 +153,7 @@ public class RequestConfig {
             return this;
         }
 
-        public Builder withNeedEncrypt(Boolean needEncrypt) {
+        public Builder withNeedEncrypt(Boolean needEncrypt){
             this.needEncrypt = needEncrypt;
             return this;
         }

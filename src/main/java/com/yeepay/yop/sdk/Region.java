@@ -19,7 +19,7 @@ public enum Region {
     /**
      * The list of ID's representing each region.
      */
-    private final List<String> regionIds;
+    private List<String> regionIds;
 
     /**
      * Constructs a new region with the specified region ID's.
@@ -28,7 +28,7 @@ public enum Region {
      * @throws NullPointerException     regionIds should not be null.
      * @throws IllegalArgumentException regionIds should not be empty.
      */
-    Region(String... regionIds) {
+    private Region(String... regionIds) {
         checkNotNull(regionIds, "regionIds should not be null.");
         checkArgument(regionIds.length > 0, "regionIds should not be empty");
         this.regionIds = Arrays.asList(regionIds);

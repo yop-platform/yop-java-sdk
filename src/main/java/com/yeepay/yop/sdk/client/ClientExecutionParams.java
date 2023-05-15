@@ -1,15 +1,15 @@
 package com.yeepay.yop.sdk.client;
 
-import com.yeepay.yop.sdk.http.HttpResponseHandler;
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.transform.RequestMarshaller;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandler;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.transform.RequestMarshaller;
 
 /**
- * title: 客户端执行参数<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 客户端执行参数<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -22,7 +22,6 @@ public class ClientExecutionParams<Input extends BaseRequest, Output extends Bas
     private RequestMarshaller<Input> requestMarshaller;
 
     private HttpResponseHandler<Output> responseHandler;
-
 
     public Input getInput() {
         return input;

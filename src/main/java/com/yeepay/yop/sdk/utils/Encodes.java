@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.utils;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;

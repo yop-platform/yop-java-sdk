@@ -1,15 +1,15 @@
 package com.yeepay.yop.sdk.http.handler;
 
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
-import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
-import com.yeepay.yop.sdk.http.HttpResponseHandler;
-import com.yeepay.yop.sdk.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzer;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandleContext;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandler;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
 
 /**
- * title: 默认HttpResponseHandler<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 默认HttpResponseHandler<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -36,5 +36,6 @@ public class DefaultHttpResponseHandler<T extends BaseResponse> implements HttpR
         }
         return response;
     }
+
 
 }

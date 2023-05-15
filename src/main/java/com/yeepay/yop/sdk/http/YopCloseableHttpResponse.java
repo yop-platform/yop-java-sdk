@@ -160,8 +160,9 @@ public class YopCloseableHttpResponse implements CloseableHttpResponse {
 
     @Override
     public String toString() {
-        String sb = "YopCloseableHttpResponse{" + original +
-                '}';
-        return sb;
+        final StringBuilder sb = new StringBuilder("YopCloseableHttpResponse{");
+        sb.append(original);
+        sb.append('}');
+        return sb.toString();
     }
 }

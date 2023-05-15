@@ -1,39 +1,38 @@
 package com.yeepay.yop.sdk.http;
 
-import com.yeepay.yop.sdk.client.ClientConfiguration;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
 
 /**
- * Retry policy that can be configured on a specific service client using {@link ClientConfiguration}.
+ * Retry policy that can be configured on a specific service client using {@link com.yeepay.g3.core.yop.sdk.sample.client.ClientConfiguration}.
  */
 public interface RetryPolicy {
 
     /**
      * SDK default max retry count.
      */
-    int DEFAULT_MAX_ERROR_RETRY = 3;
+    public static final int DEFAULT_MAX_ERROR_RETRY = 1;
     /**
      * Maximum exponential back-off time before retrying a request.
      */
-    int DEFAULT_MAX_DELAY_IN_MILLIS = 20 * 1000;
+    public static final int DEFAULT_MAX_DELAY_IN_MILLIS = 20 * 1000;
     /**
      * SDK default retry policy.
      */
-    DefaultRetryPolicy DEFAULT_RETRY_POLICY = new DefaultRetryPolicy();
+    public static final DefaultRetryPolicy DEFAULT_RETRY_POLICY = new DefaultRetryPolicy();
 
     /**
      * Returns the maximum number of retry attempts.
      *
      * @return The maximum number of retry attempts.
      */
-    int getMaxErrorRetry();
+    public int getMaxErrorRetry();
 
     /**
      * Returns the maximum delay time (in milliseconds) before retrying a request.
      *
      * @return the maximum delay time (in milliseconds) before retrying a request.
      */
-    long getMaxDelayInMillis();
+    public long getMaxDelayInMillis();
 
     /**
      * Returns the delay (in milliseconds) before next retry attempt. A negative value indicates that no more retries
@@ -45,5 +44,5 @@ public interface RetryPolicy {
      * @return the delay (in milliseconds) before next retry attempt.A negative value indicates that no more retries
      * should be made.
      */
-    long getDelayBeforeNextRetryInMillis(YopClientException exception, int retriesAttempted);
+    public long getDelayBeforeNextRetryInMillis(YopClientException exception, int retriesAttempted);
 }

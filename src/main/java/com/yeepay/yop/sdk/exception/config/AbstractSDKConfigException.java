@@ -1,13 +1,13 @@
 package com.yeepay.yop.sdk.exception.config;
 
 
-import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientBizException;
 
 /**
- * title:sdk配置异常 <br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title:sdk配置异常 <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

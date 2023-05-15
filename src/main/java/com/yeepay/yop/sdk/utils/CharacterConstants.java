@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.utils;
 
 /**
- * title: 字符常量<br>
- * description: 描述<br>
- * Copyright: Copyright (c)2014<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 字符常量<br/>
+ * description: 描述<br/>
+ * Copyright: Copyright (c)2014<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

@@ -1,16 +1,16 @@
 package com.yeepay.yop.sdk.auth;
 
-import com.yeepay.yop.sdk.auth.signer.Oauth2Signer;
-import com.yeepay.yop.sdk.auth.signer.RsaSigner;
+import com.yeepay.g3.core.yop.sdk.sample.auth.signer.Oauth2Signer;
+import com.yeepay.g3.core.yop.sdk.sample.auth.signer.RsaSigner;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * title: <br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

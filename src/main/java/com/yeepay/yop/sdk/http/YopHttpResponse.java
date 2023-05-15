@@ -1,9 +1,9 @@
 package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.utils.DateUtils;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.utils.DateUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;

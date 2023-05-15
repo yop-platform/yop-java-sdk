@@ -1,13 +1,13 @@
 package com.yeepay.yop.sdk.auth.cipher;
 
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.auth.Encryptor;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.internal.RestartableInputStream;
-import com.yeepay.yop.sdk.security.aes.AesEncryptor;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.auth.Encryptor;
+import com.yeepay.g3.core.yop.sdk.sample.auth.credentials.YopRSACredentials;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.internal.RestartableInputStream;
+import com.yeepay.g3.core.yop.sdk.sample.security.aes.AesEncryptor;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -18,11 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+
 /**
- * title: 默认加密器<br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 默认加密器<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -66,10 +67,7 @@ public class DefaultEncryptor implements Encryptor {
         if (request.getContent() != null) {
             try {
                 byte[] content = IOUtils.toByteArray(request.getContent());
-                byte[] encryptedContent = Base64.encodeBase64(AesEncryptor.encrypt(content, key));
-                //更新content-length不然网关会少读部分字节
-                request.addHeader(Headers.CONTENT_LENGTH, String.valueOf(encryptedContent.length));
-                request.setContent(RestartableInputStream.wrap(encryptedContent));
+                request.setContent(RestartableInputStream.wrap(AesEncryptor.encrypt(content, key)));
             } catch (IOException ex) {
                 throw new YopClientException("IoException occurred when encrypt content", ex);
             } catch (Throwable ex) {

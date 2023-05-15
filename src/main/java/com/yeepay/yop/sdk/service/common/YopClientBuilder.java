@@ -1,15 +1,15 @@
 package com.yeepay.yop.sdk.service.common;
 
-import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
-import com.yeepay.yop.sdk.client.AbstractServiceClientBuilder;
-import com.yeepay.yop.sdk.client.ClientParams;
-import com.yeepay.yop.sdk.service.common.auth.MockAuthorizationReqRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.auth.AuthorizationReqRegistry;
+import com.yeepay.g3.core.yop.sdk.sample.client.AbstractServiceClientBuilder;
+import com.yeepay.g3.core.yop.sdk.sample.client.ClientParams;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.auth.MockAuthorizationReqRegistry;
 
 /**
- * title: 通用ClientBuilder<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 通用ClientBuilder<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -27,12 +27,5 @@ public class YopClientBuilder extends AbstractServiceClientBuilder<YopClientBuil
     @Override
     protected YopClientImpl build(ClientParams params) {
         return new YopClientImpl(params);
-    }
-
-    /**
-     * @return Create new instance of builder with all defaults set.
-     */
-    public static YopClientBuilder builder() {
-        return new YopClientBuilder();
     }
 }

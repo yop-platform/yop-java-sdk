@@ -4,10 +4,14 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.joda.time.DateTime;
 
 /**
- * title: DateTime模块<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: DateTime模块<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
+ *
+ * @author menghao.chen
+ * @version 1.0.0
+ * @since 2020-01-07 18:43
  */
 public class DatetimeModule extends SimpleModule {
 
@@ -15,6 +19,6 @@ public class DatetimeModule extends SimpleModule {
 
     public DatetimeModule() {
         addSerializer(DateTime.class, new DateTimeSerializer());
-        addDeserializer(DateTime.class, new DateTimeDeserializer());
+        addDeserializer(DateTime.class, new DateTimeDesrializer());
     }
 }

@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.http;
 
 
-import com.yeepay.yop.sdk.auth.Encryptor;
-import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.g3.core.yop.sdk.sample.auth.Encryptor;
+import com.yeepay.g3.core.yop.sdk.sample.auth.SignOptions;
+import com.yeepay.g3.core.yop.sdk.sample.auth.Signer;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentials;
 
 import java.security.PublicKey;
 

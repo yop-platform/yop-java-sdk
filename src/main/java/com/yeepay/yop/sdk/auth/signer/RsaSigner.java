@@ -4,25 +4,24 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.auth.Signer;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
-import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.internal.RestartableInputStream;
-import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
-import com.yeepay.yop.sdk.security.rsa.RSA;
-import com.yeepay.yop.sdk.utils.CharacterConstants;
-import com.yeepay.yop.sdk.utils.DateUtils;
-import com.yeepay.yop.sdk.utils.Encodes;
-import com.yeepay.yop.sdk.utils.HttpUtils;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.auth.SignOptions;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentials;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentialsWithoutSign;
+import com.yeepay.g3.core.yop.sdk.sample.auth.credentials.YopRSACredentials;
+import com.yeepay.g3.core.yop.sdk.sample.exception.VerifySignFailedException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpResponse;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.internal.RestartableInputStream;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.security.DigestAlgEnum;
+import com.yeepay.g3.core.yop.sdk.sample.security.rsa.RSA;
+import com.yeepay.g3.core.yop.sdk.sample.utils.CharacterConstants;
+import com.yeepay.g3.core.yop.sdk.sample.utils.DateUtils;
+import com.yeepay.g3.core.yop.sdk.sample.utils.Encodes;
+import com.yeepay.g3.core.yop.sdk.sample.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +33,10 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: Rsa签名器<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Rsa签名器<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -179,7 +178,6 @@ public class RsaSigner implements Signer {
             return RestartableInputStream.wrap(
                     encodedParameters.getBytes(YopConstants.DEFAULT_CHARSET));
         }
-
         return getBinaryRequestPayloadStreamWithoutQueryParams(request);
     }
 
@@ -250,7 +248,7 @@ public class RsaSigner implements Signer {
     /**
      * Returns the re-usable thread local version of MessageDigest.
      *
-     * @return 摘要
+     * @return
      */
     private static MessageDigest getMessageDigestInstance() {
         MessageDigest messageDigest = SHA256_MESSAGE_DIGEST.get();

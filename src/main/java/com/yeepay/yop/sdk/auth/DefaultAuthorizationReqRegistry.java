@@ -1,13 +1,13 @@
-package com.yeepay.yop.sdk.auth.req;
+package com.yeepay.yop.sdk.auth;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * title: AuthorizationReq注册中心<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: AuthorizationReq注册中心<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

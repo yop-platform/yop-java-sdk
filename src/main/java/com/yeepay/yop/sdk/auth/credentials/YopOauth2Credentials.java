@@ -14,7 +14,7 @@ package com.yeepay.yop.sdk.auth.credentials;
  * @version 1.0.0
  * @since 2020/1/15 上午11:22
  */
-public class YopOauth2Credentials extends YopBaseCredentials {
+public class YopOauth2Credentials extends BaseYopCredentials {
 
     public YopOauth2Credentials(String appKey, String secretKey) {
         super(appKey, secretKey);

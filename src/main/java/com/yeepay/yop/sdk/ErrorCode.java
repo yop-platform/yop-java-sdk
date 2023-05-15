@@ -18,9 +18,9 @@ public enum ErrorCode {
     REQUEST_EXPIRED("RequestExpired"),
     SIGNATURE_DOES_NOT_MATCH("SignatureDoesNotMatch");
 
-    private final String code;
+    private String code;
 
-    ErrorCode(String code) {
+    private ErrorCode(String code) {
         this.code = code;
     }
 

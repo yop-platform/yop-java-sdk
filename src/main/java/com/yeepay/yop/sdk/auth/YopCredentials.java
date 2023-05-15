@@ -1,13 +1,12 @@
-package com.yeepay.yop.sdk.auth.credentials;
-
+package com.yeepay.yop.sdk.auth;
 
 import java.io.Serializable;
 
 /**
- * title: <br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

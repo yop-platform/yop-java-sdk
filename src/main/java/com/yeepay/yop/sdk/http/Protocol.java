@@ -25,11 +25,11 @@ public enum Protocol {
     /**
      * The protocol name.
      */
-    private final String protocol;
+    private String protocol;
 
-    private final int defaultPort;
+    private int defaultPort;
 
-    Protocol(String protocol, int defaultPort) {
+    private Protocol(String protocol, int defaultPort) {
         this.protocol = protocol;
         this.defaultPort = defaultPort;
     }

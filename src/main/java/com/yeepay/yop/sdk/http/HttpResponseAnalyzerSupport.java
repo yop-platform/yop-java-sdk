@@ -1,19 +1,19 @@
 package com.yeepay.yop.sdk.http;
 
 
-import com.yeepay.yop.sdk.http.analyzer.*;
+import com.yeepay.g3.core.yop.sdk.sample.http.analyzer.*;
 
 /**
- * title:HttpResponseAnalyzer工厂类 <br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title:HttpResponseAnalyzer工厂类 <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
  * @since 17/11/29 18:57
  */
-public class HttpResponseAnalyzerSupport {
+ public class HttpResponseAnalyzerSupport {
 
     private static final HttpResponseAnalyzer[] ANALYZER_CHAIN = new HttpResponseAnalyzer[]{
             YopMetadataResponseAnalyzer.getInstance(),
@@ -21,7 +21,7 @@ public class HttpResponseAnalyzerSupport {
             YopContentDecryptAnalyzer.getInstance(),
             YopErrorResponseAnalyzer.getInstance(),
             YopJsonResponseAnalyzer.getInstance()
-    };
+     };
 
     private static final HttpResponseAnalyzer[] YOS_DOWNLOAD_ANALYZER_CHAIN = new HttpResponseAnalyzer[]{
             YopMetadataResponseAnalyzer.getInstance(),
@@ -29,7 +29,7 @@ public class HttpResponseAnalyzerSupport {
             YopContentDecryptAnalyzer.getInstance(),
             YopErrorResponseAnalyzer.getInstance(),
             YosDownloadResponseAnalyzer.getInstance()
-    };
+     };
 
     private static final HttpResponseAnalyzer[] YOS_UPLOAD_ANALYZER_CHAIN = new HttpResponseAnalyzer[]{
             YopMetadataResponseAnalyzer.getInstance(),
@@ -41,9 +41,9 @@ public class HttpResponseAnalyzerSupport {
             YopJsonResponseAnalyzer.getInstance()
     };
 
-    public static HttpResponseAnalyzer[] getAnalyzerChain() {
-        return ANALYZER_CHAIN;
-    }
+     public static HttpResponseAnalyzer[] getAnalyzerChain() {
+         return ANALYZER_CHAIN;
+     }
 
     public static HttpResponseAnalyzer[] getYosDownloadAnalyzerChain() {
         return YOS_DOWNLOAD_ANALYZER_CHAIN;

@@ -1,11 +1,11 @@
 package com.yeepay.yop.sdk.client;
 
 import com.google.common.base.Joiner;
-import com.yeepay.yop.sdk.Region;
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.http.Protocol;
-import com.yeepay.yop.sdk.http.RetryPolicy;
+import com.yeepay.g3.core.yop.sdk.sample.Region;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.auth.YopCredentials;
+import com.yeepay.g3.core.yop.sdk.sample.http.Protocol;
+import com.yeepay.g3.core.yop.sdk.sample.http.RetryPolicy;
 
 import java.net.InetAddress;
 
@@ -154,7 +154,7 @@ public class ClientConfiguration {
     private Region region = DEFAULT_REGION;
 
 
-    private final boolean httpAsyncPutEnabled = false;
+    private boolean httpAsyncPutEnabled = false;
 
     /**
      * The YOP credentials used by the client to sign HTTP requests.

@@ -1,10 +1,10 @@
 package com.yeepay.yop.sdk.http;
 
 /**
- * title: http方法名<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: http方法名<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -17,5 +17,5 @@ public enum HttpMethodName {
     DELETE,
     HEAD,
     PATCH,
-    OPTIONS
+    OPTIONS;
 }

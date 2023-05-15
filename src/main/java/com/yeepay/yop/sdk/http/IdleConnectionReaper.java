@@ -34,7 +34,7 @@ public final class IdleConnectionReaper extends Thread {
      * The list of registered connection managers, whose connections will be periodically checked and idle connections
      * closed.
      */
-    private static final List<HttpClientConnectionManager> connectionManagers = Lists.newArrayList();
+    private static List<HttpClientConnectionManager> connectionManagers = Lists.newArrayList();
 
     /**
      * Singleton instance of the connection reaper.
@@ -97,7 +97,7 @@ public final class IdleConnectionReaper extends Thread {
                 // than block/lock while this loop executes).
                 List<HttpClientConnectionManager> connectionManagers = null;
                 synchronized (IdleConnectionReaper.class) {
-                    connectionManagers = Lists.newArrayList(IdleConnectionReaper.connectionManagers);
+                    connectionManagers = Lists.newArrayList(this.connectionManagers);
                 }
                 for (HttpClientConnectionManager connectionManager : connectionManagers) {
                     // When we release connections, the connection manager leaves them

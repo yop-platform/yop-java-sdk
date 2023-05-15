@@ -58,6 +58,7 @@ public class YopServiceException extends YopClientException {
      */
     private int statusCode;
 
+
     private String docUrl;
 
     /**
@@ -180,15 +181,6 @@ public class YopServiceException extends YopClientException {
         this.statusCode = statusCode;
     }
 
-    public String getDocUrl() {
-        return docUrl;
-    }
-
-    public void setDocUrl(String docUrl) {
-        this.docUrl = docUrl;
-    }
-
-
     /**
      * Returns the HTTP status code that was returned with this service exception.
      *
@@ -196,6 +188,14 @@ public class YopServiceException extends YopClientException {
      */
     public int getStatusCode() {
         return this.statusCode;
+    }
+
+    public String getDocUrl() {
+        return docUrl;
+    }
+
+    public void setDocUrl(String docUrl) {
+        this.docUrl = docUrl;
     }
 
     @Override
@@ -206,7 +206,7 @@ public class YopServiceException extends YopClientException {
                 + "; Sub Code: " + this.getSubErrorCode()
                 + "; Sub Message: " + this.getSubMessage()
                 + "; Request ID: " + this.getRequestId()
-                + "; docUrl: " + this.getDocUrl()
+                + "; Doc Url: " + this.getDocUrl()
                 + ")";
     }
 }

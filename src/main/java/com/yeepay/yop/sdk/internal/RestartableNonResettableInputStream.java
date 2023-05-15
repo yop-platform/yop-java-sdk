@@ -13,7 +13,7 @@
 package com.yeepay.yop.sdk.internal;
 
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +34,7 @@ public class RestartableNonResettableInputStream extends RestartableInputStream 
 
     private boolean eof = false;
 
-    private final InputStream input;
+    private InputStream input;
 
     public RestartableNonResettableInputStream(InputStream input, int bufferSize) {
         checkNotNull(input, "input should not be null.");

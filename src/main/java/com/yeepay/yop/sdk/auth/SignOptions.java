@@ -1,12 +1,12 @@
 package com.yeepay.yop.sdk.auth;
 
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.g3.core.yop.sdk.sample.security.DigestAlgEnum;
 
 /**
- * title: 签名option<br>
- * description: <br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 签名option<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -30,6 +30,7 @@ public class SignOptions {
      * 过期时间
      */
     private int expirationInSeconds = DEFAULT_EXPIRATION_IN_SECONDS;
+
 
     public DigestAlgEnum getDigestAlg() {
         return digestAlg;

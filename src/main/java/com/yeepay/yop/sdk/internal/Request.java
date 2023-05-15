@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.internal;
 
-import com.yeepay.yop.sdk.http.HttpMethodName;
-import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpMethodName;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
 
 import java.io.File;
 import java.io.InputStream;
@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * title: 请求<br>
+ * title: 请求<br/>
  * description:
  * <p>
  * Represents a request being sent to Yop Api-GateWay, including the
  * parameters being sent as part of the request, the endpoint to which the
  * request should be sent, etc
  * </p>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -84,8 +84,6 @@ public interface Request<T extends BaseRequest> {
      * <p>
      * Note that List values within the parameters Map must use an implementation that supports null
      * values.
-     *
-     * @param parameters the request parameters.
      */
     void setParameters(Map<String, List<String>> parameters);
 
@@ -193,7 +191,6 @@ public interface Request<T extends BaseRequest> {
      * Value is in seconds, positive values imply the current clock is "fast",
      * negative values imply clock is slow.
      *
-     * @param timeOffset The optional value for time offset (in seconds) for this request.
      * @return The updated request object.
      */
     Request<T> withTimeOffset(int timeOffset);

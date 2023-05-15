@@ -1,14 +1,12 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.utils.json.joda.DatetimeModule;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.utils.json.joda.DatetimeModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,8 +14,8 @@ import java.io.InputStream;
 import java.io.Writer;
 
 public class JsonUtils {
-
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper YAML_OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
 
     static {
         OBJECT_MAPPER.setSerializationInclusion(Include.NON_NULL);
@@ -32,16 +30,16 @@ public class JsonUtils {
         OBJECT_MAPPER.registerModule(new DatetimeModule());
     }
 
-    private static final ObjectWriter writer = OBJECT_MAPPER.writer();
-    private static final ObjectWriter prettyWriter = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
+    private static final ObjectWriter WRITER = OBJECT_MAPPER.writer();
+    private static final ObjectWriter PRETTY_WRITER = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
 
     public static String toJsonPrettyString(Object value) throws JsonProcessingException {
-        return prettyWriter.writeValueAsString(value);
+        return PRETTY_WRITER.writeValueAsString(value);
     }
 
     public static String toJsonString(Object value) {
         try {
-            return writer.writeValueAsString(value);
+            return WRITER.writeValueAsString(value);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -80,22 +78,27 @@ public class JsonUtils {
         }
     }
 
-    public static void load(InputStream input, Object obj) throws IOException {
+    public static void load(InputStream input, Object obj) throws IOException, JsonProcessingException {
         OBJECT_MAPPER.readerForUpdating(obj).readValue(input);
     }
 
-    public static void load(String content, Object obj) throws IOException {
+    public static void load(String content, Object obj) throws IOException, JsonProcessingException {
         OBJECT_MAPPER.readerForUpdating(obj).readValue(content);
     }
 
     public static <T> T loadFrom(InputStream input, Class<T> clazz)
-            throws IOException {
+            throws JsonParseException, JsonMappingException, IOException {
         return OBJECT_MAPPER.readValue(input, clazz);
     }
 
     public static <T> T loadFrom(String content, Class<T> clazz)
-            throws IOException {
+            throws JsonParseException, JsonMappingException, IOException {
         return OBJECT_MAPPER.readValue(content, clazz);
+    }
+
+    public static <T> T loadFromYAML(InputStream input, Class<T> clazz)
+            throws JsonParseException, JsonMappingException, IOException {
+        return YAML_OBJECT_MAPPER.readValue(input, clazz);
     }
 
     public static ObjectMapper getObjectMapper() {
@@ -103,10 +106,10 @@ public class JsonUtils {
     }
 
     public static ObjectWriter getWriter() {
-        return writer;
+        return WRITER;
     }
 
     public static ObjectWriter getPrettywriter() {
-        return prettyWriter;
+        return PRETTY_WRITER;
     }
 }

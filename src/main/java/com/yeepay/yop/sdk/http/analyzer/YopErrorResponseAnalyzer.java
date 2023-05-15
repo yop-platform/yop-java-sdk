@@ -1,22 +1,22 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.exception.YopServiceException;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
-import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.YopErrorResponse;
-import com.yeepay.yop.sdk.utils.JsonUtils;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopServiceException;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzer;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandleContext;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.YopErrorResponse;
+import com.yeepay.g3.core.yop.sdk.sample.utils.JsonUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * title:YopErrorResponseAnalyzer <br>
- * description: HTTP error response handler for YOP responses.<br>
- * Copyright: Copyright (c) 2017<br>
- * Company: 易宝支付(YeePay)<br>
+ * title:YopErrorResponseAnalyzer <br/>
+ * description: HTTP error response handler for YOP responses.<br/>
+ * Copyright: Copyright (c) 2017<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

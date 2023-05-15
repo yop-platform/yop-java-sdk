@@ -1,21 +1,21 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
-import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
-import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
-import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
-import com.yeepay.yop.sdk.model.yos.YosDownloadResponseMetadata;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzer;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandleContext;
+import com.yeepay.g3.core.yop.sdk.sample.http.YopHttpResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.YosDownloadInputStream;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.YosDownloadResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.YosDownloadResponseMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * title: <br>
- * description: <br>
- * Copyright: Copyright (c) 2018<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2018<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public class YosDownloadResponseAnalyzer implements HttpResponseAnalyzer {
 
-    private static final Logger logger = LoggerFactory.getLogger(YosDownloadResponseAnalyzer.class);
+    private static Logger logger = LoggerFactory.getLogger(YosDownloadResponseAnalyzer.class);
 
     private static final YosDownloadResponseAnalyzer INSTANCE = new YosDownloadResponseAnalyzer();
 

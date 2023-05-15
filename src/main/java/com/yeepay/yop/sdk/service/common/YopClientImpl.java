@@ -1,22 +1,22 @@
 package com.yeepay.yop.sdk.service.common;
 
-import com.yeepay.yop.sdk.client.*;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzerSupport;
-import com.yeepay.yop.sdk.http.HttpResponseHandler;
-import com.yeepay.yop.sdk.http.handler.DefaultHttpResponseHandler;
-import com.yeepay.yop.sdk.model.transform.RequestMarshaller;
-import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
-import com.yeepay.yop.sdk.service.common.request.YopRequest;
-import com.yeepay.yop.sdk.service.common.request.YopRequestMarshaller;
-import com.yeepay.yop.sdk.service.common.response.YopResponse;
-import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
+import com.yeepay.g3.core.yop.sdk.sample.client.*;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzerSupport;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandler;
+import com.yeepay.g3.core.yop.sdk.sample.http.handler.DefaultHttpResponseHandler;
+import com.yeepay.g3.core.yop.sdk.sample.model.transform.RequestMarshaller;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.YosDownloadResponse;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.request.YopRequest;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.request.YopRequestMarshaller;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.response.YopResponse;
+import com.yeepay.g3.core.yop.sdk.sample.service.common.response.YosUploadResponse;
 
 /**
- * title: YopClientImpl<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: YopClientImpl<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

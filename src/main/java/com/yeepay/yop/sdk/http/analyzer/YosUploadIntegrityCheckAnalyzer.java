@@ -1,14 +1,14 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.yeepay.yop.sdk.exception.YopServiceException;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
-import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
-import com.yeepay.yop.sdk.internal.MultiPartFile;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.model.BaseResponse;
-import com.yeepay.yop.sdk.model.yos.BaseYosUploadResponse;
-import com.yeepay.yop.sdk.model.yos.YosUploadResponseMetadata;
-import com.yeepay.yop.sdk.utils.checksum.CRC64Utils;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopServiceException;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseAnalyzer;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpResponseHandleContext;
+import com.yeepay.g3.core.yop.sdk.sample.internal.MultiPartFile;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.BaseYosUploadResponse;
+import com.yeepay.g3.core.yop.sdk.sample.model.yos.YosUploadResponseMetadata;
+import com.yeepay.g3.core.yop.sdk.sample.utils.checksum.CRC64Utils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,10 +19,10 @@ import java.util.TreeMap;
 import java.util.zip.CheckedInputStream;
 
 /**
- * title: 文件上传完整性校验<br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: 文件上传完整性校验<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0

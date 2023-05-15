@@ -13,16 +13,16 @@ public enum DigestAlgEnum {
     SHA512("SHA512", "sha-512摘要");
 
     private static final Map<String, DigestAlgEnum> VALUE_MAP = new HashMap();
-    private final String value;
-    private final String displayName;
+    private String value;
+    private String displayName;
 
-    DigestAlgEnum(String value, String displayName) {
+    private DigestAlgEnum(String value, String displayName) {
         this.value = value;
         this.displayName = displayName;
     }
 
     public static DigestAlgEnum parse(String value) {
-        return VALUE_MAP.get(value);
+        return (DigestAlgEnum)VALUE_MAP.get(value);
     }
 
     public String getValue() {
@@ -41,7 +41,7 @@ public enum DigestAlgEnum {
         DigestAlgEnum[] var0 = values();
         int var1 = var0.length;
 
-        for (int var2 = 0; var2 < var1; ++var2) {
+        for(int var2 = 0; var2 < var1; ++var2) {
             DigestAlgEnum item = var0[var2];
             VALUE_MAP.put(item.value, item);
         }

@@ -1,13 +1,13 @@
 package com.yeepay.yop.sdk.service.common.request;
 
-import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.HttpMethodName;
-import com.yeepay.yop.sdk.internal.DefaultRequest;
-import com.yeepay.yop.sdk.internal.Request;
-import com.yeepay.yop.sdk.internal.RestartableInputStream;
-import com.yeepay.yop.sdk.model.transform.RequestMarshaller;
+import com.yeepay.g3.core.yop.sdk.sample.YopConstants;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.http.Headers;
+import com.yeepay.g3.core.yop.sdk.sample.http.HttpMethodName;
+import com.yeepay.g3.core.yop.sdk.sample.internal.DefaultRequest;
+import com.yeepay.g3.core.yop.sdk.sample.internal.Request;
+import com.yeepay.g3.core.yop.sdk.sample.internal.RestartableInputStream;
+import com.yeepay.g3.core.yop.sdk.sample.model.transform.RequestMarshaller;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -18,10 +18,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * title: YopRequest序列化器<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: YopRequest序列化器<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -29,7 +29,7 @@ import java.util.UUID;
  */
 public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
 
-    private static final YopRequestMarshaller INSTANCE = new YopRequestMarshaller();
+    private static YopRequestMarshaller INSTANCE = new YopRequestMarshaller();
 
     public static YopRequestMarshaller getInstance() {
         return INSTANCE;
@@ -38,7 +38,7 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
     @Override
     public Request<YopRequest> marshall(YopRequest request) {
         String[] pathParts = StringUtils.split(request.getApiUri(), "/");
-        Request<YopRequest> internalRequest = new DefaultRequest<YopRequest>(request, pathParts[2]);
+        Request<YopRequest> internalRequest = new DefaultRequest<YopRequest>(pathParts[2]);
         if (StringUtils.equals(pathParts[0], "yos")) {
             internalRequest.assignYos();
         }
@@ -60,9 +60,8 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
                         internalRequest.addMultiPartFile(name, (File) value);
                     } else if (value instanceof InputStream) {
                         internalRequest.addMultiPartFile(name, (InputStream) value);
-                    } else {
-                        throw new YopClientException("Unexpected file parameter type, name:" + name + ", type:" + value.getClass() + ".");
                     }
+                    throw new YopClientException("Unexpected file parameter type, name:" + name + ", type:" + value.getClass() + ".");
                 }
             }
         } else if (request.getContent() != null) {

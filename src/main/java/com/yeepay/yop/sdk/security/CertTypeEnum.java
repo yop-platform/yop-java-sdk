@@ -10,21 +10,22 @@ import java.util.Map;
 public enum CertTypeEnum {
     AES128("AES128", "AES算法，密钥长度128", "AES", 128, 16, true),
     AES256("AES256", "AES算法, 密钥长度256", "AES", 256, 32, true),
-    RSA2048("RSA2048", "RSA算法, 密钥长度2048", "RSA", 2048, 294, false);
+    RSA2048("RSA2048", "RSA算法, 密钥长度2048", "RSA", 2048, 294, false),
+    RSA4096("RSA4096", "RSA算法, 密钥长度4096", "RSA", 4096, 550, false);
 
     private static final Map<String, CertTypeEnum> VALUE_MAP = new HashMap<String, CertTypeEnum>();
 
-    private final String value;
+    private String value;
 
-    private final String displayName;
+    private String displayName;
 
-    private final String algorithm;
+    private String algorithm;
 
-    private final int keySize;
+    private int keySize;
 
-    private final int encodedSize;
+    private int encodedSize;
 
-    private final boolean symmetric;
+    private boolean symmetric;
 
     static {
         for (CertTypeEnum item : CertTypeEnum.values()) {

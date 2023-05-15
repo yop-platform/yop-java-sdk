@@ -1,8 +1,7 @@
-package com.yeepay.yop.sdk.config.provider.file;
+package com.yeepay.yop.sdk.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yeepay.yop.sdk.config.enums.CertStoreType;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.g3.core.yop.sdk.sample.security.CertTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -18,7 +17,7 @@ import java.io.Serializable;
  * @version 1.0.0
  * @since 2016/12/26 下午3:50
  */
-public final class YopCertConfig implements Serializable {
+public final class CertConfig implements Serializable {
 
     private static final long serialVersionUID = -6377916283927611130L;
 

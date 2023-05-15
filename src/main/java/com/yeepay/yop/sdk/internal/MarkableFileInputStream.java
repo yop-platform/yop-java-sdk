@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 
 /**
- * title: <br>
- * description: <br>
- * Copyright: Copyright (c) 2019<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: <br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2019<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -17,7 +17,7 @@ import java.nio.channels.FileChannel;
  */
 public class MarkableFileInputStream extends FilterInputStream {
 
-    private final FileChannel myFileChannel;
+    private FileChannel myFileChannel;
 
     private long mark = -1;
 

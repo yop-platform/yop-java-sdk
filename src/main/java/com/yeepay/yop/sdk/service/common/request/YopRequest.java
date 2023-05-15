@@ -2,8 +2,8 @@ package com.yeepay.yop.sdk.service.common.request;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.g3.core.yop.sdk.sample.exception.YopClientException;
+import com.yeepay.g3.core.yop.sdk.sample.model.BaseRequest;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -13,10 +13,10 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * title: Yop请求<br>
- * description: <br>
- * Copyright: Copyright (c) 2020<br>
- * Company: 易宝支付(YeePay)<br>
+ * title: Yop请求<br/>
+ * description: <br/>
+ * Copyright: Copyright (c) 2020<br/>
+ * Company: 易宝支付(YeePay)<br/>
  *
  * @author menghao.chen
  * @version 1.0.0
@@ -30,9 +30,9 @@ public class YopRequest extends BaseRequest {
 
     private String httpMethod;
 
-    private final Multimap<String, String> parameters = ArrayListMultimap.create();
+    private Multimap<String, String> parameters = ArrayListMultimap.create();
 
-    private final Multimap<String, Object> multipartFiles = ArrayListMultimap.create();
+    private Multimap<String, Object> multipartFiles = ArrayListMultimap.create();
 
     private Object content;
 
@@ -148,16 +148,15 @@ public class YopRequest extends BaseRequest {
         return this;
     }
 
-    public YopRequest withApiUri(String apiUri) {
+    public YopRequest withApiUri(String apiUri){
         this.apiUri = apiUri;
         return this;
     }
 
-    public YopRequest withHttpMethod(String httpMethod) {
+    public YopRequest withHttpMethod(String httpMethod){
         this.httpMethod = httpMethod;
         return this;
     }
-
 
     @Override
     public String getOperationId() {
