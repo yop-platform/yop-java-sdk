@@ -125,32 +125,43 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     @Override
     public YopPlatformCredentials getLatestCredentials(String appKey, String credentialType) {
         try {
-            switch (CertTypeEnum.parse(credentialType)) {
-                case SM2:
-                    X509Certificate latestCert;
-                    try {
-                        latestCert = YopCertificateCache.loadPlatformSm2Certs(appKey, EMPTY).get(0);
-                        // 临期：异步刷新
-                        if (X509CertUtils.checkCertDate(latestCert)) {
-                            latestCert = YopCertificateCache.refreshPlatformSm2Certs(appKey, EMPTY).get(0);
-                        }
-                    } catch (CertificateException e) {
-                        LOGGER.warn("YopPlatformCredentials expired and need reload, appKey:" + appKey + ", credentialType:" + credentialType + ", ex", e);
-                        // 过期：同步加载
-                        latestCert = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY).get(0);
-                    }
-
-                    YopPlatformCredentials credentials = storeCredentials(appKey, CertTypeEnum.SM2.name(), latestCert);
-                    credentialsMap.put(credentials.getSerialNo(), credentials);
-                    return credentials;
-                case RSA2048:
-                    return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
-                default:
-                    return null;
+            // rsa
+            final CertTypeEnum parsedCertType = CertTypeEnum.parse(credentialType);
+            if (CertTypeEnum.RSA2048.equals(parsedCertType)) {
+                return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
             }
+
+            // sm2
+            return getSm2Credentials(appKey, parsedCertType);
         } catch (Exception e) {
-            LOGGER.warn("no YopPlatformCredentials found for appKey:{}, credentialType:{}", appKey, credentialType);
+            LOGGER.warn("getLatestCredentials error, ex:", e);
         }
+        LOGGER.warn("No YopPlatformCredentials Found For appKey:{}, credentialType:{}", appKey, credentialType);
         return null;
+    }
+
+    private YopPlatformCredentials getSm2Credentials(String appKey, CertTypeEnum parsedCertType) {
+        List<X509Certificate> loadedCerts;
+        try {
+            loadedCerts = YopCertificateCache.loadPlatformSm2Certs(appKey, EMPTY);
+            // 临期：异步刷新
+            if (CollectionUtils.isNotEmpty(loadedCerts) && X509CertUtils.checkCertDate(loadedCerts.get(0))) {
+                YopCertificateCache.refreshPlatformSm2Certs(appKey, EMPTY);
+            }
+        } catch (CertificateException e) {
+            // 过期：同步加载
+            LOGGER.warn("YopPlatformCredentials expired and need reload, appKey:" + appKey + ", credentialType:" + parsedCertType + ", ex", e);
+            loadedCerts = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY);
+        }
+
+        if (CollectionUtils.isEmpty(loadedCerts)) {
+            LOGGER.warn("No YopPlatformCredentials Found For appKey:{}, credentialType:{}", appKey, parsedCertType);
+            return null;
+        }
+
+        X509Certificate latestCert = loadedCerts.get(0);
+        YopPlatformCredentials credentials = storeCredentials(appKey, CertTypeEnum.SM2.name(), latestCert);
+        credentialsMap.put(credentials.getSerialNo(), credentials);
+        return credentials;
     }
 }
