@@ -88,6 +88,8 @@ public class YopDegradeRuleHelper {
                     .setTimeWindow(configRule.getTimeWindow());
             if (CircuitBreakerStrategy.ERROR_COUNT.getType() != configRule.getGrade()) {
                 degradeRule.setMinRequestAmount(configRule.getMinRequestAmount());
+            } else {
+                degradeRule.setMinRequestAmount(Double.valueOf(configRule.getCount()).intValue());
             }
             result.add(degradeRule);
         }

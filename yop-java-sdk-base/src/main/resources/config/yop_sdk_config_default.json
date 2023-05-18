@@ -12,7 +12,10 @@
     "max_conn_total": 200,
     "max_conn_per_route": 100,
     "retry_exceptions": [
-      "java.net.UnknownHostException"
+      "java.net.UnknownHostException",
+      "java.net.ConnectException:No route to host (connect failed)",
+      "java.net.ConnectException:Connection refused (Connection refused)",
+      "java.net.SocketTimeoutException:connect timed out"
     ],
     "max_retry_count": 3,
     "circuit_breaker": {
@@ -23,7 +26,7 @@
       "rules": [
         {
           "grade": 2,
-          "count": 3,
+          "count": 2,
           "time_window": 5,
           "stat_interval_ms": 30000
         }

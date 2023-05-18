@@ -176,7 +176,7 @@ public class ClientConfiguration {
 
     private int maxRetryCount = 3;
 
-    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException");
+    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException","java.net.ConnectException:No route to host (connect failed)","java.net.ConnectException:Connection refused (Connection refused)","java.net.SocketTimeoutException:connect timed out");
 
     private YopCircuitBreakerConfig circuitBreakerConfig = YopCircuitBreakerConfig.DEFAULT_CONFIG;
 
