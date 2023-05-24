@@ -38,12 +38,20 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleGateWayRouter.class);
 
     private static final Map<ServerRootType, CopyOnWriteArrayList<URI>> ALL_SERVER = Maps.newConcurrentMap();
+    private static final Map<URI, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
     private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
 
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
+
+    private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
+
+    static {
+        monitorServerRoot();
+    }
+
 
     private final ServerRootSpace space;
 
@@ -77,33 +85,44 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private static boolean addServerRoot(URI serverRoot, ServerRootType serverRootType) {
         if (null != serverRoot) {
-            monitorServerRoot(serverRoot, serverRootType);
+            ALL_SERVER_TYPES.computeIfAbsent(serverRoot, p -> Sets.newHashSet()).add(serverRootType);
             final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.computeIfAbsent(serverRootType, p -> Lists.newCopyOnWriteArrayList());
             return serverRoots.addIfAbsent(serverRoot);
         }
         return false;
     }
 
-    private static void monitorServerRoot(URI serverRoot, ServerRootType serverRootType) {
-        if (null == serverRoot || null == serverRootType) {
-            return;
+    private static void addServerRoot(URI serverRoot, List<ServerRootType> serverRootTypes) {
+        if (null != serverRoot && CollectionUtils.isNotEmpty(serverRootTypes)) {
+            for (ServerRootType serverRootType : serverRootTypes) {
+                addServerRoot(serverRoot, serverRootType);
+            }
         }
-        EventObserverRegistry.getInstance().addStateChangeObserver(serverRoot.toString(),
+    }
+
+    private static void monitorServerRoot() {
+        EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
                 (prevState, newState, rule, snapshotValue) -> {
+                    final URI serverRoot = URI.create(rule.getResource());
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
                     }
-                    switch (newState) {
-                        case OPEN:
-                            BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>()).add(serverRoot);
-                            break;
-                        case CLOSED:
-                            final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
-                            if (null != blockedServers) {
-                                blockedServers.remove(serverRoot);
+                    Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
+                    if (CollectionUtils.isNotEmpty(serverRootTypes)) {
+                        for (ServerRootType serverRootType : serverRootTypes) {
+                            switch (newState) {
+                                case OPEN:
+                                    BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>()).add(serverRoot);
+                                    break;
+                                case CLOSED:
+                                    final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
+                                    if (null != blockedServers) {
+                                        blockedServers.removeIf(serverRoot::equals);
+                                    }
+                                    break;
+                                default:
                             }
-                            break;
-                        default:
+                        }
                     }
                 });
     }
@@ -122,8 +141,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
             if (isExcludeServerRoots(serverRoot, excludeServerRoots)) {
                 throw new YopClientException("RequestConfig Error, serverRoot excluded:" + serverRoot);
             }
-            addServerRoot(serverRoot, serverRootType);
-            recordMainServer(serverRoot, serverRootType, true);
+            addServerRoot(serverRoot, MANUAL_SERVER_ROOT_TYPES);
+            recordMainServer(serverRoot, MANUAL_SERVER_ROOT_TYPES, true);
             return serverRoot;
         } else {
             // 独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原
@@ -171,7 +190,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
             URI oldestFailServer = null;
             if (null != failedServers && !failedServers.isEmpty()) {
-                oldestFailServer =  failedServers.peek();
+                oldestFailServer = failedServers.peek();
             }
 
             // 主域名兜底
@@ -185,6 +204,15 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private boolean recordMainServer(URI serverRoot, ServerRootType serverRootType) {
         return recordMainServer(serverRoot, serverRootType, false);
+    }
+
+    private void recordMainServer(URI serverRoot, List<ServerRootType> serverRootTypes, boolean force) {
+        if (CollectionUtils.isEmpty(serverRootTypes)) {
+            throw new YopClientException("Config Error, No ServerRootType Specified");
+        }
+        for (ServerRootType serverRootType : serverRootTypes) {
+            recordMainServer(serverRoot, serverRootType, force);
+        }
     }
 
     private boolean recordMainServer(URI serverRoot, ServerRootType serverRootType, boolean force) {
