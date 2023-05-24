@@ -125,12 +125,11 @@ public class ClientReporter extends Thread {
                 }
                 return;
             }
-            if (!YOP_HOST_REQUEST_EVENT_QUEUE.offer(newEvent)) {
+            while (!YOP_HOST_REQUEST_EVENT_QUEUE.offer(newEvent)) {
                 YopHostRequestEvent<?> oldEvent = YOP_HOST_REQUEST_EVENT_QUEUE.poll();
                 if (oldEvent != null) {
-                    LOGGER.info("Discard Old Event, value:{}", newEvent);
+                    LOGGER.info("Discard Old Event, value:{}", oldEvent);
                 }
-                YOP_HOST_REQUEST_EVENT_QUEUE.offer(newEvent);
             }
         } catch (Exception exception) {
             LOGGER.error("Error Handle ReportEvent, value:" + newEvent, exception);
@@ -245,7 +244,7 @@ public class ClientReporter extends Thread {
         for (List<YopReport> reportsSending : Lists.partition(reports, MAX_PACKET_SIZE)) {
             try {
                 DEFAULT_REPORTER.batchReport(reportsSending);
-                Thread.sleep(REPORT_MIN_INTERVAL_MILLISECONDS);
+                Thread.sleep(REPORT_MIN_INTERVAL_MILLISECONDS);//TODO
             } catch (InterruptedException e) {
                 // ignore
             }

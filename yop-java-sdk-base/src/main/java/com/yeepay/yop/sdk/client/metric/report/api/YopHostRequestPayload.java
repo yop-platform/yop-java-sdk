@@ -47,7 +47,7 @@ public class YopHostRequestPayload implements Serializable {
     /**
      * 最大耗时(毫秒)
      */
-    private long maxElapsedMillis;
+    private long maxElapsedMillis;//TODO 其他耗时指标
 
     /**
      * 失败明细
