@@ -4,12 +4,15 @@
  */
 package com.yeepay.yop.sdk;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
 
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,6 +31,8 @@ public interface YopConstants {
     String DEFAULT_YOS_SERVER_ROOT = "https://yos.yeepay.com/yop-center";
 
     String DEFAULT_SANDBOX_SERVER_ROOT = "https://sandbox.yeepay.com/yop-center";
+
+    List<URI> DEFAULT_PREFERRED_SERVER_ROOT = Lists.newArrayList(URI.create("https://openapi-a.yeepay.com/yop-center"), URI.create("https://openapi-h.yeepay.com/yop-center"));
 
     String DEFAULT_SANDBOX_VIA = "sandbox";
 

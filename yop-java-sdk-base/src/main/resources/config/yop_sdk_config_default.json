@@ -15,6 +15,7 @@
       "java.net.UnknownHostException",
       "java.net.ConnectException:No route to host (connect failed)",
       "java.net.ConnectException:Connection refused (Connection refused)",
+      "java.net.ConnectException:Connection refused: connect",
       "java.net.SocketTimeoutException:connect timed out"
     ],
     "max_retry_count": 3,

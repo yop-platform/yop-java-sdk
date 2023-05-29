@@ -1,9 +1,13 @@
 package com.yeepay.yop.sdk.client.router;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+
+import static com.yeepay.yop.sdk.YopConstants.DEFAULT_PREFERRED_SERVER_ROOT;
 
 /**
  * title: serverRoot空间<br>
@@ -32,7 +36,7 @@ public class ServerRootSpace implements Serializable {
     public ServerRootSpace(URI serverRoot, URI yosServerRoot, URI sandboxServerRoot) {
         this.serverRoot = serverRoot;
         this.yosServerRoot = yosServerRoot;
-        this.preferredEndPoint = Collections.emptyList();
+        this.preferredEndPoint = DEFAULT_PREFERRED_SERVER_ROOT;
         this.preferredYosEndPoint = Collections.emptyList();
         this.sandboxServerRoot = sandboxServerRoot;
     }
@@ -40,7 +44,7 @@ public class ServerRootSpace implements Serializable {
     public ServerRootSpace(URI serverRoot, URI yosServerRoot, List<URI> preferredEndPoint, List<URI> preferredYosEndPoint, URI sandboxServerRoot) {
         this.serverRoot = serverRoot;
         this.yosServerRoot = yosServerRoot;
-        this.preferredEndPoint = preferredEndPoint;
+        this.preferredEndPoint = CollectionUtils.isEmpty(preferredEndPoint) ? DEFAULT_PREFERRED_SERVER_ROOT : preferredEndPoint;
         this.preferredYosEndPoint = preferredYosEndPoint;
         this.sandboxServerRoot = sandboxServerRoot;
     }
