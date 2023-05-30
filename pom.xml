@@ -419,8 +419,12 @@
                                         <shadedPattern>com.yeepay.shade.com.jayway</shadedPattern>
                                     </relocation>
                                     <relocation>
-                                        <pattern>com.netflix</pattern>
-                                        <shadedPattern>com.yeepay.shade.com.netflix</shadedPattern>
+                                        <pattern>net.minidev</pattern>
+                                        <shadedPattern>com.yeepay.shade.net.minidev</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>org.objectweb.asm</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
                                     </relocation>
                                 </relocations>
                                 <transformers>
