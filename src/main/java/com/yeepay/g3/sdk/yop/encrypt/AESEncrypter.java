@@ -4,6 +4,7 @@
  */
 package com.yeepay.g3.sdk.yop.encrypt;
 
+import com.google.common.base.Charsets;
 import com.yeepay.g3.sdk.yop.client.YopConstants;
 import com.yeepay.g3.sdk.yop.utils.Assert;
 
@@ -72,7 +73,7 @@ public class AESEncrypter {
 
     public static String decrypt(String data, String key) {
         try {
-            byte[] originalData = Base64.decode(data.getBytes());
+            byte[] originalData = Base64.decode(data.getBytes(Charsets.UTF_8));
             byte[] valueByte = decrypt(originalData,
                     Base64.decode(key.getBytes(YopConstants.ENCODING)));
             return new String(valueByte, YopConstants.ENCODING);
@@ -83,7 +84,7 @@ public class AESEncrypter {
 
     public static String decryptWithDefaultImpl(String data, String key) {
         try {
-            byte[] originalData = Base64.decode(data.getBytes());
+            byte[] originalData = Base64.decode(data.getBytes(Charsets.UTF_8));
             byte[] valueByte = decryptWithDefaultImpl(originalData,
                     Base64.decode(key.getBytes(YopConstants.ENCODING)));
             return new String(valueByte, YopConstants.ENCODING);

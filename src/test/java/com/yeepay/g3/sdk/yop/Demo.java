@@ -1,6 +1,7 @@
 package com.yeepay.g3.sdk.yop;
 
 import com.TrustAllHttpsCertificates;
+import com.google.common.base.Charsets;
 import com.yeepay.g3.sdk.yop.client.YopClient;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
 import com.yeepay.g3.sdk.yop.client.YopResponse;
@@ -431,7 +432,7 @@ public class Demo {
     public void testBase64() {
         String x = "+/dkjfdkjfs?kdjfkdjfkdjfkdjkdj";
 
-        String base64UrlSafe = Base64.encodeBase64URLSafeString(x.getBytes());
+        String base64UrlSafe = Base64.encodeBase64URLSafeString(x.getBytes(Charsets.UTF_8));
         String base64 = "0/ZoyfKku0tunPunw7dbfA==";
         System.out.println(base64UrlSafe);
         System.out.println(base64);

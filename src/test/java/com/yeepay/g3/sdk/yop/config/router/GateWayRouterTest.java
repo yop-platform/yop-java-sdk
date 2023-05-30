@@ -1,5 +1,6 @@
 package com.yeepay.g3.sdk.yop.config.router;
 
+import com.google.common.base.Charsets;
 import com.yeepay.g3.sdk.yop.client.YopConstants;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
 import com.yeepay.g3.sdk.yop.client.router.GateWayRouter;
@@ -165,7 +166,7 @@ public class GateWayRouterTest {
 
     private YopRequest getYosRequest(String appKey) {
         YopRequest request = new YopRequest(appKey);
-        request.addFile("test", new ByteArrayInputStream("test".getBytes()));
+        request.addFile("test", new ByteArrayInputStream("test".getBytes(Charsets.UTF_8)));
         return request;
     }
 

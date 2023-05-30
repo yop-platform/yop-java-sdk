@@ -1,5 +1,6 @@
 package com.yeepay.g3.sdk.yop.utils;
 
+import com.google.common.base.Charsets;
 import com.yeepay.g3.sdk.yop.client.YopConstants;
 import com.yeepay.g3.sdk.yop.config.SDKConfig;
 import com.yeepay.g3.sdk.yop.encrypt.Base64;
@@ -58,7 +59,7 @@ public class CheckUtils {
             }
         }
         if (StringUtils.isNotEmpty(sdkConfig.getEncryptKey())) {
-            byte[] decoded = Base64.decode(sdkConfig.getEncryptKey().getBytes());
+            byte[] decoded = Base64.decode(sdkConfig.getEncryptKey().getBytes(Charsets.UTF_8));
             if (decoded.length != 16 && decoded.length != 32) {
                 throw new IllegalConfigLengthException("encryptKey", "encryptKey is illegal");
             }

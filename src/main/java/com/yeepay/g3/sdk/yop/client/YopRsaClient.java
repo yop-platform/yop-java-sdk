@@ -1,5 +1,6 @@
 package com.yeepay.g3.sdk.yop.client;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -113,7 +114,7 @@ public class YopRsaClient extends AbstractClient {
     }
 
     private static String getEncryptType(String encryptKey) {
-        byte[] decoded = Base64.decode(encryptKey.getBytes());
+        byte[] decoded = Base64.decode(encryptKey.getBytes(Charsets.UTF_8));
         if (decoded.length == 16 || decoded.length == 32) {
             return "aes" + decoded.length * 8;
         } else {
