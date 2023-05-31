@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * title: <br>
@@ -31,6 +32,12 @@ public final class HttpClientConfig implements Serializable {
 
     @JsonProperty("max_conn_per_route")
     private Integer maxConnPerRoute;
+
+    @JsonProperty("retry_exceptions")
+    private Set<String> retryExceptions;
+
+    @JsonProperty("circuit_breaker")
+    private YopCircuitBreakerConfig circuitBreakerConfig;
 
     public Integer getConnectTimeout() {
         return connectTimeout;
@@ -62,6 +69,22 @@ public final class HttpClientConfig implements Serializable {
 
     public void setMaxConnPerRoute(Integer maxConnPerRoute) {
         this.maxConnPerRoute = maxConnPerRoute;
+    }
+
+    public Set<String> getRetryExceptions() {
+        return retryExceptions;
+    }
+
+    public void setRetryExceptions(Set<String> retryExceptions) {
+        this.retryExceptions = retryExceptions;
+    }
+
+    public YopCircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
+    }
+
+    public void setCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
+        this.circuitBreakerConfig = circuitBreakerConfig;
     }
 
     @Override

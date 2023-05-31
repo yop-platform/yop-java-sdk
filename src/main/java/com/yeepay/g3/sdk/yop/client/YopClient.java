@@ -5,21 +5,16 @@ import com.yeepay.g3.sdk.yop.encrypt.AESEncrypter;
 import com.yeepay.g3.sdk.yop.encrypt.Digests;
 import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.http.HttpMethodName;
-import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
 import com.yeepay.g3.sdk.yop.utils.CheckUtils;
 import com.yeepay.g3.sdk.yop.utils.DateUtils;
 import com.yeepay.g3.sdk.yop.utils.JsonUtils;
-import com.yeepay.g3.sdk.yop.utils.checksum.CRC64Utils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.zip.CheckedInputStream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,14 +39,10 @@ public class YopClient extends AbstractClient {
      */
     public static YopResponse post(String apiUri, YopRequest request) throws IOException {
         CheckUtils.checkApiUri(apiUri);
-        String contentUrl = richRequest(apiUri, request);
         normalize(request);
         sign(apiUri, request);
 
-        HttpUriRequest httpPost = buildFormHttpRequest(request, contentUrl, HttpMethodName.POST);
-        YopResponse response = fetchContentByApacheHttpClient(httpPost);
-        handleResult(response);
-        return response;
+        return handleRequest(apiUri, request, HttpMethodName.POST, YopRequestType.WEB, YopSecurityType.AES);
     }
 
     /**
@@ -63,14 +54,10 @@ public class YopClient extends AbstractClient {
      */
     public static YopResponse get(String apiUri, YopRequest request) throws IOException {
         CheckUtils.checkApiUri(apiUri);
-        String contentUrl = richRequest(apiUri, request);
         normalize(request);
         sign(apiUri, request);
 
-        HttpUriRequest httpGet = buildFormHttpRequest(request, contentUrl, HttpMethodName.GET);
-        YopResponse response = fetchContentByApacheHttpClient(httpGet);
-        handleResult(response);
-        return response;
+        return handleRequest(apiUri, request, HttpMethodName.GET, YopRequestType.WEB, YopSecurityType.AES);
     }
 
     /**
@@ -82,17 +69,10 @@ public class YopClient extends AbstractClient {
      */
     public static YopResponse upload(String apiUri, YopRequest request) throws IOException {
         CheckUtils.checkApiUri(apiUri);
-        String contentUrl = richRequest(apiUri, request);
         normalize(request);
         sign(apiUri, request);
 
-        Pair<HttpUriRequest, List<CheckedInputStream>> pair = buildMultiFormRequest(request, contentUrl);
-        YopResponse response = fetchContentByApacheHttpClient(pair.getLeft());
-        handleResult(response);
-        if (pair.getRight() != null) {
-            checkFileIntegrity(response, CRC64Utils.getCRC64(pair.getRight()));
-        }
-        return response;
+        return handleRequest(apiUri, request, HttpMethodName.POST, YopRequestType.MULTI_FILE_UPLOAD, YopSecurityType.AES);
     }
 
     /**
@@ -166,13 +146,6 @@ public class YopClient extends AbstractClient {
             LOGGER.debug("========\ncanonicalQueryString:" + canonicalQueryString
                     + "\nsha1(secret):" + Digests.digest2Hex(secret, "sha1")
                     + "\nsignature:" + signature);
-        }
-    }
-
-    private static void handleResult(YopResponse response) {
-        String stringResult = response.getStringResult();
-        if (StringUtils.isNotBlank(stringResult)) {
-            response.setResult(JacksonJsonMarshaller.unmarshal(stringResult, Object.class));
         }
     }
 

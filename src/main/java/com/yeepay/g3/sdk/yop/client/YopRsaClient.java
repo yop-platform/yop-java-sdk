@@ -13,7 +13,6 @@ import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.http.HttpMethodName;
 import com.yeepay.g3.sdk.yop.http.HttpUtils;
 import com.yeepay.g3.sdk.yop.model.PartETag;
-import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
 import com.yeepay.g3.sdk.yop.utils.*;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64Utils;
 import com.yeepay.g3.sdk.yop.utils.io.IOUtil;
@@ -80,14 +79,7 @@ public class YopRsaClient extends AbstractClient {
             encryptRequest(request);
         }
         sign(apiUri, request, method);
-        String contentUrl = richRequest(apiUri, request);
-        HttpUriRequest httpPost = buildFormHttpRequest(request, contentUrl, method);
-        YopResponse response = fetchContentByApacheHttpClient(httpPost, new ResponseConfig()
-                .withNeedEncrypt(request.isNeedEncrypt())
-                .withEncryptKey(request.getEncryptKey())
-                .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
-        return response;
+        return handleRequest(apiUri, request, method, YopRequestType.WEB);
     }
 
     private static void encryptRequest(YopRequest request) {
@@ -134,18 +126,9 @@ public class YopRsaClient extends AbstractClient {
         if (BooleanUtils.isTrue(request.isNeedEncrypt())) {
             encryptRequest(request);
         }
-        sign(apiUri, request, HttpMethodName.POST);
-        String contentUrl = richRequest(apiUri, request);
-        Pair<HttpUriRequest, List<CheckedInputStream>> pair = buildMultiFormRequest(request, contentUrl);
-        YopResponse response = fetchContentByApacheHttpClient(pair.getLeft(), new ResponseConfig()
-                .withNeedEncrypt(request.isNeedEncrypt())
-                .withEncryptKey(request.getEncryptKey())
-                .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
-        if (pair.getRight() != null) {
-            checkFileIntegrity(response, CRC64Utils.getCRC64(pair.getRight()));
-        }
-        return response;
+        final HttpMethodName httpMethod = HttpMethodName.POST;
+        sign(apiUri, request, httpMethod);
+        return handleRequest(apiUri, request, httpMethod, YopRequestType.MULTI_FILE_UPLOAD);
     }
 
     private static void sign(String apiUri, YopRequest request, HttpMethodName httpMethod) {
@@ -156,7 +139,10 @@ public class YopRsaClient extends AbstractClient {
 
         Map<String, String> headers = request.getHeaders();
         headers.put(Headers.YOP_SESSION_ID, SESSION_ID);
-        headers.put(Headers.YOP_REQUEST_ID, getUUID());
+        // 归一化
+        if (!headers.containsKey(Headers.YOP_REQUEST_ID)) {
+            request.addHeader(Headers.YOP_REQUEST_ID, getUUID());
+        }
 
         Set<String> headersToSignSet = new HashSet<String>();
         headersToSignSet.add(Headers.YOP_REQUEST_ID);
@@ -205,13 +191,6 @@ public class YopRsaClient extends AbstractClient {
         }
 
         headers.put(Headers.AUTHORIZATION, "YOP-RSA2048-SHA256 " + InternalConfig.PROTOCOL_VERSION + "/" + appKey + "/" + timestamp + "/" + EXPIRED_SECONDS + "/" + signedHeaders + "/" + digitalSignatureDTO.getSignature());
-    }
-
-    private static void handleRsaResult(YopResponse response) {
-        String stringResult = response.getStringResult();
-        if (StringUtils.isNotBlank(stringResult)) {
-            response.setResult(JacksonJsonMarshaller.unmarshal(stringResult, Object.class));
-        }
     }
 
     private static String getCanonicalHeaders(SortedMap<String, String> headers) {
@@ -285,12 +264,14 @@ public class YopRsaClient extends AbstractClient {
     }
 
     private static YopResponse internalInitMultipartUpload(String apiUri, YopRequest request) throws IOException {
+        // TODO 兼容分块上传
         HttpMethodName method = HttpMethodName.POST;
         CheckUtils.checkApiUri(apiUri);
         if (BooleanUtils.isTrue(request.isNeedEncrypt())) {
             encryptRequest(request);
         }
         sign(apiUri, request, method);
+
         String contentUrl = richRequest(apiUri, request);
         // 将uploads，bizCode,fileName设置到query位置
         StringBuilder sb = new StringBuilder();
@@ -304,7 +285,7 @@ public class YopRsaClient extends AbstractClient {
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
+        handleResult(response);
         return response;
     }
 
@@ -333,6 +314,7 @@ public class YopRsaClient extends AbstractClient {
     }
 
     private static YopResponse internalUploadPart(String apiUri, YopRequest request, Object file, int partSize) throws IOException {
+        // TODO 兼容分块上传
         HttpMethodName method = HttpMethodName.PUT;
         CheckUtils.checkApiUri(apiUri);
         if (BooleanUtils.isTrue(request.isNeedEncrypt())) {
@@ -354,7 +336,7 @@ public class YopRsaClient extends AbstractClient {
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
+        handleResult(response);
         if (pair.getRight() != null) {
             checkFileIntegrity(response, CRC64Utils.getCRC64(pair.getRight()));
         }
@@ -379,6 +361,7 @@ public class YopRsaClient extends AbstractClient {
     }
 
     private static YopResponse internalCompleteMultipartUpload(String apiUri, YopRequest request, String jsonString) throws IOException {
+        // TODO 兼容分块上传
         HttpMethodName method = HttpMethodName.POST;
         CheckUtils.checkApiUri(apiUri);
         if (BooleanUtils.isTrue(request.isNeedEncrypt())) {
@@ -391,7 +374,7 @@ public class YopRsaClient extends AbstractClient {
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
+        handleResult(response);
         return response;
     }
 
@@ -429,6 +412,7 @@ public class YopRsaClient extends AbstractClient {
     }
 
     private static YopResponse internalAbortMultipartUpload(String apiUri, YopRequest request) throws IOException {
+        // TODO 兼容分块上传
         HttpMethodName method = HttpMethodName.DELETE;
         CheckUtils.checkApiUri(apiUri);
         if (BooleanUtils.isTrue(request.isNeedEncrypt())) {
@@ -449,7 +433,7 @@ public class YopRsaClient extends AbstractClient {
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
+        handleResult(response);
         return response;
     }
 
@@ -486,6 +470,7 @@ public class YopRsaClient extends AbstractClient {
     }
 
     private static YopResponse internalUploadSmallFile(String apiUri, YopRequest request, Object file, int partSize) throws IOException {
+        // TODO 兼容分块上传
         HttpMethodName method = HttpMethodName.PUT;
         CheckUtils.checkApiUri(apiUri);
         if (BooleanUtils.isTrue(request.isNeedEncrypt())) {
@@ -505,7 +490,7 @@ public class YopRsaClient extends AbstractClient {
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
-        handleRsaResult(response);
+        handleResult(response);
         if (pair.getRight() != null) {
             checkFileIntegrity(response, CRC64Utils.getCRC64(pair.getRight()));
         }

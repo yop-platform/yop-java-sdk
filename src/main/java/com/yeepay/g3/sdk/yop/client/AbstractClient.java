@@ -1,5 +1,10 @@
 package com.yeepay.g3.sdk.yop.client;
 
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.Tracer;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.g3.sdk.yop.client.router.GateWayRouter;
 import com.yeepay.g3.sdk.yop.client.router.ServerRootSpace;
@@ -9,23 +14,31 @@ import com.yeepay.g3.sdk.yop.config.AppSdkConfigProvider;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
 import com.yeepay.g3.sdk.yop.encrypt.AESEncrypter;
+import com.yeepay.g3.sdk.yop.encrypt.CertTypeEnum;
 import com.yeepay.g3.sdk.yop.encrypt.DigestAlgEnum;
 import com.yeepay.g3.sdk.yop.encrypt.RSA;
 import com.yeepay.g3.sdk.yop.error.YopError;
-import com.yeepay.g3.sdk.yop.exception.VerifySignFailedException;
-import com.yeepay.g3.sdk.yop.exception.YopClientException;
+import com.yeepay.g3.sdk.yop.exception.*;
 import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.http.HttpMethodName;
 import com.yeepay.g3.sdk.yop.http.YopHttpResponse;
+import com.yeepay.g3.sdk.yop.internal.RestartableInputStream;
+import com.yeepay.g3.sdk.yop.internal.YopDegradeRuleHelper;
 import com.yeepay.g3.sdk.yop.model.DownloadInputStream;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
-import com.yeepay.g3.sdk.yop.utils.*;
+import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
+import com.yeepay.g3.sdk.yop.utils.FileUtils;
+import com.yeepay.g3.sdk.yop.utils.InternalConfig;
+import com.yeepay.g3.sdk.yop.utils.UUIDUtils;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
+import com.yeepay.g3.sdk.yop.utils.checksum.CRC64Utils;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.Header;
@@ -56,7 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.PublicKey;
@@ -66,6 +78,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CheckedInputStream;
 
+import static com.yeepay.g3.sdk.yop.utils.CharacterConstants.COLON;
 import static com.yeepay.g3.sdk.yop.utils.CharacterConstants.EMPTY;
 
 public class AbstractClient {
@@ -73,6 +86,7 @@ public class AbstractClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractClient.class);
 
     private static final String CONTENT_TYPE_JSON = "application/json";
+    private static final String CONTENT_TYPE_STREAM = "application/octet-stream";
 
     private static final int EXT_READ_BUFFER_SIZE = 64 * 1024;
 
@@ -113,11 +127,23 @@ public class AbstractClient {
             serverRootSpace = new ServerRootSpace(
                     StringUtils.defaultIfBlank(appSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT),
                     StringUtils.defaultIfBlank(appSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT),
-                    StringUtils.defaultIfBlank(appSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT));
-        } catch (MalformedURLException e) {
+                    StringUtils.defaultIfBlank(appSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT),
+                    appSdkConfig.getPreferredServerRoots(), appSdkConfig.getPreferredYosServerRoots());
+        } catch (Exception e) {
             throw new YopClientException("server root illegal");
         }
         GATE_WAY_ROUTER = new SimpleGateWayRouter(serverRootSpace);
+
+        // 熔断配置
+        List<String> serverRoots = Lists.newArrayList(serverRootSpace.getServerRoot(),
+                serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
+        if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
+            serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
+        }
+        if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredYosEndPoint())) {
+            serverRoots.addAll(serverRootSpace.getPreferredYosEndPoint());
+        }
+        YopDegradeRuleHelper.initDegradeRule(serverRoots, InternalConfig.getCircuitBreakerConfig());
     }
 
     // 创建包含connection pool与超时设置的client
@@ -134,12 +160,13 @@ public class AbstractClient {
                 .setDefaultRequestConfig(requestConfig)
                 .evictExpiredConnections()
                 .evictIdleConnections(3, TimeUnit.SECONDS)
-                .setRetryHandler(new YopHttpRequestRetryHandler())
+                .disableAutomaticRetries()
                 .setKeepAliveStrategy(new YopConnectionKeepAliveStrategy())
                 .build();
 
         requestConfigBuilder = RequestConfig.custom();
         requestConfigBuilder.setConnectTimeout(InternalConfig.CONNECT_TIMEOUT);
+        requestConfigBuilder.setSocketTimeout(InternalConfig.READ_TIMEOUT);
         requestConfigBuilder.setStaleConnectionCheckEnabled(true);
         /*if (InternalConfig.getLocalAddress() != null) {
             requestConfigBuilder.setLocalAddress(config.getLocalAddress());
@@ -253,6 +280,15 @@ public class AbstractClient {
         return requestBuilder.build();
     }
 
+    protected static Pair<HttpUriRequest, List<CheckedInputStream>> buildHttpRequest(YopRequest request, String contentUrl,
+                                                                                          YopRequestType requestType, HttpMethodName methodName) {
+        if (YopRequestType.MULTI_FILE_UPLOAD.equals(requestType)) {
+            return buildMultiFormRequest(request, contentUrl);
+        }
+        HttpUriRequest httpUriRequest = buildFormHttpRequest(request, contentUrl, methodName);
+        return new ImmutablePair<HttpUriRequest, List<CheckedInputStream>>(httpUriRequest, null);
+    }
+
     /**
      * 构建multiFormRequest
      *
@@ -280,7 +316,11 @@ public class AbstractClient {
                 MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create().setCharset(Charset.forName(YopConstants.ENCODING));
                 for (Map.Entry<String, Object> entry : request.getMultipartFiles().entrySet()) {
                     String paramName = entry.getKey();
-                    Pair<String, CheckedInputStream> checkedInputStreamPair = wrapToCheckInputStream(entry.getValue());
+                    final Object paramValue = entry.getValue();
+                    if (paramValue instanceof InputStream) {
+                        resetStreamIfNecessary((InputStream) paramValue);
+                    }
+                    Pair<String, CheckedInputStream> checkedInputStreamPair = wrapToCheckInputStream(paramValue);
                     multipartEntityBuilder.addBinaryBody(paramName, checkedInputStreamPair.getRight(), ContentType.DEFAULT_BINARY, checkedInputStreamPair.getLeft());
                     checkedInputStreams.put(paramName, checkedInputStreamPair.getRight());
                 }
@@ -295,6 +335,12 @@ public class AbstractClient {
         HttpUriRequest httpPost = requestBuilder.build();
         List<CheckedInputStream> inputStreamList = checkedInputStreams == null ? null : new ArrayList<CheckedInputStream>(checkedInputStreams.values());
         return new ImmutablePair<HttpUriRequest, List<CheckedInputStream>>(httpPost, inputStreamList);
+    }
+
+    private static void resetStreamIfNecessary(InputStream content) {
+        if (content instanceof RestartableInputStream) {
+            ((RestartableInputStream) content).restart();
+        }
     }
 
     /**
@@ -386,25 +432,24 @@ public class AbstractClient {
         return fetchContentByApacheHttpClient(request, ResponseConfig.NONE_OPERATION_CONFIG);
     }
 
-
     protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
+        return fetchContentByApacheHttpClient(request, responseConfig, YopRequestType.WEB);
+    }
+
+    protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request, ResponseConfig responseConfig, YopRequestType requestType) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
         Throwable exception = null;
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
             return parseResponse(remoteResponse, responseConfig);
+        } catch (YopClientException | YopHttpException e) {
+            throw e;
         } catch (Throwable ex) {
             String requestId = getRequestId(request);
             LOGGER.error("request failure, requestId:" + requestId, ex);
             exception = ex;
-            if (ex instanceof IOException) {
-                throw (IOException) ex;
-            } else if (ex instanceof YopClientException) {
-                throw (YopClientException) ex;
-            } else {
-                throw new YopClientException("unable to execute request.", ex);
-            }
+            throw new YopHttpException("unable to execute request.", ex);
         } finally {
             if (exception != null || (remoteResponse != null && isJsonResponse(remoteResponse))) {
                 HttpClientUtils.closeQuietly(remoteResponse);
@@ -417,6 +462,10 @@ public class AbstractClient {
     }
 
     protected static YopResponse parseResponse(CloseableHttpResponse httpResponse, ResponseConfig responseConfig) throws IOException {
+        return parseResponse(YopRequestType.WEB, httpResponse, responseConfig);
+    }
+
+    protected static YopResponse parseResponse(YopRequestType requestType, CloseableHttpResponse httpResponse, ResponseConfig responseConfig) throws IOException {
         YopHttpResponse response = new YopHttpResponse(httpResponse);
         Header yopViaHeader = httpResponse.getFirstHeader(Headers.YOP_VIA);
         if (yopViaHeader != null && StringUtils.equals(yopViaHeader.getValue(), YopConstants.SANDBOX_GATEWAY_VIA)) {
@@ -440,8 +489,10 @@ public class AbstractClient {
                     if (result.getStringResult() != null) {
                         result.setResult(JacksonJsonMarshaller.unmarshal(result.getStringResult(), Object.class));
                     }
-                } else {
+                } else if (YopRequestType.FILE_DOWNLOAD.equals(requestType) || isDownloadResponse(httpResponse)) {
                     result.setResult(new DownloadInputStream(response.getContent(), httpResponse));
+                } else {
+                    throw new YopHttpException("Response Error, contentType:" + httpResponse.getEntity().getContentType());
                 }
             }
             return result;
@@ -468,6 +519,8 @@ public class AbstractClient {
             } else {
                 throw new YopClientException("empty result with httpStatusCode:" + response.getStatusCode());
             }
+        } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
+            throw new YopHttpException("Response Error, statusCode:" + statusCode);
         }
         throw new YopClientException("unexpected httpStatusCode:" + response.getStatusCode());
     }
@@ -493,6 +546,10 @@ public class AbstractClient {
 
     private static boolean isJsonResponse(CloseableHttpResponse response) {
         return StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_JSON);
+    }
+
+    private static boolean isDownloadResponse(CloseableHttpResponse response) {
+        return StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_STREAM);
     }
 
     /**
@@ -557,11 +614,189 @@ public class AbstractClient {
     }
 
     protected static String richRequest(String methodOrUri, YopRequest request) {
-        return GATE_WAY_ROUTER.route(methodOrUri, request) + methodOrUri;
+        return routeRequest(methodOrUri, request) + methodOrUri;
+    }
+
+    protected static String richRequest(String serverRoot, String apiUri) {
+        return serverRoot + apiUri;
+    }
+
+    protected static String routeRequest(String methodOrUri, YopRequest request) {
+        return GATE_WAY_ROUTER.route(methodOrUri, request, Collections.emptyList());
+    }
+
+    protected static String routeRequest(String methodOrUri, YopRequest request, List<String> excludeServerRoots) {
+        return GATE_WAY_ROUTER.route(methodOrUri, request, excludeServerRoots);
     }
 
     protected static String getUUID() {
         return UUIDUtils.compressV4UUID();
+    }
+
+    protected static YopResponse handleRequest(String apiUri, YopRequest request, HttpMethodName method, YopRequestType requestType) throws IOException {
+        return handleRequest(apiUri, request, method, requestType, YopSecurityType.RSA2048);
+    }
+
+    protected static YopResponse handleRequest(String apiUri, YopRequest request, HttpMethodName method,
+                                               YopRequestType requestType, YopSecurityType securityType) throws IOException {
+        List<String> excludeServerRoots = Lists.newArrayList();
+        String lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
+        while (!excludeServerRoots.contains(lastServerRoot)) {
+            try {
+                return handleRequestWithDegrade(lastServerRoot, apiUri, request, method, requestType, securityType);
+            } catch (YopHostException hostError) {//域名异常
+                excludeServerRoots.add(lastServerRoot);
+                lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
+            } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
+        }
+
+        // 如果所有域名均熔断，则用最早熔断域名兜底
+        lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("All ServerRoots Unavailable, Last Try, tried:{}, last:{}", excludeServerRoots, lastServerRoot);
+        }
+
+        return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType);
+    }
+
+    private static YopResponse handleRequestWithDegrade(String lastServerRoot, String apiUri, YopRequest request,
+                                                        HttpMethodName method, YopRequestType requestType, YopSecurityType securityType) {
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Trying ServerRoot, value:{}", lastServerRoot);
+        }
+        Entry entry = null;
+        Throwable degradeError = null;
+        try {
+            YopDegradeRuleHelper.addDegradeRule(lastServerRoot, InternalConfig.getCircuitBreakerConfig());
+            entry = SphU.entry(lastServerRoot);
+            return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType);
+        } catch (YopClientException clientError) {//客户端异常&业务异常
+            throw clientError;
+        } catch (YopHostException | YopUnknownException serverError) {//域名异常&未知异常
+            degradeError = serverError;
+            throw serverError;
+        } catch (Exception ex) {//熔断异常&其他未知异常
+            if (BlockException.isBlockException(ex)) {
+                throw new YopHostBlockException("ServerRoot Blocked, ex:", ex);
+            } else {
+                degradeError = ex;
+                handleUnExpectedError(ex);
+            }
+        } finally {
+            if (null != entry) {
+                if (null != degradeError) {
+                    Tracer.trace(degradeError);
+                }
+                entry.exit();
+            }
+        }
+        throw new YopUnknownException("UnExpected Situation, Cant Be Here.");
+    }
+
+    private static YopResponse doHandleRequest(String serverRoot, String apiUri, YopRequest request,
+                                               HttpMethodName method, YopRequestType requestType, YopSecurityType securityType) {
+        try {
+            // TODO 区分不同请求
+            String contentUrl = richRequest(serverRoot, apiUri);
+            final Pair<HttpUriRequest, List<CheckedInputStream>> httpRequest = buildHttpRequest(request, contentUrl, requestType, method);
+
+            final ResponseConfig responseConfig = YopSecurityType.RSA2048.equals(securityType) ? new ResponseConfig()
+                    .withNeedEncrypt(request.isNeedEncrypt())
+                    .withEncryptKey(request.getEncryptKey())
+                    .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)) : ResponseConfig.NONE_OPERATION_CONFIG;
+            YopResponse response = fetchContentByApacheHttpClient(httpRequest.getLeft(), responseConfig);
+            handleResult(response);
+            if (httpRequest.getRight() != null) {
+                checkFileIntegrity(response, CRC64Utils.getCRC64(httpRequest.getRight()));
+            }
+            return response;
+        } catch (YopClientException clientError) {//客户端异常&业务异常
+            throw clientError;
+        } catch (YopHttpException serverEx) {// 调用YOP异常
+            final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx);
+            if (analyzedEx.isNeedRetry()) {//域名异常
+                throw new YopHostException("Need Change Host, ex:", serverEx);
+            }
+            if (analyzedEx.isServerError()) {
+                handleUnExpectedError(serverEx);
+            }
+            throw new YopClientException("Client Error, ex:", serverEx);
+        } catch (Exception ex) {//未知异常
+            handleUnExpectedError(ex);
+        }
+        throw new YopUnknownException("UnExpected Situation, Cant Be Here.");
+    }
+
+    private static void handleUnExpectedError(Exception ex) {
+        LOGGER.error("UnExpected Error, ex:", ex);
+        throw new YopUnknownException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
+    }
+
+    protected static void handleResult(YopResponse response) {
+        String stringResult = response.getStringResult();
+        if (StringUtils.isNotBlank(stringResult)) {
+            response.setResult(JacksonJsonMarshaller.unmarshal(stringResult, Object.class));
+        }
+    }
+
+    private static class AnalyzeException {
+
+        private boolean needRetry;
+        private boolean serverError = true;
+
+        public boolean isNeedRetry() {
+            return needRetry;
+        }
+
+        public void setNeedRetry(boolean needRetry) {
+            this.needRetry = needRetry;
+        }
+
+        public boolean isServerError() {
+            return serverError;
+        }
+
+        public void setServerError(boolean serverError) {
+            this.serverError = serverError;
+        }
+
+        public static AnalyzeException analyze(Throwable e) {
+            final AnalyzeException result = new AnalyzeException();
+            final Throwable rootCause = ExceptionUtils.getRootCause(e);
+            if (null == rootCause) {
+                return result;
+            }
+
+            // 当笔重试 (域名异常)
+            final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
+            final List<String> curException = Lists.newArrayList(exType, exType + COLON + exMsg);
+
+            if (CollectionUtils.containsAny(InternalConfig.getRetryExceptions(), curException)) {
+                result.setNeedRetry(true);
+                return result;
+            }
+
+            // 不重试，不计入短路
+            if (CollectionUtils.containsAny(InternalConfig.getCircuitBreakerConfig().getExcludeExceptions(), curException)) {
+                result.setServerError(false);
+                return result;
+            }
+
+            // 其他异常，计入短路
+            return result;
+        }
+    }
+
+    public enum YopRequestType {
+        WEB,
+        FILE_DOWNLOAD,
+        MULTI_FILE_UPLOAD,
+    }
+
+    public enum YopSecurityType {
+        AES,
+        RSA2048
     }
 
 }

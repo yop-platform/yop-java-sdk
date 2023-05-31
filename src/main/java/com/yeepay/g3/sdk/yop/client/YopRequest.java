@@ -9,13 +9,16 @@ import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.http.Headers;
+import com.yeepay.g3.sdk.yop.internal.RestartableInputStream;
 import com.yeepay.g3.sdk.yop.utils.Assert;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -212,12 +215,29 @@ public class YopRequest {
     }
 
     public YopRequest addFile(String paramName, Object file) {
-        if (file instanceof String || file instanceof File || file instanceof InputStream) {
+        if (file instanceof String || file instanceof File) {
             multipartFiles.put(paramName, file);
+        } else if (file instanceof InputStream) {
+            multipartFiles.put(paramName, wrapToRestartStream((InputStream) file));
         } else {
             throw new YopClientException("Unsupported file object.");
         }
         return this;
+    }
+
+    private InputStream wrapToRestartStream(InputStream inputStream) {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final byte[] buffer = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buffer)) > -1) {
+                baos.write(buffer, 0, len);
+            }
+            baos.flush();
+            return RestartableInputStream.wrap(baos.toByteArray());
+        } catch (IOException e) {
+            throw new YopClientException("Invalid Stream Parameter");
+        }
     }
 
     public Map<String, Object> getMultipartFiles() {

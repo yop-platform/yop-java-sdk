@@ -4,7 +4,6 @@ import com.yeepay.g3.sdk.yop.YopServiceException;
 import com.yeepay.g3.sdk.yop.config.SDKConfig;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.utils.JsonUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,12 +41,6 @@ public final class SDKConfigUtils {
                 }
             }
         }
-        if (StringUtils.endsWith(config.getServerRoot(), "/")) {
-            config.setServerRoot(StringUtils.substring(config.getServerRoot(), 0, -1));
-        }
-        if (StringUtils.endsWith(config.getYosServerRoot(), "/")) {
-            config.setYosServerRoot(StringUtils.substring(config.getYosServerRoot(), 0, -1));
-        }
         return config;
     }
 
@@ -66,9 +59,6 @@ public final class SDKConfigUtils {
                     //ignore
                 }
             }
-        }
-        if (StringUtils.endsWith(config.getServerRoot(), "/")) {
-            config.setServerRoot(StringUtils.substring(config.getServerRoot(), 0, -1));
         }
         return config;
     }

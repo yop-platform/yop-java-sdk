@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <httpcomponents.version>4.5.8</httpcomponents.version>
+        <sentinel.version>1.8.6</sentinel.version>
     </properties>
 
     <dependencies>
@@ -96,6 +97,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.30</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-core</artifactId>
+            <version>${sentinel.version}</version>
         </dependency>
 
         <!-- test start -->
@@ -186,7 +193,6 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
-                                        <exclude>META-INF/services/*</exclude>
                                         <exclude>META-INF/spring.*</exclude>
                                         <exclude>META-INF/web-fragment.xml</exclude>
                                         <exclude>META-INF/*.SF</exclude>
@@ -232,14 +238,6 @@
                                     </excludes>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.bouncycastle</pattern>
-                                    <shadedPattern>com.yeepay.shade.org.bouncycastle</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.codehaus</pattern>
-                                    <shadedPattern>com.yeepay.shade.org.codehaus</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>org.joda</pattern>
                                     <shadedPattern>com.yeepay.shade.org.joda</shadedPattern>
                                 </relocation>
@@ -274,27 +272,9 @@
                 </executions>
             </plugin>
 
-            <!--<plugin>-->
-            <!--<groupId>org.apache.maven.plugins</groupId>-->
-            <!--<artifactId>maven-javadoc-plugin</artifactId>-->
-            <!--<version>3.0.0</version>-->
-            <!--<executions>-->
-            <!--<execution>-->
-            <!--<id>attach-javadocs</id>-->
-            <!--<phase>package</phase>-->
-            <!--<goals>-->
-            <!--<goal>jar</goal>-->
-            <!--</goals>-->
-            <!--<configuration>-->
-            <!--<additionalparam>-Xdoclint:none</additionalparam>-->
-            <!--</configuration>-->
-            <!--</execution>-->
-            <!--</executions>-->
-            <!--</plugin>-->
-
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
                 <configuration>
                     <descriptors>
                         <descriptor>${assembly.file}</descriptor>

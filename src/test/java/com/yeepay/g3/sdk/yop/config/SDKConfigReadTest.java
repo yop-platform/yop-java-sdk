@@ -1,6 +1,7 @@
 package com.yeepay.g3.sdk.yop.config;
 
 import com.yeepay.g3.sdk.yop.config.provider.DefaultFileAppSdkConfigProvider;
+import com.yeepay.g3.sdk.yop.config.support.SDKConfigUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -45,5 +46,11 @@ public class SDKConfigReadTest {
         System.setProperty("yop.sdk.config.file", "file://" + url.getFile());
         DefaultFileAppSdkConfigProvider provider = new DefaultFileAppSdkConfigProvider();
         Assert.assertNotNull(provider.getConfig("yop-boss"));
+    }
+
+    @Test
+    public void testBackupConfig() {
+        final SDKConfig sdkConfig = SDKConfigUtils.loadConfig("config/yop_sdk_config_default.json");
+        Assert.assertNotNull(sdkConfig);
     }
 }

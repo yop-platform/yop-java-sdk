@@ -1,17 +1,17 @@
 package com.yeepay.g3.sdk.yop.utils;
 
+import com.google.common.collect.Sets;
 import com.yeepay.g3.sdk.yop.YopServiceException;
-import com.yeepay.g3.sdk.yop.config.AppSdkConfig;
-import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
-import com.yeepay.g3.sdk.yop.config.HttpClientConfig;
-import com.yeepay.g3.sdk.yop.config.ProxyConfig;
+import com.yeepay.g3.sdk.yop.config.*;
 import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
 import com.yeepay.g3.sdk.yop.encrypt.CertTypeEnum;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Set;
 
 /**
  * title: <br>
@@ -39,6 +39,14 @@ public final class InternalConfig {
 
     public static ProxyConfig proxy;
 
+    private static YopCircuitBreakerConfig circuitBreakerConfig = YopCircuitBreakerConfig.DEFAULT_CONFIG;
+
+    private static Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException",
+            "java.net.ConnectException:No route to host (connect failed)",
+            "java.net.ConnectException:Connection refused (Connection refused)",
+            "java.net.ConnectException:Connection refused: connect",
+            "java.net.SocketTimeoutException:connect timed out");
+
     static {
         init();
     }
@@ -61,6 +69,14 @@ public final class InternalConfig {
             }
             proxy = config.getProxy();
             TRUST_ALL_CERTS = config.getTrustAllCerts();
+
+            if (null != clientConfig.getCircuitBreakerConfig()) {
+                circuitBreakerConfig = clientConfig.getCircuitBreakerConfig();
+            }
+
+            if (CollectionUtils.isNotEmpty(clientConfig.getRetryExceptions())) {
+                retryExceptions = clientConfig.getRetryExceptions();
+            }
         }
 
     }
@@ -86,4 +102,11 @@ public final class InternalConfig {
         return defaultAppSdkConfig.loadPrivateKey(certType);
     }
 
+    public static YopCircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
+    }
+
+    public static Set<String> getRetryExceptions() {
+        return retryExceptions;
+    }
 }

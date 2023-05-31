@@ -5,13 +5,19 @@ import com.yeepay.g3.sdk.yop.client.YopConstants;
 import com.yeepay.g3.sdk.yop.config.enums.ModeEnum;
 import com.yeepay.g3.sdk.yop.config.support.ConfigUtils;
 import com.yeepay.g3.sdk.yop.encrypt.CertTypeEnum;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+
+import static com.yeepay.g3.sdk.yop.http.HttpUtils.formatServerRoot;
 
 /**
  * title: 应用SDKConfig<br/>
@@ -32,6 +38,10 @@ public class AppSdkConfig implements Serializable {
     private String serverRoot;
 
     private String yosServerRoot;
+
+    private List<String> preferredServerRoots;
+
+    private List<String> preferredYosServerRoots;
 
     private String sandboxServerRoot;
 
@@ -73,11 +83,11 @@ public class AppSdkConfig implements Serializable {
     }
 
     public void setServerRoot(String serverRoot) {
-        this.serverRoot = serverRoot;
+        this.serverRoot = formatServerRoot(serverRoot);
     }
 
     public AppSdkConfig withServerRoot(String serverRoot) {
-        this.serverRoot = serverRoot;
+        setServerRoot(serverRoot);
         return this;
     }
 
@@ -86,11 +96,51 @@ public class AppSdkConfig implements Serializable {
     }
 
     public void setYosServerRoot(String yosServerRoot) {
-        this.yosServerRoot = yosServerRoot;
+        this.yosServerRoot = formatServerRoot(yosServerRoot);
     }
 
     public AppSdkConfig withYosServerRot(String yosServerRoot) {
-        this.yosServerRoot = yosServerRoot;
+        setYosServerRoot(yosServerRoot);
+        return this;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    public void setPreferredServerRoots(List<String> preferredServerRoots) {
+        this.preferredServerRoots = formatServerRoots(preferredServerRoots);
+    }
+
+    private List<String> formatServerRoots(List<String> serverRoots) {
+        if (CollectionUtils.isNotEmpty(serverRoots)) {
+            List<String> formattedServerRoots = new ArrayList<>(serverRoots.size());
+            for (String serverRoot : serverRoots) {
+                if (StringUtils.isBlank(serverRoot)) {
+                    continue;
+                }
+                formattedServerRoots.add(formatServerRoot(serverRoot));
+            }
+            this.preferredServerRoots = formattedServerRoots;
+        }
+        return Collections.emptyList();
+    }
+
+    public AppSdkConfig withPreferredServerRoots(List<String> preferredServerRoots) {
+        setPreferredServerRoots(preferredServerRoots);
+        return this;
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    public void setPreferredYosServerRoots(List<String> preferredYosServerRoots) {
+        this.preferredYosServerRoots = formatServerRoots(preferredYosServerRoots);
+    }
+
+    public AppSdkConfig withPreferredYosServerRoots(List<String> preferredYosServerRoots) {
+        setPreferredYosServerRoots(preferredYosServerRoots);
         return this;
     }
 
@@ -99,11 +149,11 @@ public class AppSdkConfig implements Serializable {
     }
 
     public void setSandboxServerRoot(String sandboxServerRoot) {
-        this.sandboxServerRoot = sandboxServerRoot;
+        this.sandboxServerRoot = formatServerRoot(sandboxServerRoot);
     }
 
     public AppSdkConfig withSandboxServerRoot(String sandboxServerRoot) {
-        this.sandboxServerRoot = sandboxServerRoot;
+        setSandboxServerRoot(sandboxServerRoot);
         return this;
     }
 
@@ -249,6 +299,8 @@ public class AppSdkConfig implements Serializable {
                     .withServerRoot(StringUtils.defaultIfBlank(sdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT))
                     .withYosServerRot(StringUtils.defaultIfBlank(sdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT))
                     .withSandboxServerRoot(StringUtils.defaultIfBlank(sdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT))
+                    .withPreferredServerRoots(sdkConfig.getPreferredServerRoots())
+                    .withPreferredYosServerRoots(sdkConfig.getPreferredYosServerRoots())
                     .withEncryptKey(sdkConfig.getEncryptKey())
                     .withHttpClientConfig(sdkConfig.getHttpClient())
                     .withProxy(sdkConfig.getProxy())

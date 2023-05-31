@@ -1,11 +1,14 @@
 package com.yeepay.g3.sdk.yop.client.router;
 
-import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.Serializable;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+
+import static com.yeepay.g3.sdk.yop.client.YopConstants.DEFAULT_PREFERRED_SERVER_ROOT;
+import static com.yeepay.g3.sdk.yop.http.HttpUtils.formatServerRoot;
 
 /**
  * title: serverRoot组空间<br/>
@@ -23,39 +26,53 @@ public class ServerRootSpace implements Serializable {
 
     private final String serverRoot;
 
-    private final URL serverRootURL;
+    private final URI serverRootURL;
 
     private final String yosServerRoot;
 
-    private final URL yosServerRootURL;
+    private final URI yosServerRootURL;
 
     private final String sandboxServerRoot;
 
-    private final URL sandboxServerRootURL;
+    private final URI sandboxServerRootURL;
+
+    private final List<String> preferredEndPoint;
+
+    private final List<String> preferredYosEndPoint;
 
 
-    public ServerRootSpace(String serverRoot, String yosServerRoot, String sandboxServerRoot) throws MalformedURLException {
-        this.serverRoot = normalize(serverRoot);
-        this.yosServerRoot = normalize(yosServerRoot);
-        this.sandboxServerRoot = normalize(sandboxServerRoot);
+    public ServerRootSpace(String serverRoot, String yosServerRoot, String sandboxServerRoot) {
+        this.serverRoot = formatServerRoot(serverRoot);
+        this.yosServerRoot = formatServerRoot(yosServerRoot);
+        this.sandboxServerRoot = formatServerRoot(sandboxServerRoot);
 
-        this.serverRootURL = new URL(this.serverRoot);
-        this.yosServerRootURL = new URL(this.yosServerRoot);
-        this.sandboxServerRootURL = new URL(this.sandboxServerRoot);
+        this.serverRootURL = URI.create(this.serverRoot);
+        this.yosServerRootURL = URI.create(this.yosServerRoot);
+        this.sandboxServerRootURL = URI.create(this.sandboxServerRoot);
+
+        this.preferredEndPoint = DEFAULT_PREFERRED_SERVER_ROOT;
+        this.preferredYosEndPoint = Collections.emptyList();
     }
 
-    private String normalize(String serverRoot) {
-        if (StringUtils.endsWith(serverRoot, CharacterConstants.SLASH)) {
-            return StringUtils.substring(serverRoot, 0, serverRoot.length() - 1);
-        }
-        return serverRoot;
+    public ServerRootSpace(String serverRoot, String yosServerRoot, String sandboxServerRoot,
+                           List<String> preferredEndPoint, List<String> preferredYosEndPoint) {
+        this.serverRoot = formatServerRoot(serverRoot);
+        this.yosServerRoot = formatServerRoot(yosServerRoot);
+        this.sandboxServerRoot = formatServerRoot(sandboxServerRoot);
+
+        this.serverRootURL = URI.create(this.serverRoot);
+        this.yosServerRootURL = URI.create(this.yosServerRoot);
+        this.sandboxServerRootURL = URI.create(this.sandboxServerRoot);
+
+        this.preferredEndPoint = CollectionUtils.isEmpty(preferredEndPoint) ? DEFAULT_PREFERRED_SERVER_ROOT : preferredEndPoint;
+        this.preferredYosEndPoint = preferredYosEndPoint;
     }
 
     public String getServerRoot() {
         return serverRoot;
     }
 
-    public URL getServerRootURL() {
+    public URI getServerRootURL() {
         return serverRootURL;
     }
 
@@ -63,7 +80,7 @@ public class ServerRootSpace implements Serializable {
         return yosServerRoot;
     }
 
-    public URL getYosServerRootURL() {
+    public URI getYosServerRootURL() {
         return yosServerRootURL;
     }
 
@@ -71,7 +88,15 @@ public class ServerRootSpace implements Serializable {
         return sandboxServerRoot;
     }
 
-    public URL getSandboxServerRootURL() {
+    public URI getSandboxServerRootURL() {
         return sandboxServerRootURL;
+    }
+
+    public List<String> getPreferredEndPoint() {
+        return preferredEndPoint;
+    }
+
+    public List<String> getPreferredYosEndPoint() {
+        return preferredYosEndPoint;
     }
 }

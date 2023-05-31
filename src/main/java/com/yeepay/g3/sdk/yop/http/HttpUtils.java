@@ -3,6 +3,7 @@ package com.yeepay.g3.sdk.yop.http;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.*;
@@ -191,6 +192,17 @@ public final class HttpUtils {
         Collections.sort(parameterStrings);
 
         return queryStringJoiner.join(parameterStrings);
+    }
+
+    public static String formatServerRoot(String serverRoot) {
+        if (StringUtils.isBlank(serverRoot)) {
+            return "";
+        }
+        serverRoot = serverRoot.trim();
+        if (StringUtils.endsWith(serverRoot, "/")) {
+            return StringUtils.substring(serverRoot, 0, -1);
+        }
+        return serverRoot;
     }
 
 }

@@ -1,6 +1,9 @@
 package com.yeepay.g3.sdk.yop.client;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+
+import java.util.List;
 
 /**
  * <pre>
@@ -84,6 +87,9 @@ public class YopConstants {
     public static final String DEFAULT_YOS_SERVER_ROOT = "https://yos.yeepay.com/yop-center";
 
     public static final String DEFAULT_SANDBOX_SERVER_ROOT = "https://sandbox.yeepay.com/yop-center";
+
+    public static final List<String> DEFAULT_PREFERRED_SERVER_ROOT = Lists.newArrayList("https://openapi-a.yeepay.com/yop-center",
+            "https://openapi-h.yeepay.com/yop-center");
 
     public static final String[] API_URI_PREFIX = {"/rest/v", "/yos/v"};
 

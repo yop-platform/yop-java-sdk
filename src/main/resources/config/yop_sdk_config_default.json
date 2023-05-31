@@ -2,6 +2,10 @@
   "server_root": "https://openapi.yeepay.com/yop-center",
   "yos_server_root": "https://yos.yeepay.com/yop-center",
   "sandbox_server_root": "https://sandbox.yeepay.com/yop-center",
+  "preferred_server_roots": [
+    "https://openapi-a.yeepay.com/yop-center",
+    "https://openapi-h.yeepay.com/yop-center"
+  ],
   "yop_public_key": [
     {
       "store_type": "string",
@@ -13,6 +17,28 @@
     "connect_timeout": 10000,
     "read_timeout": 30000,
     "max_conn_total": 200,
-    "max_conn_per_route": 100
+    "max_conn_per_route": 100,
+    "retry_exceptions": [
+      "java.net.UnknownHostException",
+      "java.net.ConnectException:No route to host (connect failed)",
+      "java.net.ConnectException:Connection refused (Connection refused)",
+      "java.net.ConnectException:Connection refused: connect",
+      "java.net.SocketTimeoutException:connect timed out"
+    ],
+    "max_retry_count": 3,
+    "circuit_breaker": {
+      "enable": true,
+      "yop_exclude_exceptions": [
+        "java.net.SocketTimeoutException:Read timed out"
+      ],
+      "rules": [
+        {
+          "grade": 2,
+          "count": 2,
+          "time_window": 5,
+          "stat_interval_ms": 30000
+        }
+      ]
+    }
   }
 }

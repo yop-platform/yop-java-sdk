@@ -1,11 +1,16 @@
 package com.yeepay.g3.sdk.yop.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import com.yeepay.g3.sdk.yop.config.enums.ModeEnum;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.List;
+
+import static com.yeepay.g3.sdk.yop.http.HttpUtils.formatServerRoot;
 
 /**
  * title: <br>
@@ -32,6 +37,12 @@ public final class SDKConfig implements Serializable {
 
     @JsonProperty("yos_server_root")
     private String yosServerRoot;
+
+    @JsonProperty("preferred_server_roots")
+    private List<String> preferredServerRoots;
+
+    @JsonProperty("preferred_yos_server_roots")
+    private List<String> preferredYosServerRoots;
 
     @JsonProperty("sandbox_server_root")
     private String sandboxServerRoot;
@@ -87,11 +98,53 @@ public final class SDKConfig implements Serializable {
     }
 
     public void setServerRoot(String serverRoot) {
-        this.serverRoot = serverRoot;
+        this.serverRoot = formatServerRoot(serverRoot);
     }
 
     public String getYosServerRoot() {
         return yosServerRoot;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    @JsonProperty("preferred_server_roots")
+    public SDKConfig setPreferredServerRoots(String[] serverRoots) {
+        if (null == preferredServerRoots) {
+            preferredServerRoots = Lists.newArrayList();
+        }
+        if (null == serverRoots) {
+            return this;
+        }
+        for (String server : serverRoots) {
+            if (StringUtils.isBlank(server)) {
+                continue;
+            }
+            preferredServerRoots.add(formatServerRoot(server));
+        }
+        return this;
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    @JsonProperty("preferred_yos_server_roots")
+    public SDKConfig setPreferredYosServerRoots(String[] yosServerRoots) {
+        if (null == preferredYosServerRoots) {
+            preferredYosServerRoots = Lists.newArrayList();
+        }
+        if (null == yosServerRoots) {
+            return this;
+        }
+        for (String server : yosServerRoots) {
+            if (StringUtils.isBlank(server)) {
+                continue;
+            }
+            preferredYosServerRoots.add(formatServerRoot(server));
+        }
+        return this;
     }
 
     public String getSandboxServerRoot() {
@@ -99,11 +152,13 @@ public final class SDKConfig implements Serializable {
     }
 
     public void setSandboxServerRoot(String sandboxServerRoot) {
-        this.sandboxServerRoot = sandboxServerRoot;
+        if (StringUtils.isNotBlank(sandboxServerRoot)) {
+            this.sandboxServerRoot = formatServerRoot(sandboxServerRoot);
+        }
     }
 
     public void setYosServerRoot(String yosServerRoot) {
-        this.yosServerRoot = yosServerRoot;
+        this.yosServerRoot = formatServerRoot(yosServerRoot);
     }
 
     public CertConfig[] getYopPublicKey() {
