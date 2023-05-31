@@ -447,9 +447,8 @@ public class AbstractClient {
             throw e;
         } catch (Throwable ex) {
             String requestId = getRequestId(request);
-            LOGGER.error("request failure, requestId:" + requestId, ex);
             exception = ex;
-            throw new YopHttpException("unable to execute request.", ex);
+            throw new YopHttpException("unable to execute request, requestId:" + requestId, ex);
         } finally {
             if (exception != null || (remoteResponse != null && isJsonResponse(remoteResponse))) {
                 HttpClientUtils.closeQuietly(remoteResponse);
@@ -697,7 +696,9 @@ public class AbstractClient {
     private static YopResponse doHandleRequest(String serverRoot, String apiUri, YopRequest request,
                                                HttpMethodName method, YopRequestType requestType, YopSecurityType securityType) {
         try {
-            // TODO 区分不同请求
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Sending ServerRoot, value:{}", serverRoot);
+            }
             String contentUrl = richRequest(serverRoot, apiUri);
             final Pair<HttpUriRequest, List<CheckedInputStream>> httpRequest = buildHttpRequest(request, contentUrl, requestType, method);
 

@@ -5,7 +5,7 @@
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.3.5</version>
+    <version>3.3.5-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
 
@@ -167,7 +167,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.2.4</version>
                 <configuration>
                     <!-- put your configurations here -->
                 </configuration>
@@ -179,16 +179,8 @@
                         </goals>
                         <configuration>
                             <!-- 将所有不使用的类全部排除掉 -->
-                            <minimizeJar>true</minimizeJar>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>${shaded.classifier.name}</shadedClassifierName>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>log4j:log4j:jar:</exclude>
-                                    <exclude>commons-logging:commons-logging</exclude>
-                                    <exclude>com.yeepay.infra:metrics-agent</exclude>
-                                </excludes>
-                            </artifactSet>
+                            <shadedClassifierName>shade</shadedClassifierName>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -201,12 +193,6 @@
                                         <exclude>mozilla/*</exclude>
                                         <exclude>rebel.xml</exclude>
                                     </excludes>
-                                </filter>
-                                <filter>
-                                    <artifact>commons-logging:commons-logging</artifact>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
                                 </filter>
                             </filters>
                             <transformers>
@@ -225,21 +211,44 @@
                                     <shadedPattern>com.yeepay.shade.com.fasterxml</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>com.ctc.wstx</pattern>
+                                    <shadedPattern>com.yeepay.shade.com.ctc.wstx</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>com.google</pattern>
                                     <shadedPattern>com.yeepay.shade.com.google</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.activation</pattern>
+                                    <shadedPattern>com.yeepay.shade.javax.activation</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.xml</pattern>
+                                    <shadedPattern>com.yeepay.shade.javax.xml</shadedPattern>
                                 </relocation>
                                 <!-- 需要排除 org.apache.log4j -->
                                 <relocation>
                                     <pattern>org.apache</pattern>
                                     <shadedPattern>com.yeepay.shade.org.apache</shadedPattern>
                                     <excludes>
-                                        <exclude>org.apache.log4j.*</exclude>
-                                        <exclude>org.apache.commons.logging.*</exclude>
+                                        <exclude>org/apache/commons/logging/**</exclude>
                                     </excludes>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.joda</pattern>
                                     <shadedPattern>com.yeepay.shade.org.joda</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus</pattern>
+                                    <shadedPattern>com.yeepay.shade.org.codehaus</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.minidev</pattern>
+                                    <shadedPattern>com.yeepay.shade.net.minidev</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.objectweb.asm</pattern>
+                                    <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>

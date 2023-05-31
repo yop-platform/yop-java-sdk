@@ -121,7 +121,7 @@ public class AppSdkConfig implements Serializable {
                 }
                 formattedServerRoots.add(formatServerRoot(serverRoot));
             }
-            this.preferredServerRoots = formattedServerRoots;
+            return formattedServerRoots;
         }
         return Collections.emptyList();
     }
