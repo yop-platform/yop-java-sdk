@@ -112,7 +112,10 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         for (ServerRootType serverRootType : serverRootTypes) {
                             switch (newState) {
                                 case OPEN:
-                                    BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>()).add(serverRoot);
+                                    final LinkedBlockingDeque<URI> oldBlocked =
+                                            BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
+                                    oldBlocked.removeIf(serverRoot::equals);
+                                    oldBlocked.add(serverRoot);
                                     break;
                                 case CLOSED:
                                     final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
