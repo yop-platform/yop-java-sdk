@@ -544,11 +544,11 @@ public class AbstractClient {
     }
 
     private static boolean isJsonResponse(CloseableHttpResponse response) {
-        return StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_JSON);
+        return null != response.getEntity() && StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_JSON);
     }
 
     private static boolean isDownloadResponse(CloseableHttpResponse response) {
-        return StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_STREAM);
+        return null != response.getEntity() && StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_STREAM);
     }
 
     /**
