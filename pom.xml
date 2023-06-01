@@ -218,14 +218,6 @@
                                     <pattern>com.google</pattern>
                                     <shadedPattern>com.yeepay.shade.com.google</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>javax.activation</pattern>
-                                    <shadedPattern>com.yeepay.shade.javax.activation</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>javax.xml</pattern>
-                                    <shadedPattern>com.yeepay.shade.javax.xml</shadedPattern>
-                                </relocation>
                                 <!-- 需要排除 org.apache.log4j -->
                                 <relocation>
                                     <pattern>org.apache</pattern>

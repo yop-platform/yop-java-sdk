@@ -695,6 +695,7 @@ public class AbstractClient {
 
     private static YopResponse doHandleRequest(String serverRoot, String apiUri, YopRequest request,
                                                HttpMethodName method, YopRequestType requestType, YopSecurityType securityType) {
+        final long start = System.currentTimeMillis();
         try {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Sending ServerRoot, value:{}", serverRoot);
@@ -711,13 +712,16 @@ public class AbstractClient {
             if (httpRequest.getRight() != null) {
                 checkFileIntegrity(response, CRC64Utils.getCRC64(httpRequest.getRight()));
             }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Success ServerRoot, {}, elapsed:{}", serverRoot, System.currentTimeMillis() - start);
+            }
             return response;
         } catch (YopClientException clientError) {//客户端异常&业务异常
             throw clientError;
         } catch (YopHttpException serverEx) {// 调用YOP异常
             final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Finish ServerRoot, {}, exDetail:{}", serverRoot, analyzedEx.getExDetail());
+                LOGGER.debug("Fail ServerRoot, {}, exDetail:{}", serverRoot, analyzedEx.getExDetail());
             }
             if (analyzedEx.isNeedRetry()) {//域名异常
                 throw new YopHostException("Need Change Host, ex:", serverEx);
