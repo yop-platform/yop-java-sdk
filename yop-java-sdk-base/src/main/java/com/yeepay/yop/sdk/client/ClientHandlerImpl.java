@@ -270,15 +270,21 @@ public class ClientHandlerImpl implements ClientHandler {
     private <Output extends BaseResponse, Input extends BaseRequest> Output doExecute(Request<Input> request,
                                                                                       ExecutionContext executionContext,
                                                                                       HttpResponseHandler<Output> responseHandler) {
+        final long start = System.currentTimeMillis();
         try {
-            return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
+            final Output result = client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
                     executionContext, responseHandler);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Success ServerRoot, {}, elapsed:{}", request.getEndpoint(), System.currentTimeMillis() - start);
+            }
+            return result;
         } catch (YopClientException clientError) {//客户端异常&业务异常
             throw clientError;
         } catch (YopHttpException serverEx) {// 调用YOP异常
             final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx, clientConfiguration);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Finish ServerRoot, {}, exDetail:{}", request.getEndpoint(), analyzedEx.getExDetail());
+                LOGGER.debug("Fail ServerRoot, {}, exDetail:{}, elapsed:{}", request.getEndpoint(),
+                        analyzedEx.getExDetail(), System.currentTimeMillis() - start);
             }
             if (analyzedEx.isNeedRetry()) {//域名异常
                 throw new YopHostException("Need Change Host, ex:", serverEx);
