@@ -716,6 +716,9 @@ public class AbstractClient {
             throw clientError;
         } catch (YopHttpException serverEx) {// 调用YOP异常
             final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Finish ServerRoot, {}, exDetail:{}", serverRoot, analyzedEx.getExDetail());
+            }
             if (analyzedEx.isNeedRetry()) {//域名异常
                 throw new YopHostException("Need Change Host, ex:", serverEx);
             }
@@ -746,6 +749,8 @@ public class AbstractClient {
         private boolean needRetry;
         private boolean serverError = true;
 
+        private String exDetail;
+
         public boolean isNeedRetry() {
             return needRetry;
         }
@@ -762,16 +767,22 @@ public class AbstractClient {
             this.serverError = serverError;
         }
 
+        public String getExDetail() {
+            return exDetail;
+        }
+
         public static AnalyzeException analyze(Throwable e) {
             final AnalyzeException result = new AnalyzeException();
             final Throwable rootCause = ExceptionUtils.getRootCause(e);
             if (null == rootCause) {
+                result.exDetail = e.getClass().getCanonicalName() + COLON + ExceptionUtils.getMessage(e);
                 return result;
             }
 
             // 当笔重试 (域名异常)
             final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
-            final List<String> curException = Lists.newArrayList(exType, exType + COLON + exMsg);
+            result.exDetail = exType + COLON + exMsg;
+            final List<String> curException = Lists.newArrayList(exType, result.exDetail);
 
             if (CollectionUtils.containsAny(InternalConfig.getRetryExceptions(), curException)) {
                 result.setNeedRetry(true);
