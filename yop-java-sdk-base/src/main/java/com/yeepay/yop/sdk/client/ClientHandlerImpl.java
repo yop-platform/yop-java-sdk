@@ -206,6 +206,8 @@ public class ClientHandlerImpl implements ClientHandler {
         private boolean needRetry;
         private boolean serverError = true;
 
+        private String exDetail;
+
         public boolean isNeedRetry() {
             return needRetry;
         }
@@ -222,16 +224,22 @@ public class ClientHandlerImpl implements ClientHandler {
             this.serverError = serverError;
         }
 
+        public String getExDetail() {
+            return exDetail;
+        }
+
         public static AnalyzeException analyze(Throwable e, ClientConfiguration clientConfiguration) {
             final AnalyzeException result = new AnalyzeException();
             final Throwable rootCause = ExceptionUtils.getRootCause(e);
             if (null == rootCause) {
+                result.exDetail = e.getClass().getCanonicalName() + COLON + ExceptionUtils.getMessage(e);
                 return result;
             }
 
             // 当笔重试 (域名异常)
             final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
-            final List<String> curException = Lists.newArrayList(exType, exType + COLON + exMsg);
+            result.exDetail = exType + COLON + exMsg;
+            final List<String> curException = Lists.newArrayList(exType, result.exDetail);
 
             if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), curException)) {
                 result.setNeedRetry(true);
@@ -269,6 +277,9 @@ public class ClientHandlerImpl implements ClientHandler {
             throw clientError;
         } catch (YopHttpException serverEx) {// 调用YOP异常
             final AnalyzeException analyzedEx = AnalyzeException.analyze(serverEx, clientConfiguration);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Finish ServerRoot, {}, exDetail:{}", request.getEndpoint(), analyzedEx.getExDetail());
+            }
             if (analyzedEx.isNeedRetry()) {//域名异常
                 throw new YopHostException("Need Change Host, ex:", serverEx);
             }
