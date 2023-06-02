@@ -197,8 +197,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private void handleUnExpectedError(Exception ex) {
-        LOGGER.error("UnExpected Error, ex:", ex);
-        throw new YopUnknownException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
+        throw new YopUnknownException("UnExpected Error, ", ex);
     }
 
     private static class AnalyzeException {
