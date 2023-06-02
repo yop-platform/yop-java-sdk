@@ -737,8 +737,7 @@ public class AbstractClient {
     }
 
     private static void handleUnExpectedError(Exception ex) {
-        LOGGER.error("UnExpected Error, ex:", ex);
-        throw new YopUnknownException("UnExpected Error, " + ExceptionUtils.getMessage(ex), ExceptionUtils.getRootCause(ex));
+        throw new YopUnknownException("UnExpected Error, ", ex);
     }
 
     protected static void handleResult(YopResponse response) {
