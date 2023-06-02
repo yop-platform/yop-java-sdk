@@ -11,14 +11,14 @@ import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
-import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.model.cert.YopPlatformCertQueryResult;
 import com.yeepay.yop.sdk.model.cert.YopPlatformPlainCert;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
@@ -108,7 +108,11 @@ public class YopCertificateCache {
 
     private static List<X509Certificate> loadPlatformSm2Certs(String cacheKey) {
         try {
-            return PLATFORM_CERT_CACHE.get(cacheKey);
+            final List<X509Certificate> cachedCerts = PLATFORM_CERT_CACHE.get(cacheKey);
+            if (CollectionUtils.isNotEmpty(cachedCerts)) {
+                return cachedCerts;
+            }
+            PLATFORM_CERT_CACHE.invalidate(cacheKey);
         } catch (Exception e) {
             LOGGER.warn("UnexpectedException occurred when load platformCert for cacheKey:" + cacheKey, e);
         }

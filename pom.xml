@@ -51,7 +51,7 @@
         <oklog-java.version>2.3.0</oklog-java.version>
         <jmh.version>1.33</jmh.version>
         <json-path.version>2.7.0</json-path.version>
-        <hystrix-core.version>1.5.18</hystrix-core.version>
+        <sentinel.version>1.8.6</sentinel.version>
     </properties>
 
     <dependencyManagement>
@@ -221,15 +221,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.netflix.hystrix</groupId>
-                <artifactId>hystrix-core</artifactId>
-                <version>${hystrix-core.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-core</artifactId>
+                <version>${sentinel.version}</version>
             </dependency>
 
             <!-- test dependencies -->
@@ -425,8 +419,12 @@
                                         <shadedPattern>com.yeepay.shade.com.jayway</shadedPattern>
                                     </relocation>
                                     <relocation>
-                                        <pattern>com.netflix</pattern>
-                                        <shadedPattern>com.yeepay.shade.com.netflix</shadedPattern>
+                                        <pattern>net.minidev</pattern>
+                                        <shadedPattern>com.yeepay.shade.net.minidev</shadedPattern>
+                                    </relocation>
+                                    <relocation>
+                                        <pattern>org.objectweb.asm</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
                                     </relocation>
                                 </relocations>
                                 <transformers>
@@ -434,13 +432,19 @@
                                         <resource>META-INF/services/com.yeepay.yop.sdk.auth.signer.YopSigner</resource>
                                     </transformer>
                                     <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                        <resource>META-INF/services/com.yeepay.yop.sdk.security.digest.YopDigester</resource>
+                                    </transformer>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                         <resource>META-INF/services/com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor</resource>
                                     </transformer>
                                     <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.crypto.X509CertSupport</resource>
+                                        <resource>META-INF/services/com.yeepay.yop.sdk.base.security.cert.X509CertSupport</resource>
                                     </transformer>
                                     <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                         <resource>META-INF/services/com.yeepay.yop.sdk.crypto.YopCertParser</resource>
+                                    </transformer>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                        <resource>META-INF/services/com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser</resource>
                                     </transformer>
                                     <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                         <resource>META-INF/services/com.yeepay.yop.sdk.security.encrypt.YopEncryptor</resource>

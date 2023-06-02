@@ -20,19 +20,11 @@ public interface GateWayRouter {
     /**
      * 路由
      *
-     * @param appKey  appKey
-     * @param request 请求
+     * @param appKey             应用
+     * @param request            请求
+     * @param excludeServerRoots 已失败列表
      * @return serverRoot URI
      */
-    @Deprecated
-    URI route(String appKey, Request<?> request);
-
-    /**
-     * 路由
-     *
-     * @param appKey  appKey
-     * @return serverRoot URI
-     */
-    List<URI> routes(String appKey, Request<?> request);
+    URI route(String appKey, Request<?> request, List<URI> excludeServerRoots);
 
 }

@@ -95,7 +95,7 @@ public final class YopFileSdkConfig implements Serializable {
         if (null == preferredServerRoots) {
             preferredServerRoots = Lists.newArrayList();
         }
-        if (null == serverRoots || serverRoots.length == 0) {
+        if (null == serverRoots) {
             return;
         }
         for (String server : serverRoots) {
@@ -115,7 +115,7 @@ public final class YopFileSdkConfig implements Serializable {
         if (null == preferredYosServerRoots) {
             preferredYosServerRoots = Lists.newArrayList();
         }
-        if (null == yosServerRoots || yosServerRoots.length == 0) {
+        if (null == yosServerRoots) {
             return;
         }
         for (String server : yosServerRoots) {

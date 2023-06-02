@@ -42,7 +42,7 @@ public class ClientConfigurationSupport {
                     .withClientImpl(yopHttpClientConfig.getClientImpl())
                     .withMaxRetryCount(yopHttpClientConfig.getMaxRetryCount())
                     .withRetryExceptions(yopHttpClientConfig.getRetryExceptions())
-                    .withHystrixConfig(yopHttpClientConfig.getHystrix());
+                    .withCircuitBreakerConfig(yopHttpClientConfig.getCircuitBreakerConfig());
         }
         return clientConfiguration;
     }

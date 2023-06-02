@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
+import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
@@ -31,7 +32,10 @@ public class YopJsonResponseAnalyzer implements HttpResponseAnalyzer {
     @Override
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         String content = context.getResponse().readContent();
-        if (content != null && isJsonResponse(response.getMetadata().getContentType())) {
+        if (!isJsonResponse(response.getMetadata().getContentType())) {
+            throw new YopHttpException("Response Error, contentType:" + response.getMetadata().getContentType() + ", content:" + content);
+        }
+        if (null != content) {
             JsonUtils.load(content, response);
         }
         return true;

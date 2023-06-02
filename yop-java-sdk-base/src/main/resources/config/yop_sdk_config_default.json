@@ -2,8 +2,8 @@
   "server_root": "https://openapi.yeepay.com/yop-center",
   "yos_server_root": "https://yos.yeepay.com/yop-center",
   "yop_cert_store": {
-    "enable":true,
-    "lazy":false
+    "enable": true,
+    "lazy": false
   },
   "http_client": {
     "connect_timeout": 10000,
@@ -12,41 +12,25 @@
     "max_conn_total": 200,
     "max_conn_per_route": 100,
     "retry_exceptions": [
-      "java.net.UnknownHostException"
+      "java.net.UnknownHostException",
+      "java.net.ConnectException:No route to host (connect failed)",
+      "java.net.ConnectException:Connection refused (Connection refused)",
+      "java.net.ConnectException:Connection refused: connect",
+      "java.net.SocketTimeoutException:connect timed out"
     ],
-    "max_retry_count": 2,
-    "hystrix": {
-      "group_key": "YOP_SERVER_ROOT",
-      "thread_pool_key": "YopClientExecutePool",
-      "execution_isolation_strategy": "SEMAPHORE",
-      "execution_timeout_enabled": false,
-      "execution_isolation_thread_timeout_in_milliseconds": 30000,
-      "execution_isolation_thread_interrupt_on_timeout": false,
-      "execution_isolation_thread_interrupt_on_cancel": false,
-      "execution_isolation_semaphore_max_concurrent_requests": 2147483647,
-      "circuit_breaker_enabled": true,
-      "circuit_breaker_request_volume_threshold": 10,
-      "circuit_breaker_error_threshold_percentage": 50,
-      "circuit_breaker_sleep_window_in_milliseconds": 5000,
-      "circuit_breaker_force_open": false,
-      "circuit_breaker_force_closed": false,
-      "cb_metrics_rolling_stats_time_in_milliseconds": 10000,
-      "cb_metrics_rolling_stats_num_buckets": 10,
-      "cb_metrics_rolling_percentile_enabled": false,
-      "cb_metrics_rolling_percentile_time_in_milliseconds": 60000,
-      "cb_metrics_rolling_percentile_num_buckets": 6,
-      "cb_metrics_rolling_percentile_bucket_size": 100,
-      "cb_metrics_health_snapshot_interval_in_milliseconds": 500,
-      "core_size": 10,
-      "maximum_size": 500,
-      "max_queue_size": 500,
-      "queue_size_rejection_threshold": 500,
-      "keep_alive_time_minutes": 1,
-      "allow_maximum_size_to_diverge_from_core_size": true,
-      "tp_metrics_rolling_stats_time_in_milliseconds": 10000,
-      "tp_metrics_rolling_stats_num_buckets": 10,
+    "max_retry_count": 3,
+    "circuit_breaker": {
+      "enable": true,
       "yop_exclude_exceptions": [
         "java.net.SocketTimeoutException:Read timed out"
+      ],
+      "rules": [
+        {
+          "grade": 2,
+          "count": 2,
+          "time_window": 5,
+          "stat_interval_ms": 30000
+        }
       ]
     }
   }
