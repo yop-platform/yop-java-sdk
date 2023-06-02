@@ -5,7 +5,7 @@
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.3.5-SNAPSHOT</version>
+    <version>3.3.5</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
 
@@ -180,7 +180,7 @@
                         <configuration>
                             <!-- 将所有不使用的类全部排除掉 -->
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>shade</shadedClassifierName>
+                            <shadedClassifierName>${shaded.classifier.name}</shadedClassifierName>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>

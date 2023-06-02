@@ -37,7 +37,7 @@
 参考 [发布第三方jar包到远程仓库](https://maven.apache.org/guides/mini/guide-3rd-party-jars-remote.html)，示例如下：
 
 ````xml
-mvn deploy:deploy-file -Dversion=3.2.1 -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-3.2.1.jar -DpomFile=pom.xml -Durl=http://xxxx:8000/artifactory/xxx-release/ -DrepositoryId=xxx
+mvn deploy:deploy-file -Dversion=3.3.15 -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-3.3.5.jar -DpomFile=pom.xml -Durl=http://xxxx:8000/artifactory/xxx-release/ -DrepositoryId=xxx
 ````
 
 pom引用方法如下：
@@ -75,8 +75,9 @@ pom引用方法如下：
 - encryptKey:加密密钥(目前仅支持aes256)，sdk在https协议之上支持额外的加密需求，这里配置的必须是用户在yop平台报备的加密密钥
 - httpclient:
     - connect_timeout：全局连接超时，默认值：30*1000
-    - read_timeout：全局读取超时时间，默认值：30*1000
-    - max_connections: 最大连接数，默认值：50
+    - read_timeout：全局读取超时时间，默认值：60*1000
+    - max_conn_total: 最大连接数，默认值：200
+    - max_conn_per_route: 最大连接数，默认值：100
 - proxy:
     - host: 代理服务器IP
     - port:  代理服务器端口，默认值：-1
