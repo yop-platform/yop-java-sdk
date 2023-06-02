@@ -45,16 +45,18 @@ public class YopDegradeRuleHelper {
             return;
         }
 
-        if (CollectionUtils.isEmpty(serverRoots) || null == circuitBreakerConfig
-                || CollectionUtils.isEmpty(circuitBreakerConfig.getRules())) {
-            LOGGER.warn("Empty DegradeRule, Please Check Your Config And Try Again");
-            return;
-        }
-
         synchronized (YopDegradeRuleHelper.class) {
             if (initialized) {
                 return;
             }
+
+            if (CollectionUtils.isEmpty(serverRoots) || null == circuitBreakerConfig
+                    || CollectionUtils.isEmpty(circuitBreakerConfig.getRules())) {
+                LOGGER.warn("Empty DegradeRule, Please Check Your Config And Try Again");
+                initialized = true;
+                return;
+            }
+
             Set<DegradeRule> allRules = Sets.newHashSet();
             for (URI serverRoot : serverRoots) {
                 if (null == serverRoot) {
