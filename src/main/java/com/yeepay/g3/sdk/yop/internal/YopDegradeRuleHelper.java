@@ -46,6 +46,7 @@ public class YopDegradeRuleHelper {
 
         if (CollectionUtils.isEmpty(serverRoots) || null == circuitBreakerConfig
                 || CollectionUtils.isEmpty(circuitBreakerConfig.getRules())) {
+            LOGGER.warn("Empty DegradeRule, Please Check Your Config And Try Again");
             return;
         }
 
