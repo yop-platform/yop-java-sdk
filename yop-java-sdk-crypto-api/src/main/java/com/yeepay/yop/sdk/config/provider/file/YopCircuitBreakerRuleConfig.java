@@ -52,7 +52,7 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
      * <ul/>
      */
     @JsonProperty("count")
-    private double count = 3.0;
+    private double count = 2.0;
 
     /**
      * 熔断间歇时长(秒，该窗口期后，会进入半开)
