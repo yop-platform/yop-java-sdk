@@ -6,12 +6,16 @@ package com.yeepay.yop.sdk.client.metric.report;
 
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.client.YopGlobalClient;
+import com.yeepay.yop.sdk.client.cmd.YopCmdExecutorRegistry;
+import com.yeepay.yop.sdk.model.report.YopReportResponse;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
+import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -42,7 +46,14 @@ public class YopRemoteReporter implements YopReporter {
         // 跳过验签、加解密，使用默认appKey发起请求
         request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false);
         request.setContent(JsonUtils.toJsonString(report));
-        YOP_CLIENT.request(request);
+        final YopResponse response = YOP_CLIENT.request(request);
+        handleReportResponse(response);
+    }
+
+    private void handleReportResponse(YopResponse response) throws IOException {
+        final YopReportResponse reportResponse = new YopReportResponse();
+        JsonUtils.load(response.getStringResult(), reportResponse);
+        YopCmdExecutorRegistry.get(reportResponse.getCmdType()).execute(reportResponse.getCmd());
     }
 
     @Override
