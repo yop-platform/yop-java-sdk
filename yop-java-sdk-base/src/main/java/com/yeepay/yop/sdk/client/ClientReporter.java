@@ -21,10 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -217,7 +214,7 @@ public class ClientReporter {
     }
 
     private static void sendReport() throws InterruptedException {
-        long timestamp = System.currentTimeMillis();
+        Date timestamp = new Date();
         List<YopReport> reports = Lists.newLinkedList();
         final Iterator<Map.Entry<String, AtomicReference<YopHostRequestReport>>> iterator =
                 YOP_HOST_REQUEST_REPORTS.entrySet().iterator();
@@ -230,7 +227,7 @@ public class ClientReporter {
             }
             // 达到上报条件
             if (needReport(timestamp, report)) {
-                report.setEndTime(System.currentTimeMillis());
+                report.setEndTime(new Date());
                 reports.add(report);
                 iterator.remove();
             }
@@ -257,13 +254,13 @@ public class ClientReporter {
         DEFAULT_REPORTER.batchReport(reports);
     }
 
-    private static boolean needReport(long currentTime, YopHostRequestReport report) {
+    private static boolean needReport(Date currentTime, YopHostRequestReport report) {
         final YopHostRequestPayload payload = report.getPayload();
-        final long beginTime = report.getBeginTime();
+        final Date beginTime = report.getBeginTime();
         final int failCount = payload.getFailCount();
         final long maxElapsedMillis = payload.getMaxElapsedMillis();
         final List<YopFailDetail> failDetails = payload.getFailDetails();
-        if (currentTime - beginTime > STAT_INTERVAL_MS) {
+        if (currentTime.getTime() - beginTime.getTime() > STAT_INTERVAL_MS) {
             return true;
         }
         if (failCount > MAX_FAIL_COUNT) {

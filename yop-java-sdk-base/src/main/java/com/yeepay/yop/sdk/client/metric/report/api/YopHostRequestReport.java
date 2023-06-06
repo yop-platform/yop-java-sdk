@@ -8,6 +8,8 @@ import com.yeepay.yop.sdk.client.metric.report.YopReport;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.util.Date;
+
 /**
  * title: YOP 请求调用<br>
  * description: 描述<br>
@@ -28,9 +30,9 @@ public class YopHostRequestReport implements YopReport {
 
     private YopHostRequestPayload payload;
 
-    private long beginTime = System.currentTimeMillis();
+    private Date beginTime = new Date();
 
-    private long endTime;
+    private Date endTime;
 
     @Override
     public String getType() {
@@ -60,20 +62,20 @@ public class YopHostRequestReport implements YopReport {
     }
 
     @Override
-    public long getBeginTime() {
+    public Date getBeginTime() {
         return beginTime;
     }
 
-    public void setBeginTime(long beginTime) {
+    public void setBeginTime(Date beginTime) {
         this.beginTime = beginTime;
     }
 
     @Override
-    public long getEndTime() {
+    public Date getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(long endTime) {
+    public void setEndTime(Date endTime) {
         this.endTime = endTime;
     }
 

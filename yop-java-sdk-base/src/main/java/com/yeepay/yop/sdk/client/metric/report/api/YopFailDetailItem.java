@@ -4,12 +4,14 @@
  */
 package com.yeepay.yop.sdk.client.metric.report.api;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * title: 异常详情<br>
@@ -38,12 +40,13 @@ public class YopFailDetailItem implements Serializable {
     /**
      * 发生时间戳
      */
-    private Long occurTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date occurTime;
 
     public YopFailDetailItem(String exType, String exMsg) {
         this.exType = exType;
         this.exMsg = exMsg;
-        this.occurTime = System.currentTimeMillis();
+        this.occurTime = new Date();
     }
 
     public YopFailDetailItem(Throwable ex) {
@@ -54,7 +57,7 @@ public class YopFailDetailItem implements Serializable {
         this.exType = exCause.getClass().getCanonicalName();
         this.exMsg = StringUtils.abbreviate(StringUtils.defaultString(exCause.getMessage(), ""),
                 300);// TODO 是否足够
-        this.occurTime = System.currentTimeMillis();
+        this.occurTime = new Date();
     }
 
     public String getExType() {
@@ -65,7 +68,7 @@ public class YopFailDetailItem implements Serializable {
         return exMsg;
     }
 
-    public Long getOccurTime() {
+    public Date getOccurTime() {
         return occurTime;
     }
 

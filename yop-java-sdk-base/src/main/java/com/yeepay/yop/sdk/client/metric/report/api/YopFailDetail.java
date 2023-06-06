@@ -4,11 +4,13 @@
  */
 package com.yeepay.yop.sdk.client.metric.report.api;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,7 +40,11 @@ public class YopFailDetail implements Serializable {
     /**
      * 发生时间戳
      */
-    private List<Long> occurTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private List<Date> occurTime;
+
+    public YopFailDetail() {
+    }
 
     public YopFailDetail(String exType, String exMsg) {
         this.exType = exType;
@@ -46,7 +52,7 @@ public class YopFailDetail implements Serializable {
         this.occurTime = Lists.newLinkedList();
     }
 
-    public YopFailDetail(String exType, String exMsg, List<Long> occurTime) {
+    public YopFailDetail(String exType, String exMsg, List<Date> occurTime) {
         this.exType = exType;
         this.exMsg = exMsg;
         this.occurTime = occurTime;
@@ -68,11 +74,11 @@ public class YopFailDetail implements Serializable {
         this.exMsg = exMsg;
     }
 
-    public List<Long> getOccurTime() {
+    public List<Date> getOccurTime() {
         return occurTime;
     }
 
-    public void setOccurTime(List<Long> occurTime) {
+    public void setOccurTime(List<Date> occurTime) {
         this.occurTime = occurTime;
     }
 

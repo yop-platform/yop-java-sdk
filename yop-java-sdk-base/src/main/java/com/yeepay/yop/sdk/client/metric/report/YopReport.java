@@ -4,7 +4,10 @@
  */
 package com.yeepay.yop.sdk.client.metric.report;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * title: 上报内容<br>
@@ -44,13 +47,15 @@ public interface YopReport extends Serializable {
      *
      * @return long
      */
-    long getBeginTime();
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    Date getBeginTime();
 
     /**
      * 开始时间
      *
      * @return long
      */
-    long getEndTime();
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    Date getEndTime();
 
 }
