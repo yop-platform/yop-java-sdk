@@ -53,14 +53,14 @@ public class ClientReporter {
     private static final ScheduledThreadPoolExecutor SEND_SCHEDULE_POOL = new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build());
 
-    private static final int REPORT_INTERVAL_MILLISECONDS;
-    private static final int REPORT_MIN_INTERVAL_MILLISECONDS;
-    private static final int STAT_INTERVAL_MILLISECONDS;
+    private static final int REPORT_INTERVAL_MS;
+    private static final int REPORT_MIN_INTERVAL_MS;
+    private static final int STAT_INTERVAL_MS;
     private static final int MAX_QUEUE_SIZE;
     private static final int MAX_PACKET_SIZE;
     private static final int MAX_FAIL_COUNT;
     private static final int MAX_FAIL_COUNT_PER_EX;
-    private static final int MAX_ELAPSED_MILLISECONDS;
+    private static final int MAX_ELAPSED_MS;
     private static final boolean REPORT;
     private static final boolean REPORT_SUCCESS;
 
@@ -77,26 +77,26 @@ public class ClientReporter {
         final YopReportConfig yopReportConfig = sdkConfig.getYopReportConfig();
         if (null != yopReportConfig) {
             REPORT = yopReportConfig.isEnable();
-            REPORT_SUCCESS = yopReportConfig.isEnableSuccess();
-            REPORT_INTERVAL_MILLISECONDS = yopReportConfig.getIntervalInMilliseconds();
-            REPORT_MIN_INTERVAL_MILLISECONDS = yopReportConfig.getMinIntervalInMilliseconds();
-            STAT_INTERVAL_MILLISECONDS = yopReportConfig.getStatIntervalInMilliseconds();
+            REPORT_SUCCESS = yopReportConfig.isEnableSuccessReport();
+            REPORT_INTERVAL_MS = yopReportConfig.getIntervalMs();
+            REPORT_MIN_INTERVAL_MS = yopReportConfig.getMinIntervalMs();
+            STAT_INTERVAL_MS = yopReportConfig.getStatIntervalMs();
             MAX_QUEUE_SIZE = yopReportConfig.getMaxQueueSize();
             MAX_PACKET_SIZE = yopReportConfig.getMaxPacketSize();
             MAX_FAIL_COUNT = yopReportConfig.getMaxFailCount();
             MAX_FAIL_COUNT_PER_EX = yopReportConfig.getMaxFailCountPerEx();
-            MAX_ELAPSED_MILLISECONDS = yopReportConfig.getMaxElapsedTimeMillis();
+            MAX_ELAPSED_MS = yopReportConfig.getMaxElapsedMs();
         } else {
             REPORT = true;
             REPORT_SUCCESS = false;
-            REPORT_INTERVAL_MILLISECONDS = 30000;
-            REPORT_MIN_INTERVAL_MILLISECONDS = 2000;
-            STAT_INTERVAL_MILLISECONDS = 5000;
+            REPORT_INTERVAL_MS = 30000;
+            REPORT_MIN_INTERVAL_MS = 2000;
+            STAT_INTERVAL_MS = 5000;
             MAX_QUEUE_SIZE = 500;
             MAX_PACKET_SIZE = 50;
             MAX_FAIL_COUNT = 10;
             MAX_FAIL_COUNT_PER_EX = 5;
-            MAX_ELAPSED_MILLISECONDS = 15000;
+            MAX_ELAPSED_MS = 15000;
         }
         COLLECT_POOL = new ThreadPoolExecutor(1, 1,
                 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE),
@@ -109,7 +109,7 @@ public class ClientReporter {
                     LOGGER.error("Unexpected Error, ex:", t);
                 }
             }
-        }, REPORT_INTERVAL_MILLISECONDS, REPORT_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS);
+        }, REPORT_INTERVAL_MS, REPORT_INTERVAL_MS, TimeUnit.MILLISECONDS);
     }
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {
@@ -162,12 +162,8 @@ public class ClientReporter {
                 }
 
                 final String reportKey = serverHost + serverIp;
-                AtomicReference<YopHostRequestReport> reportReference = YOP_HOST_REQUEST_REPORTS.get(reportKey);
-
-                if (null == reportReference) {
-                    YOP_HOST_REQUEST_REPORTS.putIfAbsent(reportKey, new AtomicReference<>());
-                    reportReference = YOP_HOST_REQUEST_REPORTS.get(reportKey);
-                }
+                AtomicReference<YopHostRequestReport> reportReference =
+                        YOP_HOST_REQUEST_REPORTS.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
                 // CompareAndSet并发加入统计数据
                 YopHostRequestReport current;
@@ -252,7 +248,7 @@ public class ClientReporter {
             List<YopReport> reportsSending = partitions.get(i);
             doSendReport(reportsSending);
             if (i != total -1) {
-                Thread.sleep(REPORT_MIN_INTERVAL_MILLISECONDS);
+                Thread.sleep(REPORT_MIN_INTERVAL_MS);
             }
         }
     }
@@ -267,13 +263,13 @@ public class ClientReporter {
         final int failCount = payload.getFailCount();
         final long maxElapsedMillis = payload.getMaxElapsedMillis();
         final List<YopFailDetail> failDetails = payload.getFailDetails();
-        if (currentTime - beginTime > STAT_INTERVAL_MILLISECONDS) {
+        if (currentTime - beginTime > STAT_INTERVAL_MS) {
             return true;
         }
         if (failCount > MAX_FAIL_COUNT) {
             return true;
         }
-        if (maxElapsedMillis > MAX_ELAPSED_MILLISECONDS) {
+        if (maxElapsedMillis > MAX_ELAPSED_MS) {
             return true;
         }
         if (CollectionUtils.isNotEmpty(failDetails)) {

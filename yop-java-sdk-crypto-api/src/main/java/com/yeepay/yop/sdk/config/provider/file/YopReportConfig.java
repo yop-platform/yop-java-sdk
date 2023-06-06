@@ -32,26 +32,26 @@ public class YopReportConfig implements Serializable {
     /**
      * 是否上报成功调用
      */
-    @JsonProperty("enable_success")
-    private boolean enableSuccess = false;
+    @JsonProperty("enable_success_report")
+    private boolean enableSuccessReport = false;
 
     /**
      * 最小上报周期(避免频繁上报)：毫秒
      */
-    @JsonProperty("min_interval_in_milliseconds")
-    private int minIntervalInMilliseconds = 2000;
+    @JsonProperty("min_interval_ms")
+    private int minIntervalMs = 2000;
 
     /**
      * 上报周期：毫秒
      */
-    @JsonProperty("interval_in_milliseconds")
-    private int intervalInMilliseconds = 30000;
+    @JsonProperty("interval_ms")
+    private int intervalMs = 30000;
 
     /**
      * 统计周期：毫秒
      */
-    @JsonProperty("stat_interval_in_milliseconds")
-    private int statIntervalInMilliseconds = 5000;
+    @JsonProperty("stat_interval_ms")
+    private int statIntervalMs = 5000;
 
     /**
      * 过滤异常
@@ -80,8 +80,8 @@ public class YopReportConfig implements Serializable {
     /**
      * 耗时阈值
      */
-    @JsonProperty("max_elapsed_time_in_milliseconds")
-    private int maxElapsedTimeMillis = 15000;
+    @JsonProperty("max_elapsed_ms")
+    private int maxElapsedMs = 15000;
 
     /**
      * 单次上报条数
@@ -97,36 +97,36 @@ public class YopReportConfig implements Serializable {
         this.enable = enable;
     }
 
-    public boolean isEnableSuccess() {
-        return enableSuccess;
+    public boolean isEnableSuccessReport() {
+        return enableSuccessReport;
     }
 
-    public void setEnableSuccess(boolean enableSuccess) {
-        this.enableSuccess = enableSuccess;
+    public void setEnableSuccessReport(boolean enableSuccessReport) {
+        this.enableSuccessReport = enableSuccessReport;
     }
 
-    public int getMinIntervalInMilliseconds() {
-        return minIntervalInMilliseconds;
+    public int getMinIntervalMs() {
+        return minIntervalMs;
     }
 
-    public void setMinIntervalInMilliseconds(int minIntervalInMilliseconds) {
-        this.minIntervalInMilliseconds = minIntervalInMilliseconds;
+    public void setMinIntervalMs(int minIntervalMs) {
+        this.minIntervalMs = minIntervalMs;
     }
 
-    public int getIntervalInMilliseconds() {
-        return intervalInMilliseconds;
+    public int getIntervalMs() {
+        return intervalMs;
     }
 
-    public void setIntervalInMilliseconds(int intervalInMilliseconds) {
-        this.intervalInMilliseconds = intervalInMilliseconds;
+    public void setIntervalMs(int intervalMs) {
+        this.intervalMs = intervalMs;
     }
 
-    public int getStatIntervalInMilliseconds() {
-        return statIntervalInMilliseconds;
+    public int getStatIntervalMs() {
+        return statIntervalMs;
     }
 
-    public void setStatIntervalInMilliseconds(int statIntervalInMilliseconds) {
-        this.statIntervalInMilliseconds = statIntervalInMilliseconds;
+    public void setStatIntervalMs(int statIntervalMs) {
+        this.statIntervalMs = statIntervalMs;
     }
 
     public Set<String> getExcludeExceptions() {
@@ -161,12 +161,12 @@ public class YopReportConfig implements Serializable {
         this.maxFailCountPerEx = maxFailCountPerEx;
     }
 
-    public int getMaxElapsedTimeMillis() {
-        return maxElapsedTimeMillis;
+    public int getMaxElapsedMs() {
+        return maxElapsedMs;
     }
 
-    public void setMaxElapsedTimeMillis(int maxElapsedTimeMillis) {
-        this.maxElapsedTimeMillis = maxElapsedTimeMillis;
+    public void setMaxElapsedMs(int maxElapsedMs) {
+        this.maxElapsedMs = maxElapsedMs;
     }
 
     public int getMaxPacketSize() {
