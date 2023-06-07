@@ -34,6 +34,8 @@ public class YopDefaultCmdExecutor implements YopCmdExecutor {
 
     @Override
     public void execute(String cmd, Object... args) {
-        LOGGER.info("Received YopCmd:{}", cmd);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Received YopCmd:{}", cmd);
+        }
     }
 }
