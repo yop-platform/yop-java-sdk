@@ -2,8 +2,9 @@
  * Copyright: Copyright (c)2014
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.client.metric.report.api;
+package com.yeepay.yop.sdk.client.metric.report.host;
 
+import com.yeepay.yop.sdk.client.metric.YopFailureList;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -11,7 +12,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * title: YOP 请求上报内容体<br>
+ * title: 上报内容-YOP域名请求体<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -52,7 +53,7 @@ public class YopHostRequestPayload implements Serializable {
     /**
      * 失败明细
      */
-    private List<YopFailDetail> failDetails;
+    private List<YopFailureList> failDetails;
 
     public String getServerHost() {
         return serverHost;
@@ -94,11 +95,11 @@ public class YopHostRequestPayload implements Serializable {
         this.maxElapsedMillis = maxElapsedMillis;
     }
 
-    public List<YopFailDetail> getFailDetails() {
+    public List<YopFailureList> getFailDetails() {
         return failDetails;
     }
 
-    public void setFailDetails(List<YopFailDetail> failDetails) {
+    public void setFailDetails(List<YopFailureList> failDetails) {
         this.failDetails = failDetails;
     }
 

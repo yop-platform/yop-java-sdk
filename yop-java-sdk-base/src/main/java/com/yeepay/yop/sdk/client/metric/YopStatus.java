@@ -2,10 +2,10 @@
  * Copyright: Copyright (c)2014
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.client.metric.report.api;
+package com.yeepay.yop.sdk.client.metric;
 
 /**
- * title: Yop 请求状态<br>
+ * title: 状态<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -14,7 +14,7 @@ package com.yeepay.yop.sdk.client.metric.report.api;
  * @version 1.0.0
  * @since 2023/3/29
  */
-public enum YopHostRequestStatus {
+public enum YopStatus {
     SUCCESS,
     FAIL
 }

@@ -2,7 +2,7 @@
  * Copyright: Copyright (c)2014
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.client.metric.report.api;
+package com.yeepay.yop.sdk.client.metric.report.host;
 
 import com.yeepay.yop.sdk.client.metric.report.YopReport;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -11,7 +11,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import java.util.Date;
 
 /**
- * title: YOP 请求调用<br>
+ * title: 上报内容-YOP域名请求<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>

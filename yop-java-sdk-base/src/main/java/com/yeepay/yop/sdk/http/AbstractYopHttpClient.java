@@ -7,11 +7,11 @@ package com.yeepay.yop.sdk.http;
 import com.google.common.collect.ImmutableSet;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.ClientReporter;
-import com.yeepay.yop.sdk.client.metric.event.api.YopHostReqFailEvent;
-import com.yeepay.yop.sdk.client.metric.event.api.YopHostReqSuccessEvent;
-import com.yeepay.yop.sdk.client.metric.event.api.YopHostRequestEvent;
-import com.yeepay.yop.sdk.client.metric.report.api.YopFailDetailItem;
-import com.yeepay.yop.sdk.client.metric.report.api.YopHostRequestStatus;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostFailEvent;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
+import com.yeepay.yop.sdk.client.metric.YopFailureItem;
+import com.yeepay.yop.sdk.client.metric.YopStatus;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.internal.Request;
@@ -115,19 +115,19 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         }
     }
 
-    private <Input extends BaseRequest> YopHostReqSuccessEvent toSuccessRequest(Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
-        final YopHostReqSuccessEvent successEvent = new YopHostReqSuccessEvent();
+    private <Input extends BaseRequest> YopHostSuccessEvent toSuccessRequest(Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
+        final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
         setBasic(successEvent, request, httpResponse, elapsedTime);
-        successEvent.setStatus(YopHostRequestStatus.SUCCESS);
+        successEvent.setStatus(YopStatus.SUCCESS);
         successEvent.setData("");
         return successEvent;
     }
 
-    private <Input extends BaseRequest> YopHostReqFailEvent toFailRequest(Request<Input> request, YopHttpResponse httpResponse, Exception ex, long elapsedTime) {
-        final YopHostReqFailEvent failEvent = new YopHostReqFailEvent();
+    private <Input extends BaseRequest> YopHostFailEvent toFailRequest(Request<Input> request, YopHttpResponse httpResponse, Exception ex, long elapsedTime) {
+        final YopHostFailEvent failEvent = new YopHostFailEvent();
         setBasic(failEvent, request, httpResponse, elapsedTime);
-        failEvent.setStatus(YopHostRequestStatus.FAIL);
-        failEvent.setData(new YopFailDetailItem(ex));
+        failEvent.setStatus(YopStatus.FAIL);
+        failEvent.setData(new YopFailureItem(ex));
         return failEvent;
     }
 

@@ -8,11 +8,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.client.metric.event.api.YopHostRequestEvent;
-import com.yeepay.yop.sdk.client.metric.report.YopRemoteReporter;
-import com.yeepay.yop.sdk.client.metric.report.YopReport;
-import com.yeepay.yop.sdk.client.metric.report.YopReporter;
-import com.yeepay.yop.sdk.client.metric.report.api.*;
+import com.yeepay.yop.sdk.client.metric.YopFailureList;
+import com.yeepay.yop.sdk.client.metric.YopFailureItem;
+import com.yeepay.yop.sdk.client.metric.YopStatus;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
+import com.yeepay.yop.sdk.client.metric.report.*;
+import com.yeepay.yop.sdk.client.metric.report.host.*;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -41,7 +42,7 @@ public class ClientReporter {
 
     private static final YopReporter DEFAULT_REPORTER = YopRemoteReporter.INSTANCE;
 
-    private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_REPORTS = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_COLLECTION = new ConcurrentHashMap<>();
 
     // 打包上报事件
     private static final ThreadPoolExecutor COLLECT_POOL;
@@ -101,7 +102,7 @@ public class ClientReporter {
         SEND_SCHEDULE_POOL.scheduleWithFixedDelay(new Runnable() {
             public void run() {
                 try {
-                    sendReport();
+                    sendHostReport();
                 } catch (Throwable t) {
                     LOGGER.error("Unexpected Error, ex:", t);
                 }
@@ -117,7 +118,7 @@ public class ClientReporter {
                 }
                 return;
             }
-            if (!REPORT_SUCCESS && YopHostRequestStatus.SUCCESS.equals(newEvent.getStatus())) {
+            if (!REPORT_SUCCESS && YopStatus.SUCCESS.equals(newEvent.getStatus())) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Ignore Success ReportEvent, value:{}", newEvent);
                 }
@@ -150,17 +151,17 @@ public class ClientReporter {
                 final long elapsedMillis = event.getElapsedMillis();
                 int successCount = 0;
                 int failCount = 0;
-                YopFailDetailItem failDetail = null;
-                if (YopHostRequestStatus.SUCCESS.equals(event.getStatus())) {
+                YopFailureItem failDetail = null;
+                if (YopStatus.SUCCESS.equals(event.getStatus())) {
                     successCount = 1;
                 } else {
                     failCount = 1;
-                    failDetail = (YopFailDetailItem) event.getData();
+                    failDetail = (YopFailureItem) event.getData();
                 }
 
                 final String reportKey = serverHost + serverIp;
                 AtomicReference<YopHostRequestReport> reportReference =
-                        YOP_HOST_REQUEST_REPORTS.computeIfAbsent(reportKey, p -> new AtomicReference<>());
+                        YOP_HOST_REQUEST_COLLECTION.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
                 // CompareAndSet并发加入统计数据
                 YopHostRequestReport current;
@@ -177,7 +178,7 @@ public class ClientReporter {
                         payload.setMaxElapsedMillis(elapsedMillis);
                         payload.setFailDetails(Lists.newLinkedList());
                         if (null != failDetail) {
-                            final YopFailDetail yopFailDetail = new YopFailDetail(failDetail.getExType(), failDetail.getExMsg());
+                            final YopFailureList yopFailDetail = new YopFailureList(failDetail.getExType(), failDetail.getExMsg());
                             yopFailDetail.getOccurTime().add(failDetail.getOccurTime());
                             payload.getFailDetails().add(yopFailDetail);
                         }
@@ -191,16 +192,16 @@ public class ClientReporter {
                         payload.setFailCount(oldPayload.getFailCount() + failCount);
                         payload.setMaxElapsedMillis(Math.max(elapsedMillis, oldPayload.getMaxElapsedMillis()));
                         payload.setFailDetails(Lists.newLinkedList(oldPayload.getFailDetails()));
-                        final YopFailDetailItem failDetailItem = failDetail;
+                        final YopFailureItem failDetailItem = failDetail;
                         if (null != failDetail) {
-                            final Optional<YopFailDetail> yopFailDetail = payload.getFailDetails().stream().filter(p ->
+                            final Optional<YopFailureList> yopFailDetail = payload.getFailDetails().stream().filter(p ->
                                             StringUtils.equals(p.getExType(), failDetailItem.getExType())
                                                     && StringUtils.equals(p.getExMsg(), failDetailItem.getExMsg()))
                                     .findAny();
                             if (yopFailDetail.isPresent()) {
                                 yopFailDetail.get().getOccurTime().add(failDetailItem.getOccurTime());
                             } else {
-                                final YopFailDetail newYopFailDetail = new YopFailDetail(failDetail.getExType(), failDetail.getExMsg());
+                                final YopFailureList newYopFailDetail = new YopFailureList(failDetail.getExType(), failDetail.getExMsg());
                                 newYopFailDetail.getOccurTime().add(failDetail.getOccurTime());
                                 payload.getFailDetails().add(newYopFailDetail);
                             }
@@ -213,11 +214,11 @@ public class ClientReporter {
         }
     }
 
-    private static void sendReport() throws InterruptedException {
+    private static void sendHostReport() throws InterruptedException {
         Date timestamp = new Date();
         List<YopReport> reports = Lists.newLinkedList();
         final Iterator<Map.Entry<String, AtomicReference<YopHostRequestReport>>> iterator =
-                YOP_HOST_REQUEST_REPORTS.entrySet().iterator();
+                YOP_HOST_REQUEST_COLLECTION.entrySet().iterator();
         while (iterator.hasNext()) {
             final Map.Entry<String, AtomicReference<YopHostRequestReport>> entry = iterator.next();
             AtomicReference<YopHostRequestReport> reference = entry.getValue();
@@ -259,7 +260,7 @@ public class ClientReporter {
         final Date beginTime = report.getBeginTime();
         final int failCount = payload.getFailCount();
         final long maxElapsedMillis = payload.getMaxElapsedMillis();
-        final List<YopFailDetail> failDetails = payload.getFailDetails();
+        final List<YopFailureList> failDetails = payload.getFailDetails();
         if (currentTime.getTime() - beginTime.getTime() > STAT_INTERVAL_MS) {
             return true;
         }
@@ -270,7 +271,7 @@ public class ClientReporter {
             return true;
         }
         if (CollectionUtils.isNotEmpty(failDetails)) {
-            for (YopFailDetail failDetail : failDetails) {
+            for (YopFailureList failDetail : failDetails) {
                 if (CollectionUtils.size(failDetail.getOccurTime()) > MAX_FAIL_COUNT_PER_EX) {
                     return true;
                 }

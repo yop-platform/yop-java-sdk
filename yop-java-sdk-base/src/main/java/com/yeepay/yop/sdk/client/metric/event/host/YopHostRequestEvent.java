@@ -2,16 +2,16 @@
  * Copyright: Copyright (c)2014
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.client.metric.event.api;
+package com.yeepay.yop.sdk.client.metric.event.host;
 
-import com.yeepay.yop.sdk.client.metric.report.api.YopHostRequestStatus;
+import com.yeepay.yop.sdk.client.metric.YopStatus;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 
 /**
- * title: YopApi请求事件<br>
+ * title: YOP域名请求事件<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -37,7 +37,7 @@ public class YopHostRequestEvent<T> implements Serializable {
     /**
      * success/fail
      */
-    private YopHostRequestStatus status;
+    private YopStatus status;
 
     /**
      * 耗时
@@ -45,7 +45,7 @@ public class YopHostRequestEvent<T> implements Serializable {
     private long elapsedMillis;
 
     /**
-     * 数据(不通状态可能不一样)
+     * 数据(不同状态可能不一样)
      */
     private T data;
 
@@ -65,11 +65,11 @@ public class YopHostRequestEvent<T> implements Serializable {
         this.serverIp = serverIp;
     }
 
-    public YopHostRequestStatus getStatus() {
+    public YopStatus getStatus() {
         return status;
     }
 
-    public void setStatus(YopHostRequestStatus status) {
+    public void setStatus(YopStatus status) {
         this.status = status;
     }
 

@@ -5,9 +5,9 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.google.common.collect.Lists;
-import com.yeepay.yop.sdk.client.metric.report.api.YopFailDetail;
-import com.yeepay.yop.sdk.client.metric.report.api.YopHostRequestPayload;
-import com.yeepay.yop.sdk.client.metric.report.api.YopHostRequestReport;
+import com.yeepay.yop.sdk.client.metric.YopFailureList;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestPayload;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestReport;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class JsonUtilsTest {
         final YopHostRequestReport newObj = new YopHostRequestReport();
         newObj.setBeginTime(new Date(1686039343000L));
         final YopHostRequestPayload payload = new YopHostRequestPayload();
-        payload.setFailDetails(Lists.newArrayList(new YopFailDetail("","", Lists.newArrayList(new Date(1686039343000L)))));
+        payload.setFailDetails(Lists.newArrayList(new YopFailureList("","", Lists.newArrayList(new Date(1686039343000L)))));
         newObj.setPayload(payload);
 
         final String newObjStr = JsonUtils.toJsonString(newObj);
