@@ -8,12 +8,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.client.metric.YopFailureList;
 import com.yeepay.yop.sdk.client.metric.YopFailureItem;
+import com.yeepay.yop.sdk.client.metric.YopFailureList;
 import com.yeepay.yop.sdk.client.metric.YopStatus;
 import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
-import com.yeepay.yop.sdk.client.metric.report.*;
-import com.yeepay.yop.sdk.client.metric.report.host.*;
+import com.yeepay.yop.sdk.client.metric.report.YopRemoteReporter;
+import com.yeepay.yop.sdk.client.metric.report.YopReport;
+import com.yeepay.yop.sdk.client.metric.report.YopReporter;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestPayload;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestReport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -87,7 +90,7 @@ public class ClientReporter {
         } else {
             REPORT = true;
             REPORT_SUCCESS = false;
-            REPORT_INTERVAL_MS = 30000;
+            REPORT_INTERVAL_MS = 3000;
             REPORT_MIN_INTERVAL_MS = 2000;
             STAT_INTERVAL_MS = 5000;
             MAX_QUEUE_SIZE = 500;

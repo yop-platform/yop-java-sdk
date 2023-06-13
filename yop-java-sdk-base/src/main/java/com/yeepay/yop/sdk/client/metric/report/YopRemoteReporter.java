@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.client.metric.report;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.client.YopGlobalClient;
 import com.yeepay.yop.sdk.client.cmd.YopCmdExecutorRegistry;
+import com.yeepay.yop.sdk.model.report.YopReportRequest;
 import com.yeepay.yop.sdk.model.report.YopReportResponse;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
@@ -41,11 +42,13 @@ public class YopRemoteReporter implements YopReporter {
         batchReport(Lists.newArrayList(report));
     }
 
-    private void doRemoteReport(List<YopReport> report) throws Exception {
+    private void doRemoteReport(List<YopReport> reports) throws Exception {
         YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
         // 跳过验签、加解密，使用默认appKey发起请求
         request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false);
-        request.setContent(JsonUtils.toJsonString(report));
+        YopReportRequest reportRequest = new YopReportRequest();
+        reportRequest.setReports(reports);
+        request.setContent(JsonUtils.toJsonString(reportRequest));
         final YopResponse response = YOP_CLIENT.request(request);
         handleReportResponse(response);
     }
