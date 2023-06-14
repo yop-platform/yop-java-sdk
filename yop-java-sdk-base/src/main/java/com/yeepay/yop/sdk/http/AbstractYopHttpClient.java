@@ -5,13 +5,14 @@
 package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.ImmutableSet;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.ClientReporter;
-import com.yeepay.yop.sdk.client.metric.event.host.YopHostFailEvent;
-import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
-import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
 import com.yeepay.yop.sdk.client.metric.YopFailureItem;
 import com.yeepay.yop.sdk.client.metric.YopStatus;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostFailEvent;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.internal.Request;
@@ -173,6 +174,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     private <Input extends BaseRequest> void addStandardHeader(Request<Input> request, ExecutionContext executionContext) {
         request.addHeader(Headers.YOP_APPKEY, executionContext.getYopCredentials().getAppKey());
         request.addHeader(Headers.USER_AGENT, this.clientConfig.getUserAgent());
+        request.addHeader(Headers.YOP_SESSION_ID, YopConstants.YOP_SESSION_ID);
     }
 
     /**

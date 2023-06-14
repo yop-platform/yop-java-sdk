@@ -14,6 +14,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Common constants used by the whole SDK.
@@ -118,5 +119,7 @@ public interface YopConstants {
     String DEFAULT_YOP_CALLBACK_HANDLER = "default";
 
     String DEFAULT_YOP_CIRCUIT_BREAKER = "sentinel";
+
+    String YOP_SESSION_ID = UUID.randomUUID().toString();
 
 }
