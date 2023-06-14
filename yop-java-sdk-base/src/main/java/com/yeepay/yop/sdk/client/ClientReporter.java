@@ -47,6 +47,8 @@ public class ClientReporter {
 
     private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_COLLECTION = new ConcurrentHashMap<>();
 
+    private static final LinkedBlockingQueue<YopHostRequestReport> YOP_HOST_REQUEST_QUEUE;
+
     // 打包上报事件
     private static final ThreadPoolExecutor COLLECT_POOL;
 
@@ -55,7 +57,6 @@ public class ClientReporter {
             new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build());
 
     private static final int REPORT_INTERVAL_MS;
-    private static final int REPORT_MIN_INTERVAL_MS;
     private static final int STAT_INTERVAL_MS;
     private static final int MAX_QUEUE_SIZE;
     private static final int MAX_PACKET_SIZE;
@@ -80,7 +81,6 @@ public class ClientReporter {
             REPORT = yopReportConfig.isEnable();
             REPORT_SUCCESS = yopReportConfig.isEnableSuccessReport();
             REPORT_INTERVAL_MS = yopReportConfig.getIntervalMs();
-            REPORT_MIN_INTERVAL_MS = yopReportConfig.getMinIntervalMs();
             STAT_INTERVAL_MS = yopReportConfig.getStatIntervalMs();
             MAX_QUEUE_SIZE = yopReportConfig.getMaxQueueSize();
             MAX_PACKET_SIZE = yopReportConfig.getMaxPacketSize();
@@ -91,7 +91,6 @@ public class ClientReporter {
             REPORT = true;
             REPORT_SUCCESS = false;
             REPORT_INTERVAL_MS = 3000;
-            REPORT_MIN_INTERVAL_MS = 2000;
             STAT_INTERVAL_MS = 5000;
             MAX_QUEUE_SIZE = 500;
             MAX_PACKET_SIZE = 50;
@@ -99,6 +98,7 @@ public class ClientReporter {
             MAX_FAIL_COUNT_PER_EX = 5;
             MAX_ELAPSED_MS = 15000;
         }
+        YOP_HOST_REQUEST_QUEUE = Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE);
         COLLECT_POOL = new ThreadPoolExecutor(1, 1,
                 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE),
                 new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build(), new ThreadPoolExecutor.DiscardOldestPolicy());
@@ -211,6 +211,23 @@ public class ClientReporter {
                         }
                     }
                 } while (!reportReference.compareAndSet(current, update));
+
+                YopHostRequestReport reportToBeQueue = null;
+                if (needReport(new Date(), reportReference.get())) {
+                    final AtomicReference<YopHostRequestReport> removed = YOP_HOST_REQUEST_COLLECTION.remove(reportKey);
+                    if (null != removed) {
+                        reportToBeQueue = removed.get();
+                    }
+                }
+                if (null != reportToBeQueue) {
+                    reportToBeQueue.setEndTime(new Date());
+                    while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
+                        YopHostRequestReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
+                        if (oldReport != null) {
+                            LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
+                        }
+                    }
+                }
             } catch (Exception e) {
                 LOGGER.warn("Error Collect ReportEvent, value:" + event, e);
             }
@@ -218,43 +235,17 @@ public class ClientReporter {
     }
 
     private static void sendHostReport() throws InterruptedException {
-        Date timestamp = new Date();
         List<YopReport> reports = Lists.newLinkedList();
         final Iterator<Map.Entry<String, AtomicReference<YopHostRequestReport>>> iterator =
                 YOP_HOST_REQUEST_COLLECTION.entrySet().iterator();
-        while (iterator.hasNext()) {
-            final Map.Entry<String, AtomicReference<YopHostRequestReport>> entry = iterator.next();
-            AtomicReference<YopHostRequestReport> reference = entry.getValue();
-            YopHostRequestReport report = reference.get();
-            if (null == report) {
-                continue;
-            }
-            // 达到上报条件
-            if (needReport(timestamp, report)) {
-                report.setEndTime(new Date());
-                reports.add(report);
-                iterator.remove();
-            }
+        int packetSize = 0;
+        YopHostRequestReport report;
+        while ((packetSize++ < MAX_PACKET_SIZE) && null != (report = YOP_HOST_REQUEST_QUEUE.poll())) {
+            reports.add(report);
         }
         if (CollectionUtils.isEmpty(reports)) {
             return;
         }
-        final List<List<YopReport>> partitions = Lists.partition(reports, MAX_PACKET_SIZE);
-        if (partitions.size() == 1) {
-            doSendReport(reports);
-            return;
-        }
-
-        for (int i = 0, total = partitions.size(); i < total; i++) {
-            List<YopReport> reportsSending = partitions.get(i);
-            doSendReport(reportsSending);
-            if (i != total -1) {
-                Thread.sleep(REPORT_MIN_INTERVAL_MS);
-            }
-        }
-    }
-
-    private static void doSendReport(List<YopReport> reports) {
         DEFAULT_REPORTER.batchReport(reports);
     }
 

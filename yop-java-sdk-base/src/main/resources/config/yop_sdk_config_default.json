@@ -37,8 +37,7 @@
   "yop_report": {
     "enable": true,
     "enable_success_report": false,
-    "min_interval_ms": 2000,
-    "interval_ms": 3000,
+    "send_interval_ms": 3000,
     "stat_interval_ms": 5000,
     "exclude_exceptions": [],
     "max_queue_size": 500,

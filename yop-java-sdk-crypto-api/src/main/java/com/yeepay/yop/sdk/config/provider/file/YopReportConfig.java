@@ -36,12 +36,6 @@ public class YopReportConfig implements Serializable {
     private boolean enableSuccessReport = false;
 
     /**
-     * 最小上报周期(避免频繁上报)：毫秒
-     */
-    @JsonProperty("min_interval_ms")
-    private int minIntervalMs = 2000;
-
-    /**
      * 上报周期：毫秒
      */
     @JsonProperty("interval_ms")
@@ -103,14 +97,6 @@ public class YopReportConfig implements Serializable {
 
     public void setEnableSuccessReport(boolean enableSuccessReport) {
         this.enableSuccessReport = enableSuccessReport;
-    }
-
-    public int getMinIntervalMs() {
-        return minIntervalMs;
-    }
-
-    public void setMinIntervalMs(int minIntervalMs) {
-        this.minIntervalMs = minIntervalMs;
     }
 
     public int getIntervalMs() {
