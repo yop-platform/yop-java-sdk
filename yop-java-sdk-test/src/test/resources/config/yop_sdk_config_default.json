@@ -1,8 +1,23 @@
 {
   "server_root": "http://ycetest.yeepay.com:30228/yop-center",
   "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
+  "preferred_server_roots": [
+    "http://ycetest.yeepay.com:30228/yop-center"
+    //    "https://my.yeepay.com/yop-center"
+  ],
   "yop_cert_store": {
     "enable": false,
     "valid_after_expire_period": 1674727773000
+  },
+  "yop_report": {
+    "enable": true,
+    "enable_success_report": true,
+    "send_interval_ms": 3000,
+    "stat_interval_ms": 5000,
+    "max_queue_size": 500,
+    "max_fail_count": 10,
+    "max_fail_count_per_exception": 5,
+    "max_elapsed_ms": 15000,
+    "max_packet_size": 50
   }
 }

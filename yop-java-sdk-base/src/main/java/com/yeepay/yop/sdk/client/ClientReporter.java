@@ -52,7 +52,11 @@ public class ClientReporter {
     // 打包上报事件
     private static final ThreadPoolExecutor COLLECT_POOL;
 
-    // 将打包后的事件发送到远端
+    // 定时扫描统计数据
+    private static final ScheduledThreadPoolExecutor SWEEPER_SCHEDULE_POOL = new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder().setNameFormat("client-report-sweeper-%d").setDaemon(true).build());
+
+    // 上报到远端
     private static final ScheduledThreadPoolExecutor SEND_SCHEDULE_POOL = new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build());
 
@@ -102,6 +106,15 @@ public class ClientReporter {
         COLLECT_POOL = new ThreadPoolExecutor(1, 1,
                 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE),
                 new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build(), new ThreadPoolExecutor.DiscardOldestPolicy());
+        SWEEPER_SCHEDULE_POOL.scheduleWithFixedDelay(new Runnable() {
+            public void run() {
+                try {
+                    sweepReports();
+                } catch (Throwable t) {
+                    LOGGER.error("Unexpected Error, ex:", t);
+                }
+            }
+        }, 1000, 1000, TimeUnit.MILLISECONDS);
         SEND_SCHEDULE_POOL.scheduleWithFixedDelay(new Runnable() {
             public void run() {
                 try {
@@ -111,6 +124,40 @@ public class ClientReporter {
                 }
             }
         }, REPORT_INTERVAL_MS, REPORT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private static void sweepReports() {
+        final Set<String> collectReports = YOP_HOST_REQUEST_COLLECTION.keySet();
+        if (CollectionUtils.isEmpty(collectReports)) {
+            return;
+        }
+        for (String reportKey : collectReports) {
+            final AtomicReference<YopHostRequestReport> collectReport = YOP_HOST_REQUEST_COLLECTION.get(reportKey);
+            if (null == collectReport) {
+                continue;
+            }
+            checkAndReport(reportKey, collectReport.get());
+        }
+    }
+
+    private static void checkAndReport(String reportKey, YopHostRequestReport yopHostRequestReport) {
+        YopHostRequestReport reportToBeQueue = null;
+        if (needReport(new Date(), yopHostRequestReport)) {
+            final AtomicReference<YopHostRequestReport> removed = YOP_HOST_REQUEST_COLLECTION.remove(reportKey);
+            if (null != removed) {
+                reportToBeQueue = removed.get();
+            }
+        }
+        if (null != reportToBeQueue) {
+            reportToBeQueue.setEndTime(new Date());
+
+            while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
+                YopHostRequestReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
+                if (oldReport != null) {
+                    LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
+                }
+            }
+        }
     }
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {
@@ -212,22 +259,7 @@ public class ClientReporter {
                     }
                 } while (!reportReference.compareAndSet(current, update));
 
-                YopHostRequestReport reportToBeQueue = null;
-                if (needReport(new Date(), reportReference.get())) {
-                    final AtomicReference<YopHostRequestReport> removed = YOP_HOST_REQUEST_COLLECTION.remove(reportKey);
-                    if (null != removed) {
-                        reportToBeQueue = removed.get();
-                    }
-                }
-                if (null != reportToBeQueue) {
-                    reportToBeQueue.setEndTime(new Date());
-                    while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
-                        YopHostRequestReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
-                        if (oldReport != null) {
-                            LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
-                        }
-                    }
-                }
+                checkAndReport(reportKey, reportReference.get());
             } catch (Exception e) {
                 LOGGER.warn("Error Collect ReportEvent, value:" + event, e);
             }
@@ -250,6 +282,9 @@ public class ClientReporter {
     }
 
     private static boolean needReport(Date currentTime, YopHostRequestReport report) {
+        if (null == report) {
+            return false;
+        }
         final YopHostRequestPayload payload = report.getPayload();
         final Date beginTime = report.getBeginTime();
         final int failCount = payload.getFailCount();

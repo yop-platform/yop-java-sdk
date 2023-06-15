@@ -189,6 +189,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         yopSdkConfig.setRegion(yopFileSdkConfig.getRegion());
         yopSdkConfig.setYopHttpClientConfig(yopFileSdkConfig.getHttpClient());
         yopSdkConfig.setYopCertStore(yopFileSdkConfig.getYopCertStore());
+        yopSdkConfig.setYopReportConfig(yopFileSdkConfig.getYopReportConfig());
 
         return yopSdkConfig;
     }
