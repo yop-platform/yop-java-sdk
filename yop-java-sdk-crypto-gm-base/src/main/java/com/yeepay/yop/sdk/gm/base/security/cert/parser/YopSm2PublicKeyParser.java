@@ -27,6 +27,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements YopCertParser {
 
+    static {
+        SmUtils.init();
+    }
+
     @Override
     public YopPublicKey parse(YopCertConfig certConfig) {
         if (null == certConfig.getStoreType()) {
