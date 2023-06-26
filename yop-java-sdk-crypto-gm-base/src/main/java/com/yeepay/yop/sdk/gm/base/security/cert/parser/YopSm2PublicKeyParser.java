@@ -4,15 +4,15 @@
  */
 package com.yeepay.yop.sdk.gm.base.security.cert.parser;
 
-import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.base.security.cert.parser.AbstractYopPublicKeyParser;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser;
-import com.yeepay.yop.sdk.security.cert.YopPublicKey;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
+import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -26,6 +26,10 @@ import org.apache.commons.lang3.StringUtils;
  * @since 2022/5/4
  */
 public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements YopCertParser {
+
+    static {
+        SmUtils.init();
+    }
 
     @Override
     public YopPublicKey parse(YopCertConfig certConfig) {

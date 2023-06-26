@@ -33,7 +33,12 @@ public class YopShaDigester implements YopDigester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopShaDigester.class);
 
-    private static final Map<String, MessageDigest> MESSAGE_DIGEST = YopShaDigester.initMdInstance();
+    private static final ThreadLocal<Map<String, MessageDigest>> MESSAGE_DIGEST = new ThreadLocal<Map<String, MessageDigest>>() {
+        @Override
+        protected Map<String, MessageDigest> initialValue() {
+            return YopShaDigester.initMdInstance();
+        }
+    };
 
     @Override
     public List<String> supportedAlgs() {
@@ -71,7 +76,7 @@ public class YopShaDigester implements YopDigester {
      * @return 摘要
      */
     private MessageDigest getMessageDigestInstance(String digestAlg) {
-        MessageDigest messageDigest = MESSAGE_DIGEST.get(digestAlg);
+        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
         if (null == messageDigest) {
             throw new YopClientException("digestAlg not supported, " + digestAlg);
         }

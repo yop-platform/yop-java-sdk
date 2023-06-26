@@ -38,7 +38,12 @@ public class YopSm3Digester implements YopDigester {
         SmUtils.init();
     }
 
-    private static final Map<String, MessageDigest> MESSAGE_DIGEST = initMdInstance();
+    private static final ThreadLocal<Map<String, MessageDigest>> MESSAGE_DIGEST = new ThreadLocal<Map<String, MessageDigest>>(){
+        @Override
+        protected Map<String, MessageDigest> initialValue() {
+            return initMdInstance();
+        }
+    };
 
     @Override
     public List<String> supportedAlgs() {
@@ -76,7 +81,7 @@ public class YopSm3Digester implements YopDigester {
      * @return 摘要
      */
     private MessageDigest getMessageDigestInstance(String digestAlg) {
-        MessageDigest messageDigest = MESSAGE_DIGEST.get(digestAlg);
+        MessageDigest messageDigest = MESSAGE_DIGEST.get().get(digestAlg);
         if (null == messageDigest) {
             throw new YopClientException("digestAlg not supported, " + digestAlg);
         }
