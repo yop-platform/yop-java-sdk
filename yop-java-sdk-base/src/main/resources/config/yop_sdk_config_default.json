@@ -39,7 +39,6 @@
     "enable_success_report": false,
     "send_interval_ms": 3000,
     "stat_interval_ms": 5000,
-    "exclude_exceptions": [],
     "max_queue_size": 500,
     "max_fail_count": 10,
     "max_fail_count_per_exception": 5,

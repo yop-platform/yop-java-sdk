@@ -7,7 +7,6 @@ package com.yeepay.yop.sdk.config.provider.file;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.util.Set;
 
 /**
  * title: 上报配置<br>
@@ -46,12 +45,6 @@ public class YopReportConfig implements Serializable {
      */
     @JsonProperty("stat_interval_ms")
     private int statIntervalMs = 5000;
-
-    /**
-     * 过滤异常
-     */
-    @JsonProperty("exclude_exceptions")
-    private Set<String> excludeExceptions;
 
     /**
      * 队列大小，丢弃旧数据
@@ -113,14 +106,6 @@ public class YopReportConfig implements Serializable {
 
     public void setStatIntervalMs(int statIntervalMs) {
         this.statIntervalMs = statIntervalMs;
-    }
-
-    public Set<String> getExcludeExceptions() {
-        return excludeExceptions;
-    }
-
-    public void setExcludeExceptions(Set<String> excludeExceptions) {
-        this.excludeExceptions = excludeExceptions;
     }
 
     public int getMaxQueueSize() {
