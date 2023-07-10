@@ -47,7 +47,7 @@ public interface YopReport extends Serializable {
      *
      * @return long
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "GMT+8")
     Date getBeginTime();
 
     /**
@@ -55,7 +55,7 @@ public interface YopReport extends Serializable {
      *
      * @return long
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "GMT+8")
     Date getEndTime();
 
 }

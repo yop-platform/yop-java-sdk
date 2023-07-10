@@ -40,7 +40,7 @@ public class YopFailureList implements Serializable {
     /**
      * 发生时间戳
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "GMT+8")
     private List<Date> occurTime;
 
     public YopFailureList() {
