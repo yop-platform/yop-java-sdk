@@ -229,24 +229,31 @@ public class ClientHandlerImpl implements ClientHandler {
 
         public static AnalyzeException analyze(Throwable e, ClientConfiguration clientConfiguration) {
             final AnalyzeException result = new AnalyzeException();
-            final Throwable rootCause = ExceptionUtils.getRootCause(e);
-            if (null == rootCause) {
+            final Throwable[] allExceptions = ExceptionUtils.getThrowables(e);
+
+            if (allExceptions.length == 1) {
                 result.exDetail = e.getClass().getCanonicalName() + COLON + ExceptionUtils.getMessage(e);
                 return result;
             }
 
             // 当笔重试 (域名异常)
-            final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
-            result.exDetail = exType + COLON + exMsg;
-            final List<String> curException = Lists.newArrayList(exType, result.exDetail);
-
-            if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), curException)) {
-                result.setNeedRetry(true);
-                return result;
+            final List<String> exceptionDetails = Lists.newArrayList();
+            for (int i = 0; i < allExceptions.length; i++) {
+                Throwable rootCause = allExceptions[i];
+                final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage(),
+                        exTypeAndMsg = exType + COLON + exMsg;
+                exceptionDetails.add(exType);
+                exceptionDetails.add(exTypeAndMsg);
+                if (clientConfiguration.getRetryExceptions().contains(exType) ||
+                        clientConfiguration.getRetryExceptions().contains(exTypeAndMsg)) {
+                    result.exDetail = exTypeAndMsg;
+                    result.setNeedRetry(true);
+                    return result;
+                }
             }
 
             // 不重试，不计入短路
-            if (CollectionUtils.containsAny(clientConfiguration.getCircuitBreakerConfig().getExcludeExceptions(), curException)) {
+            if (CollectionUtils.containsAny(clientConfiguration.getCircuitBreakerConfig().getExcludeExceptions(), exceptionDetails)) {
                 result.setServerError(false);
                 return result;
             }

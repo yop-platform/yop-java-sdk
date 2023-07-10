@@ -25,25 +25,25 @@ public final class YopHttpClientConfig implements Serializable {
      * 建立连接的超时
      */
     @JsonProperty("connect_timeout")
-    private int connectTimeout;
+    private int connectTimeout = 10000;
 
     /**
      * 从连接池获取到连接的超时时间
      */
     @JsonProperty("connect_request_timeout")
-    private int connectRequestTimeout;
+    private int connectRequestTimeout = 5000;
 
     /**
      * 获取数据的超时时间
      */
     @JsonProperty("read_timeout")
-    private int readTimeout;
+    private int readTimeout = 30000;
 
     @JsonProperty("max_conn_total")
-    private int maxConnTotal;
+    private int maxConnTotal = 200;
 
     @JsonProperty("max_conn_per_route")
-    private int maxConnPerRoute;
+    private int maxConnPerRoute = 100;
 
     @JsonProperty("client_impl")
     private String clientImpl;

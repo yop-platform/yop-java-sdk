@@ -67,8 +67,8 @@ public class ClientReporter {
     private static final int MAX_FAIL_COUNT;
     private static final int MAX_FAIL_COUNT_PER_EX;
     private static final int MAX_ELAPSED_MS;
-    private static final boolean REPORT;
-    private static final boolean REPORT_SUCCESS;
+    private static final boolean ENABLE_REPORT;
+    private static final boolean ENABLE_SUCCESS_REPORT;
 
     private static volatile boolean CLOSED = false;
 
@@ -82,9 +82,9 @@ public class ClientReporter {
         }
         final YopReportConfig yopReportConfig = sdkConfig.getYopReportConfig();
         if (null != yopReportConfig) {
-            REPORT = yopReportConfig.isEnable();
-            REPORT_SUCCESS = yopReportConfig.isEnableSuccessReport();
-            REPORT_INTERVAL_MS = yopReportConfig.getIntervalMs();
+            ENABLE_REPORT = yopReportConfig.isEnable();
+            ENABLE_SUCCESS_REPORT = yopReportConfig.isEnableSuccessReport();
+            REPORT_INTERVAL_MS = yopReportConfig.getSendIntervalMs();
             STAT_INTERVAL_MS = yopReportConfig.getStatIntervalMs();
             MAX_QUEUE_SIZE = yopReportConfig.getMaxQueueSize();
             MAX_PACKET_SIZE = yopReportConfig.getMaxPacketSize();
@@ -92,8 +92,8 @@ public class ClientReporter {
             MAX_FAIL_COUNT_PER_EX = yopReportConfig.getMaxFailCountPerEx();
             MAX_ELAPSED_MS = yopReportConfig.getMaxElapsedMs();
         } else {
-            REPORT = true;
-            REPORT_SUCCESS = false;
+            ENABLE_REPORT = true;
+            ENABLE_SUCCESS_REPORT = false;
             REPORT_INTERVAL_MS = 3000;
             STAT_INTERVAL_MS = 5000;
             MAX_QUEUE_SIZE = 500;
@@ -162,13 +162,13 @@ public class ClientReporter {
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {
         try {
-            if (!REPORT) {
+            if (!ENABLE_REPORT) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Ignore ReportEvent, value:{}", newEvent);
                 }
                 return;
             }
-            if (!REPORT_SUCCESS && YopStatus.SUCCESS.equals(newEvent.getStatus())) {
+            if (!ENABLE_SUCCESS_REPORT && YopStatus.SUCCESS.equals(newEvent.getStatus())) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Ignore Success ReportEvent, value:{}", newEvent);
                 }

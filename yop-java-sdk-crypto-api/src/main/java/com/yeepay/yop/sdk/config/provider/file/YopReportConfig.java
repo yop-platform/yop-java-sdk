@@ -37,8 +37,8 @@ public class YopReportConfig implements Serializable {
     /**
      * 上报周期：毫秒
      */
-    @JsonProperty("interval_ms")
-    private int intervalMs = 30000;
+    @JsonProperty("send_interval_ms")
+    private int sendIntervalMs = 3000;
 
     /**
      * 统计周期：毫秒
@@ -92,12 +92,12 @@ public class YopReportConfig implements Serializable {
         this.enableSuccessReport = enableSuccessReport;
     }
 
-    public int getIntervalMs() {
-        return intervalMs;
+    public int getSendIntervalMs() {
+        return sendIntervalMs;
     }
 
-    public void setIntervalMs(int intervalMs) {
-        this.intervalMs = intervalMs;
+    public void setSendIntervalMs(int sendIntervalMs) {
+        this.sendIntervalMs = sendIntervalMs;
     }
 
     public int getStatIntervalMs() {
