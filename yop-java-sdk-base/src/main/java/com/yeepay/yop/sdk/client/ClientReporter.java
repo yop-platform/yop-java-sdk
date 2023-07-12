@@ -254,7 +254,7 @@ public class ClientReporter {
                     failDetail = (YopFailureItem) event.getData();
                 }
 
-                final String reportKey = serverHost + serverIp;
+                final String reportKey = serverHost + "###" + serverIp;
                 AtomicReference<YopHostRequestReport> reportReference =
                         YOP_HOST_REQUEST_COLLECTION.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
