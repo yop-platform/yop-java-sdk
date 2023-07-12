@@ -107,7 +107,7 @@ public class ClientReporter {
         // 事件接收
         COLLECT_POOL = new ThreadPoolExecutor(1, 1,
                 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE),
-                new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build(), new ThreadPoolExecutor.DiscardOldestPolicy());
+                new ThreadFactoryBuilder().setNameFormat("client-report-event-collector-%d").setDaemon(true).build(), new ThreadPoolExecutor.DiscardOldestPolicy());
 
         // 定时扫描
         startSweeperThread();
@@ -258,16 +258,17 @@ public class ClientReporter {
                 AtomicReference<YopHostRequestReport> reportReference =
                         YOP_HOST_REQUEST_COLLECTION.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
-                // CompareAndSet并发加入统计数据
                 YopHostRequestReport current;
                 YopHostRequestReport update = new YopHostRequestReport();
+                YopHostRequestPayload payload = new YopHostRequestPayload();
+                payload.setServerIp(serverIp);
+                payload.setServerHost(serverHost);
+                update.setPayload(payload);
+
+                // CompareAndSet并发加入统计数据
                 do {
                     current = reportReference.get();
-                    if (current == null) {
-                        YopHostRequestPayload payload = new YopHostRequestPayload();
-                        update.setPayload(payload);
-                        payload.setServerIp(serverIp);
-                        payload.setServerHost(serverHost);
+                    if (null == current) {
                         payload.setSuccessCount(successCount);
                         payload.setFailCount(failCount);
                         payload.setMaxElapsedMillis(elapsedMillis);
@@ -278,15 +279,12 @@ public class ClientReporter {
                             payload.getFailDetails().add(yopFailDetail);
                         }
                     } else {
+                        update.setBeginTime(current.getBeginTime());
                         YopHostRequestPayload oldPayload = current.getPayload();
-                        YopHostRequestPayload payload = new YopHostRequestPayload();
-                        update.setPayload(payload);
-                        payload.setServerIp(serverIp);
-                        payload.setServerHost(serverHost);
                         payload.setSuccessCount(oldPayload.getSuccessCount() + successCount);
                         payload.setFailCount(oldPayload.getFailCount() + failCount);
                         payload.setMaxElapsedMillis(Math.max(elapsedMillis, oldPayload.getMaxElapsedMillis()));
-                        payload.setFailDetails(Lists.newLinkedList(oldPayload.getFailDetails()));
+                        payload.setFailDetails(oldPayload.cloneFailDetails());
                         final YopFailureItem failDetailItem = failDetail;
                         if (null != failDetail) {
                             final Optional<YopFailureList> yopFailDetail = payload.getFailDetails().stream().filter(p ->
@@ -357,18 +355,18 @@ public class ClientReporter {
         final int failCount = payload.getFailCount();
         final long maxElapsedMillis = payload.getMaxElapsedMillis();
         final List<YopFailureList> failDetails = payload.getFailDetails();
-        if (currentTime.getTime() - beginTime.getTime() > STAT_INTERVAL_MS) {
+        if (currentTime.getTime() - beginTime.getTime() >= STAT_INTERVAL_MS) {
             return true;
         }
-        if (failCount > MAX_FAIL_COUNT) {
+        if (failCount >= MAX_FAIL_COUNT) {
             return true;
         }
-        if (maxElapsedMillis > MAX_ELAPSED_MS) {
+        if (maxElapsedMillis >= MAX_ELAPSED_MS) {
             return true;
         }
         if (CollectionUtils.isNotEmpty(failDetails)) {
             for (YopFailureList failDetail : failDetails) {
-                if (CollectionUtils.size(failDetail.getOccurTime()) > MAX_FAIL_COUNT_PER_EX) {
+                if (CollectionUtils.size(failDetail.getOccurTime()) >= MAX_FAIL_COUNT_PER_EX) {
                     return true;
                 }
             }

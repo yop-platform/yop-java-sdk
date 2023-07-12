@@ -4,11 +4,14 @@
  */
 package com.yeepay.yop.sdk.client.metric.report.host;
 
+import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.client.metric.YopFailureList;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -101,6 +104,14 @@ public class YopHostRequestPayload implements Serializable {
 
     public void setFailDetails(List<YopFailureList> failDetails) {
         this.failDetails = failDetails;
+    }
+
+    public List<YopFailureList> cloneFailDetails() {
+        List<YopFailureList> result = Lists.newLinkedList();
+        if (CollectionUtils.isNotEmpty(failDetails)) {
+            failDetails.forEach(p -> result.add(new YopFailureList(p.getExType(), p.getExMsg(), new LinkedList<>(p.getOccurTime()))));
+        }
+        return result;
     }
 
     @Override
