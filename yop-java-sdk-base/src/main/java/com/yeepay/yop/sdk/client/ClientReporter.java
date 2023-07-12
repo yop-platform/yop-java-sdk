@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.client;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.metric.YopFailureItem;
@@ -22,12 +23,15 @@ import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.yeepay.yop.sdk.YopConstants.REPORT_API_URI;
 
 /**
  * title: 客户端上报<br>
@@ -43,22 +47,16 @@ public class ClientReporter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientReporter.class);
 
-    private static final YopReporter DEFAULT_REPORTER = YopRemoteReporter.INSTANCE;
+    private static final YopReporter REMOTE_REPORTER = YopRemoteReporter.INSTANCE;
 
     private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_COLLECTION = new ConcurrentHashMap<>();
 
-    private static final LinkedBlockingQueue<YopHostRequestReport> YOP_HOST_REQUEST_QUEUE;
+    private static final Set<String> EXCLUDE_REPORT_RESOURCES = Sets.newHashSet(REPORT_API_URI);
+
+    private static final Deque<YopReport> YOP_HOST_REQUEST_QUEUE;
 
     // 打包上报事件
     private static final ThreadPoolExecutor COLLECT_POOL;
-
-    // 定时扫描统计数据
-    private static final ScheduledThreadPoolExecutor SWEEPER_SCHEDULE_POOL = new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("client-report-sweeper-%d").setDaemon(true).build());
-
-    // 上报到远端
-    private static final ScheduledThreadPoolExecutor SEND_SCHEDULE_POOL = new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build());
 
     private static final int REPORT_INTERVAL_MS;
     private static final int STAT_INTERVAL_MS;
@@ -91,6 +89,9 @@ public class ClientReporter {
             MAX_FAIL_COUNT = yopReportConfig.getMaxFailCount();
             MAX_FAIL_COUNT_PER_EX = yopReportConfig.getMaxFailCountPerEx();
             MAX_ELAPSED_MS = yopReportConfig.getMaxElapsedMs();
+            if (CollectionUtils.isNotEmpty(yopReportConfig.getExcludeResources())) {
+                EXCLUDE_REPORT_RESOURCES.addAll(yopReportConfig.getExcludeResources());
+            }
         } else {
             ENABLE_REPORT = true;
             ENABLE_SUCCESS_REPORT = false;
@@ -102,28 +103,63 @@ public class ClientReporter {
             MAX_FAIL_COUNT_PER_EX = 5;
             MAX_ELAPSED_MS = 15000;
         }
-        YOP_HOST_REQUEST_QUEUE = Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE);
+        YOP_HOST_REQUEST_QUEUE = new LinkedBlockingDeque<>(MAX_QUEUE_SIZE);
+        // 事件接收
         COLLECT_POOL = new ThreadPoolExecutor(1, 1,
                 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue(MAX_QUEUE_SIZE),
                 new ThreadFactoryBuilder().setNameFormat("client-report-sender-%d").setDaemon(true).build(), new ThreadPoolExecutor.DiscardOldestPolicy());
-        SWEEPER_SCHEDULE_POOL.scheduleWithFixedDelay(new Runnable() {
+
+        // 定时扫描
+        startSweeperThread();
+
+        // 定时发送
+        startSenderThread();
+    }
+
+    private static void startSenderThread() {
+        final Thread reportSendThread = new Thread(new Runnable() {
+            @Override
             public void run() {
-                try {
-                    sweepReports();
-                } catch (Throwable t) {
-                    LOGGER.error("Unexpected Error, ex:", t);
+                while (!CLOSED) {
+                    try {
+                        sendHostReport();
+                    } catch (Throwable t) {
+                        LOGGER.error("Unexpected Error, ex:", t);
+                    }
+                    try {
+                        Thread.sleep(REPORT_INTERVAL_MS);
+                    } catch (InterruptedException e) {
+                        //ignore
+                    }
                 }
             }
-        }, 1000, 1000, TimeUnit.MILLISECONDS);
-        SEND_SCHEDULE_POOL.scheduleWithFixedDelay(new Runnable() {
+        });
+        reportSendThread.setName("client-report-sender");
+        reportSendThread.setDaemon(true);
+        reportSendThread.start();
+    }
+
+    private static void startSweeperThread() {
+        final Thread reportSweeperThread = new Thread(new Runnable() {
+            @Override
             public void run() {
-                try {
-                    sendHostReport();
-                } catch (Throwable t) {
-                    LOGGER.error("Unexpected Error, ex:", t);
+                while (!CLOSED) {
+                    try {
+                        sweepReports();
+                    } catch (Throwable t) {
+                        LOGGER.error("Unexpected Error, ex:", t);
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        //ignore
+                    }
                 }
             }
-        }, REPORT_INTERVAL_MS, REPORT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        });
+        reportSweeperThread.setName("client-report-sweeper");
+        reportSweeperThread.setDaemon(true);
+        reportSweeperThread.start();
     }
 
     private static void sweepReports() {
@@ -152,7 +188,7 @@ public class ClientReporter {
             reportToBeQueue.setEndTime(new Date());
 
             while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
-                YopHostRequestReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
+                YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
                 if (oldReport != null) {
                     LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
                 }
@@ -168,9 +204,18 @@ public class ClientReporter {
                 }
                 return;
             }
+
             if (!ENABLE_SUCCESS_REPORT && YopStatus.SUCCESS.equals(newEvent.getStatus())) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Ignore Success ReportEvent, value:{}", newEvent);
+                }
+                return;
+            }
+
+            if (StringUtils.isBlank(newEvent.getServerResource()) ||
+                    EXCLUDE_REPORT_RESOURCES.contains(newEvent.getServerResource())) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Ignore ReportEvent For Resource Excluded, value:{}", newEvent);
                 }
                 return;
             }
@@ -268,17 +313,39 @@ public class ClientReporter {
 
     private static void sendHostReport() throws InterruptedException {
         List<YopReport> reports = Lists.newLinkedList();
-        final Iterator<Map.Entry<String, AtomicReference<YopHostRequestReport>>> iterator =
-                YOP_HOST_REQUEST_COLLECTION.entrySet().iterator();
         int packetSize = 0;
-        YopHostRequestReport report;
+        YopReport report;
         while ((packetSize++ < MAX_PACKET_SIZE) && null != (report = YOP_HOST_REQUEST_QUEUE.poll())) {
             reports.add(report);
         }
         if (CollectionUtils.isEmpty(reports)) {
             return;
         }
-        DEFAULT_REPORTER.batchReport(reports);
+        sendWithRetry(reports);
+    }
+
+    private static void sendWithRetry(List<YopReport> reports) {
+        try {
+            REMOTE_REPORTER.batchReport(reports);
+        } catch (Exception ex) {
+            LOGGER.warn("Remote Report Fail, exType:{}, exMsg:{}, But Will Retry.", ex.getClass().getCanonicalName(),
+                    ExceptionUtils.getMessage(ex));
+            tryEnqueue(reports);
+        }
+    }
+
+    private static void tryEnqueue(List<YopReport> reports) {
+        if (CollectionUtils.isEmpty(reports)) {
+            return;
+        }
+        for (int i = reports.size() - 1; i >= 0; i--) {
+            try {
+                YOP_HOST_REQUEST_QUEUE.push(reports.get(i));
+            } catch (Exception ex) {
+                LOGGER.warn("Report ReEnqueue Fail, exType:{}, exMsg:{}, ", ex.getClass().getCanonicalName(),
+                        ExceptionUtils.getMessage(ex));
+            }
+        }
     }
 
     private static boolean needReport(Date currentTime, YopHostRequestReport report) {

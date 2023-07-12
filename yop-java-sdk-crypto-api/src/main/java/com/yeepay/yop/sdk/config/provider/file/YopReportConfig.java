@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.config.provider.file;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * title: 上报配置<br>
@@ -75,6 +76,9 @@ public class YopReportConfig implements Serializable {
      */
     @JsonProperty("max_packet_size")
     private int maxPacketSize = 50;
+
+    @JsonProperty("exclude_resources")
+    private Set<String> excludeResources;
 
     public boolean isEnable() {
         return enable;
@@ -146,5 +150,13 @@ public class YopReportConfig implements Serializable {
 
     public void setMaxPacketSize(int maxPacketSize) {
         this.maxPacketSize = maxPacketSize;
+    }
+
+    public Set<String> getExcludeResources() {
+        return excludeResources;
+    }
+
+    public void setExcludeResources(Set<String> excludeResources) {
+        this.excludeResources = excludeResources;
     }
 }

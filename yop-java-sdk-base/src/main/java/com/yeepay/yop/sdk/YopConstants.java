@@ -122,4 +122,6 @@ public interface YopConstants {
 
     String YOP_SESSION_ID = UUID.randomUUID().toString();
 
+    String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
+
 }

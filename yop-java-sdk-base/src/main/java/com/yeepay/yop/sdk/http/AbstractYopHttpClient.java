@@ -108,6 +108,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             } else {
                 ClientReporter.reportHostRequest(toFailRequest(request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
             }
+
             if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
                 httpResponse.close();
             }
@@ -133,6 +134,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     }
 
     private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
+        event.setServerResource(request.getResourcePath());
         event.setServerHost(HttpUtils.generateHostHeader(request.getEndpoint()));
         String serverIp = "";
         if (null != httpResponse) {
