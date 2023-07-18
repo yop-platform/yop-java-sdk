@@ -78,7 +78,10 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             httpResponse = doExecute(request, yopRequestConfig);
             analyzedResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, executionContext));
             return analyzedResponse;
-        } catch (YopClientException | YopHttpException e) {
+        } catch (YopClientException e) {
+            throw e;
+        } catch (YopHttpException e) {
+            serverEx = e;
             throw e;
         } catch (Exception e) {
             serverEx = e;
