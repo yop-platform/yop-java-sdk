@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.yeepay.g3.sdk.yop.config.YopReportConfig.DEFAULT_YOP_REPORT_CONFIG;
 import static com.yeepay.g3.sdk.yop.http.HttpUtils.formatServerRoot;
 
 /**
@@ -64,6 +65,8 @@ public class AppSdkConfig implements Serializable {
     private ModeEnum mode;
 
     private boolean trustAllCerts;
+
+    private YopReportConfig yopReportConfig = DEFAULT_YOP_REPORT_CONFIG;
 
     public String getAppKey() {
         return appKey;
@@ -277,6 +280,21 @@ public class AppSdkConfig implements Serializable {
         return this;
     }
 
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        if (null != yopReportConfig) {
+            this.yopReportConfig = yopReportConfig;
+        }
+    }
+
+    public AppSdkConfig withYopReportConfig(YopReportConfig yopReportConfig) {
+        setYopReportConfig(yopReportConfig);
+        return this;
+    }
+
     public static final class Builder {
         private SDKConfig sdkConfig;
 
@@ -305,7 +323,8 @@ public class AppSdkConfig implements Serializable {
                     .withHttpClientConfig(sdkConfig.getHttpClient())
                     .withProxy(sdkConfig.getProxy())
                     .withMode(sdkConfig.getMode())
-                    .withTrustAllCerts(BooleanUtils.isTrue(sdkConfig.getTrustAllCerts()));
+                    .withTrustAllCerts(BooleanUtils.isTrue(sdkConfig.getTrustAllCerts()))
+                    .withYopReportConfig(sdkConfig.getYopReportConfig());
             if (sdkConfig.getYopPublicKey() != null && sdkConfig.getYopPublicKey().length >= 1) {
                 appSdkConfig.storeYopPublicKey(sdkConfig.getYopPublicKey());
             }

@@ -77,6 +77,9 @@ public final class SDKConfig implements Serializable {
 
     private ProxyConfig proxy;
 
+    @JsonProperty("yop_report")
+    private YopReportConfig yopReportConfig;
+
     public String getAppKey() {
         return appKey;
     }
@@ -239,6 +242,14 @@ public final class SDKConfig implements Serializable {
 
     public void setProxy(ProxyConfig proxy) {
         this.proxy = proxy;
+    }
+
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        this.yopReportConfig = yopReportConfig;
     }
 
     @Override

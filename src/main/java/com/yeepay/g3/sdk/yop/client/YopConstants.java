@@ -117,6 +117,8 @@ public class YopConstants {
 
     public static final long FILE_MULTIPART_UPLOAD_SIZE = 25 * 1024 * 1024;//分块上传 超过25M分块
 
+    public static final String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
+
     /**
      * 判断是否为保护参数
      *

@@ -281,7 +281,7 @@ public class YopRsaClient extends AbstractClient {
                 .append("&fileName=").append(request.getParamValue(YopConstants.MULTIPART_FILE_NAME));
         request.getParams().clear();
         HttpUriRequest httpPost = buildFormHttpRequest(request, sb.toString(), method);
-        YopResponse response = fetchContentByApacheHttpClient(httpPost, new ResponseConfig()
+        YopResponse response = fetchContentByApacheHttpClient(apiUri, httpPost, new ResponseConfig()
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
@@ -332,7 +332,7 @@ public class YopRsaClient extends AbstractClient {
         // 移除partNumber，uploadId,bucket,key参数，避免后面被设置到body
         request.getParams().clear();
         Pair<HttpUriRequest, CheckedInputStream> pair = buildMultiPartUploadRequest(request, sb.toString(), file, partSize);
-        YopResponse response = fetchContentByApacheHttpClient(pair.getLeft(), new ResponseConfig()
+        YopResponse response = fetchContentByApacheHttpClient(apiUri, pair.getLeft(), new ResponseConfig()
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
@@ -370,7 +370,7 @@ public class YopRsaClient extends AbstractClient {
         sign(apiUri, request, method);
         String contentUrl = richRequest(apiUri, request);
         HttpUriRequest httpPost = buildJsonHttpRequest(request, contentUrl, method, jsonString);
-        YopResponse response = fetchContentByApacheHttpClient(httpPost, new ResponseConfig()
+        YopResponse response = fetchContentByApacheHttpClient(apiUri, httpPost, new ResponseConfig()
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
@@ -429,7 +429,7 @@ public class YopRsaClient extends AbstractClient {
         // 移除uploadId,bucket,key参数，避免后面被设置到body
         request.getParams().clear();
         HttpUriRequest httpPost = buildFormHttpRequest(request, sb.toString(), method);
-        YopResponse response = fetchContentByApacheHttpClient(httpPost, new ResponseConfig()
+        YopResponse response = fetchContentByApacheHttpClient(apiUri, httpPost, new ResponseConfig()
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));
@@ -486,7 +486,7 @@ public class YopRsaClient extends AbstractClient {
         // 移除bizCode参数，避免后面被设置到body
         //request.getParams().asMap().remove(YopConstants.MULTIPART_BIZ_CODE);
         Pair<HttpUriRequest, CheckedInputStream> pair = buildMultiPartUploadRequest(request, sb.toString(), file, partSize);
-        YopResponse response = fetchContentByApacheHttpClient(pair.getLeft(), new ResponseConfig()
+        YopResponse response = fetchContentByApacheHttpClient(apiUri, pair.getLeft(), new ResponseConfig()
                 .withNeedEncrypt(request.isNeedEncrypt())
                 .withEncryptKey(request.getEncryptKey())
                 .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)));

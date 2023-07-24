@@ -6,6 +6,7 @@ import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -203,6 +204,43 @@ public final class HttpUtils {
             return StringUtils.substring(serverRoot, 0, -1);
         }
         return serverRoot;
+    }
+
+    /**
+     * Returns a host header according to the specified URI. The host header is generated with the same logic used by
+     * apache http client, that is, append the port to hostname only if it is not the default port.
+     *
+     * @param uri the URI
+     * @return a host header according to the specified URI.
+     */
+    public static String generateHostHeader(URI uri) {
+        String host = uri.getHost();
+        if (isUsingNonDefaultPort(uri)) {
+            host += ":" + uri.getPort();
+        }
+        return host;
+    }
+
+    /**
+     * Returns true if the specified URI is using a non-standard port (i.e. any port other than 80 for HTTP URIs or any
+     * port other than 443 for HTTPS URIs).
+     *
+     * @param uri the URI
+     * @return True if the specified URI is using a non-standard port, otherwise false.
+     */
+    public static boolean isUsingNonDefaultPort(URI uri) {
+        String scheme = uri.getScheme().toLowerCase();
+        int port = uri.getPort();
+        if (port <= 0) {
+            return false;
+        }
+        if (scheme.equals(Protocol.HTTP.toString())) {
+            return port != Protocol.HTTP.getDefaultPort();
+        }
+        if (scheme.equals(Protocol.HTTPS.toString())) {
+            return port != Protocol.HTTPS.getDefaultPort();
+        }
+        return false;
     }
 
 }

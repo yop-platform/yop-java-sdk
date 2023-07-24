@@ -65,6 +65,11 @@ public class YopRequest {
      */
     private String encryptKey;
 
+    /**
+     * json参数
+     */
+    private Object jsonParam;
+
     public YopRequest() {
         this.appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getDefaultConfig();
         if (this.appSdkConfig == null) {
@@ -335,5 +340,13 @@ public class YopRequest {
             }
         }
         return builder.toString();
+    }
+
+    public Object getJsonParam() {
+        return jsonParam;
+    }
+
+    public void setJsonParam(Object jsonParam) {
+        this.jsonParam = jsonParam;
     }
 }

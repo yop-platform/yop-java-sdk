@@ -3,6 +3,9 @@
   "aes_secret_key": "PdZ74F6sxapgOWJ31QKmYw==",
   "server_root": "http://ycetest.yeepay.com:30228/yop-center",
   "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
+  "preferred_server_roots": [
+    "http://ycetest.yeepay.com:30228/yop-center"
+  ],
   "yop_public_key": [
     {
       "store_type": "string",
@@ -22,5 +25,16 @@
     "read_timeout": 30000,
     "max_conn_total": 200,
     "max_conn_per_route": 100
+  },
+  "yop_report": {
+    "enable": true,
+    "enable_success_report": true,
+    "send_interval_ms": 2000,
+    "stat_interval_ms": 3000,
+    "max_queue_size": 500,
+    "max_fail_count": 10,
+    "max_fail_count_per_exception": 5,
+    "max_elapsed_ms": 15000,
+    "max_packet_size": 50
   }
 }

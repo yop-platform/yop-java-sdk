@@ -6,6 +6,12 @@ import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.g3.sdk.yop.client.apache.YopServerResponseInterceptor;
+import com.yeepay.g3.sdk.yop.client.metric.YopFailureItem;
+import com.yeepay.g3.sdk.yop.client.metric.YopStatus;
+import com.yeepay.g3.sdk.yop.client.metric.event.host.YopHostFailEvent;
+import com.yeepay.g3.sdk.yop.client.metric.event.host.YopHostRequestEvent;
+import com.yeepay.g3.sdk.yop.client.metric.event.host.YopHostSuccessEvent;
 import com.yeepay.g3.sdk.yop.client.router.GateWayRouter;
 import com.yeepay.g3.sdk.yop.client.router.ServerRootSpace;
 import com.yeepay.g3.sdk.yop.client.router.SimpleGateWayRouter;
@@ -21,16 +27,14 @@ import com.yeepay.g3.sdk.yop.error.YopError;
 import com.yeepay.g3.sdk.yop.exception.*;
 import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.http.HttpMethodName;
+import com.yeepay.g3.sdk.yop.http.HttpUtils;
 import com.yeepay.g3.sdk.yop.http.YopHttpResponse;
 import com.yeepay.g3.sdk.yop.internal.RestartableInputStream;
 import com.yeepay.g3.sdk.yop.internal.YopDegradeRuleHelper;
 import com.yeepay.g3.sdk.yop.model.DownloadInputStream;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
-import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
-import com.yeepay.g3.sdk.yop.utils.FileUtils;
-import com.yeepay.g3.sdk.yop.utils.InternalConfig;
-import com.yeepay.g3.sdk.yop.utils.UUIDUtils;
+import com.yeepay.g3.sdk.yop.utils.*;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64Utils;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
@@ -69,6 +73,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.PublicKey;
@@ -78,6 +83,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CheckedInputStream;
 
+import static com.yeepay.g3.sdk.yop.client.YopConstants.API_URI_PREFIX;
 import static com.yeepay.g3.sdk.yop.utils.CharacterConstants.COLON;
 import static com.yeepay.g3.sdk.yop.utils.CharacterConstants.EMPTY;
 
@@ -162,6 +168,7 @@ public class AbstractClient {
                 .evictIdleConnections(3, TimeUnit.SECONDS)
                 .disableAutomaticRetries()
                 .setKeepAliveStrategy(new YopConnectionKeepAliveStrategy())
+                .addInterceptorLast(YopServerResponseInterceptor.INSTANCE)
                 .build();
 
         requestConfigBuilder = RequestConfig.custom();
@@ -285,7 +292,13 @@ public class AbstractClient {
         if (YopRequestType.MULTI_FILE_UPLOAD.equals(requestType)) {
             return buildMultiFormRequest(request, contentUrl);
         }
-        HttpUriRequest httpUriRequest = buildFormHttpRequest(request, contentUrl, methodName);
+        HttpUriRequest httpUriRequest;
+        if (null != request.getJsonParam()) {
+            String jsonString = request.getJsonParam() instanceof String ? (String) request.getJsonParam() : JsonUtils.toJsonString(request.getJsonParam());
+            httpUriRequest = buildJsonHttpRequest(request, contentUrl, methodName, jsonString);
+        } else {
+            httpUriRequest = buildFormHttpRequest(request, contentUrl, methodName);
+        }
         return new ImmutablePair<HttpUriRequest, List<CheckedInputStream>>(httpUriRequest, null);
     }
 
@@ -429,31 +442,81 @@ public class AbstractClient {
     }
 
     protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request) throws IOException {
-        return fetchContentByApacheHttpClient(request, ResponseConfig.NONE_OPERATION_CONFIG);
+        return fetchContentByApacheHttpClient(getApiUri(request.getURI()), request, ResponseConfig.NONE_OPERATION_CONFIG);
     }
 
-    protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
-        return fetchContentByApacheHttpClient(request, responseConfig, YopRequestType.WEB);
+    private static String getApiUri(URI uri) {
+        final String path = uri.getPath();
+        for (String apiUriPrefix : API_URI_PREFIX) {
+            final int apiUriIdx = path.indexOf(apiUriPrefix);
+            if (apiUriIdx > 0) {
+                return StringUtils.substring(path, apiUriIdx);
+            }
+        }
+        throw new YopClientException("Illegal ApiUri, value:" + uri);
     }
 
-    protected static YopResponse fetchContentByApacheHttpClient(HttpUriRequest request, ResponseConfig responseConfig, YopRequestType requestType) throws IOException {
+    protected static YopResponse fetchContentByApacheHttpClient(String apiUri, HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
+        return fetchContentByApacheHttpClient(apiUri, request, responseConfig, YopRequestType.WEB);
+    }
+
+    protected static YopResponse fetchContentByApacheHttpClient(String apiUri, HttpUriRequest request, ResponseConfig responseConfig, YopRequestType requestType) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
-        Throwable exception = null;
+        Throwable serverEx = null;
+        final long reqStartTime = System.currentTimeMillis();
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
             return parseResponse(remoteResponse, responseConfig);
-        } catch (YopClientException | YopHttpException e) {
+        } catch (YopClientException e) {
+            throw e;
+        } catch (YopHttpException e) {
+            serverEx = e;
             throw e;
         } catch (Throwable ex) {
             String requestId = getRequestId(request);
-            exception = ex;
+            serverEx = ex;
             throw new YopHttpException("unable to execute request, requestId:" + requestId, ex);
         } finally {
-            if (exception != null || (remoteResponse != null && isJsonResponse(remoteResponse))) {
+            reportHostEvent(apiUri, request, remoteResponse, serverEx, reqStartTime);
+            if (serverEx != null || (remoteResponse != null && isJsonResponse(remoteResponse))) {
                 HttpClientUtils.closeQuietly(remoteResponse);
             }
         }
+    }
+
+    private static void reportHostEvent(String apiUri, HttpUriRequest request, CloseableHttpResponse httpResponse, Throwable serverEx, long reqStartTime) {
+        long elapsedTime = System.currentTimeMillis() - reqStartTime;
+        if (null != serverEx) {
+            final YopHostFailEvent failEvent = new YopHostFailEvent();
+            setBasic(failEvent, apiUri, request, httpResponse, elapsedTime);
+            failEvent.setStatus(YopStatus.FAIL);
+            failEvent.setData(new YopFailureItem(serverEx));
+            ClientReporter.reportHostRequest(failEvent);
+            return;
+        }
+
+        final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
+        setBasic(successEvent, apiUri, request, httpResponse, elapsedTime);
+        successEvent.setStatus(YopStatus.SUCCESS);
+        successEvent.setData("");
+        ClientReporter.reportHostRequest(successEvent);
+    }
+
+    private static void setBasic(YopHostRequestEvent<?> event, String apiUri,
+                                 HttpUriRequest request, CloseableHttpResponse httpResponse,
+                                 long elapsedTime) {
+        event.setServerResource(apiUri);
+        event.setServerHost(HttpUtils.generateHostHeader(request.getURI()));
+        String serverIp = "";
+        if (null != httpResponse) {
+            final Header serverIpHeader = httpResponse.getFirstHeader(Headers.YOP_SERVER_IP);
+            if (null != serverIpHeader && StringUtils.isNotBlank(serverIpHeader.getValue())) {
+                serverIp = serverIpHeader.getValue();
+            }
+        }
+        event.setServerIp(StringUtils.defaultString(serverIp, ""));
+        event.setElapsedMillis(elapsedTime);
     }
 
     private static String getRequestId(HttpUriRequest request) {
@@ -707,7 +770,7 @@ public class AbstractClient {
                     .withNeedEncrypt(request.isNeedEncrypt())
                     .withEncryptKey(request.getEncryptKey())
                     .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)) : ResponseConfig.NONE_OPERATION_CONFIG;
-            YopResponse response = fetchContentByApacheHttpClient(httpRequest.getLeft(), responseConfig);
+            YopResponse response = fetchContentByApacheHttpClient(apiUri, httpRequest.getLeft(), responseConfig);
             handleResult(response);
             if (httpRequest.getRight() != null) {
                 checkFileIntegrity(response, CRC64Utils.getCRC64(httpRequest.getRight()));

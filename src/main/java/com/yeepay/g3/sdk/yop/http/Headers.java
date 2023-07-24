@@ -101,4 +101,6 @@ public interface Headers {
      */
     String YOP_SIGN = "x-yop-sign";
 
+    String YOP_SERVER_IP = "x-yop-server-ip";
+
 }
