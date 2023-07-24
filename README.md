@@ -37,7 +37,7 @@
 参考 [发布第三方jar包到远程仓库](https://maven.apache.org/guides/mini/guide-3rd-party-jars-remote.html)，示例如下：
 
 ````xml
-mvn deploy:deploy-file -Dversion=3.3.15 -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-3.3.5.jar -DpomFile=pom.xml -Durl=http://xxxx:8000/artifactory/xxx-release/ -DrepositoryId=xxx
+mvn deploy:deploy-file -Dversion=3.3.15 -DgroupId=com.yeepay.g3.yop -DartifactId=yop-java-sdk -Dpackaging=jar -Dfile=target/yop-java-sdk-3.3.7.jar -DpomFile=pom.xml -Durl=http://xxxx:8000/artifactory/xxx-release/ -DrepositoryId=xxx
 ````
 
 pom引用方法如下：

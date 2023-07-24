@@ -45,7 +45,10 @@ public final class InternalConfig {
             "java.net.ConnectException:No route to host (connect failed)",
             "java.net.ConnectException:Connection refused (Connection refused)",
             "java.net.ConnectException:Connection refused: connect",
-            "java.net.SocketTimeoutException:connect timed out");
+            "java.net.SocketTimeoutException:connect timed out",
+            "java.net.NoRouteToHostException",
+            "org.apache.http.conn.ConnectTimeoutException", "com.yeepay.shade.org.apache.http.conn.ConnectTimeoutException",
+            "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException");
 
     static {
         init();
