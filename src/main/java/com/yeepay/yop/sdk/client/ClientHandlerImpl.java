@@ -137,8 +137,7 @@ public class ClientHandlerImpl implements ClientHandler {
     private class YopSentinelCircuitBreaker implements YopCircuitBreaker {
 
         public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace, YopCircuitBreakerConfig circuitBreakerConfig) {
-            final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getServerRoot(),
-                    serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
+            final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
             if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
                 serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
             }
