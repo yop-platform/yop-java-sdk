@@ -9,14 +9,50 @@
     }
   ],
   "yop_cert_store": {
-    "enable":true,
-    "lazy":false
+    "enable": true,
+    "lazy": false
   },
   "http_client": {
     "connect_timeout": 10000,
     "connect_request_timeout": 10000,
     "read_timeout": 30000,
     "max_conn_total": 200,
-    "max_conn_per_route": 100
+    "max_conn_per_route": 100,
+    "retry_exceptions": [
+      "java.net.UnknownHostException",
+      "java.net.ConnectException:No route to host (connect failed)",
+      "java.net.ConnectException:Connection refused (Connection refused)",
+      "java.net.ConnectException:Connection refused: connect",
+      "java.net.SocketTimeoutException:connect timed out",
+      "java.net.NoRouteToHostException",
+      "org.apache.http.conn.ConnectTimeoutException", "com.yeepay.shade.org.apache.http.conn.ConnectTimeoutException",
+      "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException"
+    ],
+    "max_retry_count": 3,
+    "circuit_breaker": {
+      "enable": true,
+      "yop_exclude_exceptions": [
+        "java.net.SocketTimeoutException:Read timed out"
+      ],
+      "rules": [
+        {
+          "grade": 2,
+          "count": 2,
+          "time_window": 5,
+          "stat_interval_ms": 30000
+        }
+      ]
+    }
+  },
+  "yop_report": {
+    "enable": true,
+    "enable_success_report": false,
+    "send_interval_ms": 3000,
+    "stat_interval_ms": 5000,
+    "max_queue_size": 500,
+    "max_fail_count": 10,
+    "max_fail_count_per_exception": 5,
+    "max_elapsed_ms": 15000,
+    "max_packet_size": 50
   }
 }

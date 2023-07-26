@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 public class ClientConfigurationSupport {
 
     public static ClientConfiguration getClientConfiguration(YopSdkConfig yopSdkConfig) {
-        ClientConfiguration clientConfiguration = new ClientConfiguration().withEndpoint(yopSdkConfig.getServerRoot());
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
         if (StringUtils.isNotEmpty(yopSdkConfig.getRegion())) {
             clientConfiguration.withRegion(Region.valueOf(yopSdkConfig.getRegion()));
         }
@@ -38,7 +38,10 @@ public class ClientConfigurationSupport {
                     .withConnectionTimeoutInMillis(yopHttpClientConfig.getConnectTimeout())
                     .withConnectionRequestTimeoutInMillis(yopHttpClientConfig.getConnectRequestTimeout())
                     .withSocketTimeoutInMillis(yopHttpClientConfig.getReadTimeout())
-                    .withMaxConnectionsPerRoute(yopHttpClientConfig.getMaxConnPerRoute());
+                    .withMaxConnectionsPerRoute(yopHttpClientConfig.getMaxConnPerRoute())
+                    .withMaxRetryCount(yopHttpClientConfig.getMaxRetryCount())
+                    .withRetryExceptions(yopHttpClientConfig.getRetryExceptions())
+                    .withCircuitBreakerConfig(yopHttpClientConfig.getCircuitBreakerConfig());
         }
         return clientConfiguration;
     }

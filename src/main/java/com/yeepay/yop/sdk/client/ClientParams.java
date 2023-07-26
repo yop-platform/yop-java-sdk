@@ -5,6 +5,8 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * title: client参数<br>
@@ -24,6 +26,10 @@ public class ClientParams {
 
     private final URI sandboxEndPoint;
 
+    private final List<URI> preferredEndPoint;
+
+    private final List<URI> preferredYosEndPoint;
+
     private final ClientConfiguration clientConfiguration;
 
     private final AuthorizationReqRegistry authorizationReqRegistry;
@@ -38,6 +44,23 @@ public class ClientParams {
                          YopCredentialsProvider credentialsProvider, YopSdkConfigProvider yopSdkConfigProvider) {
         this.endPoint = endPoint;
         this.yosEndPoint = yosEndPoint;
+        this.preferredEndPoint = Collections.emptyList();
+        this.preferredYosEndPoint = Collections.emptyList();
+        this.sandboxEndPoint = sandboxEndPoint;
+        this.clientConfiguration = clientConfiguration;
+        this.authorizationReqRegistry = authorizationReqRegistry;
+        this.credentialsProvider = credentialsProvider;
+        this.yopSdkConfigProvider = yopSdkConfigProvider;
+    }
+
+    private ClientParams(URI endPoint, URI yosEndPoint, List<URI> preferredEndPoint, List<URI> preferredYosEndPoint, URI sandboxEndPoint,
+                         ClientConfiguration clientConfiguration,
+                         AuthorizationReqRegistry authorizationReqRegistry,
+                         YopCredentialsProvider credentialsProvider, YopSdkConfigProvider yopSdkConfigProvider) {
+        this.endPoint = endPoint;
+        this.yosEndPoint = yosEndPoint;
+        this.preferredEndPoint = preferredEndPoint;
+        this.preferredYosEndPoint = preferredYosEndPoint;
         this.sandboxEndPoint = sandboxEndPoint;
         this.clientConfiguration = clientConfiguration;
         this.authorizationReqRegistry = authorizationReqRegistry;
@@ -55,6 +78,14 @@ public class ClientParams {
 
     public URI getSandboxEndPoint() {
         return sandboxEndPoint;
+    }
+
+    public List<URI> getPreferredEndPoint() {
+        return preferredEndPoint;
+    }
+
+    public List<URI> getPreferredYosEndPoint() {
+        return preferredYosEndPoint;
     }
 
     public ClientConfiguration getClientConfiguration() {
@@ -77,6 +108,8 @@ public class ClientParams {
         private URI endPoint;
         private URI yosEndPoint;
         private URI sandboxEndPoint;
+        private List<URI> preferredEndPoint;
+        private List<URI> preferredYosEndPoint;
         private ClientConfiguration clientConfiguration;
         private AuthorizationReqRegistry authorizationReqRegistry;
         private YopCredentialsProvider credentialsProvider;
@@ -96,6 +129,16 @@ public class ClientParams {
 
         public Builder withYosEndPoint(URI yosEndPoint) {
             this.yosEndPoint = yosEndPoint;
+            return this;
+        }
+
+        public Builder withPreferredEndPoint(List<URI> preferredEndPoint) {
+            this.preferredEndPoint = preferredEndPoint;
+            return this;
+        }
+
+        public Builder withPreferredYosEndPoint(List<URI> preferredYosEndPoint) {
+            this.preferredYosEndPoint = preferredYosEndPoint;
             return this;
         }
 
@@ -125,7 +168,7 @@ public class ClientParams {
         }
 
         public ClientParams build() {
-            return new ClientParams(endPoint, yosEndPoint, sandboxEndPoint,
+            return new ClientParams(endPoint, yosEndPoint, preferredEndPoint, preferredYosEndPoint, sandboxEndPoint,
                     clientConfiguration, authorizationReqRegistry,
                     credentialsProvider, yopSdkConfigProvider);
         }

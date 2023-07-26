@@ -3,10 +3,14 @@ package com.yeepay.yop.sdk.service.common.request;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.Collection;
@@ -37,6 +41,7 @@ public class YopRequest extends BaseRequest {
     private Object content;
 
     public YopRequest(String apiUri, String httpMethod) {
+        CheckUtils.checkApiUri(apiUri);
         this.apiUri = apiUri;
         this.httpMethod = httpMethod;
     }
@@ -128,7 +133,7 @@ public class YopRequest extends BaseRequest {
         if (inputStream == null) {
             throw new YopClientException("inputStream for name:" + name + " should not be null.");
         }
-        multipartFiles.put(name, inputStream);
+        multipartFiles.put(name, restartStream(inputStream));
         return this;
     }
 
@@ -144,11 +149,27 @@ public class YopRequest extends BaseRequest {
         if (inputStream == null) {
             throw new YopClientException("inputStream for content should not be null");
         }
-        this.content = inputStream;
+        this.content = restartStream(inputStream);
         return this;
     }
 
+    private InputStream restartStream(InputStream inputStream) {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final byte[] buffer = new byte[1024];
+            int len;
+            while ((len = inputStream.read(buffer)) > -1) {
+                baos.write(buffer, 0, len);
+            }
+            baos.flush();
+            return RestartableInputStream.wrap(baos.toByteArray());
+        } catch (IOException e) {
+            throw new YopClientException("Invalid Stream Parameter");
+        }
+    }
+
     public YopRequest withApiUri(String apiUri) {
+        CheckUtils.checkApiUri(apiUri);
         this.apiUri = apiUri;
         return this;
     }

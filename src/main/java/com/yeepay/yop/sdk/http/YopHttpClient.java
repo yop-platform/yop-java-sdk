@@ -2,7 +2,14 @@ package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
+import com.yeepay.yop.sdk.client.ClientReporter;
+import com.yeepay.yop.sdk.client.metric.YopFailureItem;
+import com.yeepay.yop.sdk.client.metric.YopStatus;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostFailEvent;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
+import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
@@ -13,6 +20,7 @@ import com.yeepay.yop.sdk.utils.HttpUtils;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpHost;
@@ -156,31 +164,70 @@ public class YopHttpClient {
         HttpRequestBase httpRequest;
         CloseableHttpResponse httpResponse = null;
         Output yopResponse = null;
+        long beginTime = System.currentTimeMillis();
+        Exception serverEx = null;
         try {
             signRequest(request, executionContext);
             if (BooleanUtils.isTrue(yopRequestConfig.getNeedEncrypt())) {
                 encryptRequest(request, executionContext);
             }
-            logger.debug("Sending Request: {}", request);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Sending Request: {}", request);
+            }
             httpRequest = this.createHttpRequest(request);
             HttpContext httpContext = this.createHttpContext(request, yopRequestConfig);
             httpResponse = this.httpClient.execute(httpRequest, httpContext);
             HttpUtils.printRequest(httpRequest);
             yopResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
             return yopResponse;
+        } catch (YopClientException e) {
+            throw e;
+        } catch (YopHttpException e) {
+            serverEx = e;
+            throw e;
         } catch (Exception e) {
-            YopClientException yop;
-            if (e instanceof YopClientException) {
-                yop = (YopClientException) e;
-            } else {
-                yop = new YopClientException("Unable to execute HTTP request", e);
-            }
-            throw yop;
+            serverEx = e;
+            throw new YopHttpException("Unable to execute HTTP request, apiUri:" + request.getResourcePath(), e);
         } finally {
+            if (null == serverEx) {
+                ClientReporter.reportHostRequest(toSuccessRequest(request, httpResponse, System.currentTimeMillis() - beginTime));
+            } else {
+                ClientReporter.reportHostRequest(toFailRequest(request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+            }
             if (!(yopResponse instanceof YosDownloadResponse)) {
                 HttpClientUtils.closeQuietly(httpResponse);
             }
         }
+    }
+
+    private <Input extends BaseRequest> YopHostSuccessEvent toSuccessRequest(Request<Input> request, CloseableHttpResponse httpResponse, long elapsedTime) {
+        final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
+        setBasic(successEvent, request, httpResponse, elapsedTime);
+        successEvent.setStatus(YopStatus.SUCCESS);
+        successEvent.setData("");
+        return successEvent;
+    }
+
+    private <Input extends BaseRequest> YopHostFailEvent toFailRequest(Request<Input> request, CloseableHttpResponse httpResponse, Exception ex, long elapsedTime) {
+        final YopHostFailEvent failEvent = new YopHostFailEvent();
+        setBasic(failEvent, request, httpResponse, elapsedTime);
+        failEvent.setStatus(YopStatus.FAIL);
+        failEvent.setData(new YopFailureItem(ex));
+        return failEvent;
+    }
+
+    private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, Request<Input> request, CloseableHttpResponse httpResponse, long elapsedTime) {
+        event.setServerResource(request.getResourcePath());
+        event.setServerHost(HttpUtils.generateHostHeader(request.getEndpoint()));
+        String serverIp = "";
+        if (null != httpResponse) {
+            final Header serverIpHeader = httpResponse.getFirstHeader(Headers.YOP_SERVER_IP);
+            if (null != serverIpHeader && StringUtils.isNotBlank(serverIpHeader.getValue())) {
+                serverIp = serverIpHeader.getValue();
+            }
+        }
+        event.setServerIp(StringUtils.defaultString(serverIp, ""));
+        event.setElapsedMillis(elapsedTime);
     }
 
     /**
@@ -295,7 +342,8 @@ public class YopHttpClient {
     private CloseableHttpClient createHttpClient(HttpClientConnectionManager connectionManager,
                                                  RequestConfig requestConfig) {
         HttpClientBuilder builder =
-                HttpClients.custom().setConnectionManager(connectionManager).disableAutomaticRetries();
+                HttpClients.custom().setConnectionManager(connectionManager).disableAutomaticRetries()
+                        .addInterceptorLast(YopServerResponseInterceptor.INSTANCE);
 
         int socketBufferSizeInBytes = this.config.getSocketBufferSizeInBytes();
         if (socketBufferSizeInBytes > 0) {
