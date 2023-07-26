@@ -30,6 +30,7 @@ public final class YopFileSdkConfig implements Serializable {
     private String appKey;
 
     @JsonProperty("server_root")
+    @Deprecated
     private String serverRoot;
 
     @JsonProperty("yos_server_root")
