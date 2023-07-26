@@ -141,8 +141,7 @@ public class AbstractClient {
         GATE_WAY_ROUTER = new SimpleGateWayRouter(serverRootSpace);
 
         // 熔断配置
-        List<String> serverRoots = Lists.newArrayList(serverRootSpace.getServerRoot(),
-                serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
+        List<String> serverRoots = Lists.newArrayList(serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
         if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
             serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
         }
