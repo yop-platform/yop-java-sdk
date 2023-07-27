@@ -180,6 +180,8 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         request.addHeader(Headers.YOP_APPKEY, executionContext.getYopCredentials().getAppKey());
         request.addHeader(Headers.USER_AGENT, this.clientConfig.getUserAgent());
         request.addHeader(Headers.YOP_SESSION_ID, YopConstants.YOP_SESSION_ID);
+        request.addHeader(Headers.YOP_SDK_LANGS, YopConstants.HEADER_LANG_JAVA);
+        request.addHeader(Headers.YOP_SDK_VERSION, YopConstants.VERSION);
     }
 
     /**

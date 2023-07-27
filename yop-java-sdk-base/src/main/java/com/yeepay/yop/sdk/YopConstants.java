@@ -124,4 +124,6 @@ public interface YopConstants {
 
     String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
 
+    String HEADER_LANG_JAVA = "java";
+
 }
