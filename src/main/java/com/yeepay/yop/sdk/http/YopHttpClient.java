@@ -1,5 +1,6 @@
 package com.yeepay.yop.sdk.http;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.ClientReporter;
@@ -161,6 +162,7 @@ public class YopHttpClient {
         YopCredentials yopCredentials = executionContext.getYopCredentials();
         setAppKey(request, yopCredentials);
         setUserAgent(request);
+        setSDKLangAndVersion(request);
         HttpRequestBase httpRequest;
         CloseableHttpResponse httpResponse = null;
         Output yopResponse = null;
@@ -198,6 +200,11 @@ public class YopHttpClient {
                 HttpClientUtils.closeQuietly(httpResponse);
             }
         }
+    }
+
+    private <Input extends BaseRequest> void setSDKLangAndVersion(Request<Input> request) {
+        request.addHeader(Headers.YOP_SDK_LANGS, YopConstants.HEADER_LANG_JAVA);
+        request.addHeader(Headers.YOP_SDK_VERSION, YopConstants.VERSION);
     }
 
     private <Input extends BaseRequest> YopHostSuccessEvent toSuccessRequest(Request<Input> request, CloseableHttpResponse httpResponse, long elapsedTime) {

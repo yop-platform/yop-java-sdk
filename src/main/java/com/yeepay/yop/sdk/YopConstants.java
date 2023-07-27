@@ -66,4 +66,6 @@ public interface YopConstants {
 
     String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
 
+    String HEADER_LANG_JAVA = "java";
+
 }
