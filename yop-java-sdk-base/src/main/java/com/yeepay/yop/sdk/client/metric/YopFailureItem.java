@@ -41,12 +41,12 @@ public class YopFailureItem implements Serializable {
      * 发生时间戳
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "GMT+8")
-    private Date occurTime;
+    private Date occurDate;
 
     public YopFailureItem(String exType, String exMsg) {
         this.exType = exType;
         this.exMsg = exMsg;
-        this.occurTime = new Date();
+        this.occurDate = new Date();
     }
 
     public YopFailureItem(Throwable ex) {
@@ -57,7 +57,7 @@ public class YopFailureItem implements Serializable {
         this.exType = exCause.getClass().getCanonicalName();
         this.exMsg = StringUtils.abbreviate(StringUtils.defaultString(exCause.getMessage(), ""),
                 300);// TODO 是否足够
-        this.occurTime = new Date();
+        this.occurDate = new Date();
     }
 
     public String getExType() {
@@ -68,8 +68,8 @@ public class YopFailureItem implements Serializable {
         return exMsg;
     }
 
-    public Date getOccurTime() {
-        return occurTime;
+    public Date getOccurDate() {
+        return occurDate;
     }
 
     @Override

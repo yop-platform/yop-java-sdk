@@ -33,7 +33,7 @@ public class JsonUtilsTest {
         JsonUtils.load(repostStr, loaded);
 
         final YopHostRequestReport newObj = new YopHostRequestReport();
-        newObj.setBeginTime(new Date(1686039343000L));
+        newObj.setBeginDate(new Date(1686039343000L));
         final YopHostRequestPayload payload = new YopHostRequestPayload();
         payload.setFailDetails(Lists.newArrayList(new YopFailureList("","", Lists.newArrayList(new Date(1686039343000L)))));
         newObj.setPayload(payload);

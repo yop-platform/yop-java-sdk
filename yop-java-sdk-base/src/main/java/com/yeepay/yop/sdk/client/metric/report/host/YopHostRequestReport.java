@@ -30,9 +30,9 @@ public class YopHostRequestReport implements YopReport {
 
     private YopHostRequestPayload payload;
 
-    private Date beginTime = new Date();
+    private Date beginDate = new Date();
 
-    private Date endTime;
+    private Date endDate;
 
     @Override
     public String getType() {
@@ -62,21 +62,21 @@ public class YopHostRequestReport implements YopReport {
     }
 
     @Override
-    public Date getBeginTime() {
-        return beginTime;
+    public Date getBeginDate() {
+        return beginDate;
     }
 
-    public void setBeginTime(Date beginTime) {
-        this.beginTime = beginTime;
+    public void setBeginDate(Date beginDate) {
+        this.beginDate = beginDate;
     }
 
     @Override
-    public Date getEndTime() {
-        return endTime;
+    public Date getEndDate() {
+        return endDate;
     }
 
-    public void setEndTime(Date endTime) {
-        this.endTime = endTime;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     @Override

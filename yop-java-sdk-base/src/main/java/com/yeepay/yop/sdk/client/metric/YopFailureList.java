@@ -41,7 +41,7 @@ public class YopFailureList implements Serializable {
      * 发生时间戳
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "GMT+8")
-    private List<Date> occurTime;
+    private List<Date> occurDate;
 
     public YopFailureList() {
     }
@@ -49,13 +49,13 @@ public class YopFailureList implements Serializable {
     public YopFailureList(String exType, String exMsg) {
         this.exType = exType;
         this.exMsg = exMsg;
-        this.occurTime = Lists.newLinkedList();
+        this.occurDate = Lists.newLinkedList();
     }
 
     public YopFailureList(String exType, String exMsg, List<Date> occurTime) {
         this.exType = exType;
         this.exMsg = exMsg;
-        this.occurTime = occurTime;
+        this.occurDate = occurTime;
     }
 
     public String getExType() {
@@ -74,12 +74,12 @@ public class YopFailureList implements Serializable {
         this.exMsg = exMsg;
     }
 
-    public List<Date> getOccurTime() {
-        return occurTime;
+    public List<Date> getOccurDate() {
+        return occurDate;
     }
 
-    public void setOccurTime(List<Date> occurTime) {
-        this.occurTime = occurTime;
+    public void setOccurDate(List<Date> occurDate) {
+        this.occurDate = occurDate;
     }
 
     @Override
