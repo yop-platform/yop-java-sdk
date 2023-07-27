@@ -185,7 +185,7 @@ public class ClientReporter {
             }
         }
         if (null != reportToBeQueue) {
-            reportToBeQueue.setEndTime(new Date());
+            reportToBeQueue.setEndDate(new Date());
 
             while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
                 YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
@@ -275,11 +275,11 @@ public class ClientReporter {
                         payload.setFailDetails(Lists.newLinkedList());
                         if (null != failDetail) {
                             final YopFailureList yopFailDetail = new YopFailureList(failDetail.getExType(), failDetail.getExMsg());
-                            yopFailDetail.getOccurTime().add(failDetail.getOccurTime());
+                            yopFailDetail.getOccurDate().add(failDetail.getOccurTime());
                             payload.getFailDetails().add(yopFailDetail);
                         }
                     } else {
-                        update.setBeginTime(current.getBeginTime());
+                        update.setBeginDate(current.getBeginDate());
                         YopHostRequestPayload oldPayload = current.getPayload();
                         payload.setSuccessCount(oldPayload.getSuccessCount() + successCount);
                         payload.setFailCount(oldPayload.getFailCount() + failCount);
@@ -292,10 +292,10 @@ public class ClientReporter {
                                                     && StringUtils.equals(p.getExMsg(), failDetailItem.getExMsg()))
                                     .findAny();
                             if (yopFailDetail.isPresent()) {
-                                yopFailDetail.get().getOccurTime().add(failDetailItem.getOccurTime());
+                                yopFailDetail.get().getOccurDate().add(failDetailItem.getOccurTime());
                             } else {
                                 final YopFailureList newYopFailDetail = new YopFailureList(failDetail.getExType(), failDetail.getExMsg());
-                                newYopFailDetail.getOccurTime().add(failDetail.getOccurTime());
+                                newYopFailDetail.getOccurDate().add(failDetail.getOccurTime());
                                 payload.getFailDetails().add(newYopFailDetail);
                             }
                         }
@@ -351,7 +351,7 @@ public class ClientReporter {
             return false;
         }
         final YopHostRequestPayload payload = report.getPayload();
-        final Date beginTime = report.getBeginTime();
+        final Date beginTime = report.getBeginDate();
         final int failCount = payload.getFailCount();
         final long maxElapsedMillis = payload.getMaxElapsedMillis();
         final List<YopFailureList> failDetails = payload.getFailDetails();
@@ -366,7 +366,7 @@ public class ClientReporter {
         }
         if (CollectionUtils.isNotEmpty(failDetails)) {
             for (YopFailureList failDetail : failDetails) {
-                if (CollectionUtils.size(failDetail.getOccurTime()) >= MAX_FAIL_COUNT_PER_EX) {
+                if (CollectionUtils.size(failDetail.getOccurDate()) >= MAX_FAIL_COUNT_PER_EX) {
                     return true;
                 }
             }
