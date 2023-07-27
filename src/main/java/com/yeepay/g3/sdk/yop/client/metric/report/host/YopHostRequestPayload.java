@@ -109,7 +109,7 @@ public class YopHostRequestPayload implements Serializable {
     public List<YopFailureList> cloneFailDetails() {
         List<YopFailureList> result = Lists.newLinkedList();
         if (CollectionUtils.isNotEmpty(failDetails)) {
-            failDetails.forEach(p -> result.add(new YopFailureList(p.getExType(), p.getExMsg(), new LinkedList<>(p.getOccurTime()))));
+            failDetails.forEach(p -> result.add(new YopFailureList(p.getExType(), p.getExMsg(), new LinkedList<>(p.getOccurDate()))));
         }
         return result;
     }
