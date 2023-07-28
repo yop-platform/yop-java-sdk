@@ -456,10 +456,6 @@ public class AbstractClient {
     }
 
     protected static YopResponse fetchContentByApacheHttpClient(String apiUri, HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
-        return fetchContentByApacheHttpClient(apiUri, request, responseConfig, YopRequestType.WEB);
-    }
-
-    protected static YopResponse fetchContentByApacheHttpClient(String apiUri, HttpUriRequest request, ResponseConfig responseConfig, YopRequestType requestType) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
         Throwable serverEx = null;
