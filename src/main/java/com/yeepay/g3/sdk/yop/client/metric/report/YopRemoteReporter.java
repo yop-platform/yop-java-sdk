@@ -5,6 +5,7 @@
 package com.yeepay.g3.sdk.yop.client.metric.report;
 
 import com.google.common.collect.Lists;
+import com.yeepay.g3.sdk.yop.cache.YopCredentialsCache;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
 import com.yeepay.g3.sdk.yop.client.YopResponse;
 import com.yeepay.g3.sdk.yop.client.YopRsaClient;
@@ -13,7 +14,8 @@ import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.model.report.YopReportRequest;
 import com.yeepay.g3.sdk.yop.model.report.YopReportResponse;
 import com.yeepay.g3.sdk.yop.utils.JsonUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,22 @@ public class YopRemoteReporter implements YopReporter {
 
     private void doRemoteReport(List<YopReport> reports) throws YopReportException {
         try {
-            YopRequest request = new YopRequest();
+            YopRequest request;
+            // 选择可用凭证
+            final List<String> availableApps = YopCredentialsCache.listKeys();
+            YopCredentialsCache.AppSecretItem credentials;
+            if (CollectionUtils.isNotEmpty(availableApps)
+                    && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
+                if (StringUtils.isNotBlank(credentials.getSecretKey())) {
+                    request = new YopRequest(credentials.getAppKey(), credentials.getSecretKey());
+                } else {
+                    request = new YopRequest(credentials.getAppKey());
+                }
+            } else {
+                // 选择默认凭证
+                request = new YopRequest();
+            }
+
             // 跳过验签、加解密，使用默认appKey发起请求
             YopReportRequest reportRequest = new YopReportRequest();
             reportRequest.setReports(reports);
@@ -55,7 +72,8 @@ public class YopRemoteReporter implements YopReporter {
             final YopResponse response = YopRsaClient.post(REPORT_API_URI, request);
             handleReportResponse(response);
         } catch (YopClientException ex) {
-            LOGGER.warn("Remote Report Fail For Client Error, exType:{}, exMsg:{}", ex.getClass().getCanonicalName(), ExceptionUtils.getMessage(ex));
+            LOGGER.warn("Remote Report Fail For Client Error, exType:{}, exMsg:{}", ex.getClass().getCanonicalName(),
+                    StringUtils.defaultString(ex.getMessage()));
             BACKUP_REPORTER.batchReport(reports);
         } catch (Exception e) {
             throw new YopReportException("Remote Report Fail For Server Error, ex:", e);

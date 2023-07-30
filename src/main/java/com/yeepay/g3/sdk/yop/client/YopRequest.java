@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.yeepay.g3.sdk.yop.YopServiceException;
+import com.yeepay.g3.sdk.yop.cache.YopCredentialsCache;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfig;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
@@ -86,6 +87,8 @@ public class YopRequest {
             throw new YopServiceException("SDKConfig for appKey:" + appKey + " not found.");
         }
         this.secretKey = null;
+        // 缓存最新调用凭证
+        YopCredentialsCache.put(appKey, new YopCredentialsCache.AppSecretItem(appKey));
         init();
     }
 
@@ -108,6 +111,8 @@ public class YopRequest {
         this.appSdkConfig.setSandboxServerRoot(appSdkConfig.getSandboxServerRoot());
         this.appSdkConfig.setDefaultYopPublicKey(appSdkConfig.getDefaultYopPublicKey());
         this.secretKey = secretKey;
+        // 缓存最新调用凭证
+        YopCredentialsCache.put(appKey, new YopCredentialsCache.AppSecretItem(appKey, secretKey));
         init();
     }
 

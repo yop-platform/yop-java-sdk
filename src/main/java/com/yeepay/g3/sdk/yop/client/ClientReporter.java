@@ -25,7 +25,6 @@ import com.yeepay.g3.sdk.yop.config.support.BackUpAppSdkConfigManager;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -246,6 +245,7 @@ public class ClientReporter {
         @Override
         public void run() {
             try {
+                final String appKey = event.getAppKey();
                 final String serverHost = event.getServerHost();
                 final String serverIp = event.getServerIp();
                 final long elapsedMillis = event.getElapsedMillis();
@@ -259,13 +259,14 @@ public class ClientReporter {
                     failDetail = (YopFailureItem) event.getData();
                 }
 
-                final String reportKey = serverHost + "###" + serverIp;
+                final String reportKey = StringUtils.joinWith("###", appKey, serverHost, serverIp);
                 AtomicReference<YopHostRequestReport> reportReference =
                         YOP_HOST_REQUEST_COLLECTION.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
                 YopHostRequestReport current;
                 YopHostRequestReport update = new YopHostRequestReport();
                 YopHostRequestPayload payload = new YopHostRequestPayload();
+                payload.setAppKey(appKey);
                 payload.setServerIp(serverIp);
                 payload.setServerHost(serverHost);
                 update.setPayload(payload);
@@ -332,7 +333,7 @@ public class ClientReporter {
             REMOTE_REPORTER.batchReport(reports);
         } catch (Exception ex) {
             LOGGER.warn("Remote Report Fail, exType:{}, exMsg:{}, But Will Retry.", ex.getClass().getCanonicalName(),
-                    ExceptionUtils.getMessage(ex));
+                    StringUtils.defaultString(ex.getMessage()));
             tryEnqueue(reports);
         }
     }
@@ -346,7 +347,7 @@ public class ClientReporter {
                 YOP_HOST_REQUEST_QUEUE.push(reports.get(i));
             } catch (Exception ex) {
                 LOGGER.warn("Report ReEnqueue Fail, exType:{}, exMsg:{}, ", ex.getClass().getCanonicalName(),
-                        ExceptionUtils.getMessage(ex));
+                        StringUtils.defaultString(ex.getMessage()));
             }
         }
     }

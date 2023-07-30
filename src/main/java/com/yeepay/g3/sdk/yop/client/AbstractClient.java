@@ -482,9 +482,10 @@ public class AbstractClient {
 
     private static void reportHostEvent(String apiUri, HttpUriRequest request, CloseableHttpResponse httpResponse, Throwable serverEx, long reqStartTime) {
         long elapsedTime = System.currentTimeMillis() - reqStartTime;
+        final String appKey = getAppKey(request);
         if (null != serverEx) {
             final YopHostFailEvent failEvent = new YopHostFailEvent();
-            setBasic(failEvent, apiUri, request, httpResponse, elapsedTime);
+            setBasic(failEvent, appKey, apiUri, request, httpResponse, elapsedTime);
             failEvent.setStatus(YopStatus.FAIL);
             failEvent.setData(new YopFailureItem(serverEx));
             ClientReporter.reportHostRequest(failEvent);
@@ -492,15 +493,16 @@ public class AbstractClient {
         }
 
         final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
-        setBasic(successEvent, apiUri, request, httpResponse, elapsedTime);
+        setBasic(successEvent, appKey, apiUri, request, httpResponse, elapsedTime);
         successEvent.setStatus(YopStatus.SUCCESS);
         successEvent.setData("");
         ClientReporter.reportHostRequest(successEvent);
     }
 
-    private static void setBasic(YopHostRequestEvent<?> event, String apiUri,
+    private static void setBasic(YopHostRequestEvent<?> event, String appKey, String apiUri,
                                  HttpUriRequest request, CloseableHttpResponse httpResponse,
                                  long elapsedTime) {
+        event.setAppKey(appKey);
         event.setServerResource(apiUri);
         event.setServerHost(HttpUtils.generateHostHeader(request.getURI()));
         String serverIp = "";
@@ -516,6 +518,10 @@ public class AbstractClient {
 
     private static String getRequestId(HttpUriRequest request) {
         return request.getFirstHeader(Headers.YOP_REQUEST_ID).getValue();
+    }
+
+    private static String getAppKey(HttpUriRequest request) {
+        return request.getFirstHeader(Headers.YOP_APP_KEY).getValue();
     }
 
     protected static YopResponse parseResponse(CloseableHttpResponse httpResponse, ResponseConfig responseConfig) throws IOException {
@@ -837,7 +843,7 @@ public class AbstractClient {
             final Throwable[] allExceptions = ExceptionUtils.getThrowables(e);
 
             if (allExceptions.length == 1) {
-                result.exDetail = e.getClass().getCanonicalName() + COLON + ExceptionUtils.getMessage(e);
+                result.exDetail = e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage());
                 return result;
             }
 
@@ -845,8 +851,8 @@ public class AbstractClient {
             final List<String> exceptionDetails = Lists.newArrayList();
             for (int i = 0; i < allExceptions.length; i++) {
                 Throwable rootCause = allExceptions[i];
-                final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage(),
-                        exTypeAndMsg = exType + COLON + exMsg;
+                final String exType = rootCause.getClass().getCanonicalName(),
+                        exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage());
                 exceptionDetails.add(exType);
                 exceptionDetails.add(exTypeAndMsg);
                 if (InternalConfig.getRetryExceptions().contains(exType) ||
@@ -856,6 +862,9 @@ public class AbstractClient {
                     return result;
                 }
             }
+
+            Throwable lastCause = allExceptions[allExceptions.length -1];
+            result.exDetail = lastCause.getClass().getCanonicalName() + COLON + StringUtils.defaultString(lastCause.getMessage());
 
             // 不重试，不计入短路
             if (CollectionUtils.containsAny(InternalConfig.getCircuitBreakerConfig().getExcludeExceptions(), exceptionDetails)) {

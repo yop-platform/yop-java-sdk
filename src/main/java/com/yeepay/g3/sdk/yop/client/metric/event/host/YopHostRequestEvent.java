@@ -25,6 +25,11 @@ public class YopHostRequestEvent<T> implements Serializable {
     private static final long serialVersionUID = -1L;
 
     /**
+     * 应用
+     */
+    private String appKey;
+
+    /**
      * 服务资源
      */
     private String serverResource;
@@ -53,6 +58,14 @@ public class YopHostRequestEvent<T> implements Serializable {
      * 数据(不同状态可能不一样)
      */
     private T data;
+
+    public String getAppKey() {
+        return appKey;
+    }
+
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
+    }
 
     public String getServerResource() {
         return serverResource;
