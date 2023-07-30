@@ -241,6 +241,7 @@ public class ClientReporter {
         @Override
         public void run() {
             try {
+                final String appKey = event.getServerHost();
                 final String serverHost = event.getServerHost();
                 final String serverIp = event.getServerIp();
                 final long elapsedMillis = event.getElapsedMillis();
@@ -254,13 +255,14 @@ public class ClientReporter {
                     failDetail = (YopFailureItem) event.getData();
                 }
 
-                final String reportKey = serverHost + "###" + serverIp;
+                final String reportKey = StringUtils.joinWith("###", appKey, serverHost, serverIp);
                 AtomicReference<YopHostRequestReport> reportReference =
                         YOP_HOST_REQUEST_COLLECTION.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
                 YopHostRequestReport current;
                 YopHostRequestReport update = new YopHostRequestReport();
                 YopHostRequestPayload payload = new YopHostRequestPayload();
+                payload.setAppKey(appKey);
                 payload.setServerIp(serverIp);
                 payload.setServerHost(serverHost);
                 update.setPayload(payload);

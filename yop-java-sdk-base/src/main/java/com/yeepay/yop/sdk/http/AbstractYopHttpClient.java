@@ -88,7 +88,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             throw new YopHttpException("Unable to execute HTTP request, requestId:"
                     + request.getRequestId() + ", apiUri:" + request.getResourcePath(), e);
         } finally {
-            postExecute(beginTime, request, analyzedResponse, httpResponse, serverEx);
+            postExecute(beginTime, executionContext, request, analyzedResponse, httpResponse, serverEx);
         }
     }
 
@@ -103,40 +103,48 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      * @param <Input> 请求
      * @param <Output> 响应
      */
-    protected <Input extends BaseRequest, Output extends BaseResponse> void postExecute(long beginTime, Request<Input> request, Output analyzedResponse,
+    protected <Input extends BaseRequest, Output extends BaseResponse> void postExecute(long beginTime, ExecutionContext executionContext,
+                                                                                        Request<Input> request, Output analyzedResponse,
                                                                                       YopHttpResponse httpResponse, Exception serverEx) {
         try {
             if (null == serverEx) {
-                ClientReporter.reportHostRequest(toSuccessRequest(request, httpResponse, System.currentTimeMillis() - beginTime));
+                ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
             } else {
-                ClientReporter.reportHostRequest(toFailRequest(request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+                ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
             }
 
             if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
                 httpResponse.close();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("error when postExecute, ex:", e);
         }
     }
 
-    private <Input extends BaseRequest> YopHostSuccessEvent toSuccessRequest(Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
+    private <Input extends BaseRequest> YopHostSuccessEvent toSuccessRequest(ExecutionContext executionContext,
+                                                                             Request<Input> request, YopHttpResponse httpResponse,
+                                                                             long elapsedTime) {
         final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
-        setBasic(successEvent, request, httpResponse, elapsedTime);
+        setBasic(successEvent, executionContext, request, httpResponse, elapsedTime);
         successEvent.setStatus(YopStatus.SUCCESS);
         successEvent.setData("");
         return successEvent;
     }
 
-    private <Input extends BaseRequest> YopHostFailEvent toFailRequest(Request<Input> request, YopHttpResponse httpResponse, Exception ex, long elapsedTime) {
+    private <Input extends BaseRequest> YopHostFailEvent toFailRequest(ExecutionContext executionContext,
+                                                                       Request<Input> request, YopHttpResponse httpResponse,
+                                                                       Exception ex, long elapsedTime) {
         final YopHostFailEvent failEvent = new YopHostFailEvent();
-        setBasic(failEvent, request, httpResponse, elapsedTime);
+        setBasic(failEvent, executionContext, request, httpResponse, elapsedTime);
         failEvent.setStatus(YopStatus.FAIL);
         failEvent.setData(new YopFailureItem(ex));
         return failEvent;
     }
 
-    private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, Request<Input> request, YopHttpResponse httpResponse, long elapsedTime) {
+    private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, ExecutionContext executionContext,
+                                                      Request<Input> request, YopHttpResponse httpResponse,
+                                                      long elapsedTime) {
+        event.setAppKey(executionContext.getYopCredentials().getAppKey());
         event.setServerResource(request.getResourcePath());
         event.setServerHost(HttpUtils.generateHostHeader(request.getEndpoint()));
         String serverIp = "";

@@ -5,6 +5,8 @@
 package com.yeepay.yop.sdk.client.metric.report;
 
 import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.base.cache.YopCredentialsCache;
 import com.yeepay.yop.sdk.client.YopGlobalClient;
 import com.yeepay.yop.sdk.client.cmd.YopCmdExecutorRegistry;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -14,6 +16,7 @@ import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +53,19 @@ public class YopRemoteReporter implements YopReporter {
     private void doRemoteReport(List<YopReport> reports) throws YopReportException {
         try {
             YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
-            // 跳过验签、加解密，使用默认appKey发起请求
+            // 跳过验签、加解密
             request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false).setReadTimeout(60000);
+
+            // 选择可用凭证
+            final List<String> availableApps = YopCredentialsCache.listKeys();
+            YopCredentials<?> credentials;
+            if (CollectionUtils.isNotEmpty(availableApps)
+                    && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
+                request.getRequestConfig().setCredentials(credentials);
+            } else {
+                // 选择默认凭证
+            }
+
             YopReportRequest reportRequest = new YopReportRequest();
             reportRequest.setReports(reports);
             request.setContent(JsonUtils.toJsonString(reportRequest));

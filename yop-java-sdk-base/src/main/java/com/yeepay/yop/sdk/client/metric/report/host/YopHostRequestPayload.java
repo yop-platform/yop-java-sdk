@@ -29,6 +29,11 @@ public class YopHostRequestPayload implements Serializable {
     private static final long serialVersionUID = -1L;
 
     /**
+     * 请求appKey
+     */
+    private String appKey;
+
+    /**
      * 请求server host
      */
     private String serverHost;
@@ -57,6 +62,14 @@ public class YopHostRequestPayload implements Serializable {
      * 失败明细
      */
     private List<YopFailureList> failDetails;
+
+    public String getAppKey() {
+        return appKey;
+    }
+
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
+    }
 
     public String getServerHost() {
         return serverHost;

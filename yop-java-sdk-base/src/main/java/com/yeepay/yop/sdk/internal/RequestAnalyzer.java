@@ -9,11 +9,12 @@ import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
+import com.yeepay.yop.sdk.base.cache.YopCredentialsCache;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -47,6 +48,8 @@ public class RequestAnalyzer {
         if (null == credential) {
             throw new YopClientException("No credentials specified");
         }
+        // 缓存最新调用凭证
+        YopCredentialsCache.put(credential.getAppKey(), credential);
         return credential;
     }
 
