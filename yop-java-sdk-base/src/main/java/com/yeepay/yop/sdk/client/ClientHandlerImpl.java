@@ -232,7 +232,7 @@ public class ClientHandlerImpl implements ClientHandler {
             final Throwable[] allExceptions = ExceptionUtils.getThrowables(e);
 
             if (allExceptions.length == 1) {
-                result.exDetail = e.getClass().getCanonicalName() + COLON + ExceptionUtils.getMessage(e);
+                result.exDetail = e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage());
                 return result;
             }
 
@@ -240,8 +240,8 @@ public class ClientHandlerImpl implements ClientHandler {
             final List<String> exceptionDetails = Lists.newArrayList();
             for (int i = 0; i < allExceptions.length; i++) {
                 Throwable rootCause = allExceptions[i];
-                final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage(),
-                        exTypeAndMsg = exType + COLON + exMsg;
+                final String exType = rootCause.getClass().getCanonicalName(),
+                        exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage());
                 exceptionDetails.add(exType);
                 exceptionDetails.add(exTypeAndMsg);
                 if (clientConfiguration.getRetryExceptions().contains(exType) ||
@@ -251,6 +251,9 @@ public class ClientHandlerImpl implements ClientHandler {
                     return result;
                 }
             }
+
+            Throwable lastCause = allExceptions[allExceptions.length -1];
+            result.exDetail = lastCause.getClass().getCanonicalName() + COLON + StringUtils.defaultString(lastCause.getMessage());
 
             // 不重试，不计入短路
             if (CollectionUtils.containsAny(clientConfiguration.getCircuitBreakerConfig().getExcludeExceptions(), exceptionDetails)) {

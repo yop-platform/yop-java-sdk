@@ -17,7 +17,7 @@ import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,8 @@ public class YopRemoteReporter implements YopReporter {
             final YopResponse response = YOP_CLIENT.request(request);
             handleReportResponse(response);
         } catch (YopClientException ex) {
-            LOGGER.warn("Remote Report Fail For Client Error, exType:{}, exMsg:{}", ex.getClass().getCanonicalName(), ExceptionUtils.getMessage(ex));
+            LOGGER.warn("Remote Report Fail For Client Error, exType:{}, exMsg:{}", ex.getClass().getCanonicalName(),
+                    StringUtils.defaultString(ex.getMessage()));
             BACKUP_REPORTER.batchReport(reports);
         } catch (Exception e) {
             throw new YopReportException("Remote Report Fail For Server Error, ex:", e);
