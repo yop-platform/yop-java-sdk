@@ -13,6 +13,8 @@ import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.yeepay.yop.sdk.constants.CharacterConstants.SLASH;
+
 /**
  * title:YopErrorResponseAnalyzer <br>
  * description: HTTP error response handler for YOP responses.<br>
@@ -45,6 +47,7 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
             // not an error
             return false;
         }
+        String resource = context.getOriginRequest().getEndpoint() + SLASH + context.getOriginRequest().getResourcePath();
         // 5xx
         if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
             YopServiceException yse = null;
@@ -73,9 +76,9 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
             yse.setErrorType(YopServiceException.ErrorType.Service);
             throw yse;
         } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
-            throw new YopHttpException("Response Error, statusCode:" + statusCode);
+            throw new YopHttpException("Unexpected Response, statusCode:" + statusCode + ", resource:" + resource);
         } else {// 4xx
-            throw new YopClientException("unexpected httpStatusCode:" + statusCode);
+            throw new YopClientException("Bad Request, statusCode:" + statusCode + ", resource:" + resource);
         }
     }
 }
