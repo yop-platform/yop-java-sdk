@@ -6,7 +6,6 @@ package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.ImmutableSet;
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.YopFailureItem;
@@ -183,10 +182,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      */
     protected  <Input extends BaseRequest> void preExecute(Request<Input> request, YopRequestConfig yopRequestConfig, ExecutionContext executionContext) {
         // 请求标头
-        YopCredentials yopCredentials = executionContext.getYopCredentials();
-        setAppKey(request, yopCredentials);
-        setUserAgent(request);
-        setSDKLangAndVersion(request);
+        addStandardHeader(request, executionContext);
 
         // 签名
         signRequest(request, executionContext);
@@ -195,6 +191,14 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         if (BooleanUtils.isTrue(yopRequestConfig.getNeedEncrypt())) {
             encryptRequest(request, executionContext);
         }
+    }
+
+    private <Input extends BaseRequest> void addStandardHeader(Request<Input> request, ExecutionContext executionContext) {
+        request.addHeader(Headers.YOP_APPKEY, executionContext.getYopCredentials().getAppKey());
+        request.addHeader(Headers.USER_AGENT, this.clientConfig.getUserAgent());
+        request.addHeader(Headers.YOP_SESSION_ID, YopConstants.YOP_SESSION_ID);
+        request.addHeader(Headers.YOP_SDK_LANGS, YopConstants.HEADER_LANG_JAVA);
+        request.addHeader(Headers.YOP_SDK_VERSION, YopConstants.VERSION);
     }
 
     /**
@@ -210,19 +214,6 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
 
     private <Input extends BaseRequest> void signRequest(Request<Input> request, ExecutionContext executionContext) {
         executionContext.getSigner().sign(request, executionContext.getYopCredentials(), executionContext.getSignOptions());
-    }
-
-    protected void setUserAgent(Request<? extends BaseRequest> request) {
-        request.addHeader(Headers.USER_AGENT, this.clientConfig.getUserAgent());
-    }
-
-    protected void setAppKey(Request<? extends BaseRequest> request, YopCredentials yopCredentials) {
-        request.addHeader(Headers.YOP_APPKEY, yopCredentials.getAppKey());
-    }
-
-    private <Input extends BaseRequest> void setSDKLangAndVersion(Request<Input> request) {
-        request.addHeader(Headers.YOP_SDK_LANGS, YopConstants.HEADER_LANG_JAVA);
-        request.addHeader(Headers.YOP_SDK_VERSION, YopConstants.VERSION);
     }
 
     /**
