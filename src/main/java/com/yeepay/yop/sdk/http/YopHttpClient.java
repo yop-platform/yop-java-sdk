@@ -189,7 +189,8 @@ public class YopHttpClient {
             throw e;
         } catch (Exception e) {
             serverEx = e;
-            throw new YopHttpException("Unable to execute HTTP request, apiUri:" + request.getResourcePath(), e);
+            throw new YopHttpException("Unable to execute HTTP request, apiUri:" + request.getResourcePath()
+                    + ", serverHost:" + request.getEndpoint(), e);
         } finally {
             if (null == serverEx) {
                 ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse,
