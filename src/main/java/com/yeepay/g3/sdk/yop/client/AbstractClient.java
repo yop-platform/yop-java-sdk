@@ -693,7 +693,8 @@ public class AbstractClient {
     }
 
     protected static String getUUID() {
-        return UUIDUtils.compressV4UUID();
+        // 与高版本统一
+        return UUID.randomUUID().toString();
     }
 
     protected static YopResponse handleRequest(String apiUri, YopRequest request, HttpMethodName method, YopRequestType requestType) throws IOException {
