@@ -88,7 +88,7 @@ public class YopClient extends AbstractClient {
 
         Map<String, String> signParams = new TreeMap<String, String>();
         Multimap<String, String> parameters = request.getParams();
-        if (!parameters.isEmpty()) {
+        if (!parameters.isEmpty() && null == request.getJsonParam()) {
             for (Map.Entry<String, Collection<String>> entry : parameters.asMap().entrySet()) {
                 if (forSignature &&
                         (Headers.AUTHORIZATION.equalsIgnoreCase(entry.getKey()) || request.getIgnoreSignParams().contains(entry.getKey()))) {
