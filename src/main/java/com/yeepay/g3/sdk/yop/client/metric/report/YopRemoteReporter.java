@@ -5,11 +5,14 @@
 package com.yeepay.g3.sdk.yop.client.metric.report;
 
 import com.google.common.collect.Lists;
+import com.yeepay.g3.sdk.yop.YopServiceException;
 import com.yeepay.g3.sdk.yop.cache.YopCredentialsCache;
+import com.yeepay.g3.sdk.yop.client.YopClient;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
 import com.yeepay.g3.sdk.yop.client.YopResponse;
 import com.yeepay.g3.sdk.yop.client.YopRsaClient;
 import com.yeepay.g3.sdk.yop.client.cmd.YopCmdExecutorRegistry;
+import com.yeepay.g3.sdk.yop.encrypt.Encodes;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.model.report.YopReportRequest;
 import com.yeepay.g3.sdk.yop.model.report.YopReportResponse;
@@ -65,12 +68,16 @@ public class YopRemoteReporter implements YopReporter {
                 request = new YopRequest();
             }
 
-            // 跳过验签、加解密，使用默认appKey发起请求
             YopReportRequest reportRequest = new YopReportRequest();
             reportRequest.setReports(reports);
             request.setJsonParam(JsonUtils.toJsonString(reportRequest));
-            final YopResponse response = YopRsaClient.post(REPORT_API_URI, request);
-            handleReportResponse(response);
+            final YopResponse response = isRsa(request) ? YopRsaClient.post(REPORT_API_URI, request)
+                    : YopClient.post(REPORT_API_URI, request);
+            if (response.isSuccess()) {
+                handleReportResponse(response);
+            } else {
+                throw new YopReportException("Remote Report Fail, reason:" + response.getError());
+            }
         } catch (YopClientException ex) {
             LOGGER.warn("Remote Report Fail For Client Error, exType:{}, exMsg:{}", ex.getClass().getCanonicalName(),
                     StringUtils.defaultString(ex.getMessage()));
@@ -78,6 +85,17 @@ public class YopRemoteReporter implements YopReporter {
         } catch (Exception e) {
             throw new YopReportException("Remote Report Fail For Server Error, ex:", e);
         }
+    }
+
+    private boolean isRsa(YopRequest request) {
+        if (null != request.getSecretKey()) {
+            return isRsaSecretKey(request.getSecretKey());
+        }
+        return null != request.getAppSdkConfig().getDefaultIsvPrivateKey();
+    }
+
+    private boolean isRsaSecretKey(String secretKey) {
+        return Encodes.decodeBase64(secretKey).length > 32;
     }
 
     private void handleReportResponse(YopResponse response) throws IOException {
