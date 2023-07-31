@@ -1,16 +1,19 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
+import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.http.HttpStatus;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
-import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopErrorResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.yeepay.yop.sdk.utils.CharacterConstants.SLASH;
 
 /**
  * title:YopErrorResponseAnalyzer <br>
@@ -39,14 +42,17 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         YopHttpResponse httpResponse = context.getResponse();
         int statusCode = httpResponse.getStatusCode();
+        // 2xx
         if (statusCode / 100 == HttpStatus.SC_OK / 100 && statusCode != HttpStatus.SC_NO_CONTENT) {
             // not an error
             return false;
         }
+        String resource = context.getOriginRequest().getEndpoint() + SLASH + context.getOriginRequest().getResourcePath();
+        // 5xx
         if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
             YopServiceException yse = null;
             String content = httpResponse.readContent();
-            if (content != null) {
+            if (null != content) {
                 /*
                  * content-length is not set in the error respond message of the media service
                  */
@@ -76,14 +82,13 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
                 yse.setRequestId(response.getMetadata().getYopRequestId());
             }
             yse.setStatusCode(httpResponse.getStatusCode());
-            if (yse.getStatusCode() >= 500) {
-                yse.setErrorType(YopServiceException.ErrorType.Service);
-            } else {
-                yse.setErrorType(YopServiceException.ErrorType.Client);
-            }
+            yse.setStatusCode(httpResponse.getStatusCode());
+            yse.setErrorType(YopServiceException.ErrorType.Service);
             throw yse;
-        } else {
-            throw new YopClientException("unexpected httpStatusCode:" + statusCode);
+        } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
+            throw new YopHttpException("Unexpected Response, statusCode:" + statusCode + ", resource:" + resource);
+        } else {// 4xx
+            throw new YopClientException("Bad Request, statusCode:" + statusCode + ", resource:" + resource);
         }
     }
 }

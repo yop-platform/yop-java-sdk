@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.config.provider.file;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -34,6 +35,12 @@ public final class YopFileSdkConfig implements Serializable {
     @JsonProperty("sandbox_server_root")
     private String sandboxServerRoot;
 
+    @JsonProperty("preferred_server_roots")
+    private List<String> preferredServerRoots;
+
+    @JsonProperty("preferred_yos_server_roots")
+    private List<String> preferredYosServerRoots;
+
     @JsonProperty("aes_secret_key")
     private String aesSecretKey;
 
@@ -61,6 +68,9 @@ public final class YopFileSdkConfig implements Serializable {
 
     private Map<String, List<YopCertConfig>> isvEncryptKeyMap;
 
+    @JsonProperty("yop_report")
+    private YopReportConfig yopReportConfig;
+
     public String getAppKey() {
         return appKey;
     }
@@ -83,6 +93,46 @@ public final class YopFileSdkConfig implements Serializable {
 
     public void setYosServerRoot(String yosServerRoot) {
         this.yosServerRoot = yosServerRoot;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    @JsonProperty("preferred_server_roots")
+    public void setPreferredServerRoots(String[] serverRoots) {
+        if (null == preferredServerRoots) {
+            preferredServerRoots = Lists.newArrayList();
+        }
+        if (null == serverRoots) {
+            return;
+        }
+        for (String server : serverRoots) {
+            if (StringUtils.isBlank(server)) {
+                continue;
+            }
+            preferredServerRoots.add(server.trim());
+        }
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    @JsonProperty("preferred_yos_server_roots")
+    public void setPreferredYosServerRoots(String[] yosServerRoots) {
+        if (null == preferredYosServerRoots) {
+            preferredYosServerRoots = Lists.newArrayList();
+        }
+        if (null == yosServerRoots) {
+            return;
+        }
+        for (String server : yosServerRoots) {
+            if (StringUtils.isBlank(server)) {
+                continue;
+            }
+            preferredYosServerRoots.add(server.trim());
+        }
     }
 
     public String getSandboxServerRoot() {
@@ -203,6 +253,14 @@ public final class YopFileSdkConfig implements Serializable {
                 }});
             }
         }
+    }
+
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        this.yopReportConfig = yopReportConfig;
     }
 
     @Override

@@ -9,7 +9,7 @@ import com.yeepay.yop.sdk.utils.CharacterConstants;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonResponse;
+import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonContent;
 
 /**
  * title: 结果解密<br>
@@ -36,7 +36,7 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         YopResponseMetadata metadata = response.getMetadata();
         YopHttpResponse httpResponse = context.getResponse();
-        if (BooleanUtils.isTrue(context.isNeedDecrypt()) && isJsonResponse(metadata.getContentType())) {
+        if (BooleanUtils.isTrue(context.isNeedDecrypt()) && isJsonContent(metadata.getContentType())) {
             String content = httpResponse.readContent();
             if (content != null && !StringUtils.startsWith(content, CharacterConstants.LEFT_BRACE)) {
                 String decryptedContent = context.getEncryptor().decrypt(content);

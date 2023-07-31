@@ -306,7 +306,7 @@ public class HttpUtils {
      * @param contentType 内容类型
      * @return true if the body is json response
      */
-    public static boolean isJsonResponse(String contentType) {
-        return StringUtils.startsWith(contentType, YOP_HTTP_CONTENT_TYPE_JSON);
+    public static boolean isJsonContent(String contentType) {
+        return StringUtils.isNotBlank(contentType) && StringUtils.startsWith(contentType, YOP_HTTP_CONTENT_TYPE_JSON);
     }
 }

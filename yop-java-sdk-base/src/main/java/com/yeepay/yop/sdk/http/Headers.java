@@ -17,6 +17,8 @@ public interface Headers {
 
     String YOP_SDK_VERSION = "x-yop-sdk-version";
 
+    String YOP_SDK_LANGS = "x-yop-sdk-langs";
+
     String YOP_REQUEST_SOURCE = "x-yop-request-source";
 
     String AUTHORIZATION = "Authorization";
@@ -112,5 +114,7 @@ public interface Headers {
     String YOP_OBJECT_TYPE = "x-yop-object-type";
 
     String YOP_CERT_SERIAL_NO = "x-yop-serial-no";
+
+    String YOP_SERVER_IP = "x-yop-server-ip";
 
 }

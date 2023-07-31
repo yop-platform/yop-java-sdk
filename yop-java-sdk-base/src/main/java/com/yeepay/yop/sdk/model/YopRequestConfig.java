@@ -45,6 +45,14 @@ public class YopRequestConfig {
 
     private Boolean skipVerifySign;
 
+    /**
+     * 指定服务器根路径(请求级别配置)
+     *
+     * 作为前缀，拼接apiUri，构造最终请求路径
+     * 如未指定，会默认从com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider#getConfig()获取全局配置
+     */
+    private String serverRoot;
+
     public String getAppKey() {
         return appKey;
     }
@@ -117,6 +125,14 @@ public class YopRequestConfig {
         this.skipVerifySign = skipVerifySign;
     }
 
+    public String getServerRoot() {
+        return serverRoot;
+    }
+
+    public void setServerRoot(String serverRoot) {
+        this.serverRoot = serverRoot;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -127,6 +143,8 @@ public class YopRequestConfig {
         private int connectTimeout;
         private Boolean needEncrypt;
         private Boolean skipVerifySign;
+
+        private String serverRoot;
 
         private Builder() {
         }
@@ -180,6 +198,11 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withServerRoot(String serverRoot) {
+            this.serverRoot = serverRoot;
+            return this;
+        }
+
         public YopRequestConfig build() {
             YopRequestConfig requestConfig = new YopRequestConfig();
             requestConfig.setAppKey(appKey);
@@ -191,6 +214,7 @@ public class YopRequestConfig {
             requestConfig.setConnectTimeout(connectTimeout);
             requestConfig.setNeedEncrypt(needEncrypt);
             requestConfig.setSkipVerifySign(skipVerifySign);
+            requestConfig.setServerRoot(serverRoot);
             return requestConfig;
         }
     }

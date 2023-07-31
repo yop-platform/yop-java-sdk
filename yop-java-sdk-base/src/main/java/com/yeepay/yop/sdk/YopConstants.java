@@ -4,7 +4,12 @@
  */
 package com.yeepay.yop.sdk;
 
+import com.google.common.collect.Lists;
+
+import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Common constants used by the whole SDK.
@@ -22,6 +27,8 @@ public interface YopConstants {
     String DEFAULT_YOS_SERVER_ROOT = "https://yos.yeepay.com/yop-center";
 
     String DEFAULT_SANDBOX_SERVER_ROOT = "https://sandbox.yeepay.com/yop-center";
+
+    List<URI> DEFAULT_PREFERRED_SERVER_ROOT = Lists.newArrayList(URI.create("https://openapi-a.yeepay.com/yop-center"), URI.create("https://openapi-h.yeepay.com/yop-center"));
 
     String DEFAULT_SANDBOX_VIA = "sandbox";
 
@@ -64,5 +71,11 @@ public interface YopConstants {
     String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
 
     String YOP_DEFAULT_APPKEY = "default";
+
+    String YOP_SESSION_ID = UUID.randomUUID().toString();
+
+    String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
+
+    String HEADER_LANG_JAVA = "java";
 
 }

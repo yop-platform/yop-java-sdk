@@ -229,7 +229,8 @@ public class YopHttpClient extends AbstractYopHttpClient {
     private CloseableHttpClient createHttpClient(HttpClientConnectionManager connectionManager,
                                                  RequestConfig requestConfig) {
         HttpClientBuilder builder =
-                HttpClients.custom().setConnectionManager(connectionManager).disableAutomaticRetries();
+                HttpClients.custom().setConnectionManager(connectionManager).disableAutomaticRetries()
+                        .addInterceptorLast(YopServerResponseInterceptor.INSTANCE);
 
         int socketBufferSizeInBytes = this.clientConfig.getSocketBufferSizeInBytes();
         if (socketBufferSizeInBytes > 0) {

@@ -17,7 +17,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.yeepay.yop.sdk.YopConstants.*;
+import static com.yeepay.yop.sdk.YopConstants.YOP_HTTP_CONTENT_TYPE_FORM;
+import static com.yeepay.yop.sdk.YopConstants.YOP_HTTP_CONTENT_TYPE_JSON;
 
 /**
  * title: YopRequest序列化器<br>
@@ -67,6 +68,7 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
                     if (value instanceof File) {
                         internalRequest.addMultiPartFile(name, (File) value);
                     } else if (value instanceof InputStream) {
+                        resetStreamIfNecessary((InputStream) value);
                         internalRequest.addMultiPartFile(name, (InputStream) value);
                     } else {
                         throw new YopClientException("Unexpected file parameter type, name:" + name + ", type:" + value.getClass() + ".");
@@ -82,13 +84,20 @@ public class YopRequestMarshaller implements RequestMarshaller<YopRequest> {
                 internalRequest.addHeader(Headers.CONTENT_LENGTH, String.valueOf(contentBytes.length));
             } else if (request.getContent() instanceof InputStream) {
                 //3、单文件流式上传
-                internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_STREAM);
-                internalRequest.setContent((InputStream) request.getContent());
+                final InputStream content = (InputStream) request.getContent();
+                resetStreamIfNecessary((InputStream) request.getContent());
+                internalRequest.setContent(content);
             }
         } else {
             //4、form表单上传
             internalRequest.addHeader(Headers.CONTENT_TYPE, YOP_HTTP_CONTENT_TYPE_FORM);
         }
         return internalRequest;
+    }
+
+    private void resetStreamIfNecessary(InputStream content) {
+        if (content instanceof RestartableInputStream) {
+            ((RestartableInputStream) content).restart();
+        }
     }
 }

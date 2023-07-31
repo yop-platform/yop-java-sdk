@@ -1,10 +1,7 @@
 package com.yeepay.yop.sdk.config;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
-import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
-import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
+import com.yeepay.yop.sdk.config.provider.file.*;
 import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +10,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_CERT_STORE_PATH;
@@ -35,6 +33,10 @@ public final class YopSdkConfig implements Serializable {
 
     private String yosServerRoot;
 
+    private List<String> preferredServerRoots;
+
+    private List<String> preferredYosServerRoots;
+
     private String sandboxServerRoot;
 
     private Map<CertTypeEnum, PublicKey> yopPublicKeys;
@@ -48,6 +50,8 @@ public final class YopSdkConfig implements Serializable {
     private String region;
 
     private YopCertStore yopCertStore;
+
+    private YopReportConfig yopReportConfig = new YopReportConfig();
 
     public String getServerRoot() {
         return serverRoot;
@@ -63,6 +67,22 @@ public final class YopSdkConfig implements Serializable {
 
     public void setYosServerRoot(String yosServerRoot) {
         this.yosServerRoot = yosServerRoot;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    public void setPreferredServerRoots(List<String> preferredServerRoots) {
+        this.preferredServerRoots = preferredServerRoots;
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    public void setPreferredYosServerRoots(List<String> preferredYosServerRoots) {
+        this.preferredYosServerRoots = preferredYosServerRoots;
     }
 
     public String getSandboxServerRoot() {
@@ -128,6 +148,16 @@ public final class YopSdkConfig implements Serializable {
 
     public void setYopCertStore(YopCertStore yopCertStore) {
         this.yopCertStore = yopCertStore;
+    }
+
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        if (null != yopReportConfig) {
+            this.yopReportConfig = yopReportConfig;
+        }
     }
 
     @Override

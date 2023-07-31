@@ -11,12 +11,12 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.auth.credentials.provider.EncryptCertificate;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.client.YopGlobalClient;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.service.common.YopClient;
-import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.Encodes;
@@ -103,7 +103,7 @@ public class YopSmPlatformCredentialsRemoteLoader implements YopPlatformCredenti
     private synchronized Map<String, X509Certificate> loadAndVerifyFromRemote(YopCredentials yopCredentials, String serialNo,
                                                                               List<YopCertConfig> isvEncryptKeys) {
         try {
-            YopClient yopClient = YopClientBuilder.builder().build();
+            YopClient yopClient = YopGlobalClient.getClient();
             YopRequest request = new YopRequest(CERT_DOWNLOAD_API_URI, CERT_DOWNLOAD_API_METHOD);
             // 跳过验签
             request.getRequestConfig().setSkipVerifySign(true);
