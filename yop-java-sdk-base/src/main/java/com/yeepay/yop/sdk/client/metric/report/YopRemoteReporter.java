@@ -61,6 +61,7 @@ public class YopRemoteReporter implements YopReporter {
             YopCredentials<?> credentials;
             if (CollectionUtils.isNotEmpty(availableApps)
                     && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
+                request.getRequestConfig().setAppKey(availableApps.get(0));
                 request.getRequestConfig().setCredentials(credentials);
             } else {
                 // 选择默认凭证
