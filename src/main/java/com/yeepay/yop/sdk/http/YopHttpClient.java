@@ -160,9 +160,7 @@ public class YopHttpClient {
                                                                                    ExecutionContext executionContext,
                                                                                    HttpResponseHandler<Output> responseHandler) {
         YopCredentials yopCredentials = executionContext.getYopCredentials();
-        setAppKey(request, yopCredentials);
-        setUserAgent(request);
-        setSDKLangAndVersion(request);
+        addStandardHeader(request, executionContext);
         HttpRequestBase httpRequest;
         CloseableHttpResponse httpResponse = null;
         Output yopResponse = null;
@@ -205,7 +203,10 @@ public class YopHttpClient {
         }
     }
 
-    private <Input extends BaseRequest> void setSDKLangAndVersion(Request<Input> request) {
+    private <Input extends BaseRequest> void addStandardHeader(Request<Input> request, ExecutionContext executionContext) {
+        request.addHeader(Headers.YOP_APPKEY, executionContext.getYopCredentials().getAppKey());
+        request.addHeader(Headers.USER_AGENT, this.config.getUserAgent());
+        request.addHeader(Headers.YOP_SESSION_ID, YopConstants.YOP_SESSION_ID);
         request.addHeader(Headers.YOP_SDK_LANGS, YopConstants.HEADER_LANG_JAVA);
         request.addHeader(Headers.YOP_SDK_VERSION, YopConstants.VERSION);
     }
@@ -522,14 +523,6 @@ public class YopHttpClient {
 
         return Math.min(retryPolicy.getMaxDelayInMillis(),
                 retryPolicy.getDelayBeforeNextRetryInMillis(exception, retries));
-    }
-
-    private void setUserAgent(Request<? extends BaseRequest> request) {
-        request.addHeader(Headers.USER_AGENT, this.config.getUserAgent());
-    }
-
-    private void setAppKey(Request<? extends BaseRequest> request, YopCredentials yopCredentials) {
-        request.addHeader(Headers.YOP_APPKEY, yopCredentials.getAppKey());
     }
 
     public void shutdown() {
