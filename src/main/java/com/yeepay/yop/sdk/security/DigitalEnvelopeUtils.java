@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.security;
 
 import com.google.common.base.Charsets;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
@@ -67,7 +68,7 @@ public class DigitalEnvelopeUtils {
         //验证签名
         PublicKey publicKey = getYopPublicKey(CertTypeEnum.RSA2048);
         Signer signer = SignerFactory.getSigner(digestAlg);
-        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(), Encodes.decodeBase64(signToBase64));
+        boolean verifySign = signer.verifySign(publicKey, sourceData.getBytes(YopConstants.DEFAULT_CHARSET), Encodes.decodeBase64(signToBase64));
         if (!verifySign) {
             throw new YopClientException("verifySign fail!");
         }
