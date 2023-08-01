@@ -10,9 +10,8 @@ import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHost;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.*;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.AuthCache;
@@ -24,6 +23,7 @@ import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.LayeredConnectionSocketFactory;
@@ -38,6 +38,9 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +85,31 @@ public class YopHttpClient extends AbstractYopHttpClient {
     private HttpHost proxyHttpHost;
 
     private static final DefaultHostnameVerifier HOSTNAME_VERIFIER_INSTANCE = new DefaultHostnameVerifier();
+
+    private static final ConnectionKeepAliveStrategy KEEP_ALIVE_STRATEGY = new ConnectionKeepAliveStrategy() {
+        @Override
+        public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+            try {
+                HeaderElementIterator it = new BasicHeaderElementIterator
+                        (response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+                while (it.hasNext()) {
+                    HeaderElement he = it.nextElement();
+                    String param = he.getName();
+                    String value = he.getValue();
+                    if (value != null && param.equalsIgnoreCase
+                            ("timeout")) {
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("KeepAliveDuration Parsed From Server, timeout:{}s.", value);
+                        }
+                        return Long.parseLong(value) * 1000;
+                    }
+                }
+            } catch (Throwable e) {
+                logger.warn("KeepAliveDuration Parsed Fail, ex:{}", ExceptionUtils.getMessage(e));
+            }
+            return 60 * 1000;
+        }
+    };
 
     /**
      * Constructs a new YOP client using the specified client configuration options (ex: max retry attempts, proxy
@@ -230,7 +258,8 @@ public class YopHttpClient extends AbstractYopHttpClient {
                                                  RequestConfig requestConfig) {
         HttpClientBuilder builder =
                 HttpClients.custom().setConnectionManager(connectionManager).disableAutomaticRetries()
-                .addInterceptorLast(YopServerResponseInterceptor.INSTANCE);
+                .addInterceptorLast(YopServerResponseInterceptor.INSTANCE)
+                        .setKeepAliveStrategy(KEEP_ALIVE_STRATEGY);
 
         int socketBufferSizeInBytes = this.clientConfig.getSocketBufferSizeInBytes();
         if (socketBufferSizeInBytes > 0) {
