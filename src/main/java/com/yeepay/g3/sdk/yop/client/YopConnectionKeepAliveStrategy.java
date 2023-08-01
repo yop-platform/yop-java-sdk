@@ -5,14 +5,18 @@
 
 package com.yeepay.g3.sdk.yop.client;
 
-import org.apache.http.Header;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpResponse;
 import org.apache.http.annotation.Contract;
 import org.apache.http.annotation.ThreadingBehavior;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.Args;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * title: <br>
@@ -27,21 +31,29 @@ import org.apache.http.util.Args;
 @Contract(threading = ThreadingBehavior.IMMUTABLE)
 public class YopConnectionKeepAliveStrategy implements ConnectionKeepAliveStrategy {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopConnectionKeepAliveStrategy.class);
+
     @Override
-    public long getKeepAliveDuration(final HttpResponse response, final HttpContext context) {
-        Args.notNull(response, "HTTP response");
-        final Header[] headers = response.getHeaders(HTTP.CONN_KEEP_ALIVE);
-        if (null != headers && headers.length > 0) {
-            final String param = headers[0].getName();
-            final String value = headers[0].getValue();
-            if (value != null && param.equalsIgnoreCase("timeout")) {
-                try {
+    public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+        try {
+            HeaderElementIterator it = new BasicHeaderElementIterator
+                    (response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+            while (it.hasNext()) {
+                HeaderElement he = it.nextElement();
+                String param = he.getName();
+                String value = he.getValue();
+                if (value != null && param.equalsIgnoreCase
+                        ("timeout")) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("KeepAliveDuration Parsed From Server, timeout:{}s.", value);
+                    }
                     return Long.parseLong(value) * 1000;
-                } catch (final NumberFormatException ignore) {
                 }
             }
+        } catch (Throwable e) {
+            LOGGER.warn("KeepAliveDuration Parsed Fail, ex:{}", ExceptionUtils.getMessage(e));
         }
-        return 30 * 1000;
+        return 60 * 1000;
     }
 
 }
