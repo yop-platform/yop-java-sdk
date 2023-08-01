@@ -5,6 +5,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
+import java.util.Set;
 
 /**
  * title: <br>
@@ -24,25 +25,34 @@ public final class YopHttpClientConfig implements Serializable {
      * 建立连接的超时
      */
     @JsonProperty("connect_timeout")
-    private int connectTimeout;
+    private int connectTimeout = 10000;
 
     /**
      * 从连接池获取到连接的超时时间
      */
     @JsonProperty("connect_request_timeout")
-    private int connectRequestTimeout;
+    private int connectRequestTimeout = 5000;
 
     /**
      * 获取数据的超时时间
      */
     @JsonProperty("read_timeout")
-    private int readTimeout;
+    private int readTimeout = 30000;
 
     @JsonProperty("max_conn_total")
-    private int maxConnTotal;
+    private int maxConnTotal = 200;
 
     @JsonProperty("max_conn_per_route")
-    private int maxConnPerRoute;
+    private int maxConnPerRoute = 100;
+
+    @JsonProperty("retry_exceptions")
+    private Set<String> retryExceptions;
+
+    @JsonProperty("max_retry_count")
+    private int maxRetryCount;
+
+    @JsonProperty("circuit_breaker")
+    private YopCircuitBreakerConfig circuitBreakerConfig;
 
     public int getConnectTimeout() {
         return connectTimeout;
@@ -82,6 +92,30 @@ public final class YopHttpClientConfig implements Serializable {
 
     public void setMaxConnPerRoute(int maxConnPerRoute) {
         this.maxConnPerRoute = maxConnPerRoute;
+    }
+
+    public Set<String> getRetryExceptions() {
+        return retryExceptions;
+    }
+
+    public void setRetryExceptions(Set<String> retryExceptions) {
+        this.retryExceptions = retryExceptions;
+    }
+
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
+    }
+
+    public YopCircuitBreakerConfig getCircuitBreakerConfig() {
+        return circuitBreakerConfig;
+    }
+
+    public void setCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
+        this.circuitBreakerConfig = circuitBreakerConfig;
     }
 
     @Override

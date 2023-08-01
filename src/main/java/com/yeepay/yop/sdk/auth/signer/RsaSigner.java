@@ -32,6 +32,7 @@ import java.security.*;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonContent;
 
 /**
  * title: Rsa签名器<br>
@@ -184,7 +185,8 @@ public class RsaSigner implements Signer {
     }
 
     private RestartableInputStream getBinaryRequestPayloadStreamWithoutQueryParams(Request<? extends BaseRequest> request) {
-        if (request.getContent() instanceof RestartableInputStream) {
+        if (request.getContent() instanceof RestartableInputStream
+                && isJsonContent(request.getHeaders().get(Headers.CONTENT_TYPE))) {
             return (RestartableInputStream) request.getContent();
         }
         return RestartableInputStream.wrap(new byte[0]);

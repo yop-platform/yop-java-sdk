@@ -10,6 +10,7 @@ import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
@@ -26,6 +27,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.yeepay.yop.sdk.YopConstants.YOP_HTTP_CONTENT_TYPE_JSON;
 
 public class HttpUtils {
 
@@ -324,5 +326,15 @@ public class HttpUtils {
             }
         }
         return URLEncodedUtils.format(nameValuePairs, DEFAULT_ENCODING);
+    }
+
+    /**
+     * 判断是否是json类型
+     *
+     * @param contentType 内容类型
+     * @return true if the body is json response
+     */
+    public static boolean isJsonContent(String contentType) {
+        return StringUtils.isNotBlank(contentType) && StringUtils.startsWith(contentType, YOP_HTTP_CONTENT_TYPE_JSON);
     }
 }

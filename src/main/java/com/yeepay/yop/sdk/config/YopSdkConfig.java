@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
 import com.yeepay.yop.sdk.config.provider.file.support.YopCertConfigUtils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,6 +35,10 @@ public final class YopSdkConfig implements Serializable {
 
     private String sandboxServerRoot;
 
+    private List<String> preferredServerRoots;
+
+    private List<String> preferredYosServerRoots;
+
     private Map<CertTypeEnum, PublicKey> yopPublicKeys;
 
     private YopHttpClientConfig yopHttpClientConfig;
@@ -42,6 +48,8 @@ public final class YopSdkConfig implements Serializable {
     private YopProxyConfig proxy;
 
     private String region;
+
+    private YopReportConfig yopReportConfig = new YopReportConfig();
 
     public String getServerRoot() {
         return serverRoot;
@@ -65,6 +73,22 @@ public final class YopSdkConfig implements Serializable {
 
     public void setSandboxServerRoot(String sandboxServerRoot) {
         this.sandboxServerRoot = sandboxServerRoot;
+    }
+
+    public List<String> getPreferredServerRoots() {
+        return preferredServerRoots;
+    }
+
+    public void setPreferredServerRoots(List<String> preferredServerRoots) {
+        this.preferredServerRoots = preferredServerRoots;
+    }
+
+    public List<String> getPreferredYosServerRoots() {
+        return preferredYosServerRoots;
+    }
+
+    public void setPreferredYosServerRoots(List<String> preferredYosServerRoots) {
+        this.preferredYosServerRoots = preferredYosServerRoots;
     }
 
     public void storeYopPublicKey(YopCertConfig[] yopPublicKeys) {
@@ -112,6 +136,16 @@ public final class YopSdkConfig implements Serializable {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        if (null != yopReportConfig) {
+            this.yopReportConfig = yopReportConfig;
+        }
     }
 
     @Override

@@ -43,6 +43,14 @@ public class YopRequestConfig {
 
     private Boolean needEncrypt;
 
+    /**
+     * 指定服务器根路径(请求级别配置)
+     *
+     * 作为前缀，拼接apiUri，构造最终请求路径
+     * 如未指定，会默认从com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider#getConfig()获取全局配置
+     */
+    private String serverRoot;
+
     public String getAppKey() {
         return appKey;
     }
@@ -107,6 +115,15 @@ public class YopRequestConfig {
         this.needEncrypt = needEncrypt;
     }
 
+    public String getServerRoot() {
+        return serverRoot;
+    }
+
+    public YopRequestConfig setServerRoot(String serverRoot) {
+        this.serverRoot = serverRoot;
+        return this;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -116,6 +133,7 @@ public class YopRequestConfig {
         private int readTimeout;
         private int connectTimeout;
         private Boolean needEncrypt;
+        private String serverRoot;
 
         private Builder() {
         }
@@ -164,6 +182,11 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withServerRoot(String serverRoot) {
+            this.serverRoot = serverRoot;
+            return this;
+        }
+
         public YopRequestConfig build() {
             YopRequestConfig requestConfig = new YopRequestConfig();
             requestConfig.setAppKey(appKey);
@@ -174,6 +197,7 @@ public class YopRequestConfig {
             requestConfig.setReadTimeout(readTimeout);
             requestConfig.setConnectTimeout(connectTimeout);
             requestConfig.setNeedEncrypt(needEncrypt);
+            requestConfig.setServerRoot(serverRoot);
             return requestConfig;
         }
     }
