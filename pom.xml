@@ -396,6 +396,10 @@
                                         <shadedPattern>com.yeepay.shade.javax.annotation</shadedPattern>
                                     </relocation>
                                     <relocation>
+                                        <pattern>org.checkerframework</pattern>
+                                        <shadedPattern>com.yeepay.shade.org.checkerframework</shadedPattern>
+                                    </relocation>
+                                    <relocation>
                                         <pattern>org.apache</pattern>
                                         <shadedPattern>com.yeepay.shade.org.apache</shadedPattern>
                                         <excludes>
