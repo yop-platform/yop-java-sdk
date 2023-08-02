@@ -5,7 +5,9 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
@@ -334,15 +336,31 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
-        String appKey = input.getRequestConfig().getAppKey();
-        // 获取商户自定义的安全需求
-        String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
-        if (StringUtils.isNotEmpty(customSecurityReq)) {
+        // 获取用户自定义配置
+        String customAppKey = null;
+        String customSecurityReq = null;
+        YopCredentials<?> customCredentials = null;
+        YopRequestConfig requestConfig = input.getRequestConfig();
+        if (null != requestConfig) {
+            customAppKey = requestConfig.getAppKey();
+            customSecurityReq = requestConfig.getSecurityReq();
+            customCredentials = requestConfig.getCredentials();
+        }
+        if (StringUtils.isNotBlank(customSecurityReq)) {
             return checkCustomSecurityReq(customSecurityReq);
+        }
+        if (null != customCredentials) {
+            if (customCredentials instanceof YopOauth2Credentials) {
+                return AuthorizationReqSupport.getAuthorizationReq(AuthorizationReqSupport.SECURITY_OAUTH2);
+            }
+            final Object credential = customCredentials.getCredential();
+            if (credential instanceof CredentialsItem) {
+                return AuthorizationReqSupport.getAuthorizationReq(((CredentialsItem) credential).getCertType());
+            }
         }
 
         // 根据商户配置的密钥识别可用的安全需求
-        List<CertTypeEnum> availableCerts = checkAvailableCerts(appKey);
+        List<CertTypeEnum> availableCerts = checkAvailableCerts(customAppKey);
         List<AuthorizationReq> authReqsForApi = checkAuthReqsByApi(input.getOperationId());
         return computeSecurityReq(availableCerts, authReqsForApi);
     }
