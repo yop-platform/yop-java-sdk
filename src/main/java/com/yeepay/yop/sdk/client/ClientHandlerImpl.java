@@ -9,6 +9,7 @@ import com.yeepay.yop.sdk.auth.SignerSupport;
 import com.yeepay.yop.sdk.auth.cache.YopCredentialsCache;
 import com.yeepay.yop.sdk.auth.cipher.DefaultEncryptor;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
 import com.yeepay.yop.sdk.auth.credentials.YopRSACredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
@@ -30,6 +31,7 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -349,15 +351,34 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
-        String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
-        if (StringUtils.isNotEmpty(customSecurityReq)) {
-            AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);
-            if (authorizationReq == null) {
-                throw new YopClientException("unsupported customSecurityReq:" + customSecurityReq);
+        // 获取用户自定义配置
+        String customSecurityReq = null;
+        YopCredentials customCredentials = null;
+        YopRequestConfig requestConfig = input.getRequestConfig();
+        if (null != requestConfig) {
+            customSecurityReq = requestConfig.getSecurityReq();
+            customCredentials = requestConfig.getCredentials();
+        }
+        if (StringUtils.isNotBlank(customSecurityReq)) {
+            return checkCustomSecurityReq(customSecurityReq);
+        }
+        if (null != customCredentials) {
+            if (customCredentials instanceof YopOauth2Credentials) {
+                return AuthorizationReqSupport.getAuthorizationReq(AuthorizationReqSupport.SECURITY_OAUTH2);
             }
-            return authorizationReq;
+            if (customCredentials instanceof YopRSACredentials) {
+                return AuthorizationReqSupport.getAuthorizationReq(CertTypeEnum.RSA2048);
+            }
         }
         return authorizationReqRegistry.getAuthorizationReq(input.getOperationId());
+    }
+
+    private AuthorizationReq checkCustomSecurityReq(String customSecurityReq) {
+        AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);
+        if (authorizationReq == null) {
+            throw new YopClientException("unsupported customSecurityReq:" + customSecurityReq);
+        }
+        return authorizationReq;
     }
 
     @Override
