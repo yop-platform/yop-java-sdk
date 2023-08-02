@@ -6,7 +6,9 @@ import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.auth.cache.YopCredentialsCache;
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
@@ -25,6 +27,7 @@ import com.yeepay.yop.sdk.http.YopHttpClientFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
+import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -326,17 +329,30 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
-        String appKey = input.getRequestConfig().getAppKey();
-        //获取商户自定义的安全需求
-        String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
-        if (StringUtils.isNotEmpty(customSecurityReq)) {
-            AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);
-            if (authorizationReq == null) {
-                throw new YopClientException("unsupported customSecurityReq:" + customSecurityReq);
-            }
-            return authorizationReq;
+        // 获取用户自定义配置
+        String customAppKey = null;
+        String customSecurityReq = null;
+        YopCredentials<?> customCredentials = null;
+        YopRequestConfig requestConfig = input.getRequestConfig();
+        if (null != requestConfig) {
+            customAppKey = requestConfig.getAppKey();
+            customSecurityReq = requestConfig.getSecurityReq();
+            customCredentials = requestConfig.getCredentials();
         }
-        List<CertTypeEnum> supportCertType = yopCredentialsProvider.getSupportCertTypes(appKey);
+        if (StringUtils.isNotBlank(customSecurityReq)) {
+            return checkCustomSecurityReq(customSecurityReq);
+        }
+        if (null != customCredentials) {
+            if (customCredentials instanceof YopOauth2Credentials) {
+                return AuthorizationReqSupport.getAuthorizationReq(AuthorizationReqSupport.SECURITY_OAUTH2);
+            }
+            final Object credential = customCredentials.getCredential();
+            if (credential instanceof CredentialsItem) {
+                return AuthorizationReqSupport.getAuthorizationReq(((CredentialsItem) credential).getCertType());
+            }
+        }
+
+        List<CertTypeEnum> supportCertType = yopCredentialsProvider.getSupportCertTypes(customAppKey);
         List<AuthorizationReq> authorizationReqs = authorizationReqRegistry.getAuthorizationReq(input.getOperationId());
         for (AuthorizationReq authorizationReq : authorizationReqs) {
             if (supportCertType.contains(CertTypeEnum.parse(authorizationReq.getCredentialType()))) {
@@ -344,6 +360,14 @@ public class ClientHandlerImpl implements ClientHandler {
             }
         }
         throw new YopClientException("can not find private key");
+    }
+
+    private AuthorizationReq checkCustomSecurityReq(String customSecurityReq) {
+        AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);
+        if (authorizationReq == null) {
+            throw new YopClientException("unsupported customSecurityReq:" + customSecurityReq);
+        }
+        return authorizationReq;
     }
 
     @Override
