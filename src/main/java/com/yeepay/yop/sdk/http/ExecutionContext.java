@@ -16,6 +16,8 @@ public class ExecutionContext {
 
     private final YopCredentials yopCredentials;
 
+    private int retryCount = 0;
+
     private ExecutionContext(YopSigner signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials) {
         this.signer = signer;
         this.signOptions = signOptions;
@@ -37,6 +39,14 @@ public class ExecutionContext {
 
     public YopCredentials getYopCredentials() {
         return yopCredentials;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void addRetryCount(int i) {
+        this.retryCount += i;
     }
 
     public static final class Builder {
