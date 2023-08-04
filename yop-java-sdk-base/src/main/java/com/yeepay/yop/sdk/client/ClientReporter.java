@@ -186,14 +186,25 @@ public class ClientReporter {
         }
         if (null != reportToBeQueue) {
             reportToBeQueue.setEndDate(new Date());
+            syncReportToQueue(reportToBeQueue);
+        }
+    }
 
-            while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
-                YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
-                if (oldReport != null) {
-                    LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
-                }
+    public static void syncReportToQueue(YopReport report) {
+        while (!YOP_HOST_REQUEST_QUEUE.offer(report)) {
+            YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
+            if (oldReport != null) {
+                LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
             }
         }
+    }
+
+    public static void asyncReportToQueue(YopReport report) {
+        COLLECT_POOL.submit(() -> syncReportToQueue(report));
+    }
+
+    public static void asyncReportToQueue(YopReport report, ThreadPoolExecutor executor) {
+        executor.submit(() -> syncReportToQueue(report));
     }
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {
@@ -246,10 +257,14 @@ public class ClientReporter {
                 final String serverIp = event.getServerIp();
                 final long elapsedMillis = event.getElapsedMillis();
                 int successCount = 0;
+                int retrySuccessCount = 0;
                 int failCount = 0;
                 YopFailureItem failDetail = null;
                 if (YopStatus.SUCCESS.equals(event.getStatus())) {
                     successCount = 1;
+                    if (event.isRetry()) {
+                        retrySuccessCount = 1;
+                    }
                 } else {
                     failCount = 1;
                     failDetail = (YopFailureItem) event.getData();
@@ -272,8 +287,11 @@ public class ClientReporter {
                     current = reportReference.get();
                     if (null == current) {
                         payload.setSuccessCount(successCount);
+                        payload.setRetrySuccessCount(retrySuccessCount);
                         payload.setFailCount(failCount);
+                        payload.setMinElapsedMillis(elapsedMillis);
                         payload.setMaxElapsedMillis(elapsedMillis);
+                        payload.setAvgElapsedMillis(elapsedMillis);
                         payload.setFailDetails(Lists.newLinkedList());
                         if (null != failDetail) {
                             final YopFailureList yopFailDetail = new YopFailureList(failDetail.getExType(), failDetail.getExMsg());
@@ -284,8 +302,11 @@ public class ClientReporter {
                         update.setBeginDate(current.getBeginDate());
                         YopHostRequestPayload oldPayload = current.getPayload();
                         payload.setSuccessCount(oldPayload.getSuccessCount() + successCount);
+                        payload.setRetrySuccessCount(oldPayload.getRetrySuccessCount() + retrySuccessCount);
                         payload.setFailCount(oldPayload.getFailCount() + failCount);
+                        payload.setMinElapsedMillis(Math.min(elapsedMillis, oldPayload.getMinElapsedMillis()));
                         payload.setMaxElapsedMillis(Math.max(elapsedMillis, oldPayload.getMaxElapsedMillis()));
+                        payload.setAvgElapsedMillis(((oldPayload.getAvgElapsedMillis() * oldPayload.getTotalCount()) + elapsedMillis) / (oldPayload.getTotalCount() + 1));
                         payload.setFailDetails(oldPayload.cloneFailDetails());
                         final YopFailureItem failDetailItem = failDetail;
                         if (null != failDetail) {

@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.http;
 
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.io.IOUtils;
@@ -47,7 +47,7 @@ public abstract class AbstractYopHttpResponse implements YopHttpResponse {
             contentStr = IOUtils.toString(this.content, YopConstants.DEFAULT_ENCODING);
             return contentStr;
         } catch (IOException ex) {
-            throw new YopClientException("unable to read response content", ex);
+            throw new YopHttpException("ResponseError, Read Content Fail, ex:", ex);
         } finally {
             StreamUtils.closeQuietly(this.content);
         }

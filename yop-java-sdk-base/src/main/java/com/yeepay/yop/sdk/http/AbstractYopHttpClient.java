@@ -15,6 +15,7 @@ import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
 import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
+import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
@@ -76,7 +77,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         Output analyzedResponse = null;
         YopHttpResponse httpResponse = null;
         long beginTime = System.currentTimeMillis();
-        Exception serverEx = null;
+        Exception ex = null;
         try {
             preExecute(request, yopRequestConfig, executionContext);
             if (LOGGER.isDebugEnabled()) {
@@ -86,18 +87,16 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             analyzedResponse = responseHandler.handle(
                     new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
             return analyzedResponse;
-        } catch (YopClientException e) {
-            throw e;
-        } catch (YopHttpException e) {
-            serverEx = e;
+        } catch (YopClientException | YopHttpException e) {
+            ex = e;
             throw e;
         } catch (Exception e) {
-            serverEx = e;
+            ex = e;
             throw new YopHttpException("Unable to execute HTTP request, requestId:"
                     + request.getHeaders().get(YOP_REQUEST_ID) + ", apiUri:" + request.getResourcePath()
                     + ", serverHost:" + request.getEndpoint(), e);
         } finally {
-            postExecute(beginTime, executionContext, request, analyzedResponse, httpResponse, serverEx);
+            postExecute(beginTime, executionContext, request, analyzedResponse, httpResponse, ex);
         }
     }
 
@@ -108,18 +107,27 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      * @param request 请求对象
      * @param analyzedResponse 响应对象
      * @param httpResponse http响应
-     * @param serverEx 服务端异常
+     * @param originEx 服务端异常
      * @param <Input> 请求
      * @param <Output> 响应
      */
     protected <Input extends BaseRequest, Output extends BaseResponse> void postExecute(long beginTime, ExecutionContext executionContext,
                                                                                         Request<Input> request, Output analyzedResponse,
-                                                                                        YopHttpResponse httpResponse, Exception serverEx) {
+                                                                                        YopHttpResponse httpResponse, Exception originEx) {
         try {
-            if (null == serverEx) {
-                ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
-            } else {
-                ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+            boolean isEx = null != originEx,
+                    isClientEx = originEx instanceof YopClientException,
+                    isServiceEx = originEx instanceof YopServiceException,
+                    isHttpEx = originEx instanceof YopHttpException,
+                    isUnexpectedEx = isEx && !(isClientEx || isHttpEx),
+                    isHostEx = isHttpEx || isUnexpectedEx,
+                    needReport = !isEx || isServiceEx || isHostEx;
+            if (needReport) {
+                if (isHostEx) {
+                    ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, originEx, System.currentTimeMillis() - beginTime));
+                } else {
+                    ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
+                }
             }
 
             if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
@@ -162,6 +170,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         }
         event.setServerIp(StringUtils.defaultString(serverIp, ""));
         event.setElapsedMillis(elapsedTime);
+        event.setRetry(executionContext.getRetryCount() > 0);
     }
 
     /**
