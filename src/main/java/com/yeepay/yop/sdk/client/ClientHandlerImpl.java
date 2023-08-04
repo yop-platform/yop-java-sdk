@@ -125,6 +125,7 @@ public class ClientHandlerImpl implements ClientHandler {
             } catch (YopHostException hostError) {//域名异常
                 excludeServerRoots.add(lastServerRoot);
                 lastServerRoot = gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, excludeServerRoots);
+                executionContext.addRetryCount(1);
             } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
         }
 

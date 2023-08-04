@@ -4,6 +4,9 @@ import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserver
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.client.ClientReporter;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
 import com.yeepay.yop.sdk.config.enums.ModeEnum;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 
 /**
  * title: 简单网关路由<br>
@@ -100,34 +104,50 @@ public class SimpleGateWayRouter implements GateWayRouter {
         }
     }
 
+
+
     private static void monitorServerRoot() {
         EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
                 (prevState, newState, rule, snapshotValue) -> {
-                    final URI serverRoot = URI.create(rule.getResource());
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
-                    }
-                    Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                    if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                        for (ServerRootType serverRootType : serverRootTypes) {
-                            switch (newState) {
-                                case OPEN:
-                                    final LinkedBlockingDeque<URI> oldBlocked =
-                                            BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
-                                    oldBlocked.removeIf(serverRoot::equals);
-                                    oldBlocked.add(serverRoot);
-                                    break;
-                                case CLOSED:
-                                    final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
-                                    if (null != blockedServers) {
-                                        blockedServers.removeIf(serverRoot::equals);
-                                    }
-                                    break;
-                                default:
+                    try {
+                        final URI serverRoot = URI.create(rule.getResource());
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
+                        }
+                        Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
+                        if (CollectionUtils.isNotEmpty(serverRootTypes)) {
+                            for (ServerRootType serverRootType : serverRootTypes) {
+                                switch (newState) {
+                                    case OPEN:
+                                        final LinkedBlockingDeque<URI> oldBlocked =
+                                                BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
+                                        oldBlocked.removeIf(serverRoot::equals);
+                                        oldBlocked.add(serverRoot);
+                                        break;
+                                    case CLOSED:
+                                        final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
+                                        if (null != blockedServers) {
+                                            blockedServers.removeIf(serverRoot::equals);
+                                        }
+                                        break;
+                                    default:
+                                }
                             }
                         }
+                        ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name())));
+                    } catch (Exception e) {
+                        LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
                 });
+    }
+
+    private static List<String> getAllServerRoots(ServerRootType serverRootType) {
+        final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.get(serverRootType);
+        if (CollectionUtils.isEmpty(serverRoots)) {
+            return Collections.emptyList();
+        }
+        return serverRoots.stream().map(URI::toString).collect(Collectors.toList());
     }
 
     @Override

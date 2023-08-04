@@ -49,7 +49,7 @@ public class YopCircuitBreakerConfig implements Serializable {
      * 非短路异常
      */
     @JsonProperty("yop_exclude_exceptions")
-    private Set<String> excludeExceptions = Sets.newHashSet("java.net.SocketTimeoutException:Read timed out");
+    private Set<String> excludeExceptions = Sets.newHashSet("com.yeepay.yop.sdk.exception.YopClientException");
     // endRegion
 
     public boolean isEnable() {

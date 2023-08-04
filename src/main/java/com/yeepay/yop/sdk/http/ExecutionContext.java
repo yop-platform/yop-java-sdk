@@ -20,6 +20,8 @@ public class ExecutionContext {
 
     private final PublicKey yopPublicKey;
 
+    private int retryCount = 0;
+
     private ExecutionContext(Signer signer, SignOptions signOptions, Encryptor encryptor, YopCredentials yopCredentials, PublicKey yopPublicKey) {
         this.signer = signer;
         this.signOptions = signOptions;
@@ -48,13 +50,20 @@ public class ExecutionContext {
         return yopPublicKey;
     }
 
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void addRetryCount(int i) {
+        this.retryCount += i;
+    }
+
     public static final class Builder {
         private Signer signer;
         private SignOptions signOptions;
         private Encryptor encryptor;
         private YopCredentials yopCredentials;
         private PublicKey yopPublicKey;
-
 
         private Builder() {
         }

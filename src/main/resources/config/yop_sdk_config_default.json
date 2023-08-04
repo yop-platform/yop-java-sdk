@@ -28,7 +28,7 @@
     "circuit_breaker": {
       "enable": true,
       "yop_exclude_exceptions": [
-        "java.net.SocketTimeoutException:Read timed out"
+        "com.yeepay.yop.sdk.exception.YopClientException"
       ],
       "rules": [
         {

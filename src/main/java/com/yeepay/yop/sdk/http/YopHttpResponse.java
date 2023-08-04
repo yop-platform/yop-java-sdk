@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.http;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -86,7 +87,7 @@ public class YopHttpResponse {
             contentStr = IOUtils.toString(content, YopConstants.DEFAULT_ENCODING);
             return contentStr;
         } catch (IOException ex) {
-            throw new YopClientException("unable to read response content", ex);
+            throw new YopHttpException("ResponseError, Read Content Fail, ex:", ex);
         } finally {
             IOUtils.closeQuietly(content);
         }

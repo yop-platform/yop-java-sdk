@@ -87,7 +87,9 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
         } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
             throw new YopHttpException("Unexpected Response, statusCode:" + statusCode + ", resource:" + resource);
         } else {// 4xx
-            throw new YopClientException("Bad Request, statusCode:" + statusCode + ", resource:" + resource);
+            final YopServiceException invokeEx = new YopServiceException("ReqParam Illegal, Bad Request, statusCode:" + statusCode + ", resource:" + resource);
+            invokeEx.setErrorType(YopServiceException.ErrorType.Client);
+            throw invokeEx;
         }
     }
 }
