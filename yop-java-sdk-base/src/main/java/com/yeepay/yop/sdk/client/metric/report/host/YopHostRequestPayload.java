@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.client.metric.report.host;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.client.metric.YopFailureList;
 import org.apache.commons.collections4.CollectionUtils;
@@ -59,9 +60,19 @@ public class YopHostRequestPayload implements Serializable {
     private int failCount;
 
     /**
+     * 最小耗时(毫秒)
+     */
+    private long minElapsedMillis;
+
+    /**
      * 最大耗时(毫秒)
      */
-    private long maxElapsedMillis;//TODO 其他耗时指标
+    private long maxElapsedMillis;
+
+    /**
+     * 平均耗时(毫秒)
+     */
+    private long avgElapsedMillis;
 
     /**
      * 失败明细
@@ -116,12 +127,33 @@ public class YopHostRequestPayload implements Serializable {
         this.failCount = failCount;
     }
 
+    @JsonIgnore
+    public int getTotalCount() {
+        return this.successCount + this.failCount;
+    }
+
+    public long getMinElapsedMillis() {
+        return minElapsedMillis;
+    }
+
+    public void setMinElapsedMillis(long minElapsedMillis) {
+        this.minElapsedMillis = minElapsedMillis;
+    }
+
     public long getMaxElapsedMillis() {
         return maxElapsedMillis;
     }
 
     public void setMaxElapsedMillis(long maxElapsedMillis) {
         this.maxElapsedMillis = maxElapsedMillis;
+    }
+
+    public long getAvgElapsedMillis() {
+        return avgElapsedMillis;
+    }
+
+    public void setAvgElapsedMillis(long avgElapsedMillis) {
+        this.avgElapsedMillis = avgElapsedMillis;
     }
 
     public List<YopFailureList> getFailDetails() {

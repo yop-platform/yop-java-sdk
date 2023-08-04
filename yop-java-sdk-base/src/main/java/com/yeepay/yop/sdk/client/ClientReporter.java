@@ -277,7 +277,9 @@ public class ClientReporter {
                         payload.setSuccessCount(successCount);
                         payload.setRetrySuccessCount(retrySuccessCount);
                         payload.setFailCount(failCount);
+                        payload.setMinElapsedMillis(elapsedMillis);
                         payload.setMaxElapsedMillis(elapsedMillis);
+                        payload.setAvgElapsedMillis(elapsedMillis);
                         payload.setFailDetails(Lists.newLinkedList());
                         if (null != failDetail) {
                             final YopFailureList yopFailDetail = new YopFailureList(failDetail.getExType(), failDetail.getExMsg());
@@ -290,7 +292,9 @@ public class ClientReporter {
                         payload.setSuccessCount(oldPayload.getSuccessCount() + successCount);
                         payload.setRetrySuccessCount(oldPayload.getRetrySuccessCount() + retrySuccessCount);
                         payload.setFailCount(oldPayload.getFailCount() + failCount);
+                        payload.setMinElapsedMillis(Math.min(elapsedMillis, oldPayload.getMinElapsedMillis()));
                         payload.setMaxElapsedMillis(Math.max(elapsedMillis, oldPayload.getMaxElapsedMillis()));
+                        payload.setAvgElapsedMillis(((oldPayload.getAvgElapsedMillis() * oldPayload.getTotalCount()) + elapsedMillis) / (oldPayload.getTotalCount() + 1));
                         payload.setFailDetails(oldPayload.cloneFailDetails());
                         final YopFailureItem failDetailItem = failDetail;
                         if (null != failDetail) {
