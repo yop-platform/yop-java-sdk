@@ -96,7 +96,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
                     HeaderElement he = it.nextElement();
                     String param = he.getName();
                     String value = he.getValue();
-                    if (value != null && param.equalsIgnoreCase
+                    if (null != value && param.equalsIgnoreCase
                             ("timeout")) {
                         if (logger.isDebugEnabled()) {
                             logger.debug("KeepAliveDuration Parsed From Server, timeout:{}s.", value);

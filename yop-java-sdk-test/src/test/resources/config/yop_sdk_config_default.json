@@ -1,11 +1,10 @@
 {
-//  "server_root": "http://ycetest.yeepay1.com:30229/yop-center",
-//  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
-//  "preferred_server_roots": [
-//    "http://ycetest.yeepay.com:30229/yop-center"
-//    "http://ycetest.yeepay.com:30229/yop-center"
-//    //    "https://my.yeepay.com/yop-center"
-//  ],
+  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
+  "preferred_server_roots": [
+    "http://ycetest.yeepay.com:30228/yop-center",
+    "http://ycetest.yeepay.com:30502/yop-center",
+    "http://ycetest.yeepay.com:30229/yop-center"
+  ],
   "yop_cert_store": {
     "enable": false,
     "valid_after_expire_period": 1674727773000
