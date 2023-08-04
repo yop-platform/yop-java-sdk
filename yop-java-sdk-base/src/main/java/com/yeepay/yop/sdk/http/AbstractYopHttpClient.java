@@ -107,18 +107,16 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                                                                                         Request<Input> request, Output analyzedResponse,
                                                                                       YopHttpResponse httpResponse, Exception originEx) {
         try {
-            boolean needReport = false, hostError = false;
-            Exception serverEx = null;
-            if (originEx instanceof YopServiceException) {
-                needReport = true;
-            }
-            if (originEx instanceof YopHttpException) {
-                needReport = true;
-                hostError = true;
-            }
+            boolean isEx = null != originEx,
+                    isClientEx = originEx instanceof YopClientException,
+                    isServiceEx = originEx instanceof YopServiceException,
+                    isHttpEx = originEx instanceof YopHttpException,
+                    isUnexpectedEx = isEx && !(isClientEx || isHttpEx),
+                    isHostEx = isHttpEx || isUnexpectedEx,
+                    needReport = !isEx || isServiceEx || isHostEx;
             if (needReport) {
-                if (hostError) {
-                    ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+                if (isHostEx) {
+                    ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, originEx, System.currentTimeMillis() - beginTime));
                 } else {
                     ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
                 }
