@@ -18,14 +18,14 @@ import java.util.Date;
  * @version 1.0.0
  * @since 2023/8/4
  */
-public class YopHostBlockReport extends AbstractYopReport {
+public class YopHostStatusChangeReport extends AbstractYopReport {
 
     private static final long serialVersionUID = -1L;
 
-    private String type = "YopHostBlockReport";
-    private YopHostBlockPayload payload;
+    private String type = "YopHostStatusChangeReport";
+    private YopHostStatusChangePayload payload;
 
-    public YopHostBlockReport(YopHostBlockPayload payload) {
+    public YopHostStatusChangeReport(YopHostStatusChangePayload payload) {
         this.payload = payload;
         setEndDate(new Date());
     }
@@ -40,11 +40,11 @@ public class YopHostBlockReport extends AbstractYopReport {
     }
 
     @Override
-    public YopHostBlockPayload getPayload() {
+    public YopHostStatusChangePayload getPayload() {
         return payload;
     }
 
-    public void setPayload(YopHostBlockPayload payload) {
+    public void setPayload(YopHostStatusChangePayload payload) {
         this.payload = payload;
     }
 }
