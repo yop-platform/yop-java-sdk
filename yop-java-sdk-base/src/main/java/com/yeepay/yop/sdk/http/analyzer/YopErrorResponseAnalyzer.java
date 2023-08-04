@@ -1,6 +1,5 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
@@ -57,7 +56,7 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
                 try {
                     yopErrorResponse = JsonUtils.loadFrom(content, YopErrorResponse.class);
                 } catch (Exception ex) {
-                    LOGGER.error("unable to parse error response, content:" + content, ex);
+                    LOGGER.warn("Response Illegal, YopErrorResponse ParseFail, content:" + content, ex);
                 }
                 if (yopErrorResponse != null && yopErrorResponse.getMessage() != null) {
                     yse = new YopServiceException(yopErrorResponse.getMessage());
@@ -76,9 +75,11 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
             yse.setErrorType(YopServiceException.ErrorType.Service);
             throw yse;
         } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
-            throw new YopHttpException("Unexpected Response, statusCode:" + statusCode + ", resource:" + resource);
+            throw new YopHttpException("ResponseError, Unexpected Response, statusCode:" + statusCode + ", resource:" + resource);
         } else {// 4xx
-            throw new YopClientException("Bad Request, statusCode:" + statusCode + ", resource:" + resource);
+            final YopServiceException invokeEx = new YopServiceException("ReqParam Illegal, Bad Request, statusCode:" + statusCode + ", resource:" + resource);
+            invokeEx.setErrorType(YopServiceException.ErrorType.Client);
+            throw invokeEx;
         }
     }
 }

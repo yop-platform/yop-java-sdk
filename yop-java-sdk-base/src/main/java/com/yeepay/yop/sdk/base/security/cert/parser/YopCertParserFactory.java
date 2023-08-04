@@ -60,7 +60,7 @@ public class YopCertParserFactory {
     public static YopCertParser getCertParser(String parserId) {
         final YopCertParser yopCertParser = YOP_CERT_PARSER_MAP.get(parserId);
         if (null == yopCertParser) {
-            throw new YopClientException("YopCertParser not found, parserId:" + parserId);
+            throw new YopClientException("ConfigProblem, YopCertParser NotFound, parserId:" + parserId);
         }
         return yopCertParser;
     }

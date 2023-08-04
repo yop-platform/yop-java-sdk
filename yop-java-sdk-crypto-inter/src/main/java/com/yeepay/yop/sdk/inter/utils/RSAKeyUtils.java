@@ -37,7 +37,7 @@ public class RSAKeyUtils {
             return KeyFactory.getInstance(RSA).generatePublic(
                     new X509EncodedKeySpec(Encodes.decodeBase64(pubKey)));
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new YopClientException("No such algorithm.", e);
+            throw new YopClientException("ConfigProblem, YopPublicKey ParseFail, value:" + pubKey + ", ex:", e);
         }
     }
 
@@ -51,10 +51,8 @@ public class RSAKeyUtils {
         try {
             return KeyFactory.getInstance(RSA).generatePrivate(
                     new PKCS8EncodedKeySpec(Encodes.decodeBase64(priKey)));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new YopClientException("No such algorithm.", e);
         } catch (Exception e) {
-            throw new YopClientException("Convert string to PrivateKey fail.", e);
+            throw new YopClientException("ConfigProblem, IsvPrivateKey ParseFail, value:" + priKey + ", ex:", e);
         }
     }
 

@@ -62,7 +62,7 @@ public class SmUtils {
             KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return kf.generatePublic(eks);
         } catch (Exception e) {
-            throw new YopClientException(e.getMessage());
+            throw new YopClientException("ConfigProblem, YopPublicKey Convert Fail, value:" + pubKey, e);
         }
     }
 

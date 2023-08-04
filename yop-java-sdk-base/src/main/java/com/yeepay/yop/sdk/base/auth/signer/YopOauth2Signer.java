@@ -44,12 +44,14 @@ public class YopOauth2Signer implements YopSigner {
 
     @Override
     public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
-        checkNotNull(request, "request should not be null.");
+        if (null == request) {
+            throw new YopClientException("ReqParam Illegal, Request IsNull");
+        }
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;
         }
         if (!(credentials instanceof YopOauth2Credentials)) {
-            throw new YopClientException("UnSupported credentials type:" + credentials.getClass().getSimpleName());
+            throw new YopClientException("ReqParam Illegal, YopCredentials IsNotYopOauth2Credentials, type:" + credentials.getClass().getSimpleName());
         }
         String secretKey = (String) credentials.getCredential();
         String authorizationHeader = AUTHORIZATION_PREFIX + secretKey;

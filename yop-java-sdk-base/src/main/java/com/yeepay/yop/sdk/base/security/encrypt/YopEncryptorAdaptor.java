@@ -47,7 +47,8 @@ public abstract class YopEncryptorAdaptor implements YopEncryptor {
         try {
             return Encodes.encodeUrlSafeBase64(encrypt(plain.getBytes(YopConstants.DEFAULT_ENCODING), options));
         } catch (UnsupportedEncodingException e) {
-            throw new YopClientException("error happened when encrypt data", e);
+            throw new YopClientException("UnexpectedError, EncryptFail, value:"
+                    + plain + ",options:" + options + ",ex:", e);
         }
     }
 
@@ -66,7 +67,7 @@ public abstract class YopEncryptorAdaptor implements YopEncryptor {
         try {
             return new String(decrypt(cipher, options), YopConstants.DEFAULT_ENCODING);
         } catch (UnsupportedEncodingException e) {
-            throw new YopClientException("error happened when decrypt data", e);
+            throw new YopClientException("UnexpectedError, DecryptFail, options:" + options + ",ex:", e);
         }
     }
 

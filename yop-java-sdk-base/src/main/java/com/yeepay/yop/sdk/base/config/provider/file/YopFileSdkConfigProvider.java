@@ -100,7 +100,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         }
 
         if (null == customSdkConfig) {
-            throw new YopClientException("Can't load config, file:" + configFile);
+            throw new YopClientException("ConfigProblem, Can't load config, file:" + configFile);
         }
 
         return customSdkConfig;

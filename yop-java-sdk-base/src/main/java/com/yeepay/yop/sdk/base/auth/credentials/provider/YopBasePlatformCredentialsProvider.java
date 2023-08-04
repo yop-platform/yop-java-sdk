@@ -48,13 +48,13 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     @Override
     public YopPlatformCredentials getCredentials(String appKey, String serialNo) {
         if (StringUtils.isBlank(serialNo)) {
-            throw new YopClientException("serialNo is required");
+            throw new YopClientException("ReqParam Illegal, PlatformCert SerialNo NotSpecified");
         }
         YopPlatformCredentials foundCredentials = credentialsMap.computeIfAbsent(serialNo, p -> {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
                 X509Certificate rsaCert = loadLocalRsaCert(appKey, serialNo);
                 if (null == rsaCert) {
-                    throw new YopClientException("loadLocalRsaCert fail, serialNo:" + serialNo);
+                    throw new YopClientException("ConfigProblem, LocalRsaCert NotFound, serialNo:" + serialNo);
                 }
                 return convertRsaCredentials(appKey, CertTypeEnum.RSA2048, rsaCert);
             } else {
@@ -62,7 +62,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
                 if (null == localCredentials) {
                     X509Certificate remoteCert = loadRemoteSm2Cert(appKey, serialNo);
                     if (null == remoteCert) {
-                        throw new YopClientException("loadRemoteSm2Cert fail, serialNo:" + serialNo);
+                        throw new YopClientException("ConfigProblem, RemoteSm2Cert NotFound, serialNo:" + serialNo);
                     }
                     return storeCredentials(appKey, CertTypeEnum.SM2.name(), remoteCert);
                 } else {

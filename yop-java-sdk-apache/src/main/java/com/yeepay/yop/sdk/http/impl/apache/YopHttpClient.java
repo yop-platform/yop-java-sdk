@@ -171,7 +171,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
             SSLContext sslContext = getSSLContext();
             sslSocketFactory = new SSLConnectionSocketFactory(sslContext, HOSTNAME_VERIFIER_INSTANCE);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw new YopClientException("Fail to create SSLConnectionSocketFactory", e);
+            throw new YopClientException("EnvProblem, Fail to Create SSLConnectionSocketFactory, ex:", e);
         }
         RegistryBuilder registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTPS.toString(), sslSocketFactory)
                 .register(Protocol.HTTP.toString(), PlainConnectionSocketFactory.getSocketFactory());
@@ -344,7 +344,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
             } else if (request.getHttpMethod() == HttpMethodName.HEAD) {
                 httpRequest = new HttpHead(uri);
             } else {
-                throw new YopClientException("Unknown HTTP method name: " + request.getHttpMethod());
+                throw new YopClientException("ReqParam Illegal, HttpMethod, name:" + request.getHttpMethod());
             }
         }
 

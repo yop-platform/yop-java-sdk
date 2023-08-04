@@ -65,7 +65,7 @@ public class CheckUtils {
         if (StringUtils.isNotBlank(apiUri) && API_URI_PATTERN.matcher(apiUri).matches()) {
             return;
         }
-        throw new YopClientException("apiUri is illegal, param:" + apiUri);
+        throw new YopClientException("ReqParam Illegal, ApiUri, value:" + apiUri);
     }
 
     /**

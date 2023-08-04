@@ -266,7 +266,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         try {
             files.add(new MultiPartFile(file));
         } catch (Exception ex) {
-            throw new YopClientException("add file failed.", ex);
+            throw new YopClientException("ReqParam Illegal, FileParam, name:" + name + ", value:" + file, ex);
         }
     }
 
@@ -280,7 +280,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         try {
             files.add(new MultiPartFile(in));
         } catch (Exception ex) {
-            throw new YopClientException("add file failed", ex);
+            throw new YopClientException("ReqParam Illegal, InputStreamParam, name:" + name + ", ex:", ex);
         }
     }
 

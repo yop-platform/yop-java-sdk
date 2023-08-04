@@ -32,7 +32,7 @@ public class YopHttpClientFactory {
             httpClientProviderMap.put(yopHttpClientProvider.name(), yopHttpClientProvider);
         }
         if (httpClientProviderMap.isEmpty()) {
-            throw new YopClientException("No YopHttpClientProvider found!");
+            throw new YopClientException("SetUpProblem，YopHttpClientProvider NotFound!");
         }
     }
 
@@ -52,7 +52,7 @@ public class YopHttpClientFactory {
     public static YopHttpClient getClient(ClientConfiguration clientConfig) {
         final YopHttpClientProvider yopHttpClientProvider = httpClientProviderMap.get(clientConfig.getClientImpl());
         if (null == yopHttpClientProvider) {
-            throw new YopClientException("YopHttpClientProvider Not Found, name:" + clientConfig.getClientImpl());
+            throw new YopClientException("SetUpProblem, YopHttpClientProvider NotFound, name:" + clientConfig.getClientImpl());
         }
         return yopHttpClientProvider.get(clientConfig);
     }

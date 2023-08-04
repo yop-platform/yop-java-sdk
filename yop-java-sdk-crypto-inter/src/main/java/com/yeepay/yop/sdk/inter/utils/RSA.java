@@ -49,7 +49,7 @@ public class RSA {
             signature.update(data);
             return signature.verify(sign);
         } catch (Exception e) {
-            throw new YopClientException("verifySign fail!", e);
+            throw new YopClientException("SystemError, Sign Fail, key:" + publicKey + ", digestAlg" + digestAlg + "ex:", e);
         }
     }
 
@@ -83,7 +83,7 @@ public class RSA {
             signature.update(data);
             return signature.sign();
         } catch (Exception e) {
-            throw new YopClientException("sign fail!", e);
+            throw new YopClientException("SystemError, Sign Fail, key:" + key + ", digestAlg" + digestAlg + "ex:", e);
         }
     }
 
@@ -130,7 +130,7 @@ public class RSA {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
-            throw new YopClientException("rsa encrypt failed!", e);
+            throw new YopClientException("SystemError, Encrypt Fail, key:" + key + "ex:", e);
         }
     }
 
@@ -145,7 +145,7 @@ public class RSA {
         try {
             return Encodes.encodeUrlSafeBase64(encrypt(data.getBytes(Charsets.UTF_8), key));
         } catch (Exception e) {
-            throw new YopClientException("rsa encrypt fail!", e);
+            throw new YopClientException("SystemError, Encrypt Fail, data:" + data + ", key:" + key + "ex:", e);
         }
     }
 
@@ -162,7 +162,7 @@ public class RSA {
             cipher.init(Cipher.DECRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
-            throw new YopClientException("rsa decrypt fail!", e);
+            throw new YopClientException("SystemError, Decrypt Fail, key:" + key + "ex:", e);
         }
     }
 
@@ -177,7 +177,7 @@ public class RSA {
         try {
             return new String(decrypt(Encodes.decodeBase64(data), key), Charsets.UTF_8);
         } catch (Exception e) {
-            throw new YopClientException("rsa decrypt fail!", e);
+            throw new YopClientException("SystemError, Decrypt Fail, data:" + data + ", key:" + key + "ex:", e);
         }
     }
 }

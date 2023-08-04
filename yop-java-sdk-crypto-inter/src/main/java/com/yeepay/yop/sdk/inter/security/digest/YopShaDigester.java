@@ -49,8 +49,7 @@ public class YopShaDigester implements YopDigester {
             while (digestInputStream.read(buffer) > -1) {}
             return digestInputStream.getMessageDigest().digest();
         } catch (Exception e) {
-            throw new YopClientException(
-                    "Unable to compute hash while signing request: " + e.getMessage(), e);
+            throw new YopClientException("SystemError, Digest Fail, alg:" + alg + ", ex:", e);
         }
     }
 

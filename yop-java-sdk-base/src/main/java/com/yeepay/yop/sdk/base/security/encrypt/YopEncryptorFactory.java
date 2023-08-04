@@ -80,7 +80,7 @@ public class YopEncryptorFactory {
     public static YopEncryptor getEncryptor(String encryptAlg) {
         final YopEncryptor yopEncryptor = YOP_ENCRYPTOR_MAP.get(encryptAlg);
         if (null == yopEncryptor) {
-            throw new YopClientException("YopEncryptor not found, encryptAlg:" + encryptAlg);
+            throw new YopClientException("ConfigProblem, YopEncryptor NotFound, encryptAlg:" + encryptAlg);
         }
         return yopEncryptor;
     }

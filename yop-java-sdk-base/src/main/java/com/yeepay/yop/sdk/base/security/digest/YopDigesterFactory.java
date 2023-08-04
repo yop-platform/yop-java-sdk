@@ -58,7 +58,7 @@ public class YopDigesterFactory {
     public static YopDigester getDigester(String alg) {
         final YopDigester yopDigester = YOP_DIGESTER_MAP.get(alg);
         if (null == yopDigester) {
-            throw new YopClientException("YopDigester not found, alg:" + alg);
+            throw new YopClientException("ConfigProblem, YopDigester NotFound, alg:" + alg);
         }
         return yopDigester;
     }

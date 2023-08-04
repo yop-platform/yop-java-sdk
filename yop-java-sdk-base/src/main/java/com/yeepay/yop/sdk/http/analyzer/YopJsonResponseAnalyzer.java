@@ -34,7 +34,7 @@ public class YopJsonResponseAnalyzer implements HttpResponseAnalyzer {
     public <T extends BaseResponse> boolean analysis(HttpResponseHandleContext context, T response) throws Exception {
         String content = context.getResponse().readContent();
         if (!isJsonResponse(response.getMetadata().getContentType())) {
-            throw new YopHttpException("Unexpected Response, contentType:" + response.getMetadata().getContentType()
+            throw new YopHttpException("ResponseError, Need Json, contentType:" + response.getMetadata().getContentType()
                     + ", content:" + content + ", resource:"
                     + context.getOriginRequest().getEndpoint() + SLASH + context.getOriginRequest().getResourcePath());
         }

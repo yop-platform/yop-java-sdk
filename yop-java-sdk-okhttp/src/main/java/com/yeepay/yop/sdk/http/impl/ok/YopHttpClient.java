@@ -166,7 +166,8 @@ public class YopHttpClient extends AbstractYopHttpClient {
                     httpRequestBuilder.head();
                     break;
                 default:
-                    throw new YopClientException("Unknown HTTP method name: " + request.getHttpMethod());
+                    throw new YopClientException("ReqParam Illegal, HttpMethod NotSupport, name:" +
+                            request.getHttpMethod() + ", request:" + request);
             }
         }
 

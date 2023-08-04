@@ -15,6 +15,7 @@ import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
 import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
+import com.yeepay.yop.sdk.exception.YopServiceException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
@@ -69,7 +70,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         Output analyzedResponse = null;
         YopHttpResponse httpResponse = null;
         long beginTime = System.currentTimeMillis();
-        Exception serverEx = null;
+        Exception ex = null;
         try {
             preExecute(request, executionContext);
             if (LOGGER.isDebugEnabled()) {
@@ -78,18 +79,16 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             httpResponse = doExecute(request, yopRequestConfig);
             analyzedResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, executionContext));
             return analyzedResponse;
-        } catch (YopClientException e) {
-            throw e;
-        } catch (YopHttpException e) {
-            serverEx = e;
+        } catch (YopClientException | YopHttpException e) {
+            ex = e;
             throw e;
         } catch (Exception e) {
-            serverEx = e;
+            ex = e;
             throw new YopHttpException("Unable to execute HTTP request, requestId:"
                     + request.getRequestId() + ", apiUri:" + request.getResourcePath()
                     + ", serverHost:" + request.getEndpoint(), e);
         } finally {
-            postExecute(beginTime, executionContext, request, analyzedResponse, httpResponse, serverEx);
+            postExecute(beginTime, executionContext, request, analyzedResponse, httpResponse, ex);
         }
     }
 
@@ -100,20 +99,30 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
      * @param request 请求对象
      * @param analyzedResponse 响应对象
      * @param httpResponse http响应
-     * @param serverEx 服务端异常
+     * @param originEx 服务端异常
      * @param <Input> 请求
      * @param <Output> 响应
      */
     protected <Input extends BaseRequest, Output extends BaseResponse> void postExecute(long beginTime, ExecutionContext executionContext,
                                                                                         Request<Input> request, Output analyzedResponse,
-                                                                                      YopHttpResponse httpResponse, Exception serverEx) {
+                                                                                      YopHttpResponse httpResponse, Exception originEx) {
         try {
-            if (null == serverEx) {
-                ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
-            } else {
-                ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+            boolean needReport = false, hostError = false;
+            Exception serverEx = null;
+            if (originEx instanceof YopServiceException) {
+                needReport = true;
             }
-
+            if (originEx instanceof YopHttpException) {
+                needReport = true;
+                hostError = true;
+            }
+            if (needReport) {
+                if (hostError) {
+                    ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, serverEx, System.currentTimeMillis() - beginTime));
+                } else {
+                    ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
+                }
+            }
             if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
                 httpResponse.close();
             }
@@ -231,7 +240,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     protected  <Input extends BaseRequest> boolean checkForMultiPart(Request<Input> request) throws YopClientException {
         boolean result = request.getMultiPartFiles() != null && request.getMultiPartFiles().size() > 0;
         if (result && !HttpMethodName.POST.equals(request.getHttpMethod())) {
-            throw new YopClientException("ContentType:multipart/form-data only support Post Request");
+            throw new YopClientException("ReqParam Illegal, ContentType:multipart/form-data only support Post Request");
         }
         return result;
     }

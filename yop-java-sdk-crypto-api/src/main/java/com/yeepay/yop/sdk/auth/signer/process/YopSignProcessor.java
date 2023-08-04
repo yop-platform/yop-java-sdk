@@ -29,7 +29,7 @@ public interface YopSignProcessor {
      */
     default String sign(String content, CredentialsItem credentialsItem) {
         if (!isSupport(credentialsItem)) {
-            throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+            throw new YopClientException("ConfigProblem, CredentialsItem Type NotSupport, type:" + credentialsItem.getClass().getSimpleName());
         }
         return doSign(content, credentialsItem);
     }
@@ -60,7 +60,7 @@ public interface YopSignProcessor {
         if (isSupport(credentialsItem)) {
             return doVerify(content, signature, credentialsItem);
         }
-        throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+        throw new YopClientException("ConfigProblem, CredentialsItem Type NotSupport, type:" + credentialsItem.getClass().getSimpleName());
     }
 
     default boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {

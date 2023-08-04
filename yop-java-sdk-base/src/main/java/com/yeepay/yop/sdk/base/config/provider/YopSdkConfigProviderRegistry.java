@@ -27,7 +27,7 @@ public class YopSdkConfigProviderRegistry {
      */
     public static void registerProvider(YopSdkConfigProvider provider) {
         if (provider == null) {
-            throw new YopClientException("customProvider can't be null.");
+            throw new YopClientException("SetUpProblem, Custom YopSdkConfigProvider IsNull.");
         }
         customProvider = provider;
     }

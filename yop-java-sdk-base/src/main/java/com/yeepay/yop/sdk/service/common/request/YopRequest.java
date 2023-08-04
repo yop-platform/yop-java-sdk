@@ -160,7 +160,7 @@ public class YopRequest extends BaseRequest {
             baos.flush();
             return RestartableInputStream.wrap(baos.toByteArray());
         } catch (IOException e) {
-            throw new YopClientException("Invalid Stream Parameter");
+            throw new YopClientException("ReqParam Illegal, InputStreamParam Cant Restart, ex:", e);
         }
     }
 
@@ -172,7 +172,7 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest setContent(String content) {
         if (StringUtils.isEmpty(content)) {
-            throw new YopClientException("content should not be empty");
+            throw new YopClientException("ReqParam Illegal, RequestContent Is Empty");
         }
         this.content = content;
         return this;
@@ -194,7 +194,7 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest setStream(InputStream inputStream) {
         if (inputStream == null) {
-            throw new YopClientException("inputStream for content should not be null");
+            throw new YopClientException("ReqParam Illegal, InputStreamParam IsNull.");
         }
         this.content = restartStream(inputStream);
         return this;
