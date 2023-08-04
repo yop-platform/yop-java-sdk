@@ -245,10 +245,14 @@ public class ClientReporter {
                 final String serverIp = event.getServerIp();
                 final long elapsedMillis = event.getElapsedMillis();
                 int successCount = 0;
+                int retrySuccessCount = 0;
                 int failCount = 0;
                 YopFailureItem failDetail = null;
                 if (YopStatus.SUCCESS.equals(event.getStatus())) {
                     successCount = 1;
+                    if (event.isRetry()) {
+                        retrySuccessCount = 1;
+                    }
                 } else {
                     failCount = 1;
                     failDetail = (YopFailureItem) event.getData();
@@ -271,6 +275,7 @@ public class ClientReporter {
                     current = reportReference.get();
                     if (null == current) {
                         payload.setSuccessCount(successCount);
+                        payload.setRetrySuccessCount(retrySuccessCount);
                         payload.setFailCount(failCount);
                         payload.setMaxElapsedMillis(elapsedMillis);
                         payload.setFailDetails(Lists.newLinkedList());
@@ -283,6 +288,7 @@ public class ClientReporter {
                         update.setBeginDate(current.getBeginDate());
                         YopHostRequestPayload oldPayload = current.getPayload();
                         payload.setSuccessCount(oldPayload.getSuccessCount() + successCount);
+                        payload.setRetrySuccessCount(oldPayload.getRetrySuccessCount() + retrySuccessCount);
                         payload.setFailCount(oldPayload.getFailCount() + failCount);
                         payload.setMaxElapsedMillis(Math.max(elapsedMillis, oldPayload.getMaxElapsedMillis()));
                         payload.setFailDetails(oldPayload.cloneFailDetails());

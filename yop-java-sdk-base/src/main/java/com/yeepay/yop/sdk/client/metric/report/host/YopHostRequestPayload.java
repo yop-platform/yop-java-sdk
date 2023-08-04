@@ -49,6 +49,11 @@ public class YopHostRequestPayload implements Serializable {
     private int successCount;
 
     /**
+     * 重试成功笔数
+     */
+    private int retrySuccessCount;
+
+    /**
      * 失败笔数
      */
     private int failCount;
@@ -93,6 +98,14 @@ public class YopHostRequestPayload implements Serializable {
 
     public void setSuccessCount(int successCount) {
         this.successCount = successCount;
+    }
+
+    public int getRetrySuccessCount() {
+        return retrySuccessCount;
+    }
+
+    public void setRetrySuccessCount(int retrySuccessCount) {
+        this.retrySuccessCount = retrySuccessCount;
     }
 
     public int getFailCount() {

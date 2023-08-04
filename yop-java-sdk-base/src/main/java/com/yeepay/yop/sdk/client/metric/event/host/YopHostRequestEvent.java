@@ -59,6 +59,8 @@ public class YopHostRequestEvent<T> implements Serializable {
      */
     private T data;
 
+    private boolean retry;
+
     public String getAppKey() {
         return appKey;
     }
@@ -113,6 +115,14 @@ public class YopHostRequestEvent<T> implements Serializable {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public boolean isRetry() {
+        return retry;
+    }
+
+    public void setRetry(boolean retry) {
+        this.retry = retry;
     }
 
     @Override

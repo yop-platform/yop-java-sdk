@@ -163,6 +163,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         }
         event.setServerIp(StringUtils.defaultString(serverIp, ""));
         event.setElapsedMillis(elapsedTime);
+        event.setRetry(executionContext.getRetryCount() > 0);
     }
 
     /**

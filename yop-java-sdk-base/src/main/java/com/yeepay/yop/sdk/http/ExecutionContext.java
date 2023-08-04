@@ -23,6 +23,8 @@ public class ExecutionContext {
 
     private final Future<EncryptOptions> encryptOptions;
 
+    private int retryCount = 0;
+
     private ExecutionContext(YopSigner signer, SignOptions signOptions, YopCredentials<?> yopCredentials,
                              YopEncryptor encryptor, Future<EncryptOptions> encryptOptions) {
         this.signer = signer;
@@ -55,6 +57,14 @@ public class ExecutionContext {
 
     public Future<EncryptOptions> getEncryptOptions() {
         return encryptOptions;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void addRetryCount(int i) {
+        this.retryCount += i;
     }
 
     public static final class Builder {
