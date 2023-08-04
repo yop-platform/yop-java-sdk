@@ -64,7 +64,7 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
             return RSA.encrypt(plain, ((PKICredentialsItem) ((YopPlatformCredentials)
                     options.getCredentials()).getCredential()).getPublicKey());
         } catch (Throwable e) {
-            throw new YopClientException("error happened when encrypt with RSA alg", e);
+            throw new YopClientException("SystemError, Encrypt Fail, options:" + options + "ex:", e);
         }
     }
 
@@ -79,7 +79,7 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
         try {
             return RSA.decrypt(cipher, ((YopPKICredentials) options.getCredentials()).getCredential().getPrivateKey());
         } catch (Throwable e) {
-            throw new YopClientException("error happened when decrypt with RSA alg", e);
+            throw new YopClientException("SystemError, Decrypt Fail, options:" + options + "ex:", e);
         }
     }
 

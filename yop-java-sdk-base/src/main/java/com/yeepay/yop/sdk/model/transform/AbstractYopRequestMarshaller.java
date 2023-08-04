@@ -55,7 +55,7 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
                         resetStreamIfNecessary((InputStream) value);
                         internalRequest.addMultiPartFile(name, (InputStream) value);
                     } else {
-                        throw new YopClientException("Unexpected file parameter type, name:" + name + ", type:" + value.getClass() + ".");
+                        throw new YopClientException("ReqParam Illegal, FileParamType NotSupport, name:" + name + ", type:" + value.getClass() + ".");
                     }
                 }
             }

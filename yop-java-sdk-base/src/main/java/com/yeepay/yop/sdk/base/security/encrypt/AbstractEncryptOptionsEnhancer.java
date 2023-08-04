@@ -23,12 +23,12 @@ public abstract class AbstractEncryptOptionsEnhancer implements EncryptOptionsEn
 
     protected boolean checkForEnhance(EncryptOptions source) {
         if (null == source.getCredentials()) {
-            throw new YopClientException("yop encrypt credentials not specified");
+            throw new YopClientException("ParamProblem, EncryptOptionsCredentials IsNull, value:" + source);
         }
         if (source.getCredentials() instanceof YopSymmetricCredentials) {
             return true;
         }
-        LOGGER.warn("credentials not enhanced, class:{}", source.getCredentials().getClass().getCanonicalName());
+        LOGGER.warn("ParamProblem, Need YopSymmetricCredentials to Enhance EncryptOptions, class:{}", source.getCredentials().getClass().getCanonicalName());
         return false;
     }
 }

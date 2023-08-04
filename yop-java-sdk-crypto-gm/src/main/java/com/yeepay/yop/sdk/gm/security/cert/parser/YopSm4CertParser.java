@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.gm.security.cert.parser;
 
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
+import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -22,6 +23,10 @@ import org.apache.commons.lang3.StringUtils;
  * @since 2022/5/4
  */
 public class YopSm4CertParser implements YopCertParser {
+
+    static {
+        SmUtils.init();
+    }
 
     @Override
     public String parse(YopCertConfig certConfig) {

@@ -14,13 +14,14 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Common constants used by the whole SDK.
  */
 public interface YopConstants {
 
-    String VERSION = "4.4.1";
+    String VERSION = "4.4.2";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -118,5 +119,11 @@ public interface YopConstants {
     String DEFAULT_YOP_CALLBACK_HANDLER = "default";
 
     String DEFAULT_YOP_CIRCUIT_BREAKER = "sentinel";
+
+    String YOP_SESSION_ID = UUID.randomUUID().toString();
+
+    String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
+
+    String HEADER_LANG_JAVA = "java";
 
 }

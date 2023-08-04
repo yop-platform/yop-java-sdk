@@ -5,10 +5,10 @@
 package com.yeepay.yop.sdk.gm.base.security.digest;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.security.digest.YopDigester;
 import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
+import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.digest.YopDigester;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +54,7 @@ public class YopSm3Digester implements YopDigester {
             while (digestInputStream.read(buffer) > -1) {}
             return digestInputStream.getMessageDigest().digest();
         } catch (Exception e) {
-            throw new YopClientException(
-                    "Unable to compute hash while signing request: " + e.getMessage(), e);
+            throw new YopClientException("UnexpectedError, MessageDigest Fail, alg:" + alg + ", ex:", e);
         }
     }
 

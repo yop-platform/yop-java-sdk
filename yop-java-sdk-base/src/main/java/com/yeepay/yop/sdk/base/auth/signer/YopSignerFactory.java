@@ -46,7 +46,7 @@ public class YopSignerFactory {
     public static YopSigner getSigner(String signerType) {
         final YopSigner yopSigner = YOP_SIGNER_MAP.get(signerType);
         if (null == yopSigner) {
-            throw new YopClientException("YopSigner not found, signerType:" + signerType);
+            throw new YopClientException("ConfigProblem, YopSigner NotFound, signerType:" + signerType);
         }
         return yopSigner;
     }

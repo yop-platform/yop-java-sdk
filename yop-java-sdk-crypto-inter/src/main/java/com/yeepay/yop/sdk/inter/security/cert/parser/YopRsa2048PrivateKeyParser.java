@@ -4,14 +4,14 @@
  */
 package com.yeepay.yop.sdk.inter.security.cert.parser;
 
-import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.base.security.cert.parser.AbstractYopPrivateKeyParser;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
-import com.yeepay.yop.sdk.inter.utils.RSAKeyUtils;
+import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.inter.utils.RSAKeyUtils;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.KeyStore;
@@ -33,23 +33,23 @@ public class YopRsa2048PrivateKeyParser extends AbstractYopPrivateKeyParser impl
     @Override
     public PrivateKey parse(YopCertConfig certConfig) {
         if (null == certConfig.getStoreType()) {
-            throw new YopClientException("Can't init ISV private key! Store type is error.");
+            throw new YopClientException("ConfigProblem, IsvPrivateKey StoreType IsNull, certConfig:" + certConfig);
         }
         switch (certConfig.getStoreType()) {
             case STRING:
                 try {
                     return RSAKeyUtils.string2PrivateKey(certConfig.getValue());
                 } catch (Exception ex) {
-                    throw new YopClientException("Failed to init private key form config file is error, " + certConfig, ex);
+                    throw new YopClientException("ConfigProblem, IsvPrivateKey Parse Fail, certConfig:" + certConfig, ex);
                 }
             case FILE_P12:
                 try {
                     return parsePrivateKey(certConfig.getPassword(), certConfig.getValue());
                 } catch (Exception ex) {
-                    throw new YopClientException("Config wrong for private_key, cert_config:" + certConfig, ex);
+                    throw new YopClientException("ConfigProblem, IsvPrivateKey Parse Fail, certConfig:" + certConfig, ex);
                 }
             default:
-                throw new YopClientException("Config wrong for cert store_type not supported, " + certConfig.getStoreType());
+                throw new YopClientException("ConfigProblem, IsvPrivateKey StoreType NotSupport, certConfig:" + certConfig);
         }
     }
 

@@ -59,7 +59,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
                                 .withExpirationInSeconds(reqOptions.getExpirationInSeconds())
                                 .withUrlSafe(!StringUtils.containsAny(metadata.getYopSign(), '+', '/', '=')));
             } else {
-                throw new YopClientException("yop platform credentials not found");
+                throw new YopClientException("ConfigProblem, YopPlatformCredentials NotFound, appKey:" + context.getAppKey() + ", serialNo:" + metadata.getYopCertSerialNo());
             }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("response sign verify success, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());

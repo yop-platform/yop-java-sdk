@@ -53,7 +53,7 @@ public class Sm4Utils {
         try {
             return generateKey(DEFAULT_KEY_SIZE);
         } catch (Exception e) {
-            throw new YopClientException("error happens when generate sm4 key");
+            throw new YopClientException("UnexpectedError, Generate Sm4Key Fail, ex:", e);
         }
 
     }

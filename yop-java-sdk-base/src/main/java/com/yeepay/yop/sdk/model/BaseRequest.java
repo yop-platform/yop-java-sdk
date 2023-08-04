@@ -71,13 +71,13 @@ public abstract class BaseRequest implements Serializable, Cloneable {
 
     protected void validateParameter(String name, Object value) {
         if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("parameter name:" + name + " should not be empty.");
+            throw new YopClientException("ReqParam Illegal, ParamName IsEmpty, name:" + name + ",value:" + value);
         }
         if (value == null) {
-            throw new YopClientException("parameter value for name:" + name + " can't be null.");
+            throw new YopClientException("ReqParam Illegal, ParamValue IsNull, name:" + name);
         }
         if (value instanceof File && !((File) value).exists()) {
-            throw new YopClientException("file does not exist.");
+            throw new YopClientException("ReqParam Illegal. FileParam NotExist, name:" + name + ", value:" + value);
         }
     }
 

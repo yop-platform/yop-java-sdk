@@ -75,7 +75,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
             engine.init(true, pwr);
             return engine.processBlock(plain, 0, plain.length);
         } catch (Throwable e) {
-            throw new YopClientException("error happened when encrypt with SM2 alg", e);
+            throw new YopClientException("SystemError, Encrypt Fail, options:" + options, e);
         }
     }
 
@@ -94,7 +94,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
             engine.init(false, priKeyParameters);
             return engine.processBlock(cipher, 0, cipher.length);
         } catch (Throwable e) {
-            throw new YopClientException("error happened when decrypt with SM2 alg", e);
+            throw new YopClientException("SystemError, Decrypt Fail, options:" + options, e);
         }
     }
 

@@ -5,7 +5,9 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
@@ -121,6 +123,7 @@ public class ClientHandlerImpl implements ClientHandler {
             } catch (YopHostException hostError) {//域名异常
                 excludeServerRoots.add(lastServerRoot);
                 lastServerRoot = gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, excludeServerRoots);
+                executionContext.addRetryCount(1);
             } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
         }
 
@@ -144,8 +147,8 @@ public class ClientHandlerImpl implements ClientHandler {
     private class YopSentinelCircuitBreaker implements YopCircuitBreaker {
 
         public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace, YopCircuitBreakerConfig circuitBreakerConfig) {
-            final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getServerRoot(),
-                    serverRootSpace.getYosServerRoot(), serverRootSpace.getSandboxServerRoot());
+            final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getYosServerRoot(),
+                    serverRootSpace.getSandboxServerRoot());
             if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
                 serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
             }
@@ -229,24 +232,34 @@ public class ClientHandlerImpl implements ClientHandler {
 
         public static AnalyzeException analyze(Throwable e, ClientConfiguration clientConfiguration) {
             final AnalyzeException result = new AnalyzeException();
-            final Throwable rootCause = ExceptionUtils.getRootCause(e);
-            if (null == rootCause) {
-                result.exDetail = e.getClass().getCanonicalName() + COLON + ExceptionUtils.getMessage(e);
+            final Throwable[] allExceptions = ExceptionUtils.getThrowables(e);
+
+            if (allExceptions.length == 1) {
+                result.exDetail = e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage());
                 return result;
             }
 
             // 当笔重试 (域名异常)
-            final String exType = rootCause.getClass().getCanonicalName(), exMsg = rootCause.getMessage();
-            result.exDetail = exType + COLON + exMsg;
-            final List<String> curException = Lists.newArrayList(exType, result.exDetail);
-
-            if (CollectionUtils.containsAny(clientConfiguration.getRetryExceptions(), curException)) {
-                result.setNeedRetry(true);
-                return result;
+            final List<String> exceptionDetails = Lists.newArrayList();
+            for (int i = 0; i < allExceptions.length; i++) {
+                Throwable rootCause = allExceptions[i];
+                final String exType = rootCause.getClass().getCanonicalName(),
+                        exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage());
+                exceptionDetails.add(exType);
+                exceptionDetails.add(exTypeAndMsg);
+                if (clientConfiguration.getRetryExceptions().contains(exType) ||
+                        clientConfiguration.getRetryExceptions().contains(exTypeAndMsg)) {
+                    result.exDetail = exTypeAndMsg;
+                    result.setNeedRetry(true);
+                    return result;
+                }
             }
 
+            Throwable lastCause = allExceptions[allExceptions.length -1];
+            result.exDetail = lastCause.getClass().getCanonicalName() + COLON + StringUtils.defaultString(lastCause.getMessage());
+
             // 不重试，不计入短路
-            if (CollectionUtils.containsAny(clientConfiguration.getCircuitBreakerConfig().getExcludeExceptions(), curException)) {
+            if (CollectionUtils.containsAny(clientConfiguration.getCircuitBreakerConfig().getExcludeExceptions(), exceptionDetails)) {
                 result.setServerError(false);
                 return result;
             }
@@ -324,15 +337,31 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest> AuthorizationReq getAuthorizationReq(Input input) {
-        String appKey = input.getRequestConfig().getAppKey();
-        // 获取商户自定义的安全需求
-        String customSecurityReq = input.getRequestConfig() == null ? null : input.getRequestConfig().getSecurityReq();
-        if (StringUtils.isNotEmpty(customSecurityReq)) {
+        // 获取用户自定义配置
+        String customAppKey = null;
+        String customSecurityReq = null;
+        YopCredentials<?> customCredentials = null;
+        YopRequestConfig requestConfig = input.getRequestConfig();
+        if (null != requestConfig) {
+            customAppKey = requestConfig.getAppKey();
+            customSecurityReq = requestConfig.getSecurityReq();
+            customCredentials = requestConfig.getCredentials();
+        }
+        if (StringUtils.isNotBlank(customSecurityReq)) {
             return checkCustomSecurityReq(customSecurityReq);
+        }
+        if (null != customCredentials) {
+            if (customCredentials instanceof YopOauth2Credentials) {
+                return AuthorizationReqSupport.getAuthorizationReq(AuthorizationReqSupport.SECURITY_OAUTH2);
+            }
+            final Object credential = customCredentials.getCredential();
+            if (credential instanceof CredentialsItem) {
+                return AuthorizationReqSupport.getAuthorizationReq(((CredentialsItem) credential).getCertType());
+            }
         }
 
         // 根据商户配置的密钥识别可用的安全需求
-        List<CertTypeEnum> availableCerts = checkAvailableCerts(appKey);
+        List<CertTypeEnum> availableCerts = checkAvailableCerts(customAppKey);
         List<AuthorizationReq> authReqsForApi = checkAuthReqsByApi(input.getOperationId());
         return computeSecurityReq(availableCerts, authReqsForApi);
     }

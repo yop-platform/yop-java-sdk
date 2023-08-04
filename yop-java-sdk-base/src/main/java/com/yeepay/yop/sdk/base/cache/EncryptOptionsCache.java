@@ -53,7 +53,8 @@ public class EncryptOptionsCache {
         try {
             return ENCRYPT_OPTIONS_CACHE.get(getCacheKey(appKey, encryptAlg));
         } catch (ExecutionException e) {
-            throw new YopClientException("initEncryptOptions error, ex:", e);
+            throw new YopClientException("ConfigProblem, LoadEncryptOptions Fail, appKey:"
+                    + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
     }
 
@@ -72,7 +73,8 @@ public class EncryptOptionsCache {
         try {
             ENCRYPT_OPTIONS_CACHE.refresh(getCacheKey(appKey, encryptAlg));
         } catch (Exception e) {
-            throw new YopClientException("refreshEncryptOptions error, ex:", e);
+            throw new YopClientException("ConfigProblem, RefreshEncryptOptions Fail, appKey:"
+                    + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
     }
 
@@ -86,7 +88,8 @@ public class EncryptOptionsCache {
         try {
             ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(appKey, encryptAlg));
         } catch (Exception e) {
-            throw new YopClientException("invalidateEncryptOptions error, ex:", e);
+            throw new YopClientException("ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
+                    + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
     }
 
@@ -101,7 +104,8 @@ public class EncryptOptionsCache {
         try {
             ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(appKey, encryptAlg));
         } catch (Exception e) {
-            throw new YopClientException("invalidate EncryptOptions error, ex:", e);
+            throw new YopClientException("ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
+                    + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
         return loadEncryptOptions(appKey, encryptAlg);
     }

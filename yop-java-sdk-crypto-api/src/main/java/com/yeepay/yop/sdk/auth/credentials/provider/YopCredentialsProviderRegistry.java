@@ -27,7 +27,7 @@ public class YopCredentialsProviderRegistry {
 
     public static void registerProvider(YopCredentialsProvider yopCredentialsProvider) {
         if (yopCredentialsProvider == null) {
-            throw new YopClientException("customProvider can't be null.");
+            throw new YopClientException("SetUpProblem, Custom YopCredentialsProvider IsNull.");
         }
         CUSTOM_PROVIDER = yopCredentialsProvider;
     }

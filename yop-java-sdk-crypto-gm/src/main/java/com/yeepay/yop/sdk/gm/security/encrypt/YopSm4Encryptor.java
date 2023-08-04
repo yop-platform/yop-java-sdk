@@ -7,14 +7,14 @@ package com.yeepay.yop.sdk.gm.security.encrypt;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
+import com.yeepay.yop.sdk.gm.utils.Sm4Utils;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
 import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.utils.RandomUtils;
-import com.yeepay.yop.sdk.gm.utils.Sm4Utils;
-import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jcajce.io.CipherInputStream;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -63,7 +63,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
                 map.put(SM4_CBC_PKCS5PADDING, Cipher.getInstance(SM4_CBC_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME));
                 map.put(ALGORITHM_NAME_GCM_NOPADDING, Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME));
             } catch (Exception e) {
-                throw new YopClientException("error happened when initial with SM4 alg", e);
+                throw new YopClientException("SystemError, YopSm4Encryptor InitFail, ex:", e);
             }
             return map;
         }
@@ -90,7 +90,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(ENCRYPT_MODE, options);
             return initializedCipher.doFinal(plain);
         } catch (Throwable t) {
-            throw new YopClientException("error happened when encrypt data", t);
+            throw new YopClientException("SystemError, Encrypt Fail, options:" + options + ", ex:", t);
         }
     }
 
@@ -98,7 +98,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
     public InputStream encrypt(InputStream plain, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("chunked encrypt for files not supported now");
+            throw new YopClientException("SystemError, Encrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(plain, getInitializedCipher(ENCRYPT_MODE, options, false));
     }
@@ -109,7 +109,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(DECRYPT_MODE, options);
             return initializedCipher.doFinal(cipher);
         } catch (Throwable t) {
-            throw new YopClientException("error happened when decrypt data", t);
+            throw new YopClientException("SystemError, Decrypt Fail, options:" + options, t);
         }
     }
 
@@ -117,7 +117,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
     public InputStream decrypt(InputStream cipher, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("chunked decrypt for files not supported now");
+            throw new YopClientException("SystemError, Encrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(cipher, getInitializedCipher(DECRYPT_MODE, options, false));
     }
@@ -151,7 +151,8 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             cipher.init(mode, sm4Key);
             return cipher;
         } catch (Throwable throwable) {
-            throw new YopClientException("error happened when initialize cipher", throwable);
+            throw new YopClientException("SystemError, InitCipher Fail, mode:" + mode +
+                    ", options:" + encryptOptions + ", ex:", throwable);
         }
     }
 }

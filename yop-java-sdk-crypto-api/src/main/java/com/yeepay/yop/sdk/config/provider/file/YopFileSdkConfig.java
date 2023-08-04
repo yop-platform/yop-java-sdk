@@ -30,6 +30,7 @@ public final class YopFileSdkConfig implements Serializable {
     private String appKey;
 
     @JsonProperty("server_root")
+    @Deprecated
     private String serverRoot;
 
     @JsonProperty("yos_server_root")
@@ -61,6 +62,9 @@ public final class YopFileSdkConfig implements Serializable {
 
     @Deprecated
     private Map<String, List<YopCertConfig>> isvEncryptKeyMap;
+
+    @JsonProperty("yop_report")
+    private YopReportConfig yopReportConfig;
 
     public String getAppKey() {
         return appKey;
@@ -222,6 +226,14 @@ public final class YopFileSdkConfig implements Serializable {
                 isvEncryptKeyMap.put(appKey, list);
             }
         }
+    }
+
+    public YopReportConfig getYopReportConfig() {
+        return yopReportConfig;
+    }
+
+    public void setYopReportConfig(YopReportConfig yopReportConfig) {
+        this.yopReportConfig = yopReportConfig;
     }
 
     @Override

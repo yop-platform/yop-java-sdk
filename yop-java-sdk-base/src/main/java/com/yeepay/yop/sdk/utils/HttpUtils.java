@@ -293,7 +293,7 @@ public class HttpUtils {
                 try {
                     encodedNameValuePair.add(toNameValuePair(forSignature, paramName, paramValue));
                 } catch (UnsupportedEncodingException e) {
-                    throw new YopClientException("unsupported charset.", e);
+                    throw new YopClientException("ReqParam Illegal, Charset NotSuppport, name:" + paramName + ",value:" + paramValue, e);
                 }
             }
         }

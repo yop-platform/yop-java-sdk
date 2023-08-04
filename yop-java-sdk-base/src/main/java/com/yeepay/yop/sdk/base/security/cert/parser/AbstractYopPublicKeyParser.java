@@ -40,7 +40,7 @@ public abstract class AbstractYopPublicKeyParser {
         try {
             certStream = FileUtils.getResourceAsStream(certPath);
             if (null == certStream) {
-                throw new YopClientException("X509Cert Not Exists, path:" + certPath + ", type:" + certType);
+                throw new YopClientException("ConfigProblem, X509Cert NotFound, path:" + certPath + ", type:" + certType);
             }
             return X509CertSupportFactory.getSupport(certType.getValue()).generate(certStream);
         } finally {

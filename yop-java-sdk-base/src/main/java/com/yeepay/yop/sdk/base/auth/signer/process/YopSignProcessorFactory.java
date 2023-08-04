@@ -35,7 +35,7 @@ public class YopSignProcessorFactory {
     public static YopSignProcessor getSignProcessor(String certType) {
         final YopSignProcessor yopSignProcessor = YOP_SIGN_PROCESSOR_MAP.get(certType);
         if (null == yopSignProcessor) {
-            throw new YopClientException("YopSignProcessor not found, certType:" + certType);
+            throw new YopClientException("ConfigProblem, YopSignProcessor NotFound, certType:" + certType);
         }
         return yopSignProcessor;
     }

@@ -41,7 +41,7 @@ public class Sm4Enhancer extends AbstractEncryptOptionsEnhancer {
         }
         List<YopCertConfig> mainKeys = YopCredentialsProviderRegistry.getProvider().getIsvEncryptKey(appKey);
         if (CollectionUtils.isEmpty(mainKeys)) {
-            throw new YopClientException("isv encrypted key not config");
+            throw new YopClientException("ConfigProblem, IsvEncryptKey NotFound, appKey:" + appKey);
         }
         EncryptOptions mainKeyOptions = source.copy();
         String mainCredential = mainKeys.get(0).getValue();

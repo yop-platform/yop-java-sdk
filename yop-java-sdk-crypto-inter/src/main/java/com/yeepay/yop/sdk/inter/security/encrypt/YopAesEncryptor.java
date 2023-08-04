@@ -51,7 +51,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
                 map.put(AES_CBC_PCK_ALG, Cipher.getInstance(AES_CBC_PCK_ALG));
                 map.put(AES_ALG, Cipher.getInstance(AES_ALG));
             } catch (Exception e) {
-                throw new YopClientException("error happened when initial with AES alg", e);
+                throw new YopClientException("SystemError, InitCipher Fail, ex:", e);
             }
             return map;
         }
@@ -87,7 +87,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(Cipher.ENCRYPT_MODE, options);
             return initializedCipher.doFinal(plain);
         } catch (Throwable t) {
-            throw new YopClientException("error happened when encrypt data", t);
+            throw new YopClientException("SystemError, Encrypt Fail, options:" + options + ", ex:", t);
         }
     }
 
@@ -95,7 +95,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
     public InputStream encrypt(InputStream plain, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("chunked encrypt for files not supported now");
+            throw new YopClientException("SystemError, Encrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(plain, getInitializedCipher(Cipher.ENCRYPT_MODE, options, false));
     }
@@ -106,7 +106,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(Cipher.DECRYPT_MODE, options);
             return initializedCipher.doFinal(cipher);
         } catch (Throwable t) {
-            throw new YopClientException("error happened when decrypt data", t);
+            throw new YopClientException("SystemError, Decrypt Fail, options:" + options + ", ex:", t);
         }
     }
 
@@ -114,7 +114,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
     public InputStream decrypt(InputStream cipher, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("chunked decrypt for files not supported now");
+            throw new YopClientException("SystemError, Decrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(cipher, getInitializedCipher(Cipher.DECRYPT_MODE, options, false));
     }

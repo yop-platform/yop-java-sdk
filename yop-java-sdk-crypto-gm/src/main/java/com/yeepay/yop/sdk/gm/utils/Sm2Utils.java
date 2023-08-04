@@ -93,7 +93,7 @@ public class Sm2Utils {
             KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return kf.generatePublic(eks);
         } catch (Exception e) {
-            throw new YopClientException(e.getMessage());
+            throw new YopClientException("ConfigProblem, YopPublicKey Illegal, value:" + pubKey + ", ex:", e);
         }
     }
 
@@ -113,7 +113,7 @@ public class Sm2Utils {
             KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return kf.generatePrivate(peks);
         } catch (Exception e) {
-            throw new YopClientException(e.getMessage());
+            throw new YopClientException("ConfigProblem, IsvPrivateKey Illegal, value:" + priKey + ", ex:" + e);
         }
 
     }
@@ -155,7 +155,8 @@ public class Sm2Utils {
             }
             return Encodes.encodeUrlSafeBase64(sign(priKey, dataByte));
         } catch (CryptoException e) {
-            throw new YopClientException("UnExpectedException occurred when sign content");
+            throw new YopClientException("UnexpectedError, Sign Fail, data:" + data + ", key:"
+                    + priKey + ", options:" + options + ", ex:", e);
         }
 
     }
@@ -174,7 +175,8 @@ public class Sm2Utils {
             byte[] dataByte = data.getBytes(Charsets.UTF_8);
             return verify(publicKey, dataByte, encodeSM2SignToDER(signByte));
         } catch (IOException e) {
-            throw new YopClientException("IOException occurred when verify sign");
+            throw new YopClientException("UnexpectedError, VerifySign Fail, data:" +
+                    data + ", sign:" + signature + ", key:" + publicKey + ", ex:", e);
         }
     }
 

@@ -58,7 +58,8 @@ public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
                     .getLatestCredentials(appKey, CertTypeEnum.SM2.getValue());
         }
         if (null == platformCredentials) {
-            throw new YopClientException("EncryptOptions Enhance Fail For No YopPlatformCredentials Found");
+            throw new YopClientException("ConfigProblem, YopPlatformCredentials NotFound to Enhance EncryptOptions, appKey:"
+                    + appKey + ", serialNo:" + serialNo);
         }
         source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialBytes,
                 new EncryptOptions(platformCredentials)));

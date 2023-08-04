@@ -33,10 +33,10 @@ public class Holder<V> {
         try {
             return futureTask.get();
         } catch (InterruptedException e) {
-            throw new YopClientException("InterruptedException occurred when get value from SingletonHolder.");
+            throw new YopClientException("SystemError, ThreadInterrupted, ex:", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            throw new YopClientException("UnexpectedException occurred when get value from SingletonHolder.", cause);
+            throw new YopClientException("UnexpectedError, ex:", cause);
         }
     }
 

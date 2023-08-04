@@ -46,7 +46,7 @@ public class X509CertSupportFactory {
     public static X509CertSupport getSupport(String certType) {
         final X509CertSupport x509CertSupport = X509_CERT_GENERATOR_MAP.get(certType);
         if (null == x509CertSupport) {
-            throw new YopClientException("X509CertSupport not found, certType:" + certType);
+            throw new YopClientException("ConfigProblem, X509CertSupport NotFound, certType:" + certType);
         }
         return x509CertSupport;
     }

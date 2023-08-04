@@ -50,7 +50,7 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
         CertTypeEnum certType;
         if (null == appConfig || StringUtils.isEmpty(credentialType) ||
                 (null == (certType = CertTypeEnum.parse(credentialType)))) {
-            throw new YopClientException("Illegal params when buildCredentials, credentialType:" + credentialType);
+            throw new YopClientException("ConfigProblem, IsvPrivateCert NotFound, certType:" + credentialType + ", config:" + appConfig);
         }
         switch (certType) {
             case RSA2048:
@@ -58,7 +58,7 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
                 MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(Encodes.encodeKey(appConfig.loadPrivateKey(certType)), certType);
                 return new MockEncryptorCredentials(appConfig.getAppKey(), credentialsItem);
             default:
-                throw new YopClientException("CertType is illegal for YopCredentials, certType:" + certType);
+                throw new YopClientException("ConfigProblem, IsvPrivateCert Type NotSupport, certType:" + certType + ", config:" + appConfig);
         }
     }
 

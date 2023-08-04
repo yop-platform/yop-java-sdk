@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.model.cert;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ import java.util.List;
  * @version 1.0.0
  * @since 2022/4/26
  */
-public class YopPlatformCertQueryResult {
+public class YopPlatformCertQueryResult implements Serializable {
 
     private static final long serialVersionUID = -1L;
 

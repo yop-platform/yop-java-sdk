@@ -27,26 +27,30 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements YopCertParser {
 
+    static {
+        SmUtils.init();
+    }
+
     @Override
     public YopPublicKey parse(YopCertConfig certConfig) {
         if (null == certConfig.getStoreType()) {
-            throw new YopClientException("Can't init YOP public key!,  Store type is error.");
+            throw new YopClientException("ConfigProblem, YopPublicKey StoreType IsNull, certConfig:" + certConfig);
         }
         switch (certConfig.getStoreType()) {
             case STRING:
                 try {
                     return new YopPublicKey(SmUtils.string2PublicKey(certConfig.getValue()));
                 } catch (Exception ex) {
-                    throw new YopClientException("Can't init YOP public key!, cert_config:" + certConfig, ex);
+                    throw new YopClientException("ConfigProblem, YopPublicKey Value Illegal, certConfig:" + certConfig, ex);
                 }
             case FILE_CER:
                 try {
                     return new YopPublicKey(getX509Cert(certConfig.getValue(), CertTypeEnum.SM2));
                 } catch (Exception e) {
-                    throw new YopClientException("Can't init YOP public key! cert_config:" + certConfig, e);
+                    throw new YopClientException("ConfigProblem, YopPublicKey Value Illegal, certConfig:" + certConfig, e);
                 }
             default:
-                throw new YopClientException("Can't init YOP public key!, cert_config:" + certConfig);
+                throw new YopClientException("ConfigProblem, YopPublicKey StoreType Illegal, certConfig:" + certConfig);
         }
     }
 
