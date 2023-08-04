@@ -185,14 +185,25 @@ public class ClientReporter {
         }
         if (null != reportToBeQueue) {
             reportToBeQueue.setEndDate(new Date());
+            syncReportToQueue(reportToBeQueue);
+        }
+    }
 
-            while (!YOP_HOST_REQUEST_QUEUE.offer(reportToBeQueue)) {
-                YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
-                if (oldReport != null) {
-                    LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
-                }
+    public static void syncReportToQueue(YopReport report) {
+        while (!YOP_HOST_REQUEST_QUEUE.offer(report)) {
+            YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
+            if (oldReport != null) {
+                LOGGER.info("Discard Old ReportEvent, value:{}", oldReport);
             }
         }
+    }
+
+    public static void asyncReportToQueue(YopReport report) {
+        COLLECT_POOL.submit(() -> syncReportToQueue(report));
+    }
+
+    public static void asyncReportToQueue(YopReport report, ThreadPoolExecutor executor) {
+        executor.submit(() -> syncReportToQueue(report));
     }
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {

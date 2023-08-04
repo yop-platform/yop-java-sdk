@@ -4,6 +4,9 @@ import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserver
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.client.ClientReporter;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostBlockPayload;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostBlockReport;
 import com.yeepay.yop.sdk.client.router.enums.ModeEnum;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -22,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 
 /**
  * title: 简单网关路由<br>
@@ -115,6 +119,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                                             BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
                                     oldBlocked.removeIf(serverRoot::equals);
                                     oldBlocked.add(serverRoot);
+                                    ClientReporter.asyncReportToQueue(new YopHostBlockReport(new YopHostBlockPayload(serverRoot.toString(), getAllServerRoots(serverRootType))));
                                     break;
                                 case CLOSED:
                                     final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
@@ -127,6 +132,14 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         }
                     }
                 });
+    }
+
+    private static List<String> getAllServerRoots(ServerRootType serverRootType) {
+        final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.get(serverRootType);
+        if (CollectionUtils.isEmpty(serverRoots)) {
+            return Collections.emptyList();
+        }
+        return serverRoots.stream().map(URI::toString).collect(Collectors.toList());
     }
 
     @Override
