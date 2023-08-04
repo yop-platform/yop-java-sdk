@@ -6,6 +6,7 @@ import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.g3.sdk.yop.YopServiceException;
 import com.yeepay.g3.sdk.yop.client.apache.YopServerResponseInterceptor;
 import com.yeepay.g3.sdk.yop.client.metric.YopFailureItem;
 import com.yeepay.g3.sdk.yop.client.metric.YopStatus;
@@ -34,7 +35,10 @@ import com.yeepay.g3.sdk.yop.internal.YopDegradeRuleHelper;
 import com.yeepay.g3.sdk.yop.model.DownloadInputStream;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
-import com.yeepay.g3.sdk.yop.utils.*;
+import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
+import com.yeepay.g3.sdk.yop.utils.FileUtils;
+import com.yeepay.g3.sdk.yop.utils.InternalConfig;
+import com.yeepay.g3.sdk.yop.utils.JsonUtils;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64Utils;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
@@ -456,52 +460,67 @@ public class AbstractClient {
     }
 
     protected static YopResponse fetchContentByApacheHttpClient(String apiUri, HttpUriRequest request, ResponseConfig responseConfig) throws IOException {
+        return fetchContentByApacheHttpClient(apiUri, request, responseConfig, 0);
+    }
+
+    protected static YopResponse fetchContentByApacheHttpClient(String apiUri, HttpUriRequest request, ResponseConfig responseConfig, int retryCount) throws IOException {
         HttpContext httpContext = createHttpContext();
         CloseableHttpResponse remoteResponse = null;
-        Throwable serverEx = null;
+        Throwable ex = null;
         final long reqStartTime = System.currentTimeMillis();
         try {
             remoteResponse = getHttpClient().execute(request, httpContext);
             return parseResponse(remoteResponse, responseConfig);
-        } catch (YopClientException e) {
+        } catch (YopClientException | YopHttpException e) {
+            ex = e;
             throw e;
-        } catch (YopHttpException e) {
-            serverEx = e;
-            throw e;
-        } catch (Throwable ex) {
+        } catch (Throwable e) {
             String requestId = getRequestId(request);
-            serverEx = ex;
-            throw new YopHttpException("unable to execute request, requestId:" + requestId, ex);
+            ex = e;
+            throw new YopHttpException("unable to execute request, requestId:" + requestId, e);
         } finally {
-            reportHostEvent(apiUri, request, remoteResponse, serverEx, reqStartTime);
-            if (serverEx != null || (remoteResponse != null && isJsonResponse(remoteResponse))) {
+            reportHostEvent(apiUri, request, remoteResponse, ex, reqStartTime, retryCount);
+            if (null != ex || (null != remoteResponse && isJsonResponse(remoteResponse))) {
                 HttpClientUtils.closeQuietly(remoteResponse);
             }
         }
     }
 
-    private static void reportHostEvent(String apiUri, HttpUriRequest request, CloseableHttpResponse httpResponse, Throwable serverEx, long reqStartTime) {
-        long elapsedTime = System.currentTimeMillis() - reqStartTime;
-        final String appKey = getAppKey(request);
-        if (null != serverEx) {
-            final YopHostFailEvent failEvent = new YopHostFailEvent();
-            setBasic(failEvent, appKey, apiUri, request, httpResponse, elapsedTime);
-            failEvent.setStatus(YopStatus.FAIL);
-            failEvent.setData(new YopFailureItem(serverEx));
-            ClientReporter.reportHostRequest(failEvent);
-            return;
+    private static void reportHostEvent(String apiUri, HttpUriRequest request, CloseableHttpResponse httpResponse,
+                                        Throwable originEx, long reqStartTime, int retryCount) {
+        try {
+            long elapsedTime = System.currentTimeMillis() - reqStartTime;
+            final String appKey = getAppKey(request);
+            boolean isEx = null != originEx,
+                    isClientEx = originEx instanceof YopClientException,
+                    isServiceEx = originEx instanceof YopServiceException,
+                    isHttpEx = originEx instanceof YopHttpException,
+                    isUnexpectedEx = isEx && !(isClientEx || isHttpEx),
+                    isHostEx = isHttpEx || isUnexpectedEx,
+                    needReport = !isEx || isServiceEx || isHostEx;
+            if (needReport) {
+                if (isHostEx) {
+                    final YopHostFailEvent failEvent = new YopHostFailEvent();
+                    setBasic(failEvent, appKey, apiUri, request, httpResponse, elapsedTime, retryCount);
+                    failEvent.setStatus(YopStatus.FAIL);
+                    failEvent.setData(new YopFailureItem(originEx));
+                    ClientReporter.reportHostRequest(failEvent);
+                } else {
+                    final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
+                    setBasic(successEvent, appKey, apiUri, request, httpResponse, elapsedTime, retryCount);
+                    successEvent.setStatus(YopStatus.SUCCESS);
+                    successEvent.setData("");
+                    ClientReporter.reportHostRequest(successEvent);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("ReportError, ex:" + e);
         }
-
-        final YopHostSuccessEvent successEvent = new YopHostSuccessEvent();
-        setBasic(successEvent, appKey, apiUri, request, httpResponse, elapsedTime);
-        successEvent.setStatus(YopStatus.SUCCESS);
-        successEvent.setData("");
-        ClientReporter.reportHostRequest(successEvent);
     }
 
     private static void setBasic(YopHostRequestEvent<?> event, String appKey, String apiUri,
                                  HttpUriRequest request, CloseableHttpResponse httpResponse,
-                                 long elapsedTime) {
+                                 long elapsedTime, int retryCount) {
         event.setAppKey(appKey);
         event.setServerResource(apiUri);
         event.setServerHost(HttpUtils.generateHostHeader(request.getURI()));
@@ -514,6 +533,7 @@ public class AbstractClient {
         }
         event.setServerIp(StringUtils.defaultString(serverIp, ""));
         event.setElapsedMillis(elapsedTime);
+        event.setRetry(retryCount > 0);
     }
 
     private static String getRequestId(HttpUriRequest request) {
@@ -580,12 +600,14 @@ public class AbstractClient {
                         .build());
                 return result;
             } else {
-                throw new YopClientException("empty result with httpStatusCode:" + response.getStatusCode());
+                throw new YopHttpException("ResponseError, Empty Content, httpStatusCode:" + response.getStatusCode());
             }
         } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
             throw new YopHttpException("Response Error, statusCode:" + statusCode);
         }
-        throw new YopClientException("unexpected httpStatusCode:" + response.getStatusCode());
+        final YopServiceException invokeEx = new YopServiceException("ReqParam Illegal, Bad Request, statusCode:" + statusCode);
+        invokeEx.setErrorType(YopServiceException.ErrorType.Client);
+        throw invokeEx;
     }
 
     private static String decryptResponse(String content, ResponseConfig response) {
@@ -705,12 +727,14 @@ public class AbstractClient {
                                                YopRequestType requestType, YopSecurityType securityType) throws IOException {
         List<String> excludeServerRoots = Lists.newArrayList();
         String lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
+        int retryCount = 0;
         while (!excludeServerRoots.contains(lastServerRoot)) {
             try {
-                return handleRequestWithDegrade(lastServerRoot, apiUri, request, method, requestType, securityType);
+                return handleRequestWithDegrade(lastServerRoot, apiUri, request, method, requestType, securityType, retryCount);
             } catch (YopHostException hostError) {//域名异常
                 excludeServerRoots.add(lastServerRoot);
                 lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
+                retryCount++;
             } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
         }
 
@@ -720,11 +744,12 @@ public class AbstractClient {
             LOGGER.debug("All ServerRoots Unavailable, Last Try, tried:{}, last:{}", excludeServerRoots, lastServerRoot);
         }
 
-        return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType);
+        return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType, retryCount);
     }
 
     private static YopResponse handleRequestWithDegrade(String lastServerRoot, String apiUri, YopRequest request,
-                                                        HttpMethodName method, YopRequestType requestType, YopSecurityType securityType) {
+                                                        HttpMethodName method, YopRequestType requestType, YopSecurityType securityType,
+                                                        int retryCount) {
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Trying ServerRoot, value:{}", lastServerRoot);
@@ -734,7 +759,7 @@ public class AbstractClient {
         try {
             YopDegradeRuleHelper.addDegradeRule(lastServerRoot, InternalConfig.getCircuitBreakerConfig());
             entry = SphU.entry(lastServerRoot);
-            return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType);
+            return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType, retryCount);
         } catch (YopClientException clientError) {//客户端异常&业务异常
             throw clientError;
         } catch (YopHostException | YopUnknownException serverError) {//域名异常&未知异常
@@ -759,7 +784,8 @@ public class AbstractClient {
     }
 
     private static YopResponse doHandleRequest(String serverRoot, String apiUri, YopRequest request,
-                                               HttpMethodName method, YopRequestType requestType, YopSecurityType securityType) {
+                                               HttpMethodName method, YopRequestType requestType, YopSecurityType securityType,
+                                               int retryCount) {
         final long start = System.currentTimeMillis();
         try {
             if (LOGGER.isDebugEnabled()) {
@@ -772,7 +798,7 @@ public class AbstractClient {
                     .withNeedEncrypt(request.isNeedEncrypt())
                     .withEncryptKey(request.getEncryptKey())
                     .withYopPublicKey(InternalConfig.getYopPublicKey(CertTypeEnum.RSA2048)) : ResponseConfig.NONE_OPERATION_CONFIG;
-            YopResponse response = fetchContentByApacheHttpClient(apiUri, httpRequest.getLeft(), responseConfig);
+            YopResponse response = fetchContentByApacheHttpClient(apiUri, httpRequest.getLeft(), responseConfig, retryCount);
             handleResult(response);
             if (httpRequest.getRight() != null) {
                 checkFileIntegrity(response, CRC64Utils.getCRC64(httpRequest.getRight()));
