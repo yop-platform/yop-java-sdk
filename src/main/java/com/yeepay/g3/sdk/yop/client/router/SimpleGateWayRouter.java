@@ -4,7 +4,10 @@ import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserver
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.yeepay.g3.sdk.yop.client.ClientReporter;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
+import com.yeepay.g3.sdk.yop.client.metric.report.host.YopHostStatusChangePayload;
+import com.yeepay.g3.sdk.yop.client.metric.report.host.YopHostStatusChangeReport;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfig;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.enums.ModeEnum;
@@ -57,29 +60,35 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static void monitorServerRoot() {
         EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
                 (prevState, newState, rule, snapshotValue) -> {
-                    final String serverRoot = rule.getResource();
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
-                    }
-                    Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                    if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                        for (ServerRootType serverRootType : serverRootTypes) {
-                            switch (newState) {
-                                case OPEN:
-                                    final LinkedBlockingDeque<String> oldBlocked =
-                                            BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
-                                    oldBlocked.removeIf(serverRoot::equals);
-                                    oldBlocked.add(serverRoot);
-                                    break;
-                                case CLOSED:
-                                    final LinkedBlockingDeque<String> blockedServers = BLOCKED_SERVERS.get(serverRootType);
-                                    if (null != blockedServers) {
-                                        blockedServers.removeIf(serverRoot::equals);
-                                    }
-                                    break;
-                                default:
+                    try {
+                        final String serverRoot = rule.getResource();
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
+                        }
+                        Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
+                        if (CollectionUtils.isNotEmpty(serverRootTypes)) {
+                            for (ServerRootType serverRootType : serverRootTypes) {
+                                switch (newState) {
+                                    case OPEN:
+                                        final LinkedBlockingDeque<String> oldBlocked =
+                                                BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
+                                        oldBlocked.removeIf(serverRoot::equals);
+                                        oldBlocked.add(serverRoot);
+                                        break;
+                                    case CLOSED:
+                                        final LinkedBlockingDeque<String> blockedServers = BLOCKED_SERVERS.get(serverRootType);
+                                        if (null != blockedServers) {
+                                            blockedServers.removeIf(serverRoot::equals);
+                                        }
+                                        break;
+                                    default:
+                                }
                             }
                         }
+                        ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name())));
+                    } catch (Exception e) {
+                        LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
                 });
     }
