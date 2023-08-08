@@ -16,7 +16,7 @@ import java.util.UUID;
  */
 public interface YopConstants {
 
-    String VERSION = "4.2.4";
+    String VERSION = "4.2.5";
 
     String DEFAULT_ENCODING = "UTF-8";
 

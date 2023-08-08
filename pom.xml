@@ -383,17 +383,13 @@
                                         <pattern>org.objectweb.asm</pattern>
                                         <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
                                     </relocation>
+                                    <relocation>
+                                        <pattern>com.alibaba.csp.sentinel</pattern>
+                                        <shadedPattern>com.yeepay.shade.com.alibaba.csp.sentinel</shadedPattern>
+                                    </relocation>
                                 </relocations>
                                 <transformers>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.http.YopHttpClientProvider</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.auth.signer.YopSigner</resource>
-                                    </transformer>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 </transformers>
                             </configuration>
                         </execution>
@@ -535,7 +531,7 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-        <tag>v4.2.4</tag>
+        <tag>v4.2.5</tag>
     </scm>
 
     <developers>
