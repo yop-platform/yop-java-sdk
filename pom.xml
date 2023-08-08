@@ -204,6 +204,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.schemas</resource>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <relocations>
                                 <relocation>
@@ -241,6 +242,10 @@
                                 <relocation>
                                     <pattern>org.objectweb.asm</pattern>
                                     <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.alibaba.csp.sentinel</pattern>
+                                    <shadedPattern>com.yeepay.shade.com.alibaba.csp.sentinel</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
