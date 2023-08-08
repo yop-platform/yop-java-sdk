@@ -5,7 +5,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>3.3.10</version>
+    <version>3.3.10-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -176,9 +176,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
-                <configuration>
-                    <!-- put your configurations here -->
-                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -186,9 +183,8 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <!-- 将所有不使用的类全部排除掉 -->
                             <shadedArtifactAttached>true</shadedArtifactAttached>
-                            <shadedClassifierName>${shaded.classifier.name}</shadedClassifierName>
+                            <shadedClassifierName>shade</shadedClassifierName>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -212,6 +208,7 @@
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.schemas</resource>
                                 </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <relocations>
                                 <relocation>
@@ -261,6 +258,10 @@
                                 <relocation>
                                     <pattern>org.objectweb.asm</pattern>
                                     <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.alibaba.csp.sentinel</pattern>
+                                    <shadedPattern>com.yeepay.shade.com.alibaba.csp.sentinel</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -457,11 +458,10 @@
             </distributionManagement>
             <build>
                 <plugins>
-
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.3.0</version>
                         <configuration>
                             <descriptors>
                                 <descriptor>assembly.xml</descriptor>
