@@ -426,29 +426,13 @@
                                         <pattern>org.objectweb.asm</pattern>
                                         <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
                                     </relocation>
+                                    <relocation>
+                                        <pattern>com.alibaba.csp.sentinel</pattern>
+                                        <shadedPattern>com.yeepay.shade.com.alibaba.csp.sentinel</shadedPattern>
+                                    </relocation>
                                 </relocations>
                                 <transformers>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.base.auth.signer.YopSigner</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.security.digest.YopDigester</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.base.security.cert.X509CertSupport</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.security.encrypt.YopEncryptor</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/services/com.yeepay.yop.sdk.http.YopHttpClientProvider</resource>
-                                    </transformer>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 </transformers>
                             </configuration>
                         </execution>
