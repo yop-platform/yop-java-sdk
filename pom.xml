@@ -5,7 +5,7 @@
     <artifactId>yop-java-sdk</artifactId>
     <packaging>jar</packaging>
 
-    <version>4.1.13</version>
+    <version>4.1.13-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -330,7 +330,14 @@
                                     <pattern>org.objectweb.asm</pattern>
                                     <shadedPattern>com.yeepay.shade.org.objectweb.asm</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.alibaba.csp.sentinel</pattern>
+                                    <shadedPattern>com.yeepay.shade.com.alibaba.csp.sentinel</shadedPattern>
+                                </relocation>
                             </relocations>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
