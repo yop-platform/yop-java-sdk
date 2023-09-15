@@ -33,12 +33,10 @@ public class MultiPartFile implements Serializable {
     private final String fileName;
 
     public MultiPartFile(File file) throws IOException {
-        Pair<String, CheckedInputStream> inputStreamPair = getCheckedInputStreamPair(new FileInputStream(file));
-        this.fileName = inputStreamPair.getLeft();
+        this(new FileInputStream(file));
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("filename parsed, origin:{}, current:{}", file.getName(), this.fileName);
         }
-        this.inputStream = inputStreamPair.getRight();
     }
 
     public MultiPartFile(InputStream in) throws IOException {
