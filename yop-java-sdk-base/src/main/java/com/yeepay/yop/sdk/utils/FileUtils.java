@@ -1,6 +1,11 @@
 package com.yeepay.yop.sdk.utils;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
+import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.config.TikaConfig;
@@ -17,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
 
@@ -132,6 +138,54 @@ public final class FileUtils {
 
     public static ClassLoader getContextClassLoader() {
         return Thread.currentThread().getContextClassLoader();
+    }
+
+    /**
+     * 保存文件到本地
+     *
+     * @param yosDownloadResponse 接口返回
+     * @return File
+     */
+    public static File saveFile(YosDownloadResponse yosDownloadResponse) {
+        YosDownloadInputStream yosDownloadInputStream = yosDownloadResponse.getResult();
+        try {
+            String filePrefix = "yos-", fileSuffix = ".tmp";
+            try {
+                String fileName = getFileNameFromHeader(yosDownloadResponse.getMetadata().getContentDisposition());
+                if (StringUtils.isNotBlank(fileName)) {
+                    final String[] split = fileName.split("\\.");
+                    if (split.length == 2) {
+                        if (StringUtils.length(split[0])  > 3) {
+                            filePrefix = split[0];
+                        }
+                        if (StringUtils.isNotBlank(split[1])) {
+                            fileSuffix = CharacterConstants.DOT + split[1];
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.warn("parse Content-Disposition fail, value:" + yosDownloadResponse.getMetadata().getContentDisposition(), e);
+            }
+            File tmpFile = File.createTempFile(filePrefix, fileSuffix);
+            long size = IOUtils.copy(yosDownloadInputStream, Files.newOutputStream(tmpFile.toPath()));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("file downloaded to path:{}, size:{}.", tmpFile.getAbsolutePath(), size);
+            }
+            return tmpFile;
+        } catch (Throwable ex) {
+            LOGGER.error("fail to save file, response:" + yosDownloadResponse, ex);
+            throw new YopClientException("fail to save file, response:" + yosDownloadResponse);
+        } finally {
+            StreamUtils.closeQuietly(yosDownloadInputStream);
+        }
+    }
+
+    private static String getFileNameFromHeader(String contentDisposition) {
+        final String[] parts = contentDisposition.split( "filename=");
+        if (parts.length == 2) {
+            return StringUtils.trim(parts[1]);
+        }
+        return null;
     }
 
 }

@@ -4,6 +4,8 @@ import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.checksum.CRC64;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.zip.CheckedInputStream;
@@ -20,6 +22,8 @@ import java.util.zip.CheckedInputStream;
  */
 public class MultiPartFile implements Serializable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultiPartFile.class);
+
     private static final long serialVersionUID = -1L;
 
     private static final int EXT_READ_BUFFER_SIZE = 64 * 1024;
@@ -29,8 +33,10 @@ public class MultiPartFile implements Serializable {
     private final String fileName;
 
     public MultiPartFile(File file) throws IOException {
-        this.inputStream = getCheckedInputStream(new FileInputStream(file));
-        this.fileName = file.getName();
+        this(new FileInputStream(file));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("filename parsed, origin:{}, current:{}", file.getName(), this.fileName);
+        }
     }
 
     public MultiPartFile(InputStream in) throws IOException {
