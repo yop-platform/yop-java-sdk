@@ -211,7 +211,8 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     private <Input extends BaseRequest> void encryptRequest(Request<Input> request, ExecutionContext executionContext)
             throws ExecutionException, InterruptedException, UnsupportedEncodingException {
         if (!executionContext.isEncryptSupported()) {
-            LOGGER.debug("request not encrypted for no YopEncryptor found(or maybe a rsa request)");
+            LOGGER.debug("request not encrypted，encryptor:{}, encryptOptions:{}", executionContext.getEncryptor(),
+                    executionContext.getEncryptOptions());
             return;
         }
         encrypt(request, executionContext.getEncryptor(), executionContext.getEncryptOptions().get());
