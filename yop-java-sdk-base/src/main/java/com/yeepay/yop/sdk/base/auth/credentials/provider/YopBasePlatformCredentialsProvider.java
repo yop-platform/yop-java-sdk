@@ -117,7 +117,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
      *
      * @param appKey     应用标识
      * @param serialNo   证书序列号(长度为10的16进制字符串)
-     * @param serverRoot 请求端点
+     * @param serverRoot 平台证书请求端点
      * @return X509Certificate
      */
     protected X509Certificate loadRemoteSm2Cert(String appKey, String serialNo, String serverRoot) {
@@ -150,7 +150,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             // rsa
             final CertTypeEnum parsedCertType = CertTypeEnum.parse(credentialType);
             if (CertTypeEnum.RSA2048.equals(parsedCertType)) {
-                return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
+                return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, serverRoot);
             }
 
             // sm2

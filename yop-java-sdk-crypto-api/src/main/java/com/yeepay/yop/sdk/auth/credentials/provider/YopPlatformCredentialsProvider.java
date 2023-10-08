@@ -34,7 +34,7 @@ public interface YopPlatformCredentialsProvider {
      *
      * @param appKey     应用
      * @param serialNo   证书序列号
-     * @param serverRoot 请求端点
+     * @param serverRoot 平台证书请求端点
      * @return
      */
     default YopPlatformCredentials getCredentials(String appKey, String serialNo, String serverRoot) {

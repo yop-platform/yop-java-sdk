@@ -110,7 +110,7 @@ public class YopCertificateCache {
      *
      * @param appKey     应用标识
      * @param serialNo   证书序列号，可空
-     * @param serverRoot 请求端点，可空
+     * @param serverRoot 平台证书请求端点，可空
      * @return 最新平台证书
      */
     public static List<X509Certificate> loadPlatformSm2Certs(String appKey, String serialNo, String serverRoot) {
@@ -147,7 +147,7 @@ public class YopCertificateCache {
      *
      * @param appKey     应用标识
      * @param serialNo   证书序列号，可空
-     * @param serverRoot 请求端点，可空
+     * @param serverRoot 平台证书请求端点，可空
      * @return 最新平台证书
      */
     public static List<X509Certificate> refreshPlatformSm2Certs(String appKey, String serialNo, String serverRoot) {
@@ -177,7 +177,7 @@ public class YopCertificateCache {
      *
      * @param appKey     应用标识
      * @param serialNo   证书序列号，可空
-     * @param serverRoot 请求端点，可空
+     * @param serverRoot 平台证书请求端点，可空
      * @return 最新平台证书
      */
     public static List<X509Certificate> reloadPlatformSm2Certs(String appKey, String serialNo, String serverRoot) {

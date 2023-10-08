@@ -60,7 +60,7 @@ public class EncryptOptionsCache {
      *
      * @param appKey     应用
      * @param encryptAlg 加解密算法
-     * @param serverRoot 请求端点
+     * @param serverRoot 平台证书请求端点
      * @return Future<EncryptOptions>
      */
     public static Future<EncryptOptions> loadEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
@@ -97,7 +97,7 @@ public class EncryptOptionsCache {
      *
      * @param appKey     应用
      * @param encryptAlg 加解密算法
-     * @param serverRoot 请求端点
+     * @param serverRoot 平台证书请求端点
      */
     public static void refreshEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
         try {
@@ -123,7 +123,7 @@ public class EncryptOptionsCache {
      *
      * @param appKey     应用
      * @param encryptAlg 加解密算法
-     * @param serverRoot 请求端点
+     * @param serverRoot 平台证书请求端点
      */
     public static void invalidateEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
         try {
@@ -150,7 +150,7 @@ public class EncryptOptionsCache {
      *
      * @param appKey     应用
      * @param encryptAlg 加解密算法
-     * @param serverRoot 请求端点
+     * @param serverRoot 平台证书请求端点
      * @return Future<EncryptOptions>
      */
     public static Future<EncryptOptions> reloadEncryptOptions(String appKey, String encryptAlg, String serverRoot) {

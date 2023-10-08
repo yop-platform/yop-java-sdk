@@ -105,6 +105,11 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
     private String platformSerialNo;
 
     /**
+     * 平台证书请求端点
+     */
+    private String platformServerRoot;
+
+    /**
      * 加密头
      */
     private String yopEncrypt;
@@ -117,7 +122,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
     @Override
     public YopCallback parse() {
         // 验签
-        verifySign();
+        verifySign(platformServerRoot);
 
         // 解密
         final String bizContent = decryptBizContent();
@@ -129,12 +134,12 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
                 .withMetaInfo("headers", originRequest.getHeaders()).build();
     }
 
-    private void verifySign() {
+    private void verifySign(String serverRoot) {
         String sign = signature;
         String[] args = sign.split("\\$");
         String plainText = preparePlainText();
         final YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
-                getCredentials(appKey, platformSerialNo);
+                getCredentials(appKey, platformSerialNo, serverRoot);
         YopSignProcessorFactory.getSignProcessor(certType.getValue()).verify(plainText, args[0], platformCredentials.getCredential());
     }
 
@@ -184,6 +189,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
                 platformSerialNo = headers.get(Headers.YOP_CERT_SERIAL_NO);
             }
             platformSerialNo = X509CertUtils.parseToHex(platformSerialNo);
+            platformServerRoot = request.getPlatformServerRoot();
             yopEncrypt = headers.get(Headers.YOP_ENCRYPT);
             yopRequestId = headers.get(Headers.YOP_REQUEST_ID);
         } catch (Exception e) {
