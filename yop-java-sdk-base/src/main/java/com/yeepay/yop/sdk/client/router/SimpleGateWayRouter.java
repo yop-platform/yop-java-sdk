@@ -162,7 +162,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 throw new YopClientException("RequestConfig Error, serverRoot excluded:" + serverRoot);
             }
             addServerRoot(serverRoot, MANUAL_SERVER_ROOT_TYPES);
-            recordMainServer(serverRoot, MANUAL_SERVER_ROOT_TYPES, true);
             return serverRoot;
         } else {
             // 独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原

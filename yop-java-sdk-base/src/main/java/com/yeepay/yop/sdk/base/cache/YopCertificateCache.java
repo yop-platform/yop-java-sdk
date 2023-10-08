@@ -10,7 +10,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.client.YopGlobalClient;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
@@ -38,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 
 /**
  * title: Yop证书缓存类<br>
@@ -102,7 +102,19 @@ public class YopCertificateCache {
      * @return 最新平台证书
      */
     public static List<X509Certificate> loadPlatformSm2Certs(String appKey, String serialNo) {
-        final String cacheKey = getCacheKey(appKey, serialNo);
+        return loadPlatformSm2Certs(appKey, serialNo, null);
+    }
+
+    /**
+     * 加载平台证书
+     *
+     * @param appKey     应用标识
+     * @param serialNo   证书序列号，可空
+     * @param serverRoot 请求端点，可空
+     * @return 最新平台证书
+     */
+    public static List<X509Certificate> loadPlatformSm2Certs(String appKey, String serialNo, String serverRoot) {
+        final String cacheKey = getCacheKey(appKey, serialNo, serverRoot);
         return loadPlatformSm2Certs(cacheKey);
     }
 
@@ -127,7 +139,19 @@ public class YopCertificateCache {
      * @return 最新平台证书
      */
     public static List<X509Certificate> refreshPlatformSm2Certs(String appKey, String serialNo) {
-        final String cacheKey = getCacheKey(appKey, serialNo);
+        return refreshPlatformSm2Certs(appKey, serialNo, null);
+    }
+
+    /**
+     * 加载并异步刷新平台证书
+     *
+     * @param appKey     应用标识
+     * @param serialNo   证书序列号，可空
+     * @param serverRoot 请求端点，可空
+     * @return 最新平台证书
+     */
+    public static List<X509Certificate> refreshPlatformSm2Certs(String appKey, String serialNo, String serverRoot) {
+        final String cacheKey = getCacheKey(appKey, serialNo, serverRoot);
         try {
             // async
             PLATFORM_CERT_CACHE.refresh(cacheKey);
@@ -145,7 +169,19 @@ public class YopCertificateCache {
      * @return 最新平台证书
      */
     public static List<X509Certificate> reloadPlatformSm2Certs(String appKey, String serialNo) {
-        final String cacheKey = getCacheKey(appKey, serialNo);
+        return reloadPlatformSm2Certs(appKey, serialNo, null);
+    }
+
+    /**
+     * 失效并重新加载平台证书
+     *
+     * @param appKey     应用标识
+     * @param serialNo   证书序列号，可空
+     * @param serverRoot 请求端点，可空
+     * @return 最新平台证书
+     */
+    public static List<X509Certificate> reloadPlatformSm2Certs(String appKey, String serialNo, String serverRoot) {
+        final String cacheKey = getCacheKey(appKey, serialNo, serverRoot);
         try {
             PLATFORM_CERT_CACHE.invalidate(cacheKey);
         } catch (Exception e) {
@@ -154,12 +190,12 @@ public class YopCertificateCache {
         return loadPlatformSm2Certs(cacheKey);
     }
 
-    private static String getCacheKey(String appKey, String serialNo) {
-        appKey = StringUtils.defaultIfBlank(appKey, YopConstants.YOP_DEFAULT_APPKEY);
-        return StringUtils.isBlank(serialNo) ? appKey : StringUtils.joinWith(COMMA, appKey, serialNo);
+    private static String getCacheKey(String appKey, String serialNo, String serverRoot) {
+        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(appKey, YopConstants.YOP_DEFAULT_APPKEY),
+                StringUtils.defaultIfBlank(serialNo, EMPTY), StringUtils.defaultIfBlank(serverRoot, EMPTY));
     }
 
-    private static synchronized List<X509Certificate> doLoad(YopCredentials<?> yopCredentials, String serialNo) {
+    private static synchronized List<X509Certificate> doLoad(YopCredentials<?> yopCredentials, String serialNo, String serverRoot) {
         List<X509Certificate> result = Collections.emptyList();
         try {
             YopRequest request = new YopRequest(CERT_DOWNLOAD_API_URI, CERT_DOWNLOAD_API_METHOD);
@@ -170,6 +206,9 @@ public class YopCertificateCache {
                     .setCredentials(yopCredentials);
             if (StringUtils.isNotBlank(serialNo)) {
                 request.addParameter(CERT_DOWNLOAD_API_PARAM_SERIAL_NO, serialNo);
+            }
+            if (StringUtils.isNotBlank(serverRoot)) {
+                request.getRequestConfig().setServerRoot(serverRoot);
             }
             request.addParameter(CERT_DOWNLOAD_API_PARAM_CERT_TYPE, CertTypeEnum.SM2.getValue());
             YopResponse response = YOP_CLIENT.request(request);
@@ -294,10 +333,10 @@ public class YopCertificateCache {
                 LOGGER.debug("try to init platform cert for cacheKey:" + cacheKey);
                 List<X509Certificate> platformCert = Collections.emptyList();
                 try {
-                    String[] split = cacheKey.split(COMMA);
-                    String appKey = split[0], serialNo = split.length > 1 ? split[1] : null;
-                    platformCert = doLoad(YopCredentialsProviderRegistry.getProvider()
-                            .getCredentials(appKey, CertTypeEnum.SM2.getValue()), serialNo);
+                    String[] split = StringUtils.splitPreserveAllTokens(cacheKey, COMMA);
+                    String appKey = split[0], serialNo = split.length > 1 ? split[1] : null,
+                            serverRoot = split.length > 2 ? split[2] : null;
+                    platformCert = doLoad(YopCredentialsCache.get(appKey), serialNo, serverRoot);
                 } catch (Exception ex) {
                     LOGGER.warn("UnexpectedException occurred when init platformCert for cacheKey:" + cacheKey, ex);
                 }

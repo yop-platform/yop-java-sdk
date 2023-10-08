@@ -324,7 +324,8 @@ public class ClientHandlerImpl implements ClientHandler {
             Future<EncryptOptions> encryptOptions = null;
             if (isEncryptSupported(credential, requestConfig)) {
                 encryptor = getEncryptor(requestConfig);
-                encryptOptions = EncryptOptionsCache.loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg());
+                encryptOptions = EncryptOptionsCache.loadEncryptOptions(credential.getAppKey(),
+                        requestConfig.getEncryptAlg(), requestConfig.getServerRoot());
             }
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
                     .withYopCredentials(credential)

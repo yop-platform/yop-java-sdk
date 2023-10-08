@@ -37,9 +37,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
+import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 import static com.yeepay.yop.sdk.internal.RequestEncryptor.encrypt;
-import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 
 /**
  * title: Yop商户回调处理引擎<br>
@@ -71,7 +71,7 @@ public class YopCallbackEngine {
             YopCredentials<?> credential = getCredentials(requestConfig, authorizationReq);
             if (isEncryptSupported(credential, requestConfig)) {
                 encrypt(marshalled, getEncryptor(requestConfig), EncryptOptionsCache
-                        .loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg()).get());
+                        .loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()).get());
             }
             YopSignerFactory.getSigner(authorizationReq.getSignerType()).sign(marshalled, credential, authorizationReq.getSignOptions());
         }
