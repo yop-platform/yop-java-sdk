@@ -192,7 +192,11 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 if (recordMainServer(mainServer, serverRootType)) {
                     BACKUP_SERVERS.put(serverRootType, randomList);
                 }
-                return MAIN_SERVER.get(serverRootType);
+                final URI mainServerSetted = MAIN_SERVER.get(serverRootType);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Main ServerRoot Set, value:{}", mainServerSetted);
+                }
+                return mainServerSetted;
             }
 
             // 主域名故障，临时启用备选域名
