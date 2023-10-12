@@ -23,7 +23,7 @@ public class YopFileSdkConfigProviderTest extends BaseTest {
     public void loadSdkConfigDir() {
         System.setProperty(YopFileSdkConfigProvider.SDK_CONFIG_DIR_PROPERTY_KEY, "config1");
         YopFileSdkConfig yopSdkConfig = yopFileSdkConfigProvider.loadSdkConfig("app_10085525305");
-        Assert.assertEquals("dir", yopSdkConfig.getRegion());
+        Assert.assertEquals("CN_N1", yopSdkConfig.getRegion());
     }
 
     @Test

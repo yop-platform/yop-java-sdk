@@ -30,15 +30,24 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM2_CERT_S
 public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
     private final String appKey;
     private final String serialNo;
+    private final String serverRoot;
 
     public Sm2Enhancer(String appKey) {
         this.appKey = appKey;
         this.serialNo = "";
+        this.serverRoot = "";
     }
 
     public Sm2Enhancer(String appKey, String serialNo) {
         this.appKey = appKey;
         this.serialNo = serialNo;
+        this.serverRoot = "";
+    }
+
+    public Sm2Enhancer(String appKey, String serialNo, String serverRoot) {
+        this.appKey = appKey;
+        this.serialNo = serialNo;
+        this.serverRoot = serverRoot;
     }
 
     @Override
@@ -52,10 +61,10 @@ public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
         final YopPlatformCredentialsProvider platformCredentialsProvider = YopPlatformCredentialsProviderRegistry.getProvider();
         final YopPlatformCredentials platformCredentials;
         if (StringUtils.isNotBlank(serialNo)) {
-            platformCredentials = platformCredentialsProvider.getCredentials(appKey, serialNo);
+            platformCredentials = platformCredentialsProvider.getCredentials(appKey, serialNo, serverRoot);
         } else {
             platformCredentials = platformCredentialsProvider
-                    .getLatestCredentials(appKey, CertTypeEnum.SM2.getValue());
+                    .getLatestCredentials(appKey, CertTypeEnum.SM2.getValue(), serverRoot);
         }
         if (null == platformCredentials) {
             throw new YopClientException("ConfigProblem, YopPlatformCredentials NotFound to Enhance EncryptOptions, appKey:"

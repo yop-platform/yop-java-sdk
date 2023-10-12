@@ -47,17 +47,31 @@ public class YopSignUtils {
      * @param appKey
      */
     public static void verify(String data, String signature, String appKey) {
+        verify(data, signature, appKey, null);
+    }
+
+    /**
+     * 验签：验签失败则抛出异常
+     *
+     * @param data       原文
+     * @param signature  签名
+     * @param appKey     应用
+     * @param serverRoot 平台证书请求端点
+     */
+    public static void verify(String data, String signature, String appKey, String serverRoot) {
         validSignature(signature);
         String args[] = StringUtils.split(signature, "$");
         CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
-        String serialNo = args.length == 4 ? args[3] : (CertTypeEnum.SM2.equals(certType) ? YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO : YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
-        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
+        String serialNo = args.length == 4 ? args[3] : (CertTypeEnum.SM2.equals(certType)
+                ? YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO
+                : YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
+        final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider()
+                .getCredentials(appKey, serialNo, serverRoot);
         if (null != yopPlatformCredentials) {
             verify(data, signature, yopPlatformCredentials.getCredential());
         } else {
             throw new YopClientException("can not load platform cert");
         }
-
     }
 
     /**

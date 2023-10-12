@@ -47,6 +47,11 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
 
     @Override
     public YopPlatformCredentials getCredentials(String appKey, String serialNo) {
+        return getCredentials(appKey, serialNo, null);
+    }
+
+    @Override
+    public YopPlatformCredentials getCredentials(String appKey, String serialNo, String serverRoot) {
         if (StringUtils.isBlank(serialNo)) {
             throw new YopClientException("ReqParam Illegal, PlatformCert SerialNo NotSpecified");
         }
@@ -60,7 +65,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             } else {
                 YopPlatformCredentials localCredentials = loadCredentialsFromStore(appKey, serialNo);
                 if (null == localCredentials) {
-                    X509Certificate remoteCert = loadRemoteSm2Cert(appKey, serialNo);
+                    X509Certificate remoteCert = loadRemoteSm2Cert(appKey, serialNo, serverRoot);
                     if (null == remoteCert) {
                         throw new YopClientException("ConfigProblem, RemoteSm2Cert NotFound, serialNo:" + serialNo);
                     }
@@ -99,12 +104,24 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     /**
      * 从远端加载指定序列号国密证书
      *
-     * @param appKey   应用标识
-     * @param serialNo 证书序列号(长度为10的16进制字符串)
+     * @param appKey     应用标识
+     * @param serialNo   证书序列号(长度为10的16进制字符串)
      * @return X509Certificate
      */
     protected X509Certificate loadRemoteSm2Cert(String appKey, String serialNo) {
-        final List<X509Certificate> x509Certificates = YopCertificateCache.loadPlatformSm2Certs(appKey, serialNo);
+        return loadRemoteSm2Cert(appKey, serialNo, null);
+    }
+
+    /**
+     * 从远端加载指定序列号国密证书
+     *
+     * @param appKey     应用标识
+     * @param serialNo   证书序列号(长度为10的16进制字符串)
+     * @param serverRoot 平台证书请求端点
+     * @return X509Certificate
+     */
+    protected X509Certificate loadRemoteSm2Cert(String appKey, String serialNo, String serverRoot) {
+        final List<X509Certificate> x509Certificates = YopCertificateCache.loadPlatformSm2Certs(appKey, serialNo, serverRoot);
         if (CollectionUtils.isNotEmpty(x509Certificates)) {
             return x509Certificates.get(0);
         }
@@ -124,15 +141,20 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
 
     @Override
     public YopPlatformCredentials getLatestCredentials(String appKey, String credentialType) {
+        return getLatestCredentials(appKey, credentialType, null);
+    }
+
+    @Override
+    public YopPlatformCredentials getLatestCredentials(String appKey, String credentialType, String serverRoot) {
         try {
             // rsa
             final CertTypeEnum parsedCertType = CertTypeEnum.parse(credentialType);
             if (CertTypeEnum.RSA2048.equals(parsedCertType)) {
-                return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
+                return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, serverRoot);
             }
 
             // sm2
-            return getSm2Credentials(appKey, parsedCertType);
+            return getSm2Credentials(appKey, parsedCertType, serverRoot);
         } catch (Exception e) {
             LOGGER.warn("getLatestCredentials error, ex:", e);
         }
@@ -140,18 +162,18 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         return null;
     }
 
-    private YopPlatformCredentials getSm2Credentials(String appKey, CertTypeEnum parsedCertType) {
+    private YopPlatformCredentials getSm2Credentials(String appKey, CertTypeEnum parsedCertType, String serverRoot) {
         List<X509Certificate> loadedCerts;
         try {
-            loadedCerts = YopCertificateCache.loadPlatformSm2Certs(appKey, EMPTY);
+            loadedCerts = YopCertificateCache.loadPlatformSm2Certs(appKey, EMPTY, serverRoot);
             // 临期：异步刷新
             if (CollectionUtils.isNotEmpty(loadedCerts) && X509CertUtils.checkCertDate(loadedCerts.get(0))) {
-                YopCertificateCache.refreshPlatformSm2Certs(appKey, EMPTY);
+                YopCertificateCache.refreshPlatformSm2Certs(appKey, EMPTY, serverRoot);
             }
         } catch (CertificateException e) {
             // 过期：同步加载
             LOGGER.warn("YopPlatformCredentials expired and need reload, appKey:" + appKey + ", credentialType:" + parsedCertType + ", ex", e);
-            loadedCerts = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY);
+            loadedCerts = YopCertificateCache.reloadPlatformSm2Certs(appKey, EMPTY, serverRoot);
         }
 
         if (CollectionUtils.isEmpty(loadedCerts)) {

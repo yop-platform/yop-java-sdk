@@ -291,7 +291,8 @@ public class YopEncryptorTest extends BaseTest {
         request.addEncryptParameter("merchantNo", "10040040287");
         String appKey = "OPR:10040040287";
         request.getRequestConfig().setAppKey(appKey).setSecurityReq("YOP-SM2-SM3")
-                .setTotalEncrypt(true)
+//                .setTotalEncrypt(true)
+                .setReadTimeout(90000)
         ;
 
         YosDownloadResponse response = yopClient.download(request);

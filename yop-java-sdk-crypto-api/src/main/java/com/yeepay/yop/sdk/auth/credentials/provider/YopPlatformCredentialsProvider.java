@@ -30,6 +30,18 @@ public interface YopPlatformCredentialsProvider {
     YopPlatformCredentials getCredentials(String appKey, String serialNo);
 
     /**
+     * 根据应用&证书序列号获取平台凭证
+     *
+     * @param appKey     应用
+     * @param serialNo   证书序列号
+     * @param serverRoot 平台证书请求端点
+     * @return
+     */
+    default YopPlatformCredentials getCredentials(String appKey, String serialNo, String serverRoot) {
+        return getCredentials(appKey, serialNo);
+    }
+
+    /**
      * 获取应用下某类型的最新可用平台凭证
      *
      * @param appKey         应用标识
@@ -37,6 +49,18 @@ public interface YopPlatformCredentialsProvider {
      * @return YopPlatformCredentials
      */
     YopPlatformCredentials getLatestCredentials(String appKey, String credentialType);
+
+    /**
+     * 获取应用下某类型的最新可用平台凭证
+     *
+     * @param appKey         应用标识
+     * @param credentialType 凭证类型
+     * @param serverRoot     请求端点
+     * @return YopPlatformCredentials
+     */
+    default YopPlatformCredentials getLatestCredentials(String appKey, String credentialType, String serverRoot) {
+        return getLatestCredentials(appKey, credentialType);
+    }
 
     /**
      * 将应用下平台证书转换并存入加密机

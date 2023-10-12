@@ -10,6 +10,8 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegist
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -17,8 +19,6 @@ import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.SymmetricEncryptAlgEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 import org.apache.commons.lang3.StringUtils;
 
 import java.security.PrivateKey;
@@ -81,6 +81,19 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, PrivateKey privateKey) {
+        return decrypt(cipherText, appKey, privateKey, null);
+    }
+
+    /**
+     * 拆开数字信封
+     *
+     * @param cipherText 待解密内容
+     * @param appKey     appKey
+     * @param privateKey 私钥（用于解密）
+     * @param serverRoot 平台证书请求端点
+     * @return 已解密内容
+     */
+    public static String decrypt(String cipherText, String appKey, PrivateKey privateKey, String serverRoot) {
         //分解参数
         String[] args = cipherText.split("\\" + SEPARATOR);
         if (args.length != 4) {
@@ -111,7 +124,7 @@ public class DigitalEnvelopeUtils {
 
         //验证签名
         YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
-                getLatestCredentials(appKey, certType.getValue());
+                getLatestCredentials(appKey, certType.getValue(), serverRoot);
 
         final YopSignProcessor yopSignProcess = YopSignProcessorFactory.getSignProcessor(SIGNER_MAP.get(digestAlg));
         boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, platformCredentials.getCredential());

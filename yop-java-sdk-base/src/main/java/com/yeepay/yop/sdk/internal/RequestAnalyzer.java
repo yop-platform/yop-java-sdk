@@ -66,7 +66,7 @@ public class RequestAnalyzer {
                 && !(credential instanceof YopPKICredentials &&
                 CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType()))
                 && !(null == YopPlatformCredentialsProviderRegistry.getProvider()
-                .getLatestCredentials(credential.getAppKey(), CertTypeEnum.SM2.getValue()));
+                .getLatestCredentials(credential.getAppKey(), CertTypeEnum.SM2.getValue(), requestConfig.getServerRoot()));
     }
 
     /**

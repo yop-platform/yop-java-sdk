@@ -162,7 +162,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 throw new YopClientException("RequestConfig Error, serverRoot excluded:" + serverRoot);
             }
             addServerRoot(serverRoot, MANUAL_SERVER_ROOT_TYPES);
-            recordMainServer(serverRoot, MANUAL_SERVER_ROOT_TYPES, true);
             return serverRoot;
         } else {
             // 独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原
@@ -193,7 +192,11 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 if (recordMainServer(mainServer, serverRootType)) {
                     BACKUP_SERVERS.put(serverRootType, randomList);
                 }
-                return MAIN_SERVER.get(serverRootType);
+                final URI mainServerSetted = MAIN_SERVER.get(serverRootType);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Main ServerRoot Set, value:{}", mainServerSetted);
+                }
+                return mainServerSetted;
             }
 
             // 主域名故障，临时启用备选域名

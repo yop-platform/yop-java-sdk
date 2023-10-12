@@ -67,6 +67,11 @@ public class YopCallbackRequest implements Serializable {
      */
     private Object content;
 
+    /**
+     * 平台证书请求端点
+     */
+    private String platformServerRoot;
+
     public YopCallbackRequest(String httpPath, String httpMethod) {
         this.httpPath = httpPath;
         this.httpMethod = httpMethod;
@@ -78,6 +83,7 @@ public class YopCallbackRequest implements Serializable {
         callbackRequest.setContentType(yopRequest.getContentType());
         callbackRequest.setHeaders(yopRequest.getHeaders());
         callbackRequest.setContent(yopRequest.getContent());
+        callbackRequest.setPlatformServerRoot(originRequest.getRequestConfig().getServerRoot());
         return callbackRequest;
     }
 
@@ -107,6 +113,10 @@ public class YopCallbackRequest implements Serializable {
 
     public Object getContent() {
         return content;
+    }
+
+    public String getPlatformServerRoot() {
+        return platformServerRoot;
     }
 
     public String getParam(String name) {
@@ -156,6 +166,11 @@ public class YopCallbackRequest implements Serializable {
 
     public YopCallbackRequest setContent(Object content) {
         this.content = content;
+        return this;
+    }
+
+    public YopCallbackRequest setPlatformServerRoot(String platformServerRoot) {
+        this.platformServerRoot = platformServerRoot;
         return this;
     }
 

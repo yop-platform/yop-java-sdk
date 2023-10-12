@@ -50,7 +50,8 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
                 LOGGER.debug("response sign verify begin, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
             }
             final SignOptions reqOptions = context.getSignOptions();
-            YopPlatformCredentials platformCredentials = getPlatformCredential(reqOptions, context.getAppKey(), metadata.getYopCertSerialNo());
+            YopPlatformCredentials platformCredentials = getPlatformCredential(reqOptions, context.getAppKey(),
+                    metadata.getYopCertSerialNo(), context.getOriginRequest().getOriginalRequestObject().getRequestConfig().getServerRoot());
             if (null != platformCredentials) {
                 // 目前 YOP响应签名非urlsafe
                 context.getSigner().checkSignature(context.getResponse(), metadata.getYopSign(), platformCredentials,
@@ -68,7 +69,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
         return false;
     }
 
-    private YopPlatformCredentials getPlatformCredential(SignOptions signOptions, String appKey, String serialNo) {
+    private YopPlatformCredentials getPlatformCredential(SignOptions signOptions, String appKey, String serialNo, String serverRoot) {
         CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
         if (certType == CertTypeEnum.RSA2048) {
             if (StringUtils.isNotBlank(serialNo)) {
@@ -77,7 +78,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             serialNo = YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
         }
 
-        return YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo);
+        return YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo, serverRoot);
     }
 
 }
