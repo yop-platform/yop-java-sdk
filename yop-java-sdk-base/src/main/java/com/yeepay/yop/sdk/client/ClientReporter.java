@@ -21,6 +21,7 @@ import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestReport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.utils.ModeUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -66,6 +67,7 @@ public class ClientReporter {
     private static final int MAX_ELAPSED_MS;
     private static final boolean ENABLE_REPORT;
     private static final boolean ENABLE_SUCCESS_REPORT;
+    private static final boolean ENABLE_SANDBOX_REPORT;
 
     private static volatile boolean CLOSED = false;
 
@@ -81,6 +83,7 @@ public class ClientReporter {
         if (null != yopReportConfig) {
             ENABLE_REPORT = yopReportConfig.isEnable();
             ENABLE_SUCCESS_REPORT = yopReportConfig.isEnableSuccessReport();
+            ENABLE_SANDBOX_REPORT = yopReportConfig.isEnableSandboxReport();
             REPORT_INTERVAL_MS = yopReportConfig.getSendIntervalMs();
             STAT_INTERVAL_MS = yopReportConfig.getStatIntervalMs();
             MAX_QUEUE_SIZE = yopReportConfig.getMaxQueueSize();
@@ -94,6 +97,7 @@ public class ClientReporter {
         } else {
             ENABLE_REPORT = true;
             ENABLE_SUCCESS_REPORT = false;
+            ENABLE_SANDBOX_REPORT = false;
             REPORT_INTERVAL_MS = 3000;
             STAT_INTERVAL_MS = 5000;
             MAX_QUEUE_SIZE = 500;
@@ -190,6 +194,9 @@ public class ClientReporter {
     }
 
     public static void syncReportToQueue(YopReport report) {
+        if (!isEnableReport(report)) {
+            return;
+        }
         while (!YOP_HOST_REQUEST_QUEUE.offer(report)) {
             YopReport oldReport = YOP_HOST_REQUEST_QUEUE.poll();
             if (oldReport != null) {
@@ -199,19 +206,30 @@ public class ClientReporter {
     }
 
     public static void asyncReportToQueue(YopReport report) {
-        COLLECT_POOL.submit(() -> syncReportToQueue(report));
+        if (isEnableReport(report)) {
+            COLLECT_POOL.submit(() -> syncReportToQueue(report));
+        }
     }
 
     public static void asyncReportToQueue(YopReport report, ThreadPoolExecutor executor) {
-        executor.submit(() -> syncReportToQueue(report));
+        if (isEnableReport(report)) {
+            executor.submit(() -> syncReportToQueue(report));
+        }
+    }
+
+    private static boolean isEnableReport(Object reportOrEvent) {
+        if (ENABLE_REPORT && (ENABLE_SANDBOX_REPORT || !ModeUtils.isInSandbox())) {
+            return true;
+        }
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Ignore Report, value:{}", reportOrEvent);
+        }
+        return false;
     }
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {
         try {
-            if (!ENABLE_REPORT) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Ignore ReportEvent, value:{}", newEvent);
-                }
+            if (!isEnableReport(newEvent)) {
                 return;
             }
 

@@ -36,6 +36,12 @@ public class YopReportConfig implements Serializable {
     private boolean enableSuccessReport = false;
 
     /**
+     * 是否上报成功调用
+     */
+    @JsonProperty("enable_sandbox_report")
+    private boolean enableSandboxReport = false;
+
+    /**
      * 上报周期：毫秒
      */
     @JsonProperty("send_interval_ms")
@@ -94,6 +100,14 @@ public class YopReportConfig implements Serializable {
 
     public void setEnableSuccessReport(boolean enableSuccessReport) {
         this.enableSuccessReport = enableSuccessReport;
+    }
+
+    public boolean isEnableSandboxReport() {
+        return enableSandboxReport;
+    }
+
+    public void setEnableSandboxReport(boolean enableSandboxReport) {
+        this.enableSandboxReport = enableSandboxReport;
     }
 
     public int getSendIntervalMs() {

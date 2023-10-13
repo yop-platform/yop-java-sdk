@@ -7,12 +7,12 @@ import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
-import com.yeepay.yop.sdk.client.router.enums.ModeEnum;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.utils.CheckUtils;
+import com.yeepay.yop.sdk.utils.ModeUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -47,9 +47,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
     private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
 
-    private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
-    private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
-
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
 
     static {
@@ -61,13 +58,9 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private final Set<String> independentApiGroups;
 
-    private final ModeEnum systemMode;
-
     public SimpleGateWayRouter(ServerRootSpace space) {
         this.space = space;
         this.independentApiGroups = Collections.unmodifiableSet(Sets.newHashSet("bank-encryption"));
-        String systemModeConfig = System.getProperty(SYSTEM_SDK_MODE_KEY);
-        this.systemMode = StringUtils.isEmpty(systemModeConfig) ? null : ModeEnum.valueOf(systemModeConfig);
         addServerRoots(space);
     }
 
@@ -149,7 +142,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     @Override
     public URI route(String appKey, Request<?> request, List<URI> excludeServerRoots) {
-        if (isAppInSandbox(appKey)) {
+        if (ModeUtils.isAppInSandbox(appKey)) {
             return space.getSandboxServerRoot();
         }
 
@@ -268,13 +261,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
         } catch (Exception ex) {
             throw new YopClientException("Route Request Failure, ex:", ex);
         }
-    }
-
-    private boolean isAppInSandbox(String appKey) {
-        if (systemMode == null) {
-            return StringUtils.startsWith(appKey, SANDBOX_APP_ID_PREFIX);
-        }
-        return systemMode == ModeEnum.sandbox;
     }
 
     private String getIndependentApiGroupHost(String apiGroup, String originHost, boolean isYosRequest) {
