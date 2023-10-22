@@ -4,6 +4,8 @@
  */
 package com.yeepay.yop.sdk.example;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 import org.apache.commons.codec.binary.Base64;
@@ -26,6 +28,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
 import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
@@ -77,7 +80,7 @@ public class YopRsaEncryptExample {
         // 加密会话密钥，可每笔调用都生成，也可以多笔公用一个，建议定时更换
         String encryptKey = encodeUrlSafeBase64(generateRandomKey());
 
-        // get请求，form参数
+//        // get请求，form参数
         getFormExample(YopRequestMethod.GET, "/rest/v1.0/test/errorcode2",
                 YopRequestContentType.FORM_URL_ENCODE, encryptKey);
 
@@ -123,7 +126,7 @@ public class YopRsaEncryptExample {
         CloseableHttpResponse response = null;
         try {
             response = httpClient.execute(request);
-            handleResponse(YopRequestType.WEB, response);
+            handleResponse(YopRequestType.WEB, response, encryptKey);
         } finally {
             HttpClientUtils.closeQuietly(response);
         }
@@ -180,7 +183,7 @@ public class YopRsaEncryptExample {
         CloseableHttpResponse response = null;
         try {
             response = httpClient.execute(request);
-            handleResponse(YopRequestType.WEB, response);
+            handleResponse(YopRequestType.WEB, response, encryptKey);
         } finally {
             HttpClientUtils.closeQuietly(response);
         }
@@ -225,7 +228,7 @@ public class YopRsaEncryptExample {
         CloseableHttpResponse response = null;
         try {
             response = httpClient.execute(request);
-            handleResponse(YopRequestType.WEB, response);
+            handleResponse(YopRequestType.WEB, response, encryptKey);
         } finally {
             HttpClientUtils.closeQuietly(response);
         }
@@ -262,7 +265,7 @@ public class YopRsaEncryptExample {
         CloseableHttpResponse response = null;
         try {
             response = httpClient.execute(request);
-            handleResponse(YopRequestType.FILE_DOWNLOAD, response);
+            handleResponse(YopRequestType.FILE_DOWNLOAD, response, encryptKey);
         } finally {
             HttpClientUtils.closeQuietly(response);
         }
@@ -592,6 +595,16 @@ public class YopRsaEncryptExample {
         return encodeUrlSafeBase64(cipher.doFinal(plain.getBytes("UTF-8")));
     }
 
+    private static String decryptParam(String aesKey, String encryptContent) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
+        return new String(cipher.doFinal(decodeBase64(encryptContent)), "UTF-8");
+    }
+
+    private static InputStream decryptStream(String aesKey, InputStream encryptStream) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
+        return new CipherInputStream(encryptStream, cipher);
+    }
+
     private static Cipher getInitializedCipher(int mode, String aesKey) {
         try {
             byte[] key = decodeBase64(aesKey);
@@ -661,8 +674,11 @@ public class YopRsaEncryptExample {
         return requestBuilder.build();
     }
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private static void handleResponse(YopRequestType requestType,
-                                       CloseableHttpResponse httpResponse) throws IOException {
+                                       CloseableHttpResponse httpResponse,
+                                       String encryptKey) throws Exception {
         // header
         Map<String, String> headers = Maps.newHashMap();
         for (Header header : httpResponse.getAllHeaders()) {
@@ -670,6 +686,8 @@ public class YopRsaEncryptExample {
         }
         String encryptHeader = headers.get("x-yop-encrypt"),// 加密头
                 signHeader = headers.get("x-yop-sign"); //签名头
+
+        boolean isEncryptResponse = StringUtils.isNotBlank(encryptHeader);
 
         // body
         HttpEntity entity = httpResponse.getEntity();
@@ -679,11 +697,19 @@ public class YopRsaEncryptExample {
             if (null != entity && entity.getContent() != null) {
                 if (isJsonResponse(httpResponse)) {
                     String content = IOUtils.toString(entity.getContent(), DEFAULT_ENCODING);
-                    // TODO 解密
                     System.out.println("Request success, response:" + content);
+                    final JsonNode bizData = OBJECT_MAPPER.readTree(content).get("result");
+                    if (isEncryptResponse) {
+                        System.out.println("Response decrypt success, bizData:" + decryptParam(encryptKey, bizData.asText()));
+                    }
                     return;
                 } else if (YopRequestType.FILE_DOWNLOAD.equals(requestType) || isDownloadResponse(httpResponse)) {
-                    final File file = saveFile(entity.getContent(), headers);
+                    InputStream fileContent = entity.getContent();
+                    if (isEncryptResponse) {
+                        fileContent = decryptStream(encryptKey, fileContent);
+                        System.out.println("Response file decrypt success");
+                    }
+                    final File file = saveFile(fileContent, headers);
                     System.out.println("Request success, file downloaded:" + file);
                     return;
                 } else {
@@ -695,9 +721,6 @@ public class YopRsaEncryptExample {
         } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
             if (entity.getContent() != null) {
                 String content = IOUtils.toString(entity.getContent(), DEFAULT_ENCODING);
-//                verifySignature(content, response.getHeader(Headers.YOP_SIGN), responseConfig.getYopPublicKey());
-//                content = decryptResponse(content, responseConfig);
-
                 System.out.println("Request Fail, response:" + content);
                 return;
             } else {
