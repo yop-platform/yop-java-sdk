@@ -95,7 +95,7 @@ public class YopRsaCallbackExample {
         String signToBase64 = StringUtils.substringAfterLast(data, SEPARATOR);
 
         // 验签
-        if (verifySign(sourceData.getBytes(UTF_8), decodeBase64(signToBase64), publicKey)) {
+        if (!verifySign(sourceData.getBytes(UTF_8), decodeBase64(signToBase64), publicKey)) {
             throw new RuntimeException("verify sign fail, key:" + publicKey);
         }
 
