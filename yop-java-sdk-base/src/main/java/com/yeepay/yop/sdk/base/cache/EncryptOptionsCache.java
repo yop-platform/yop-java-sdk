@@ -165,7 +165,7 @@ public class EncryptOptionsCache {
     }
 
     private static String getCacheKey(String appKey, String encryptAlg, String serverRoot) {
-        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(appKey, YopConstants.YOP_DEFAULT_APPKEY),
+        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY),
                 StringUtils.defaultIfBlank(encryptAlg, EMPTY), StringUtils.defaultIfBlank(serverRoot, EMPTY));
     }
 
