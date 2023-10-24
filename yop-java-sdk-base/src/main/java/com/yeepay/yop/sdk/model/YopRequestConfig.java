@@ -2,6 +2,7 @@ package com.yeepay.yop.sdk.model;
 
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
@@ -145,6 +146,9 @@ public class YopRequestConfig {
     public YopRequestConfig setTotalEncrypt(Boolean totalEncrypt) {
         if (null != totalEncrypt) {
             this.totalEncrypt = totalEncrypt;
+            if (totalEncrypt && !BooleanUtils.isFalse(needEncrypt)) {
+                needEncrypt = true;
+            }
         }
         return this;
     }
