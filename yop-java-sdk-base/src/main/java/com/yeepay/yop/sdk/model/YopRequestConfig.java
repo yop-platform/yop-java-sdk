@@ -183,18 +183,24 @@ public class YopRequestConfig {
 
     public YopRequestConfig addEncryptParam(String name) {
         encryptParams.add(name);
-        needEncrypt = true;
+        if (!BooleanUtils.isFalse(needEncrypt)) {
+            needEncrypt = true;
+        }
         return this;
     }
     public YopRequestConfig addEncryptParams(Set<String> params) {
         encryptParams.addAll(params);
-        needEncrypt = true;
+        if (!BooleanUtils.isFalse(needEncrypt)) {
+            needEncrypt = true;
+        }
         return this;
     }
 
     public YopRequestConfig addEncryptHeader(String headerName) {
         encryptHeaders.add(StringUtils.lowerCase(headerName));
-        needEncrypt = true;
+        if (!BooleanUtils.isFalse(needEncrypt)) {
+            needEncrypt = true;
+        }
         return this;
     }
 
