@@ -73,12 +73,6 @@ public class RequestAnalyzer {
             return true;
         }
         return false;
-
-        // 不支持加密，或者没有有效证书，则不进行加密
-//                && !(credential instanceof YopPKICredentials &&
-//                CertTypeEnum.RSA2048.equals(((YopPKICredentials) credential).getCredential().getCertType()))
-//                && !(null == YopPlatformCredentialsProviderRegistry.getProvider()
-//                .getLatestCredentials(credential.getAppKey(), CertTypeEnum.SM2.getValue(), requestConfig.getServerRoot()));
     }
 
     /**
