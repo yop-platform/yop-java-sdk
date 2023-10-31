@@ -78,8 +78,7 @@ public class RequestEncryptor {
 
         // 请求、响应参数均不加密时，不传加密头
         // TODO 支持商户配置响应是否加密，并传给网关
-        boolean responseEncrypt = false;
-        if (CollectionUtils.isEmpty(encryptHeaders) && CollectionUtils.isEmpty(encryptParams) && !responseEncrypt) {
+        if (CollectionUtils.isEmpty(encryptHeaders) && CollectionUtils.isEmpty(encryptParams)) {
             return;
         }
         buildEncryptHeader(request, encryptHeaders, encryptParams, encryptOptions);
