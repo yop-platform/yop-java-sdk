@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.base.cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.base.security.encrypt.RsaEnhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm2Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 
@@ -164,7 +165,7 @@ public class EncryptOptionsCache {
     }
 
     private static String getCacheKey(String appKey, String encryptAlg, String serverRoot) {
-        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(appKey, YopConstants.YOP_DEFAULT_APPKEY),
+        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY),
                 StringUtils.defaultIfBlank(encryptAlg, EMPTY), StringUtils.defaultIfBlank(serverRoot, EMPTY));
     }
 
@@ -183,7 +184,7 @@ public class EncryptOptionsCache {
                     String appKey = split[0], encryptAlg = split[1]
                             , serverRoot = split.length > 2 ? split[2]: null;
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
-                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(new Sm2Enhancer(appKey, EMPTY, serverRoot));
+                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(getEnhancer(appKey, encryptAlg, serverRoot));
                     encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
                 } catch (Exception ex) {
                     LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);
@@ -191,6 +192,20 @@ public class EncryptOptionsCache {
                 return encryptOptions;
             }
         });
+    }
+
+    private static EncryptOptionsEnhancer getEnhancer(String appKey,
+                                                      String encryptAlg,
+                                                      String serverRoot) {
+        switch (encryptAlg) {
+            case SM4_CBC_PKCS5PADDING:
+                return new Sm2Enhancer(appKey, EMPTY, serverRoot);
+            case AES:
+            case AES_ECB_PKCS5PADDING:
+                return new RsaEnhancer(appKey);
+            default:
+                throw new YopClientException("not supported encryptAlg:" + encryptAlg);
+        }
     }
 
 }

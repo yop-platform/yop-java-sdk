@@ -7,8 +7,6 @@ package com.yeepay.yop.sdk.utils;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * title: <br>
@@ -24,13 +22,6 @@ public final class RandomUtils {
 
     private RandomUtils() {
         // do nothing
-    }
-
-    /**
-     * 返回无锁的ThreadLocalRandom
-     */
-    public static Random threadLocalRandom() {
-        return ThreadLocalRandom.current();
     }
 
     /**
