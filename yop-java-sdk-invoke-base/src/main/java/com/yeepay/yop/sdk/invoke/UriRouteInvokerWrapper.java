@@ -77,7 +77,7 @@ public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext,
 
                 // 可重试异常，仅当配置路由时触发
                 if (analyzedEx.isNeedRetry()
-                        && null != uriRouter && null != retryPolicy
+                        && null != retryPolicy
                         && retryPolicy.allowRetry(invoker, throwable)) {
                     excludeServerRoots.add(lastServerRoot);
                     getContext().markRetried(1);

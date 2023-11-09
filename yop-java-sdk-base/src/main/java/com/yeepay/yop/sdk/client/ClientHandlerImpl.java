@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -107,7 +106,7 @@ public class ClientHandlerImpl implements ClientHandler {
         return new UriRouteInvokerWrapper<>(
                 new YopInvoker<>(executionParams, executionContext, new SimpleExceptionAnalyzer(null != circuitBreakerConfig ?
                         circuitBreakerConfig.getExcludeExceptions() : Collections.emptySet(),
-                        clientConfiguration.getRetryExceptions())),
+                        clientConfiguration.getRetryExceptions()), true),
                 SimpleUriRetryPolicy.singleton(),
                 new YopRouter<>(gateWayRouter)).invoke();
     }
@@ -159,7 +158,7 @@ public class ClientHandlerImpl implements ClientHandler {
             } finally {
                 if (null != entry) {
                     final AnalyzedException lastException = invoker.getLastException();
-                    if (lastException.isNeedDegrade()) {
+                    if (null != lastException && lastException.isNeedDegrade()) {
                         Tracer.trace(lastException.getException());
                     }
                     entry.exit();
@@ -206,111 +205,35 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private class YopInvoker<Input extends BaseRequest, Output extends BaseResponse>
-            implements UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
+            extends AbstractUriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
             ExecutionContext, AnalyzedException> {
 
-        private URI serverRoot;
-        private ClientExecutionParams<Input, Output> executionParams;
-        private ExecutionContext executionContext;
-
-        private boolean enableCircuitBreaker = false;
-
-        private List<AnalyzedException> exceptions = new LinkedList<>();
-
-        private AnalyzedException lastException;
-
-        private ExceptionAnalyzer<AnalyzedException> exceptionAnalyzer;
-
         public YopInvoker(ClientExecutionParams<Input, Output> executionParams,
-                          ExecutionContext executionContext, ExceptionAnalyzer<AnalyzedException> exceptionAnalyzer) {
-            this.executionParams = executionParams;
-            this.executionContext = executionContext;
-            this.exceptionAnalyzer = exceptionAnalyzer;
+                          ExecutionContext executionContext,
+                          ExceptionAnalyzer<AnalyzedException> exceptionAnalyzer,
+                          boolean circuitBreaker) {
+            setInput(executionParams);
+            setContext(executionContext);
+            setExceptionAnalyzer(exceptionAnalyzer);
+            if (circuitBreaker) {
+                enableCircuitBreaker();
+            } else {
+                disableCircuitBreaker();
+            }
         }
 
         @Override
         public Output invoke() {
             // 准备http参数
-            Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
-            request.setEndpoint(serverRoot);
+            Request<Input> request = getInput().getRequestMarshaller().marshall(getInput().getInput());
+            request.setEndpoint(getUri());
 
             // 发起http调用
-            if (enableCircuitBreaker && null != circuitBreaker) {
+            if (isCircuitBreakerEnable() && null != circuitBreaker) {
                 return circuitBreaker.execute(request, this);
             } else {
                 return doExecute(request, this);
             }
-        }
-
-        @Override
-        public ClientExecutionParams<Input, Output> getInput() {
-            return executionParams;
-        }
-
-        @Override
-        public void setInput(ClientExecutionParams<Input, Output> executionParams) {
-            this.executionParams = executionParams;
-        }
-
-        @Override
-        public URI getUri() {
-            return serverRoot;
-        }
-
-        @Override
-        public void setUri(URI uri) {
-            this.serverRoot = uri;
-        }
-
-        @Override
-        public void setContext(ExecutionContext context) {
-            this.executionContext = context;
-        }
-
-        @Override
-        public ExecutionContext getContext() {
-            return executionContext;
-        }
-
-        @Override
-        public boolean isCircuitBreakerEnable() {
-            return enableCircuitBreaker;
-        }
-
-        @Override
-        public void enableCircuitBreaker() {
-            this.enableCircuitBreaker = true;
-        }
-
-        @Override
-        public void disableCircuitBreaker() {
-            this.enableCircuitBreaker = false;
-        }
-
-        @Override
-        public List<AnalyzedException> getExceptions() {
-            return exceptions;
-        }
-
-        @Override
-        public void addException(AnalyzedException exception) {
-            this.exceptions.add(exception);
-            this.lastException = exception;
-        }
-
-        @Override
-        public AnalyzedException getLastException() {
-            return this.lastException;
-        }
-
-        @Override
-        public ExceptionAnalyzer<AnalyzedException> getExceptionAnalyzer() {
-            return exceptionAnalyzer;
-        }
-
-        @Override
-        public void setExceptionAnalyzer(ExceptionAnalyzer<AnalyzedException> analyzer) {
-            this.exceptionAnalyzer = analyzer;
         }
     }
 
