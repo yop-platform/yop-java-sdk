@@ -4,7 +4,7 @@
  */
 package com.yeepay.yop.sdk.invoke;
 
-import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
+import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ import java.util.List;
  * @version 1.0.0
  * @since 2023/11/6
  */
-public interface Invoker<Input, Output, Context, Exception extends ExceptionAnalyzeResult> {
+public interface Invoker<Input, Output, Context, Exception extends AnalyzedException> {
 
     Output invoke();
 

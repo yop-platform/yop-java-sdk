@@ -5,9 +5,10 @@
 package com.yeepay.yop.sdk.invoke;
 
 import com.google.common.collect.Lists;
-import com.yeepay.yop.sdk.invoke.exceptions.BLockException;
-import com.yeepay.yop.sdk.invoke.exceptions.ClientException;
-import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
+import com.yeepay.yop.sdk.exception.YopBlockException;
+import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
+import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzer;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -28,7 +29,7 @@ import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
  * @version 1.0.0
  * @since 2023/11/6
  */
-public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<ExceptionAnalyzeResult> {
+public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedException> {
 
     private final Set<String> excludeExceptions;
 
@@ -40,12 +41,12 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<ExceptionAnaly
     }
 
     @Override
-    public ExceptionAnalyzeResult analyze(Throwable e, Object... args) {
-        final ExceptionAnalyzeResult result = new ExceptionAnalyzeResult();
+    public AnalyzedException analyze(Throwable e, Object... args) {
+        final AnalyzedException result = new AnalyzedException();
         result.setException(e);
 
         // 客户端异常&业务异常，不重试，不计入熔断笔数
-        if (e instanceof ClientException) {
+        if (e instanceof YopClientException) {
             result.setExDetail(e.getClass().getCanonicalName() + COLON +
                     StringUtils.defaultString(e.getMessage()));
             return result;
@@ -62,7 +63,7 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<ExceptionAnaly
             exceptionDetails.add(exTypeAndMsg);
             if (retryExceptions.contains(exType) ||
                     retryExceptions.contains(exTypeAndMsg) ||
-                    e instanceof BLockException) {
+                    e instanceof YopBlockException) {
                 result.setExDetail(exTypeAndMsg);
                 result.setNeedRetry(true);
                 result.setNeedDegrade(true);

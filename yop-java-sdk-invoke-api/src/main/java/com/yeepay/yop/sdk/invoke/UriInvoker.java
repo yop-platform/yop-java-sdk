@@ -4,7 +4,7 @@
  */
 package com.yeepay.yop.sdk.invoke;
 
-import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
+import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 
 import java.net.URI;
 
@@ -18,7 +18,7 @@ import java.net.URI;
  * @version 1.0.0
  * @since 2023/11/7
  */
-public interface UriInvoker<Input, Output, Context, Exception extends ExceptionAnalyzeResult>
+public interface UriInvoker<Input, Output, Context, Exception extends AnalyzedException>
         extends Invoker<Input, Output, Context, Exception> {
 
     URI getUri();

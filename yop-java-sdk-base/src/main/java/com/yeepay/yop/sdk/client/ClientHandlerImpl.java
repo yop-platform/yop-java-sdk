@@ -26,7 +26,8 @@ import com.yeepay.yop.sdk.http.YopHttpClient;
 import com.yeepay.yop.sdk.http.YopHttpClientFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.*;
-import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
+import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
+import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzer;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
@@ -115,7 +116,7 @@ public class ClientHandlerImpl implements ClientHandler {
 
         <Input extends BaseRequest, Output extends BaseResponse> Output execute(Request<Input> request,
                                                                                 UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
-                                                                                        ExecutionContext, ExceptionAnalyzeResult> invoker);
+                                                                                        ExecutionContext, AnalyzedException> invoker);
 
     }
 
@@ -136,7 +137,7 @@ public class ClientHandlerImpl implements ClientHandler {
         @Override
         public <Input extends BaseRequest, Output extends BaseResponse> Output execute(Request<Input> request,
                                                                                        UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
-                                                                                               ExecutionContext, ExceptionAnalyzeResult> invoker)
+                                                                                               ExecutionContext, AnalyzedException> invoker)
                 throws YopClientException, YopHttpException, YopUnknownException, YopHostException {
 
             Entry entry = null;
@@ -157,7 +158,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 throw new YopUnknownException("UnExpected Error, ", ex);
             } finally {
                 if (null != entry) {
-                    final ExceptionAnalyzeResult lastException = invoker.getLastException();
+                    final AnalyzedException lastException = invoker.getLastException();
                     if (lastException.isNeedDegrade()) {
                         Tracer.trace(lastException.getException());
                     }
@@ -169,7 +170,7 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private <Input extends BaseRequest, Output extends BaseResponse> Output doExecute(Request<Input> request,
                                                                                       UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
-                                                                                              ExecutionContext, ExceptionAnalyzeResult> invoker)
+                                                                                              ExecutionContext, AnalyzedException> invoker)
             throws YopClientException, YopHttpException, YopUnknownException {
 
         final long start = System.currentTimeMillis();
@@ -193,7 +194,7 @@ public class ClientHandlerImpl implements ClientHandler {
         } finally {
             String result = "success";
             if (null != throwable) {
-                final ExceptionAnalyzeResult analyzeResult = invoker.getExceptionAnalyzer().analyze(throwable);
+                final AnalyzedException analyzeResult = invoker.getExceptionAnalyzer().analyze(throwable);
                 invoker.addException(analyzeResult);
                 result = "fail caused by " + analyzeResult.getExDetail();
             }
@@ -206,7 +207,7 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private class YopInvoker<Input extends BaseRequest, Output extends BaseResponse>
             implements UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
-            ExecutionContext, ExceptionAnalyzeResult> {
+            ExecutionContext, AnalyzedException> {
 
         private URI serverRoot;
         private ClientExecutionParams<Input, Output> executionParams;
@@ -214,14 +215,14 @@ public class ClientHandlerImpl implements ClientHandler {
 
         private boolean enableCircuitBreaker = false;
 
-        private List<ExceptionAnalyzeResult> exceptions = new LinkedList<>();
+        private List<AnalyzedException> exceptions = new LinkedList<>();
 
-        private ExceptionAnalyzeResult lastException;
+        private AnalyzedException lastException;
 
-        private ExceptionAnalyzer<ExceptionAnalyzeResult> exceptionAnalyzer;
+        private ExceptionAnalyzer<AnalyzedException> exceptionAnalyzer;
 
         public YopInvoker(ClientExecutionParams<Input, Output> executionParams,
-                          ExecutionContext executionContext, ExceptionAnalyzer<ExceptionAnalyzeResult> exceptionAnalyzer) {
+                          ExecutionContext executionContext, ExceptionAnalyzer<AnalyzedException> exceptionAnalyzer) {
             this.executionParams = executionParams;
             this.executionContext = executionContext;
             this.exceptionAnalyzer = exceptionAnalyzer;
@@ -287,28 +288,28 @@ public class ClientHandlerImpl implements ClientHandler {
         }
 
         @Override
-        public List<ExceptionAnalyzeResult> getExceptions() {
+        public List<AnalyzedException> getExceptions() {
             return exceptions;
         }
 
         @Override
-        public void addException(ExceptionAnalyzeResult exception) {
+        public void addException(AnalyzedException exception) {
             this.exceptions.add(exception);
             this.lastException = exception;
         }
 
         @Override
-        public ExceptionAnalyzeResult getLastException() {
+        public AnalyzedException getLastException() {
             return this.lastException;
         }
 
         @Override
-        public ExceptionAnalyzer<ExceptionAnalyzeResult> getExceptionAnalyzer() {
+        public ExceptionAnalyzer<AnalyzedException> getExceptionAnalyzer() {
             return exceptionAnalyzer;
         }
 
         @Override
-        public void setExceptionAnalyzer(ExceptionAnalyzer<ExceptionAnalyzeResult> analyzer) {
+        public void setExceptionAnalyzer(ExceptionAnalyzer<AnalyzedException> analyzer) {
             this.exceptionAnalyzer = analyzer;
         }
     }

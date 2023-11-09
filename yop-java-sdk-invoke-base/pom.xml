@@ -17,12 +17,20 @@
             <artifactId>yop-java-sdk-invoke-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.yeepay.yop.sdk</groupId>
-            <artifactId>yop-java-sdk-crypto-api</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

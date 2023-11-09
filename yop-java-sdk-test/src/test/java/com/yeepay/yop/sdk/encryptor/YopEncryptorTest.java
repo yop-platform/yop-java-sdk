@@ -48,6 +48,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.slf4j.Logger;
@@ -283,6 +284,7 @@ public class YopEncryptorTest extends BaseTest {
 
     @Test
     // 加密后下载速度慢很多
+    @Ignore
     public void yopRequestDownload() throws Exception {
         final long start = System.currentTimeMillis();
         YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");

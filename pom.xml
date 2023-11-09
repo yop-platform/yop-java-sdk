@@ -19,6 +19,7 @@
         <module>yop-java-sdk-test</module>
         <module>yop-java-sdk-invoke-api</module>
         <module>yop-java-sdk-invoke-base</module>
+        <module>yop-java-sdk-api</module>
     </modules>
 
     <name>yop-java-sdk-parent</name>
@@ -111,6 +112,11 @@
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk-invoke-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

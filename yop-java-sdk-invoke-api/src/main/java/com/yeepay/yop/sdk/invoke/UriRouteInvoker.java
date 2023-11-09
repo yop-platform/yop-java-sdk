@@ -4,7 +4,8 @@
  */
 package com.yeepay.yop.sdk.invoke;
 
-import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
+import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
+import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzer;
 
 /**
  * title: 基于Uri的路由调用器<br>
@@ -16,7 +17,7 @@ import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
  * @version 1.0.0
  * @since 2023/11/8
  */
-public interface UriRouteInvoker<Input, Output, Context, Exception extends ExceptionAnalyzeResult>
+public interface UriRouteInvoker<Input, Output, Context, Exception extends AnalyzedException>
         extends UriInvoker<Input, Output, Context, Exception> {
 
     boolean isCircuitBreakerEnable();

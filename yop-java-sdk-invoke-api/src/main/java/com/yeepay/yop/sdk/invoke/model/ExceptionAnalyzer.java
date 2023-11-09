@@ -2,7 +2,7 @@
  * Copyright: Copyright (c)2014
  * Company: 易宝支付(YeePay)
  */
-package com.yeepay.yop.sdk.invoke;
+package com.yeepay.yop.sdk.invoke.model;
 
 /**
  * title: 异常分析器<br>
@@ -14,7 +14,7 @@ package com.yeepay.yop.sdk.invoke;
  * @version 1.0.0
  * @since 2023/11/6
  */
-public interface ExceptionAnalyzer<ExceptionAnalyzeResult> {
+public interface ExceptionAnalyzer<AnalyzedException> {
 
-    ExceptionAnalyzeResult analyze(Throwable ex, Object... args);
+    AnalyzedException analyze(Throwable ex, Object... args);
 }

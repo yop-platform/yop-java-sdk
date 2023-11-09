@@ -16,7 +16,7 @@ import java.io.Serializable;
  * @version 1.0.0
  * @since 2023/11/7
  */
-public class ExceptionAnalyzeResult implements Serializable {
+public class AnalyzedException implements Serializable {
 
     private static final long serialVersionUID = -1L;
 

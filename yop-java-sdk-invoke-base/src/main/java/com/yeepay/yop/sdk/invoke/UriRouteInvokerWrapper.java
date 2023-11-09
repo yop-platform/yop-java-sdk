@@ -7,9 +7,9 @@ package com.yeepay.yop.sdk.invoke;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopUnknownException;
-import com.yeepay.yop.sdk.invoke.exceptions.ClientException;
-import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzeResult;
+import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 import com.yeepay.yop.sdk.invoke.model.RetryContext;
+import com.yeepay.yop.sdk.invoke.model.RetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ import java.util.List;
  * @since 2023/11/6
  */
 public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext, Policy extends RetryPolicy,
-        Exception extends ExceptionAnalyzeResult>
+        Exception extends AnalyzedException>
         implements Invoker<Input, Output, Context, Exception> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UriRouteInvokerWrapper.class);
@@ -64,7 +64,7 @@ public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext,
                 return result;
             } catch (Throwable throwable) {
                 // 客户端异常、业务异常
-                if (throwable instanceof ClientException) {
+                if (throwable instanceof YopClientException) {
                     throw throwable;
                 }
 
