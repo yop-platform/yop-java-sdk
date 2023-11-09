@@ -33,6 +33,7 @@ public class X509CertUtilsTest {
 
     @Test
     public void parseToDecimal() {
+        Assert.assertEquals(X509CertUtils.parseToDecimal("4059376239"), "276374708793");
         Assert.assertEquals(X509CertUtils.parseToDecimal("4032156487"), "275718169735");
         Assert.assertEquals(X509CertUtils.parseToDecimal("4397139598"), "290297451928");
         Assert.assertEquals(X509CertUtils.parseToDecimal("4028129061"), "275550212193");

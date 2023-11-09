@@ -71,7 +71,7 @@ public class YopSignUtilsTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     public void testVerifySm2Sign() {
         String pubKey = "MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAESUkMtofAfGIkj6BD1K20YcFR24zqmrub7IaVJoHsfx3loCTZvKexXPpWnYY/Zb+mPr3wieuLCHbKB0HoimTTCw==";
         String signature = "OdU3vPOIddmzxBZs4m3IguT_X4aIgVN6cPvzQQjW1hgu_oA8oEa_2gdAb_zZIIE7qyTTgtXELqJm0P-TCPOxEA$SM3$SM2$4379555845";

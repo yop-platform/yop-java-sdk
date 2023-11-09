@@ -15,6 +15,10 @@
             <artifactId>yop-java-sdk-crypto-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.yeepay.yop.sdk</groupId>
+            <artifactId>yop-java-sdk-invoke-base</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>

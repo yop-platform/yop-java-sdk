@@ -1,5 +1,7 @@
 package com.yeepay.yop.sdk.exception;
 
+import com.yeepay.yop.sdk.invoke.exceptions.ClientException;
+
 /**
  * Base exception class for any errors that occur on the client side when attempting to access a YOP service API.
  * <p>
@@ -12,7 +14,7 @@ package com.yeepay.yop.sdk.exception;
  *
  * @see YopServiceException
  */
-public class YopClientException extends RuntimeException {
+public class YopClientException extends RuntimeException implements ClientException {
     private static final long serialVersionUID = -9085416005820812953L;
 
     /**

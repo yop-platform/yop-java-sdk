@@ -4,6 +4,8 @@
  */
 package com.yeepay.yop.sdk.exception;
 
+import com.yeepay.yop.sdk.invoke.exceptions.BLockException;
+
 /**
  * title: Yop域名熔断异常<br>
  * description: 该异常会触发当笔切换dns重试<br>
@@ -14,7 +16,7 @@ package com.yeepay.yop.sdk.exception;
  * @version 1.0.0
  * @since 2023/3/27
  */
-public class YopHostBlockException extends YopHostException {
+public class YopHostBlockException extends YopHostException implements BLockException {
     private static final long serialVersionUID = -1L;
 
     public YopHostBlockException(String message) {

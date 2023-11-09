@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.config.provider.file;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.invoke.config.CircuitBreakerConfig;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -26,7 +27,7 @@ import static com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerRuleConfi
  * @version 1.0.0
  * @since 2023/3/28
  */
-public class YopCircuitBreakerConfig implements Serializable {
+public class YopCircuitBreakerConfig implements CircuitBreakerConfig<YopCircuitBreakerRuleConfig>, Serializable {
 
     private static final long serialVersionUID = -1L;
 
