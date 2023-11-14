@@ -39,6 +39,7 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_C
 import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
+import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonContentType;
 import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 
 /**
@@ -173,7 +174,7 @@ public class RequestEncryptor {
                                        YopRequestConfig requestConfig, EncryptOptions encryptOptions) {
         if (null == request.getContent()) return;
 
-        if (YopContentType.JSON.equals(request.getContentType())) {
+        if (isJsonContentType(request)) {
             byte[] jsonBytes = encryptJsonParams(encryptor, finalEncryptParams, requestConfig, request.getContent(), encryptOptions);
             RestartableInputStream restartableInputStream = RestartableInputStream.wrap(jsonBytes);
             request.setContent(restartableInputStream);

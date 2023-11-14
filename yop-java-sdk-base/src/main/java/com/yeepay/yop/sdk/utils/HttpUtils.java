@@ -322,6 +322,20 @@ public class HttpUtils {
     }
 
     /**
+     * 判断是否是json类型请求
+     *
+     * @param request 内容类型
+     * @return true if the body is json response
+     */
+    public static boolean isJsonContentType(Request<? extends BaseRequest> request) {
+        return null != request &&
+                (YopContentType.JSON.equals(request.getContentType()) ||
+                        (MapUtils.isNotEmpty(request.getHeaders())
+                                && StringUtils.startsWith(request.getHeaders().get(Headers.CONTENT_TYPE),
+                                YOP_HTTP_CONTENT_TYPE_JSON)));
+    }
+
+    /**
      * 构造规范uri(用于签名)
      *
      * @param path

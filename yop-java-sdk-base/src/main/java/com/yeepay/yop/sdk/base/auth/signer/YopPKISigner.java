@@ -18,7 +18,6 @@ import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.base.security.digest.YopDigesterFactory;
 import com.yeepay.yop.sdk.http.Headers;
-import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
@@ -35,6 +34,7 @@ import java.util.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yeepay.yop.sdk.YopConstants.DEFAULT_YOP_PROTOCOL_VERSION;
+import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonContentType;
 
 /**
  * title: YopPKISigner<br/>
@@ -181,7 +181,7 @@ public class YopPKISigner implements YopSigner {
     }
 
     private RestartableInputStream getBinaryRequestPayloadStreamWithoutQueryParams(Request<? extends BaseRequest> request) {
-        if (request.getContent() instanceof RestartableInputStream && YopContentType.JSON.equals(request.getContentType())) {
+        if (request.getContent() instanceof RestartableInputStream && isJsonContentType(request)) {
             return (RestartableInputStream) request.getContent();
         }
         return RestartableInputStream.wrap(new byte[0]);
