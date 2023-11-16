@@ -84,6 +84,7 @@ public abstract class AbstractUriRouteInvoker<Input, Output, Context, Exception 
     @Override
     public void addException(Exception exception) {
         this.exceptions.add(exception);
+        this.lastException = exception;
     }
 
     @Override
