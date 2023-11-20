@@ -140,12 +140,15 @@ public class ClientHandlerImpl implements ClientHandler {
                 throws YopClientException, YopHttpException, YopUnknownException, YopHostException {
 
             Entry entry = null;
+            boolean successInvoked = false;
             try {
                 final URI serverRoot = request.getEndpoint();
                 final String host = serverRoot.toString();
                 YopDegradeRuleHelper.addDegradeRule(serverRoot, circuitBreakerConfig);
                 entry = SphU.entry(host);
-                return doExecute(request, invoker);
+                final Output output = doExecute(request, invoker);
+                successInvoked = true;
+                return output;
             } catch (YopClientException | YopHttpException | YopUnknownException ex) {
                 throw ex;
             } catch (Throwable ex) {
@@ -158,7 +161,7 @@ public class ClientHandlerImpl implements ClientHandler {
             } finally {
                 if (null != entry) {
                     final AnalyzedException lastException = invoker.getLastException();
-                    if (null != lastException && lastException.isNeedDegrade()) {
+                    if (!successInvoked && null != lastException && lastException.isNeedDegrade()) {
                         Tracer.trace(lastException.getException());
                     }
                     entry.exit();

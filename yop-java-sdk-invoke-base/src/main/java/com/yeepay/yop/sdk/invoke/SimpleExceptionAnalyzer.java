@@ -52,6 +52,13 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
             return result;
         }
 
+        // 熔断异常，直接重试
+        if (e instanceof YopBlockException) {
+            result.setExDetail(e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage()));
+            result.setNeedRetry(true);
+            return result;
+        }
+
         // 分析堆栈，预期异常，可重试
         final Throwable[] allExceptions = ExceptionUtils.getThrowables(e);
         final List<String> exceptionDetails = Lists.newArrayList();
@@ -62,8 +69,7 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
             exceptionDetails.add(exType);
             exceptionDetails.add(exTypeAndMsg);
             if (retryExceptions.contains(exType) ||
-                    retryExceptions.contains(exTypeAndMsg) ||
-                    e instanceof YopBlockException) {
+                    retryExceptions.contains(exTypeAndMsg)) {
                 result.setExDetail(exTypeAndMsg);
                 result.setNeedRetry(true);
                 result.setNeedDegrade(true);
