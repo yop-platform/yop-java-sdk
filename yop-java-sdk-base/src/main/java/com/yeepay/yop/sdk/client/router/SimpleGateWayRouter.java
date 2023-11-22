@@ -5,6 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.client.ClientReporter;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostProbeReport;
+import com.yeepay.yop.sdk.client.metric.report.host.YopHostProbeReportPayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
 import com.yeepay.yop.sdk.client.router.enums.ModeEnum;
@@ -19,10 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
@@ -46,11 +45,13 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
     private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
+    private static final Map<ServerRootType, Set<URI>> CANDIDATE_SERVERS = Maps.newConcurrentMap();
 
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
 
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
+    private static final List<ServerRootType> PROBE_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
 
     static {
         monitorServerRoot();
@@ -104,6 +105,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
     }
 
     private static void monitorServerRoot() {
+        // sentinel监控
         EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
                 (prevState, newState, rule, snapshotValue) -> {
                     try {
@@ -114,18 +116,19 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
                         if (CollectionUtils.isNotEmpty(serverRootTypes)) {
                             for (ServerRootType serverRootType : serverRootTypes) {
+                                final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.computeIfAbsent(serverRootType,
+                                        p -> new LinkedBlockingDeque<>());
+                                final Set<URI> candidateServers = CANDIDATE_SERVERS.computeIfAbsent(serverRootType,
+                                        p -> new HashSet<>());
                                 switch (newState) {
                                     case OPEN:
-                                        final LinkedBlockingDeque<URI> oldBlocked =
-                                                BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
-                                        oldBlocked.removeIf(serverRoot::equals);
-                                        oldBlocked.add(serverRoot);
+                                        candidateServers.remove(serverRoot);
+                                        blockedServers.removeIf(serverRoot::equals);
+                                        blockedServers.add(serverRoot);
                                         break;
                                     case CLOSED:
-                                        final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
-                                        if (null != blockedServers) {
-                                            blockedServers.removeIf(serverRoot::equals);
-                                        }
+                                        candidateServers.add(serverRoot);
+                                        blockedServers.removeIf(serverRoot::equals);
                                         break;
                                     default:
                                 }
@@ -137,6 +140,73 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
                 });
+        // 自探测监控
+        ServerRootProbeThread probeThread = new ServerRootProbeThread();
+        probeThread.start();
+    }
+
+    private static class ServerRootProbeThread extends Thread {
+        public ServerRootProbeThread() {
+            super("yop-java-sdk-server-probe");
+            this.setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            while (!this.isInterrupted()) {
+                try {
+                    Thread.sleep(50);
+                    if (BLOCKED_SERVERS.isEmpty()) {
+                        continue;
+                    }
+                    Map<ServerRootType, List<URI>> toBeProbeServers = Maps.newHashMap();
+                    for (ServerRootType serverRootType : PROBE_SERVER_ROOT_TYPES) {
+                        final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
+                        if (null != failedServers) {
+                            toBeProbeServers.put(serverRootType, new ArrayList<>(failedServers));
+                        }
+                    }
+                    toBeProbeServers.forEach((serverRootType, uris) -> {
+                        final LinkedBlockingDeque<URI> blockedUris = BLOCKED_SERVERS.get(serverRootType);
+                        if (null == blockedUris || blockedUris.isEmpty()) {
+                            return;
+                        }
+                        final Set<URI> candidateUris = CANDIDATE_SERVERS.computeIfAbsent(serverRootType,
+                                p -> new HashSet<>());
+                        for (URI uri : uris) {
+                            if (doProbe(uri, serverRootType,
+                                    new ArrayList<>(blockedUris),
+                                    new ArrayList<>(candidateUris))) {
+                                candidateUris.add(uri);
+                                blockedUris.removeIf(uri::equals);
+                            } else {
+                                candidateUris.remove(uri);
+                                blockedUris.removeIf(uri::equals);
+                                blockedUris.add(uri);
+                            }
+                        }
+                    });
+                } catch (Throwable e) {
+                    LOGGER.warn("probe error, ex:", e);
+                }
+            }
+        }
+
+        private boolean doProbe(URI server, ServerRootType serverType,
+                                List<URI> blockServers, List<URI> candidateServers) {
+            String serverRoot = server.toString();
+            try {
+                ClientReporter.syncProbeReport(serverRoot, new YopHostProbeReport(
+                        new YopHostProbeReportPayload(serverType.name(),
+                                blockServers.stream().map(URI::toString).collect(Collectors.toList()),
+                                candidateServers.stream().map(URI::toString).collect(Collectors.toList()))));
+                LOGGER.debug("probe success, serverRoot:{}", serverRoot);
+                return true;
+            } catch (Throwable e) {
+                LOGGER.debug("probe fail, serverRoot:" + serverRoot, e);
+            }
+            return false;
+        }
     }
 
     private static List<String> getAllServerRoots(ServerRootType serverRootType) {
@@ -206,6 +276,15 @@ public class SimpleGateWayRouter implements GateWayRouter {
                     if (!isExcludeServerRoots(backup, excludeServerRoots)) {
                         return backup;
                     }
+                }
+            }
+
+            // 备用域名故障，优先从已探测列表筛选
+            final Set<URI> candidateServers = CANDIDATE_SERVERS.get(serverRootType);
+            if (CollectionUtils.isNotEmpty(candidateServers)) {
+                List<URI> tmpCandidates = new ArrayList<>(candidateServers);
+                if (CollectionUtils.isNotEmpty(tmpCandidates)) {
+                    return RouteUtils.randomOne(tmpCandidates);
                 }
             }
 

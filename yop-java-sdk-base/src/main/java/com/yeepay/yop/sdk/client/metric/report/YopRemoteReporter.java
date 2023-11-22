@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import static com.yeepay.yop.sdk.YopConstants.REPORT_API_METHOD;
@@ -37,11 +38,11 @@ import static com.yeepay.yop.sdk.YopConstants.REPORT_API_URI;
  * @version 1.0.0
  * @since 2023/3/21
  */
-public class YopRemoteReporter implements YopReporter {
+public class YopRemoteReporter implements YopReporter, YopProbeReporter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopRemoteReporter.class);
 
-    public static final YopReporter INSTANCE = new YopRemoteReporter();
+    public static final YopRemoteReporter INSTANCE = new YopRemoteReporter();
     private static final YopReporter BACKUP_REPORTER = YopLocalReporter.INSTANCE;
     private static final YopClient YOP_CLIENT = YopGlobalClient.getClient();
 
@@ -50,21 +51,8 @@ public class YopRemoteReporter implements YopReporter {
         batchReport(Lists.newArrayList(report));
     }
 
-    private void doRemoteReport(List<YopReport> reports) throws YopReportException {
+    private void doRemoteReport(YopRequest request, List<YopReport> reports) throws YopReportException {
         try {
-            YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
-            // 跳过验签、加解密
-            request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false).setReadTimeout(60000);
-
-            // 选择可用凭证
-            final List<String> availableApps = YopCredentialsCache.listKeys();
-            YopCredentials<?> credentials;
-            if (CollectionUtils.isNotEmpty(availableApps)
-                    && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
-                request.getRequestConfig().setAppKey(availableApps.get(0));
-                request.getRequestConfig().setCredentials(credentials);
-            }
-
             YopReportRequest reportRequest = new YopReportRequest();
             reportRequest.setReports(reports);
             request.setContent(JsonUtils.toJsonString(reportRequest));
@@ -79,6 +67,16 @@ public class YopRemoteReporter implements YopReporter {
         }
     }
 
+    private YopRequest initReportRequest() {
+        YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
+        // 跳过验签、加解密
+        request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false).setReadTimeout(60000);
+
+        // 选择可用凭证
+        chooseAvailableCredentials(request);
+        return request;
+    }
+
     private void handleReportResponse(YopResponse response) throws IOException {
         final YopReportResponse reportResponse = new YopReportResponse();
         JsonUtils.load(response.getStringResult(), reportResponse);
@@ -87,6 +85,35 @@ public class YopRemoteReporter implements YopReporter {
 
     @Override
     public void batchReport(List<YopReport> reports) throws YopReportException {
-        doRemoteReport(reports);
+        YopRequest request = initReportRequest();
+        doRemoteReport(request, reports);
+    }
+
+    @Override
+    public void probeReport(String serverRoot, YopReport report) throws YopReportException {
+        YopRequest request = initProbeReportRequest(serverRoot);
+        doRemoteReport(request, Collections.singletonList(report));
+    }
+
+    private YopRequest initProbeReportRequest(String serverRoot) {
+        YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
+        // 跳过验签、加解密、禁用断路器
+        request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false)
+                .setReadTimeout(3000)
+                .setEnableCircuitBreaker(false).setServerRoot(serverRoot);
+
+        // 选择可用凭证
+        chooseAvailableCredentials(request);
+        return request;
+    }
+
+    private void chooseAvailableCredentials(YopRequest request) {
+        final List<String> availableApps = YopCredentialsCache.listKeys();
+        YopCredentials<?> credentials;
+        if (CollectionUtils.isNotEmpty(availableApps)
+                && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
+            request.getRequestConfig().setAppKey(availableApps.get(0));
+            request.getRequestConfig().setCredentials(credentials);
+        }
     }
 }
