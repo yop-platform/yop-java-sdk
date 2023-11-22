@@ -35,6 +35,7 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -232,7 +233,8 @@ public class ClientHandlerImpl implements ClientHandler {
             request.setEndpoint(getUri());
 
             // 发起http调用
-            if (isCircuitBreakerEnable() && null != circuitBreaker) {
+            if (isCircuitBreakerEnable() && null != circuitBreaker && !BooleanUtils.isFalse(request.getOriginalRequestObject()
+                    .getRequestConfig().getEnableCircuitBreaker())) {
                 return circuitBreaker.execute(request, this);
             } else {
                 return doExecute(request, this);
