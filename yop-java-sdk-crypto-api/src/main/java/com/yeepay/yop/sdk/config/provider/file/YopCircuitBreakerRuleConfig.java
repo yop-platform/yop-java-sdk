@@ -25,7 +25,19 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
     private static final long serialVersionUID = -1L;
 
     public static final YopCircuitBreakerRuleConfig DEFAULT_CONFIG = new YopCircuitBreakerRuleConfig();
-    public static final YopCircuitBreakerRuleConfig DEFAULT_ERROR_COUNT_CONFIG = new YopCircuitBreakerRuleConfig(30 * 1000);
+    public static final YopCircuitBreakerRuleConfig DEFAULT_ERROR_COUNT_CONFIG;
+    public static final YopCircuitBreakerRuleConfig DEFAULT_ERROR_RATIO_CONFIG;
+
+    static {
+        DEFAULT_ERROR_COUNT_CONFIG = new YopCircuitBreakerRuleConfig(5 * 60 * 1000);
+        DEFAULT_ERROR_COUNT_CONFIG.setGrade(2);
+        DEFAULT_ERROR_COUNT_CONFIG.setCount(5.0);
+        DEFAULT_ERROR_COUNT_CONFIG.setTimeWindow(5 * 60);
+        DEFAULT_ERROR_RATIO_CONFIG = new YopCircuitBreakerRuleConfig(5 * 1000);
+        DEFAULT_ERROR_RATIO_CONFIG.setGrade(1);
+        DEFAULT_ERROR_RATIO_CONFIG.setTimeWindow(5 * 60);
+        DEFAULT_ERROR_RATIO_CONFIG.setMinRequestAmount(5);
+    }
 
     public YopCircuitBreakerRuleConfig() {
     }
@@ -33,6 +45,7 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
     public YopCircuitBreakerRuleConfig(int statIntervalMs) {
         this.statIntervalMs = statIntervalMs;
     }
+
 
     // region 断路器
 
