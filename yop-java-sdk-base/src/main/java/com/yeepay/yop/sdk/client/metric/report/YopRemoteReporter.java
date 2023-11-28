@@ -99,6 +99,7 @@ public class YopRemoteReporter implements YopReporter, YopProbeReporter {
         YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
         // 跳过验签、加解密、禁用断路器
         request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false)
+                .setConnectTimeout(3000)
                 .setReadTimeout(3000)
                 .setEnableCircuitBreaker(false).setServerRoot(serverRoot);
 
