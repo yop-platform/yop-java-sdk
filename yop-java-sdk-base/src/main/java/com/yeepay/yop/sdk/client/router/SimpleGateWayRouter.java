@@ -115,7 +115,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         final UriResource uriResource = UriResource.parseResourceKey(rule.getResource());
                         final URI serverRoot = uriResource.getResource();
                         if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
+                            LOGGER.debug("ServerRoot Block State Changed, rule:{}, serverRoot:{}, old:{}, new:{}",
+                                    rule, serverRoot, prevState, newState);
                         }
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
                         if (CollectionUtils.isNotEmpty(serverRootTypes)) {
@@ -144,7 +145,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                             BLOCKED_SEQUENCE.compareAndSet(expect, expect + 1);
                         }
                         ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
-                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name())));
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
                     } catch (Exception e) {
                         LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
