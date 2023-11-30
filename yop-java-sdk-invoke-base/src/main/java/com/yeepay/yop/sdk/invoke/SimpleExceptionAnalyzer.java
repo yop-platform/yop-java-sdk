@@ -56,6 +56,7 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
         if (e instanceof YopBlockException) {
             result.setExDetail(e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage()));
             result.setNeedRetry(true);
+            result.setBlocked(true);
             return result;
         }
 

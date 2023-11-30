@@ -104,7 +104,7 @@ public class ClientHandlerImpl implements ClientHandler {
     public <Input extends BaseRequest, Output extends BaseResponse> Output execute(
             ClientExecutionParams<Input, Output> executionParams) {
         ExecutionContext executionContext = getExecutionContext(executionParams);
-        return new UriRouteInvokerWrapper<>(
+        return new UriResourceRouteInvokerWrapper<>(
                 new YopInvoker<>(executionParams, executionContext, new SimpleExceptionAnalyzer(null != circuitBreakerConfig ?
                         circuitBreakerConfig.getExcludeExceptions() : Collections.emptySet(),
                         clientConfiguration.getRetryExceptions()), true),
@@ -115,7 +115,7 @@ public class ClientHandlerImpl implements ClientHandler {
     private interface YopCircuitBreaker {
 
         <Input extends BaseRequest, Output extends BaseResponse> Output execute(Request<Input> request,
-                                                                                UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
+                                                                                UriResourceRouteInvoker<ClientExecutionParams<Input, Output>, Output,
                                                                                         ExecutionContext, AnalyzedException> invoker);
 
     }
@@ -136,17 +136,16 @@ public class ClientHandlerImpl implements ClientHandler {
 
         @Override
         public <Input extends BaseRequest, Output extends BaseResponse> Output execute(Request<Input> request,
-                                                                                       UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
+                                                                                       UriResourceRouteInvoker<ClientExecutionParams<Input, Output>, Output,
                                                                                                ExecutionContext, AnalyzedException> invoker)
                 throws YopClientException, YopHttpException, YopUnknownException, YopHostException {
 
             Entry entry = null;
             boolean successInvoked = false;
             try {
-                final URI serverRoot = request.getEndpoint();
-                final String host = serverRoot.toString();
-                YopDegradeRuleHelper.addDegradeRule(serverRoot, circuitBreakerConfig);
-                entry = SphU.entry(host);
+                final String resource = invoker.getUriResource().computeResourceKey();
+                YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
+                entry = SphU.entry(resource);
                 final Output output = doExecute(request, invoker);
                 successInvoked = true;
                 return output;
@@ -172,7 +171,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private <Input extends BaseRequest, Output extends BaseResponse> Output doExecute(Request<Input> request,
-                                                                                      UriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
+                                                                                      UriResourceRouteInvoker<ClientExecutionParams<Input, Output>, Output,
                                                                                               ExecutionContext, AnalyzedException> invoker)
             throws YopClientException, YopHttpException, YopUnknownException {
 
@@ -209,7 +208,7 @@ public class ClientHandlerImpl implements ClientHandler {
     }
 
     private class YopInvoker<Input extends BaseRequest, Output extends BaseResponse>
-            extends AbstractUriRouteInvoker<ClientExecutionParams<Input, Output>, Output,
+            extends AbstractUriResourceRouteInvoker<ClientExecutionParams<Input, Output>, Output,
             ExecutionContext, AnalyzedException> {
 
         public YopInvoker(ClientExecutionParams<Input, Output> executionParams,
@@ -230,7 +229,7 @@ public class ClientHandlerImpl implements ClientHandler {
         public Output invoke() {
             // 准备http参数
             Request<Input> request = getInput().getRequestMarshaller().marshall(getInput().getInput());
-            request.setEndpoint(getUri());
+            request.setEndpoint(getUriResource().getResource());
 
             // 发起http调用
             if (isCircuitBreakerEnable() && null != circuitBreaker && !BooleanUtils.isFalse(request.getOriginalRequestObject()

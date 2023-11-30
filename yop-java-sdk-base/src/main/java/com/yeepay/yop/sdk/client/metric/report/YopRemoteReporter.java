@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import static com.yeepay.yop.sdk.YopConstants.REPORT_API_METHOD;
@@ -38,7 +37,7 @@ import static com.yeepay.yop.sdk.YopConstants.REPORT_API_URI;
  * @version 1.0.0
  * @since 2023/3/21
  */
-public class YopRemoteReporter implements YopReporter, YopProbeReporter {
+public class YopRemoteReporter implements YopReporter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopRemoteReporter.class);
 
@@ -87,25 +86,6 @@ public class YopRemoteReporter implements YopReporter, YopProbeReporter {
     public void batchReport(List<YopReport> reports) throws YopReportException {
         YopRequest request = initReportRequest();
         doRemoteReport(request, reports);
-    }
-
-    @Override
-    public void probeReport(String serverRoot, YopReport report) throws YopReportException {
-        YopRequest request = initProbeReportRequest(serverRoot);
-        doRemoteReport(request, Collections.singletonList(report));
-    }
-
-    private YopRequest initProbeReportRequest(String serverRoot) {
-        YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
-        // 跳过验签、加解密、禁用断路器
-        request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false)
-                .setConnectTimeout(3000)
-                .setReadTimeout(3000)
-                .setEnableCircuitBreaker(false).setServerRoot(serverRoot);
-
-        // 选择可用凭证
-        chooseAvailableCredentials(request);
-        return request;
     }
 
     private void chooseAvailableCredentials(YopRequest request) {

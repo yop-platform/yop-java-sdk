@@ -24,6 +24,8 @@ public class AnalyzedException implements Serializable {
     private boolean needRetry;
     private boolean needDegrade;
 
+    private boolean blocked;
+
     private String exDetail;
 
     public Throwable getException() {
@@ -58,4 +60,11 @@ public class AnalyzedException implements Serializable {
         return exDetail;
     }
 
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
 }

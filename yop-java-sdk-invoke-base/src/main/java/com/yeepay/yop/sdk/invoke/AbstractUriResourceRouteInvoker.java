@@ -6,13 +6,13 @@ package com.yeepay.yop.sdk.invoke;
 
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzer;
+import com.yeepay.yop.sdk.invoke.model.UriResource;
 
-import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * title: 基于Uri的抽象路由实现类<br>
+ * title: 基于UriResource的抽象路由实现类<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -21,10 +21,10 @@ import java.util.List;
  * @version 1.0.0
  * @since 2023/11/9
  */
-public abstract class AbstractUriRouteInvoker<Input, Output, Context, Exception extends AnalyzedException>
-        implements UriRouteInvoker<Input, Output, Context, Exception> {
+public abstract class AbstractUriResourceRouteInvoker<Input, Output, Context, Exception extends AnalyzedException>
+        implements UriResourceRouteInvoker<Input, Output, Context, Exception> {
 
-    private URI uri;
+    private UriResource uriResource;
     private Input input;
     private Context context;
 
@@ -37,13 +37,13 @@ public abstract class AbstractUriRouteInvoker<Input, Output, Context, Exception 
     private ExceptionAnalyzer<Exception> exceptionAnalyzer;
 
     @Override
-    public URI getUri() {
-        return uri;
+    public UriResource getUriResource() {
+        return uriResource;
     }
 
     @Override
-    public void setUri(URI uri) {
-        this.uri = uri;
+    public void setUriResource(UriResource uri) {
+        this.uriResource = uri;
     }
 
     @Override

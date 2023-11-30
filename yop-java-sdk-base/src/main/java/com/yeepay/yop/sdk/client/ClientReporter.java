@@ -13,7 +13,9 @@ import com.yeepay.yop.sdk.client.metric.YopFailureItem;
 import com.yeepay.yop.sdk.client.metric.YopFailureList;
 import com.yeepay.yop.sdk.client.metric.YopStatus;
 import com.yeepay.yop.sdk.client.metric.event.host.YopHostRequestEvent;
-import com.yeepay.yop.sdk.client.metric.report.*;
+import com.yeepay.yop.sdk.client.metric.report.YopRemoteReporter;
+import com.yeepay.yop.sdk.client.metric.report.YopReport;
+import com.yeepay.yop.sdk.client.metric.report.YopReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestPayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostRequestReport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
@@ -45,8 +47,6 @@ public class ClientReporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientReporter.class);
 
     private static final YopReporter REMOTE_REPORTER = YopRemoteReporter.INSTANCE;
-    private static final YopProbeReporter PROBE_REPORTER = YopRemoteReporter.INSTANCE;
-
     private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_COLLECTION = new ConcurrentHashMap<>();
 
     private static final Set<String> EXCLUDE_REPORT_RESOURCES = Sets.newHashSet(REPORT_API_URI);
@@ -203,10 +203,6 @@ public class ClientReporter {
 
     public static void asyncReportToQueue(YopReport report, ThreadPoolExecutor executor) {
         executor.submit(() -> syncReportToQueue(report));
-    }
-
-    public static void syncProbeReport(String serverRoot, YopReport report) throws YopReportException {
-        PROBE_REPORTER.probeReport(serverRoot, report);
     }
 
     public static void reportHostRequest(YopHostRequestEvent<?> newEvent) {

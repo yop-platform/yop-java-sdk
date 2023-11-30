@@ -109,8 +109,20 @@ public class YopDegradeRuleHelper {
         if (null == serverRoot) {
             return;
         }
+        addDegradeRule(serverRoot.toString(), circuitBreakerConfig);
+    }
 
-        String resource = serverRoot.toString();
+    /**
+     * 添加降级配置
+     *
+     * @param resource 资源名称
+     * @param circuitBreakerConfig 域名降级配置
+     */
+    public static void addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
+        if (null == resource) {
+            return;
+        }
+
         if (DegradeRuleManager.hasConfig(resource)) {
             return;
         }
@@ -120,6 +132,18 @@ public class YopDegradeRuleHelper {
             DegradeRuleManager.setRulesForResource(resource, rules);
         }
         LOGGER.info("DegradeRule Added, rules:{}", rules);
+    }
+
+    /**
+     * 移除降级配置
+     *
+     * @param resource 资源名称
+     */
+    public static void removeDegradeRule(String resource) {
+        if (null == resource) {
+            return;
+        }
+        DegradeRuleManager.setRulesForResource(resource, null);
     }
 
 }

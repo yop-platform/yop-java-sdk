@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.client.ClientExecutionParams;
 import com.yeepay.yop.sdk.http.ExecutionContext;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.Router;
+import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 
@@ -25,7 +26,7 @@ import java.util.List;
  * @since 2023/11/7
  */
 public class YopRouter<Input extends BaseRequest, OutPut extends BaseResponse>
-        implements Router<URI, ClientExecutionParams<Input, OutPut>, ExecutionContext> {
+        implements Router<UriResource, ClientExecutionParams<Input, OutPut>, ExecutionContext> {
 
     private final GateWayRouter gateWayRouter;
 
@@ -34,7 +35,7 @@ public class YopRouter<Input extends BaseRequest, OutPut extends BaseResponse>
     }
 
     @Override
-    public URI route(ClientExecutionParams<Input, OutPut> executionParams, ExecutionContext executionContext, Object...args) {
+    public UriResource route(ClientExecutionParams<Input, OutPut> executionParams, ExecutionContext executionContext, Object...args) {
         Request<Input> request = executionParams.getRequestMarshaller().marshall(executionParams.getInput());
         return gateWayRouter.route(executionContext.getYopCredentials().getAppKey(), request, (List<URI>) args[0]);
     }
