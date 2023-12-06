@@ -108,7 +108,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 new YopInvoker<>(executionParams, executionContext, new SimpleExceptionAnalyzer(null != circuitBreakerConfig ?
                         circuitBreakerConfig.getExcludeExceptions() : Collections.emptySet(),
                         clientConfiguration.getRetryExceptions()), true),
-                SimpleUriRetryPolicy.singleton(),
+                new SimpleUriRetryPolicy(clientConfiguration.getMaxRetryCount()),
                 new YopRouter<>(gateWayRouter)).invoke();
     }
 

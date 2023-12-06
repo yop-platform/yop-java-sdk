@@ -11,6 +11,7 @@ import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 import com.yeepay.yop.sdk.invoke.model.RetryContext;
 import com.yeepay.yop.sdk.invoke.model.RetryPolicy;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,89 +52,63 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
     public Output invoke() {
         final long start = System.currentTimeMillis();
         List<URI> excludeServerRoots = Lists.newArrayList();
-        UriResource lastServerRoot = uriRouter.route(getInput(), getContext(), excludeServerRoots);
-
-        while (!excludeServerRoots.contains(lastServerRoot.getResource())) {
+        UriResource lastServerRoot = null;
+        Throwable currentEx;
+        boolean needRetry;
+        do {
             try {
+                lastServerRoot = uriRouter.route(getInput(), getContext(), excludeServerRoots);
                 invoker.setUriResource(lastServerRoot);
                 final Output result = invoker.invoke();
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Success ServerRoot, {}, elapsed:{}, retryCount:{}", invoker.getUriResource(),
+                    LOGGER.debug("Success ServerRoot, {}, elapsed:{}, retryCount:{}", lastServerRoot,
                             System.currentTimeMillis() - start, getContext().retryCount());
                 }
                 return result;
             } catch (Throwable throwable) {
-                // 重试前
-                final Exception analyzedEx = beforeRetry(throwable, lastServerRoot, start);
-
-                // 可重试异常，仅当配置路由时触发
-                if (analyzedEx.isNeedRetry()
-                        && null != retryPolicy
-                        && retryPolicy.allowRetry(invoker, throwable)) {
-                    excludeServerRoots.add(lastServerRoot.getResource());
-                    getContext().markRetried(1);
-
-                    // 切换uri重试
-                    lastServerRoot = uriRouter.route(getInput(), getContext(), excludeServerRoots);
-                    continue;
+                currentEx = throwable;
+                // 路由异常，客户端配置问题
+                if (null == lastServerRoot || null == lastServerRoot.getResource()) {
+                    throw new YopClientException("Config Error, No ServerRoot Found");
                 }
 
-                // 重试后
-                throw afterRetry(throwable, analyzedEx);
+                // 客户端异常、业务异常，直接抛给上层
+                if (throwable instanceof YopClientException) {
+                    throw (YopClientException) throwable;
+                }
+
+                // 其他已分析异常
+                final Exception analyzedException = getLastException();
+                if (null == analyzedException) {
+                    throw handleUnExpectedError(currentEx);
+                }
+
+                // 重试准备
+                needRetry = analyzedException.isNeedRetry()
+                        && null != retryPolicy
+                        && retryPolicy.allowRetry(this);
+                if (needRetry) {
+                    excludeServerRoots.add(lastServerRoot.getResource());
+                    if (!analyzedException.isBlocked()) {
+                        getContext().markRetried(1);
+                    }
+                }
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Fail ServerRoot, {}, exDetail:{}, elapsed:{}, needRetry:{}", lastServerRoot,
+                            ExceptionUtils.getMessage(currentEx), System.currentTimeMillis() - start, needRetry);
+                }
             }
-        }
+        } while (needRetry);
 
-        // 如果所有域名均熔断，则用最早熔断域名兜底
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("All ServerRoots Unavailable, Last Try, tried:{}, last:{}",
-                    excludeServerRoots, lastServerRoot);
-        }
-        try {
-            invoker.setUriResource(lastServerRoot);
-            return invoker.invoke();
-        } catch (Throwable throwable) {
-            // 重试前
-            final Exception analyzedEx = beforeRetry(throwable, lastServerRoot, start);
+        // 非预期异常处理
+        throw handleUnExpectedError(currentEx);
 
-            // 确保兜底请求发出去
-            if (analyzedEx.isBlocked()) {
-                invoker.setUriResource(lastServerRoot);
-                invoker.disableCircuitBreaker();
-                return invoker.invoke();
-            }
-            // 重试后
-            throw afterRetry(throwable, analyzedEx);
-        }
-    }
-
-    private Exception beforeRetry(Throwable throwable, UriResource lastServerRoot, long start) {
-        // 客户端异常、业务异常
-        if (throwable instanceof YopClientException) {
-            throw (YopClientException) throwable;
-        }
-
-        // 其他异常，须具体分析
-        final Exception analyzedEx = invoker.getLastException();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Fail ServerRoot, {}, exDetail:{}, elapsed:{}", invoker.getUriResource(),
-                    analyzedEx.getExDetail(), System.currentTimeMillis() - start);
-        }
-        return analyzedEx;
-    }
-
-    private RuntimeException afterRetry(Throwable throwable, Exception analyzedEx) {
-        // 封装非预期的服务端异常
-        if (analyzedEx.isNeedDegrade()) {
-            return handleUnExpectedError(throwable);
-        }
-
-        // 非预期的客户端异常
-        return new YopClientException("Client Error, ex:", throwable);
     }
 
     private RuntimeException handleUnExpectedError(Throwable ex) {
         if (ex instanceof YopUnknownException) {
-            return  (YopUnknownException) ex;
+            return (YopUnknownException) ex;
         }
         return new YopUnknownException("UnExpected Error, ", ex);
     }

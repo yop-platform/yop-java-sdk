@@ -52,7 +52,7 @@ public final class YopHttpClientConfig implements Serializable {
     private Set<String> retryExceptions;
 
     @JsonProperty("max_retry_count")
-    private int maxRetryCount;
+    private int maxRetryCount = 3;
 
     @JsonProperty("circuit_breaker")
     private YopCircuitBreakerConfig circuitBreakerConfig;

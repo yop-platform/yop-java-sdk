@@ -130,4 +130,6 @@ public interface YopConstants {
 
     String HEADER_LANG_JAVA = "java";
 
+    boolean SDK_DEBUG = Boolean.parseBoolean(System.getProperty("yop.sdk.debug", "false"));
+
 }

@@ -201,29 +201,28 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 return new UriResource(independentServerRoot);
             }
 
-            // 主域名
-            URI mainServer = MAIN_SERVER.get(serverRootType);
-            if (null != mainServer && !isExcludeServerRoots(mainServer, excludeServerRoots)) {
-                return new UriResource(mainServer);
-            }
-
             final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.get(serverRootType);
             if (CollectionUtils.isEmpty(serverRoots)) {
                 throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
             }
 
+            // 主域名准备
+            URI mainServer = MAIN_SERVER.get(serverRootType);
             // 随机选主
             if (null == mainServer) {
                 final List<URI> randomList = RouteUtils.randomList(serverRoots);
-                mainServer = randomList.remove(0);
-                if (recordMainServer(mainServer, serverRootType)) {
+                if (recordMainServer(randomList.remove(0), serverRootType)) {
                     BACKUP_SERVERS.put(serverRootType, randomList);
                 }
-                final URI mainServerSetted = MAIN_SERVER.get(serverRootType);
+                mainServer = MAIN_SERVER.get(serverRootType);
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Main ServerRoot Set, value:{}", mainServerSetted);
+                    LOGGER.debug("Main ServerRoot Set, value:{}", mainServer);
                 }
-                return new UriResource(mainServerSetted);
+            }
+
+            // 主域名正常
+            if (null != mainServer && !isExcludeServerRoots(mainServer, excludeServerRoots)) {
+                return new UriResource(mainServer);
             }
 
             // 主域名故障，临时启用备选域名
@@ -239,8 +238,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
             // 备用域名故障，选用最早故障的域名
             URI oldestFailServer = null;
             final long blockedSequence;
-
-            // 保证申请资源一致性
             synchronized (BLOCKED_LOCK) {
                 final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
                 if (null != failedServers && !failedServers.isEmpty()) {
@@ -249,7 +246,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 blockedSequence = BLOCKED_SEQUENCE.get();
             }
 
-            // 主域名兜底, 理论上不会发生
+            // 熔断列表为空(说明其他线程已半开成功)，选主域名即可
             if (null == oldestFailServer) {
                 oldestFailServer = mainServer;
             }

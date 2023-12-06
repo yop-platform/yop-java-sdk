@@ -8,6 +8,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreakerStrategy;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerRuleConfig;
 import org.apache.commons.collections4.CollectionUtils;
@@ -131,7 +132,9 @@ public class YopDegradeRuleHelper {
         if (CollectionUtils.isNotEmpty(rules)) {
             DegradeRuleManager.setRulesForResource(resource, rules);
         }
-        LOGGER.info("DegradeRule Added, rules:{}", rules);
+        if (YopConstants.SDK_DEBUG) {
+            LOGGER.info("DegradeRule Added, rules:{}", rules);
+        }
     }
 
     /**

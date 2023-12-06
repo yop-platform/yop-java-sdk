@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.log;
 
 import com.alibaba.csp.sentinel.log.LogTarget;
 import com.alibaba.csp.sentinel.log.Logger;
+import com.yeepay.yop.sdk.YopConstants;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -25,12 +26,16 @@ public class YopSentinelRecordLogger implements Logger {
 
     @Override
     public void info(String format, Object... arguments) {
-        LOGGER.info(format, arguments);
+        if (YopConstants.SDK_DEBUG) {
+            LOGGER.info(format, arguments);
+        }
     }
 
     @Override
     public void info(String msg, Throwable e) {
-        LOGGER.info(msg, e);
+        if (YopConstants.SDK_DEBUG) {
+            LOGGER.info(msg, e);
+        }
     }
 
     @Override
