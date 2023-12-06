@@ -5,6 +5,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserver
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
@@ -26,8 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -50,9 +50,13 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
     private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
+    private static final Object BLOCKED_LOCK = new Object();
     private static final AtomicLong BLOCKED_SEQUENCE = new AtomicLong(0);
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
+
+    private static final ScheduledThreadPoolExecutor BLOCKED_SWEEPER = new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder().setNameFormat("yop-blocked-resource-sweeper-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
 
@@ -120,29 +124,39 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         }
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
                         if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            for (ServerRootType serverRootType : serverRootTypes) {
-                                final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.computeIfAbsent(serverRootType,
-                                        p -> new LinkedBlockingDeque<>());
-                                switch (newState) {
-                                    case OPEN:
-                                        blockedServers.removeIf(serverRoot::equals);
-                                        blockedServers.add(serverRoot);
-                                        break;
-                                    case CLOSED:
-                                        blockedServers.removeIf(serverRoot::equals);
-                                        break;
-                                    default:
+                            synchronized (BLOCKED_LOCK) {
+                                for (ServerRootType serverRootType : serverRootTypes) {
+                                    final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.computeIfAbsent(serverRootType,
+                                            p -> new LinkedBlockingDeque<>());
+                                    switch (newState) {
+                                        case OPEN:
+                                            blockedServers.removeIf(serverRoot::equals);
+                                            blockedServers.add(serverRoot);
+                                            break;
+                                        case CLOSED:
+                                            blockedServers.removeIf(serverRoot::equals);
+                                            break;
+                                        default:
+                                    }
+                                }
+                                if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
+                                    BLOCKED_SEQUENCE.getAndAdd(1L);
                                 }
                             }
                         }
+                        // 异步，延时清理过期资源
                         if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
-                            final String blockedSequence = uriResource.getResourcePrefix();
-                            ALL_SERVER.values().forEach(p -> p.forEach(server -> {
-                                YopDegradeRuleHelper.removeDegradeRule(new UriResource(UriResource.ResourceType.BLOCKED,
-                                        String.valueOf(blockedSequence), server).computeResourceKey());
-                            }));
-                            final long expect = Long.parseLong(blockedSequence);
-                            BLOCKED_SEQUENCE.compareAndSet(expect, expect + 1);
+                            BLOCKED_SWEEPER.schedule(() -> {
+                                try {
+                                    final String blockedSequence = uriResource.getResourcePrefix();
+                                    ALL_SERVER.values().forEach(p -> p.forEach(server -> {
+                                        YopDegradeRuleHelper.removeDegradeRule(new UriResource(UriResource.ResourceType.BLOCKED,
+                                                blockedSequence, server).computeResourceKey());
+                                    }));
+                                } catch (Exception e) {
+                                    LOGGER.warn("blocked sweeper failed, ex:", e);
+                                }
+                            }, 1, TimeUnit.MINUTES);
                         }
                         ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
                                 new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
@@ -223,8 +237,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
             }
 
             // 备用域名故障，选用最早故障的域名
-            final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
             URI oldestFailServer = null;
+            final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
             if (null != failedServers && !failedServers.isEmpty()) {
                 oldestFailServer = failedServers.peek();
             }
