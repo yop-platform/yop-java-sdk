@@ -238,9 +238,15 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
             // 备用域名故障，选用最早故障的域名
             URI oldestFailServer = null;
-            final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
-            if (null != failedServers && !failedServers.isEmpty()) {
-                oldestFailServer = failedServers.peek();
+            final long blockedSequence;
+
+            // 保证申请资源一致性
+            synchronized (BLOCKED_LOCK) {
+                final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
+                if (null != failedServers && !failedServers.isEmpty()) {
+                    oldestFailServer = failedServers.peek();
+                }
+                blockedSequence = BLOCKED_SEQUENCE.get();
             }
 
             // 主域名兜底, 理论上不会发生
@@ -248,7 +254,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 oldestFailServer = mainServer;
             }
             return new UriResource(UriResource.ResourceType.BLOCKED,
-                    String.valueOf(BLOCKED_SEQUENCE.get()), oldestFailServer);
+                    String.valueOf(blockedSequence), oldestFailServer);
         }
     }
 
