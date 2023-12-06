@@ -106,11 +106,11 @@ public class YopDegradeRuleHelper {
      * @param serverRoot 域名
      * @param circuitBreakerConfig 域名降级配置
      */
-    public static void addDegradeRule(URI serverRoot, YopCircuitBreakerConfig circuitBreakerConfig) {
+    public static boolean addDegradeRule(URI serverRoot, YopCircuitBreakerConfig circuitBreakerConfig) {
         if (null == serverRoot) {
-            return;
+            return false;
         }
-        addDegradeRule(serverRoot.toString(), circuitBreakerConfig);
+        return addDegradeRule(serverRoot.toString(), circuitBreakerConfig);
     }
 
     /**
@@ -119,22 +119,27 @@ public class YopDegradeRuleHelper {
      * @param resource 资源名称
      * @param circuitBreakerConfig 域名降级配置
      */
-    public static void addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
+    public static boolean addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
         if (null == resource) {
-            return;
+            return false;
         }
 
         if (DegradeRuleManager.hasConfig(resource)) {
-            return;
+            return false;
         }
 
         Set<DegradeRule> rules = initDegradeRuleForResource(resource, circuitBreakerConfig);
         if (CollectionUtils.isNotEmpty(rules)) {
-            DegradeRuleManager.setRulesForResource(resource, rules);
+            final boolean ruleSetted = DegradeRuleManager.setRulesForResource(resource, rules);
+            if (!ruleSetted) {
+                LOGGER.warn("DegradeRule Add Fail, resource:{}, rules:{}", resource, rules);
+            }
+            return ruleSetted;
         }
         if (YopConstants.SDK_DEBUG) {
             LOGGER.info("DegradeRule Added, rules:{}", rules);
         }
+        return false;
     }
 
     /**
@@ -142,11 +147,15 @@ public class YopDegradeRuleHelper {
      *
      * @param resource 资源名称
      */
-    public static void removeDegradeRule(String resource) {
+    public static boolean removeDegradeRule(String resource) {
         if (null == resource) {
-            return;
+            return false;
         }
-        DegradeRuleManager.setRulesForResource(resource, null);
+        final boolean ruleSetted = DegradeRuleManager.setRulesForResource(resource, null);
+        if (!ruleSetted) {
+            LOGGER.warn("DegradeRule Remove Fail, resource:{}", resource);
+        }
+        return ruleSetted;
     }
 
 }
