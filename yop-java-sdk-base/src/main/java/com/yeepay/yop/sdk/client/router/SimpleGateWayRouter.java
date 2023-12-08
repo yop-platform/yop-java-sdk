@@ -123,10 +123,13 @@ public class SimpleGateWayRouter implements GateWayRouter {
                             LOGGER.debug("ServerRoot Block State Changed, rule:{}, serverRoot:{}, old:{}, new:{}",
                                     rule, serverRoot, prevState, newState);
                         }
+                        boolean serverBlocked = newState.equals(CircuitBreaker.State.OPEN),
+                                serverRecovered = newState.equals(CircuitBreaker.State.CLOSED),
+                                blockServerUpdated = serverBlocked || serverRecovered;
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                        if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            rwl.writeLock().lock();
+                        if (CollectionUtils.isNotEmpty(serverRootTypes) && blockServerUpdated) {
                             try {
+                                rwl.writeLock().lock();
                                 for (ServerRootType serverRootType : serverRootTypes) {
                                     final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.computeIfAbsent(serverRootType,
                                             p -> new LinkedBlockingDeque<>());
@@ -149,7 +152,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                             }
                         }
                         // 异步，延时清理过期资源
-                        if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
+                        if (serverBlocked && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
                             BLOCKED_SWEEPER.schedule(() -> {
                                 try {
                                     final String blockedSequence = uriResource.getResourcePrefix();
@@ -242,8 +245,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
             // 备用域名故障，选用最早故障的域名
             URI oldestFailServer = null;
             final long blockedSequence;
-            rwl.readLock().lock();
             try {
+                rwl.readLock().lock();
                 final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
                 if (null != failedServers && !failedServers.isEmpty()) {
                     oldestFailServer = failedServers.peek();
