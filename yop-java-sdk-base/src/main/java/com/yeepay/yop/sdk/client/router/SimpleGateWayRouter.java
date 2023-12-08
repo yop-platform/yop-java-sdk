@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +51,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
     private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
-    private static final Object BLOCKED_LOCK = new Object();
+    private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private static final AtomicLong BLOCKED_SEQUENCE = new AtomicLong(0);
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
@@ -124,7 +125,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         }
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
                         if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            synchronized (BLOCKED_LOCK) {
+                            rwl.writeLock().lock();
+                            try {
                                 for (ServerRootType serverRootType : serverRootTypes) {
                                     final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.computeIfAbsent(serverRootType,
                                             p -> new LinkedBlockingDeque<>());
@@ -142,6 +144,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
                                 if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
                                     BLOCKED_SEQUENCE.getAndAdd(1L);
                                 }
+                            } finally {
+                                rwl.writeLock().unlock();
                             }
                         }
                         // 异步，延时清理过期资源
@@ -238,12 +242,15 @@ public class SimpleGateWayRouter implements GateWayRouter {
             // 备用域名故障，选用最早故障的域名
             URI oldestFailServer = null;
             final long blockedSequence;
-            synchronized (BLOCKED_LOCK) {
+            rwl.readLock().lock();
+            try {
                 final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
                 if (null != failedServers && !failedServers.isEmpty()) {
                     oldestFailServer = failedServers.peek();
                 }
                 blockedSequence = BLOCKED_SEQUENCE.get();
+            } finally {
+                rwl.readLock().unlock();
             }
 
             // 熔断列表为空(说明其他线程已半开成功)，选主域名即可

@@ -19,6 +19,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * title: 降级helper<br>
@@ -34,6 +35,8 @@ public class YopDegradeRuleHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopDegradeRuleHelper.class);
     private volatile static boolean initialized = false;
+
+    private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 
     /**
      * 初始化降级配置
@@ -119,49 +122,87 @@ public class YopDegradeRuleHelper {
      * @param resource 资源名称
      * @param circuitBreakerConfig 域名降级配置
      */
-    public synchronized static boolean addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
+    public static boolean addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
         if (null == resource) {
             return false;
         }
 
-        if (DegradeRuleManager.hasConfig(resource)) {
+        if (existsResource(resource)) {
             return false;
         }
 
         Set<DegradeRule> rules = initDegradeRuleForResource(resource, circuitBreakerConfig);
-        if (CollectionUtils.isNotEmpty(rules)) {
-            final boolean ruleSetted = DegradeRuleManager.setRulesForResource(resource, rules);
-            if (!ruleSetted) {
-                LOGGER.warn("DegradeRule Add Fail, resource:{}, newRules:{}, oldRules:{}", resource, rules,
-                        DegradeRuleManager.getRulesOfResource(resource));
-            }
-            return ruleSetted;
-        }
-        if (YopConstants.SDK_DEBUG) {
+        boolean ruleAdded = updateRulesForResource(resource, rules, false);
+        if (YopConstants.SDK_DEBUG && ruleAdded) {
             LOGGER.info("DegradeRule Added, rules:{}", rules);
         }
-        return false;
+        return ruleAdded;
     }
+
+    /**
+     * 更新降级配置
+     *
+     * @param resource 资源名称
+     * @param circuitBreakerConfig 域名降级配置
+     */
+    public static boolean updateDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
+        if (null == resource) {
+            return false;
+        }
+
+        Set<DegradeRule> rules = initDegradeRuleForResource(resource, circuitBreakerConfig);
+        boolean ruleUpdated = updateRulesForResource(resource, rules, true);
+        if (YopConstants.SDK_DEBUG && ruleUpdated) {
+            LOGGER.info("DegradeRule Updated, rules:{}", rules);
+        }
+        return ruleUpdated;
+    }
+
+    private static boolean updateRulesForResource(String resource, Set<DegradeRule> rules, boolean forceUpdate) {
+        if (null == resource) {
+            return false;
+        }
+        Set<DegradeRule> updateRules = CollectionUtils.isNotEmpty(rules) ? rules : null;
+        rwl.writeLock().lock();
+        try {
+            if (DegradeRuleManager.hasConfig(resource) && !forceUpdate) {
+                return false;
+            }
+            return DegradeRuleManager.setRulesForResource(resource, updateRules);
+        } finally {
+            rwl.writeLock().unlock();
+        }
+    }
+
+    private static boolean existsResource(String resource) {
+        rwl.readLock().lock();
+        try {
+            return DegradeRuleManager.hasConfig(resource);
+        } finally {
+            rwl.readLock().unlock();
+        }
+    }
+
 
     /**
      * 移除降级配置
      *
      * @param resource 资源名称
      */
-    public synchronized static boolean removeDegradeRule(String resource) {
+    public static boolean removeDegradeRule(String resource) {
         if (null == resource) {
             return false;
         }
 
-        if (!DegradeRuleManager.hasConfig(resource)) {
+        if (!existsResource(resource)) {
             return true;
         }
 
-        final boolean ruleSetted = DegradeRuleManager.setRulesForResource(resource, null);
-        if (!ruleSetted) {
-            LOGGER.warn("DegradeRule Remove Fail, resource:{}", resource);
+        final boolean ruleRemoved = updateRulesForResource(resource, null, true);
+        if (YopConstants.SDK_DEBUG && ruleRemoved) {
+            LOGGER.info("DegradeRule Removed, resource:{}", resource);
         }
-        return ruleSetted;
+        return ruleRemoved;
     }
 
 }
