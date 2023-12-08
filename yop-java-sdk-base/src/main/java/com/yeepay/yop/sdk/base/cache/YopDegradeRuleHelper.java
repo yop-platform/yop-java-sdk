@@ -119,7 +119,7 @@ public class YopDegradeRuleHelper {
      * @param resource 资源名称
      * @param circuitBreakerConfig 域名降级配置
      */
-    public static boolean addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
+    public synchronized static boolean addDegradeRule(String resource, YopCircuitBreakerConfig circuitBreakerConfig) {
         if (null == resource) {
             return false;
         }
@@ -132,7 +132,8 @@ public class YopDegradeRuleHelper {
         if (CollectionUtils.isNotEmpty(rules)) {
             final boolean ruleSetted = DegradeRuleManager.setRulesForResource(resource, rules);
             if (!ruleSetted) {
-                LOGGER.warn("DegradeRule Add Fail, resource:{}, rules:{}", resource, rules);
+                LOGGER.warn("DegradeRule Add Fail, resource:{}, newRules:{}, oldRules:{}", resource, rules,
+                        DegradeRuleManager.getRulesOfResource(resource));
             }
             return ruleSetted;
         }
@@ -147,10 +148,15 @@ public class YopDegradeRuleHelper {
      *
      * @param resource 资源名称
      */
-    public static boolean removeDegradeRule(String resource) {
+    public synchronized static boolean removeDegradeRule(String resource) {
         if (null == resource) {
             return false;
         }
+
+        if (!DegradeRuleManager.hasConfig(resource)) {
+            return true;
+        }
+
         final boolean ruleSetted = DegradeRuleManager.setRulesForResource(resource, null);
         if (!ruleSetted) {
             LOGGER.warn("DegradeRule Remove Fail, resource:{}", resource);
