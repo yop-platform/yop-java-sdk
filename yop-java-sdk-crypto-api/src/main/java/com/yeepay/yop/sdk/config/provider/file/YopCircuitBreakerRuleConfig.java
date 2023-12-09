@@ -35,6 +35,7 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
         DEFAULT_ERROR_COUNT_CONFIG.setTimeWindow(5 * 60);
         DEFAULT_ERROR_RATIO_CONFIG = new YopCircuitBreakerRuleConfig(5 * 1000);
         DEFAULT_ERROR_RATIO_CONFIG.setGrade(1);
+        DEFAULT_ERROR_RATIO_CONFIG.setCount(0.2);
         DEFAULT_ERROR_RATIO_CONFIG.setTimeWindow(5 * 60);
         DEFAULT_ERROR_RATIO_CONFIG.setMinRequestAmount(5);
     }
