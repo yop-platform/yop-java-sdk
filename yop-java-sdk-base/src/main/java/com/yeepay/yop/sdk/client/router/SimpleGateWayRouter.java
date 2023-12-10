@@ -29,6 +29,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import static com.yeepay.yop.sdk.invoke.model.UriResource.RETAIN_RESOURCE_ID;
+
+
 /**
  * title: 简单网关路由<br>
  * description: <br>
@@ -50,8 +53,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final BlockServerPool BLOCKED_SERVER_POOL = new BlockServerPool();
 
     // sentinel 限制，最多6000资源，超出后不再熔断，预留1000
-    private static final int BLOCKED_MAX_SIZE = Constants.MAX_SLOT_CHAIN_SIZE - 1000;
-    private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock(true);
+    private static final int BLOCKED_MAX_SIZE = Constants.MAX_SLOT_CHAIN_SIZE - 500;
+    private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
@@ -318,7 +321,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
         @Override
         public int hashCode() {
-            return uri.hashCode();
+            return Objects.hash(uri);
         }
 
         @Override
@@ -353,8 +356,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static class BlockServerPool {
         private Map<URI, Map<String, BlockServer>> serverMap = Maps.newConcurrentMap();
         private static final Map<ServerRootType, List<URI>> serverBlockList = Maps.newConcurrentMap();
-
-        private static final String RETAIN_RESOURCE_ID = "0000";
 
         private int size;
 
@@ -413,7 +414,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             final Map<String, BlockServer> blockServers = serverMap.get(uri);
             if (null != blockServers && !blockServers.isEmpty()) {
                 for (BlockServer blockServer : blockServers.values()) {
-                    if (blockServer.available) {
+                    if (blockServer.available || blockServer.nextAvailableTime <= System.currentTimeMillis()) {
                         return blockServer;
                     }
                 }
@@ -425,7 +426,16 @@ public class SimpleGateWayRouter implements GateWayRouter {
             if (size >= BLOCKED_MAX_SIZE) {
                 LOGGER.error("Blocked Server OverFlow");
                 return new UriResource(UriResource.ResourceType.BLOCKED,
-                        RETAIN_RESOURCE_ID, oldestFailServer);
+                        RETAIN_RESOURCE_ID, oldestFailServer, args -> {
+                    try {
+                        if (null != args && args.length > 0) {
+                            Boolean success = (Boolean) args[0];
+                            updateServerOrder(oldestFailServer, ALL_SERVER_TYPES.get(oldestFailServer), success);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Error When Handle UriResource.Callback, ex:", e);
+                    }
+                });
             }
             String resourceId = String.valueOf(size++);
             final UriResource uriResource = new UriResource(UriResource.ResourceType.BLOCKED,
@@ -449,7 +459,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
         public void onServerStatusChange(UriResource uriResource, CircuitBreaker.State prevState,
                                          CircuitBreaker.State newState, DegradeRule rule,
                                          Set<ServerRootType> serverRootTypes) {
-            updateServerOrder(uriResource, serverRootTypes, newState);
+            updateServerOrder(uriResource.getResource(), serverRootTypes, newState);
             updateServerStatus(uriResource, rule, newState);
         }
 
@@ -470,23 +480,33 @@ public class SimpleGateWayRouter implements GateWayRouter {
         }
 
         // 更新熔断列表排序
-        private void updateServerOrder(UriResource uriResource, Set<ServerRootType> serverRootTypes,
+
+        private void updateServerOrder(URI serverRoot, Set<ServerRootType> serverRootTypes,
                                        CircuitBreaker.State newState) {
-            final URI serverRoot = uriResource.getResource();
-            for (ServerRootType serverRootType : serverRootTypes) {
-                final List<URI> blockedServers = serverBlockList.computeIfAbsent(serverRootType,
-                        p -> new ArrayList<>());
-                blockedServers.removeIf(serverRoot::equals);
-                switch (newState) {
-                    case OPEN:
-                        blockedServers.add(serverRoot);
-                    case CLOSED:
-                    case HALF_OPEN:
-                        blockedServers.add(0, serverRoot);
-                        break;
-                    default:
-                }
+            updateServerOrder(serverRoot, serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
+        }
+
+        private void updateServerOrder(URI serverRoot, Set<ServerRootType> serverRootTypes,
+                                       boolean successInvoked) {
+            if (null == serverRoot || CollectionUtils.isEmpty(serverRootTypes)) {
+                return;
             }
+            rwl.writeLock().lock();
+            try {
+                for (ServerRootType serverRootType : serverRootTypes) {
+                    final List<URI> blockedServers = serverBlockList.computeIfAbsent(serverRootType,
+                            p -> new ArrayList<>());
+                    blockedServers.removeIf(serverRoot::equals);
+                    if (successInvoked) {
+                        blockedServers.add(0, serverRoot);
+                    } else {
+                        blockedServers.add(serverRoot);
+                    }
+                }
+            } finally {
+                rwl.writeLock().unlock();
+            }
+
         }
     }
 }

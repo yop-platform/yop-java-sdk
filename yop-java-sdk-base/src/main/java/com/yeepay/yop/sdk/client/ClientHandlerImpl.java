@@ -28,6 +28,7 @@ import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.*;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 import com.yeepay.yop.sdk.invoke.model.ExceptionAnalyzer;
+import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
@@ -142,10 +143,14 @@ public class ClientHandlerImpl implements ClientHandler {
 
             Entry entry = null;
             boolean successInvoked = false;
+            final UriResource uriResource = invoker.getUriResource();
             try {
-                final String resource = invoker.getUriResource().computeResourceKey();
-                YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
-                entry = SphU.entry(resource);
+                // 请求保留资源时，不再熔断
+                if (!uriResource.isRetained()) {
+                    final String resource = uriResource.computeResourceKey();
+                    YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
+                    entry = SphU.entry(resource);
+                }
                 final Output output = doExecute(request, invoker);
                 successInvoked = true;
                 return output;
@@ -159,6 +164,9 @@ public class ClientHandlerImpl implements ClientHandler {
                 }
                 throw new YopUnknownException("UnExpected Error, ", ex);
             } finally {
+                if (null != uriResource && null != uriResource.getCallback()) {
+                    uriResource.getCallback().notify(successInvoked);
+                }
                 if (null != entry) {
                     final AnalyzedException lastException = invoker.getLastException();
                     if (!successInvoked && null != lastException && lastException.isNeedDegrade()) {

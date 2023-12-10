@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.constants.CharacterConstants;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.Objects;
 
 import static com.yeepay.yop.sdk.invoke.model.UriResource.ResourceType.COMMON;
 
@@ -27,6 +28,8 @@ public class UriResource implements Serializable {
 
     public static final String RESOURCE_SEPERATOR = "####";
 
+    public static final String RETAIN_RESOURCE_ID = "0000";
+
     /**
      * URI路径
      */
@@ -42,6 +45,8 @@ public class UriResource implements Serializable {
      */
     private String resourcePrefix = CharacterConstants.EMPTY;
 
+    private Callback callback;
+
     public UriResource(URI uri) {
         this.resource = uri;
         this.resourceType = COMMON;
@@ -51,6 +56,13 @@ public class UriResource implements Serializable {
         this.resource = uri;
         this.resourceType = resourceType;
         this.resourcePrefix = resourcePrefix;
+    }
+
+    public UriResource(ResourceType resourceType, String resourcePrefix, URI resource, Callback callback) {
+        this.resource = resource;
+        this.resourceType = resourceType;
+        this.resourcePrefix = resourcePrefix;
+        this.callback = callback;
     }
 
     public URI getResource() {
@@ -77,6 +89,14 @@ public class UriResource implements Serializable {
         this.resourcePrefix = resourcePrefix;
     }
 
+    public boolean isRetained() {
+        return RETAIN_RESOURCE_ID.equals(this.resourcePrefix);
+    }
+
+    public Callback getCallback() {
+        return callback;
+    }
+
     public enum ResourceType {
         /**
          * 正常资源
@@ -94,6 +114,22 @@ public class UriResource implements Serializable {
         return this.resourceType + RESOURCE_SEPERATOR + this.resourcePrefix + RESOURCE_SEPERATOR + this.resource.toString();
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.resourceType, this.resourcePrefix, this.resource);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof UriResource) {
+            UriResource that = (UriResource) obj;
+            return this.resourceType.equals(that.getResourceType())
+                    && this.resourcePrefix.equals(that.resourcePrefix)
+                    && this.resource.equals(that.resource);
+        }
+        return false;
+    }
+
     public String computeResourceKey() {
         if (COMMON.equals(this.resourceType)) {
             return this.resource.toString();
@@ -109,4 +145,9 @@ public class UriResource implements Serializable {
         return new UriResource(ResourceType.valueOf(resourceSeperated[0]),
                 resourceSeperated[1], URI.create(resourceSeperated[2]));
     }
+
+    public interface Callback {
+        void notify(Object ...args);
+    }
+
 }
