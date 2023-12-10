@@ -163,8 +163,8 @@ public class YopDegradeRuleHelper {
             return false;
         }
         Set<DegradeRule> updateRules = CollectionUtils.isNotEmpty(rules) ? rules : null;
+        rwl.writeLock().lock();
         try {
-            rwl.writeLock().lock();
             if (DegradeRuleManager.hasConfig(resource) && !forceUpdate) {
                 return false;
             }
@@ -175,8 +175,8 @@ public class YopDegradeRuleHelper {
     }
 
     private static boolean existsResource(String resource) {
+        rwl.readLock().lock();
         try {
-            rwl.readLock().lock();
             return DegradeRuleManager.hasConfig(resource);
         } finally {
             rwl.readLock().unlock();
