@@ -476,16 +476,12 @@ public class SimpleGateWayRouter implements GateWayRouter {
             for (ServerRootType serverRootType : serverRootTypes) {
                 final List<URI> blockedServers = serverBlockList.computeIfAbsent(serverRootType,
                         p -> new ArrayList<>());
+                blockedServers.removeIf(serverRoot::equals);
                 switch (newState) {
                     case OPEN:
-                        blockedServers.removeIf(serverRoot::equals);
                         blockedServers.add(serverRoot);
-                        break;
                     case CLOSED:
-                        blockedServers.removeIf(serverRoot::equals);
-                        break;
                     case HALF_OPEN:
-                        blockedServers.removeIf(serverRoot::equals);
                         blockedServers.add(0, serverRoot);
                         break;
                     default:
