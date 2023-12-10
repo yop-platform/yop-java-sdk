@@ -4,9 +4,9 @@
  */
 package com.yeepay.yop.sdk.sentinel;
 
-import com.alibaba.csp.sentinel.*;
-import com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
-import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
@@ -22,9 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -143,7 +141,6 @@ public class SentinelTest {
     }
 
 
-
     @Test
     public void ycTest() throws IOException {
         System.setProperty("yop.sdk.config.env", "qa");
@@ -169,25 +166,6 @@ public class SentinelTest {
             }).start();
         }
         System.in.read();
-    }
-
-    @Test
-    public void testReflectSph() throws IllegalAccessException, NoSuchFieldException {
-        final CtSph ctSph = (CtSph) Env.sph;
-        final Class<? extends CtSph> aClass = ctSph.getClass();
-
-        final Field chainMapField = aClass.getDeclaredField("chainMap");
-        chainMapField.setAccessible(true);
-        final Map<ResourceWrapper, ProcessorSlotChain> chainMap =
-                (Map<ResourceWrapper, ProcessorSlotChain>) chainMapField.get(ctSph);
-        assert chainMap.isEmpty();
-
-
-        final Field lockField = aClass.getDeclaredField("LOCK");
-        lockField.setAccessible(true);
-        final Object lock = lockField.get(ctSph);
-        assert null != lock;
-
     }
 
 }

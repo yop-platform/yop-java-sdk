@@ -1,15 +1,25 @@
 {
+  "app_key": "app_100800191870146",
   "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
   "preferred_server_roots": [
-    "http://ycetest.yeepay.com:30228/yop-center"
+    "http://ycetest.yeepay.com:30228/yop-center",
+    "http://ycetest.yeepay.com:30502/yop-center"
   ],
   "yop_cert_store": {
     "enable": false,
     "valid_after_expire_period": 1674727773000
   },
+  "isv_private_key": [
+    {
+      "app_key": "app_100800191870146",
+      "store_type": "string",
+      "cert_type": "RSA2048",
+      "value": "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCcl9jdReLN2vk57DWeu2l223gO6txH4ra/cOkM1rHYSwUqrvVYUM61qNL4AZNO3nlBMUkEtZ5RyvBGajJ0OZidenqcnXHKTBOD6GcVpBsS4qCU5hIHspI0khYBhikl1z74E3HHe9sIwVz+gEx2TkCwH9aH4jh68YeKk25+tHeb75JPMhdj0S+IzWyNHFOOTPD6VQ3vCq1RDqutL56gVBIt6p4+ZQ4GkTDRQoD7OKWDZOkzXz+JnaLqIN/hnZ/8ag+0WY60rgpjXBAX1ezZtHGp33L4sqnIZIzIp38e1Oyfe+Ab1cBQkaRaBqKYRXjq7NXG0sfeuoFxJONPQfjSsYcxAgMBAAECggEABAJAJ0QBfycer7ysD7z5AXWzYGBjVMTJTGPZ134Mjf63qmTRu5nP/OcORZKWwJNh88kM9z2mCK6DEa5ozcBmt4tZ5bYDInxpmHwj3XI2zjg2h7FPH1rTMtzViuLyHTmiL0wiIsr5K8N1e79xlarBrbCW96ITM5SI1YOaNcytbjS82Y0b6AS3Jx4H02ihcpzFRPYZNffLhE3lu4WN6aoiQUnWvC+agwF88osHmUIwrKlo9unwzjzOh2bXGSvzTESeGdDMEz4ekNRX8dEfC31sJwd2tUqha5hTev/oFgymNwFhQvj0OfnB1oKjf7gaRbOYjFf5P3nou5d4EBR7OyyTpQKBgQC6pXRqwpVh8Hhvf0/vFYZk5yQsKBi/ik4vyYtIZVtdZGIq4vjUpIftt9WoxTYKhjgOL0vsPvtbR79XnMFOb0PSZXARfMoUlAwtMM+mk9N3fb5a6jrgV617Ob1Oqf691WPqdprb6t1HMBSYTzD3J1mPKeGmItsTAlFZuUjzkyvN3QKBgQDWx52jTXvc4QyOqu4Fc0mPSDJEYBBB6XpnTXRIT8rUFD9SDTWRhb29UL2nrtoQ6/8ZTC+/wKQ5B9UAUEwNxSk8IsrWDhcuioxOc1rT7nPRoVXQarr35//NV1CPmZyn6ybpCqDTsy6mvtWLIJdjZCc+1yZevM1uvOtRMrWRhs8bZQKBgEqIpfu4JqVMvRtxUL9d7iQ/NW+4t2FN3rkwl8FaUGj0HEuaBdoMtgdVASp7ToBXZu0rL/twjzm9ZgibnYov3nqXbXBeT+h10oL9Wf7gS3MNMMXngYlzGeD6hsFyGzs9ir/niyHFIYY7Cg5kmV4pRZdpFyYcBzYJF+lnl11FaRm1AoGAFu1wMoKO+mE7ye8NQZ+w9o6qbwoiMicOXgCyrRV3fXQ73jJyyXoRayg3VrMfrDbFIJo1bq7N2Riw8DuiIsYtRLIiHP+cEefQWn+N7pnB21rxojICi3xEnlL30px/UJ2VpcLwsCisjjhI63UrM/z5A4hMHEjjVTLtm9lh8IsHiNECgYBf+YEmhG88617fUMa7p9VLcwZNXWOgAFX230CYBFQQIgDuwINASoM4GGVfnvLPym4+WNW3cvfI1sNSm3VXzoM+uSHZtQUkG0SjHZl3buNGXXaJ1iZK/EoRHGraukC6ZuaDsnnjFQbRqvdZIFXqEWFbPFSWBQm9g2dYSbzNu3u9Kg=="
+    }
+  ],
   "yop_report": {
-    "enable": true,
-    "enable_success_report": true,
+    "enable": false,
+    "enable_success_report": false,
     "send_interval_ms": 3000,
     "stat_interval_ms": 5000,
     "max_queue_size": 500,
@@ -20,7 +30,7 @@
   },
   "http_client": {
     "connect_timeout": 10000,
-    "connect_request_timeout": 5000,
+    "connect_request_timeout": 10000,
     "read_timeout": 30000
   }
 }

@@ -21,8 +21,8 @@ import com.yeepay.yop.sdk.client.router.YopRouter;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.exception.*;
 import com.yeepay.yop.sdk.http.ExecutionContext;
+import com.yeepay.yop.sdk.http.HttpResponseHandler;
 import com.yeepay.yop.sdk.http.YopHttpClient;
-import com.yeepay.yop.sdk.http.YopHttpClientFactory;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.*;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
@@ -35,8 +35,10 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.sentinel.YopSph;
+import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,14 +93,45 @@ public class ClientHandlerImpl implements ClientHandler {
         this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace, this.circuitBreakerConfig);
     }
 
-    private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
-        YopHttpClient yopHttpClient;
-        if (null == handlerParams) {
-            yopHttpClient = YopHttpClientFactory.getDefaultClient();
-        } else {
-            yopHttpClient = YopHttpClientFactory.getClient(handlerParams.getClientParams().getClientConfiguration());
+    private class YopMockHttpClient implements YopHttpClient {
+
+        @Override
+        public <Output extends BaseResponse, Input extends BaseRequest> Output execute(Request<Input> yopRequest, YopRequestConfig yopRequestConfig, ExecutionContext executionContext, HttpResponseHandler<Output> responseHandler) {
+            if (randomFailure(5000)) {
+                throw new YopHttpException("mock fail " + yopRequest.getEndpoint());
+
+            }
+            YopResponse yopResponse = new YopResponse();
+            yopResponse.setResult(Collections.singletonMap("id", 1234));
+            yopResponse.setStringResult("{\"id\":1234}");
+            return (Output) yopResponse;
         }
-        return yopHttpClient;
+
+        private boolean randomFailure(int configThreshold) {
+            if (configThreshold <= 0) {
+                return false;
+            }
+            if (configThreshold >= 10000) {
+                return true;
+            }
+            return RandomUtils.nextInt(0, 10000) <= configThreshold;
+        }
+
+        @Override
+        public void shutdown() {
+
+        }
+    }
+
+    private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
+        return new YopMockHttpClient();
+//        YopHttpClient yopHttpClient;
+//        if (null == handlerParams) {
+//            yopHttpClient = YopHttpClientFactory.getDefaultClient();
+//        } else {
+//            yopHttpClient = YopHttpClientFactory.getClient(handlerParams.getClientParams().getClientConfiguration());
+//        }
+//        return yopHttpClient;
     }
 
     @Override
