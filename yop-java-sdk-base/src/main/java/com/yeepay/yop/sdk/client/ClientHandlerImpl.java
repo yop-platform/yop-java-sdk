@@ -1,7 +1,6 @@
 package com.yeepay.yop.sdk.client;
 
 import com.alibaba.csp.sentinel.Entry;
-import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
@@ -35,6 +34,7 @@ import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+import com.yeepay.yop.sdk.sentinel.YopSph;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -149,7 +149,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 if (!uriResource.isRetained()) {
                     final String resource = uriResource.computeResourceKey();
                     YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
-                    entry = SphU.entry(resource);
+                    entry = YopSph.getInstance().entry(resource);
                 }
                 final Output output = doExecute(request, invoker);
                 successInvoked = true;

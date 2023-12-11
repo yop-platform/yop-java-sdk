@@ -1,12 +1,13 @@
 package com.yeepay.yop.sdk.client.router;
 
-import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
@@ -26,10 +27,12 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-
-import static com.yeepay.yop.sdk.invoke.model.UriResource.RETAIN_RESOURCE_ID;
 
 
 /**
@@ -50,13 +53,16 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<URI, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
-    private static final BlockServerPool BLOCKED_SERVER_POOL = new BlockServerPool();
-
-    // sentinel 限制，最多6000资源，超出后不再熔断，预留1000
-    private static final int BLOCKED_MAX_SIZE = Constants.MAX_SLOT_CHAIN_SIZE - 500;
     private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+    private static final BlockServerPool BLOCK_SERVER_POOL = new BlockServerPool();
+    private static final AtomicLong BLOCKED_SEQUENCE = new AtomicLong(0);
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
+
+    private static final ScheduledThreadPoolExecutor BLOCKED_SWEEPER = new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder().setNameFormat("yop-blocked-resource-sweeper-%d").setDaemon(true).build(),
+            new ThreadPoolExecutor.CallerRunsPolicy());
+
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
 
     static {
@@ -121,12 +127,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                                 serverRoot, prevState, newState, rule);
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
                         if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            rwl.writeLock().lock();
-                            try {
-                                BLOCKED_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverRootTypes);
-                            } finally {
-                                rwl.writeLock().unlock();
-                            }
+                            BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverRootTypes);
                         }
                         ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
                                 new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
@@ -206,7 +207,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             }
 
             // 备用域名故障，选用最早故障的域名
-            return BLOCKED_SERVER_POOL.select(serverRootType, mainServer);
+            return BLOCK_SERVER_POOL.select(serverRootType, mainServer);
         }
     }
 
@@ -359,20 +360,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
         private int size;
 
-        public void blockServer(UriResource uri, long nextAvailableTime) {
-            final URI resource = uri.getResource();
-            final Map<String, BlockServer> servers = serverMap.computeIfAbsent(resource, p-> Maps.newHashMap());
-            final boolean available = nextAvailableTime > 0 && nextAvailableTime < System.currentTimeMillis();
-            final String resourceKey = uri.computeResourceKey();
-            BlockServer blockServer = servers.get(resourceKey);
-            if (null == blockServer) {
-                servers.put(resourceKey, new BlockServer(uri, available, nextAvailableTime));
-                size++;
-            } else {
-                blockServer.setAvailable(available).setNextAvailableTime(nextAvailableTime);
-            }
-        }
-
         public UriResource select(ServerRootType serverType, URI mainServer) {
             rwl.readLock().lock();
             try {
@@ -385,107 +372,29 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 if (null == oldestFailServer) {
                     oldestFailServer = mainServer;
                 }
-
-                // 查找可用资源
-                BlockServer availableServer = availableServer(oldestFailServer);
-                if (null != availableServer) {
-                    return availableServer.uri;
-                }
-
-                // 无可用资源，则重新初始化一个
-                rwl.readLock().unlock();
-                rwl.writeLock().lock();
-                try {
-                    // 二次查找
-                    if (null != (availableServer = availableServer(oldestFailServer))) {
-                        return availableServer.uri;
-                    }
-                    return initServer(oldestFailServer);
-                } finally {
-                    rwl.readLock().lock();// 参考官方示例
-                    rwl.writeLock().unlock();
-                }
+                return initServer(oldestFailServer);
             } finally {
                 rwl.readLock().unlock();
             }
         }
 
-        private BlockServer availableServer(URI uri) {
-            final Map<String, BlockServer> blockServers = serverMap.get(uri);
-            if (null != blockServers && !blockServers.isEmpty()) {
-                for (BlockServer blockServer : blockServers.values()) {
-                    if (blockServer.available || blockServer.nextAvailableTime <= System.currentTimeMillis()) {
-                        return blockServer;
-                    }
-                }
-            }
-            return null;
-        }
-
         private UriResource initServer(URI oldestFailServer) {
-            if (size >= BLOCKED_MAX_SIZE) {
-                LOGGER.error("Blocked Server OverFlow");
-                return new UriResource(UriResource.ResourceType.BLOCKED,
-                        RETAIN_RESOURCE_ID, oldestFailServer, args -> {
-                    try {
-                        if (null != args && args.length > 0) {
-                            Boolean success = (Boolean) args[0];
-                            updateServerOrder(oldestFailServer, ALL_SERVER_TYPES.get(oldestFailServer), success);
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Error When Handle UriResource.Callback, ex:", e);
-                    }
-                });
-            }
-            String resourceId = String.valueOf(size++);
-            final UriResource uriResource = new UriResource(UriResource.ResourceType.BLOCKED,
+            String resourceId = String.valueOf(BLOCKED_SEQUENCE.getAndAdd(1L));
+            return new UriResource(UriResource.ResourceType.BLOCKED,
                     resourceId, oldestFailServer);
-            final Map<String, BlockServer> blockServers = serverMap.computeIfAbsent(oldestFailServer, p -> Maps.newHashMap());
-            final BlockServer blockServer = new BlockServer(uriResource, true);
-            blockServers.put(uriResource.computeResourceKey(), blockServer);
-            return uriResource;
 
-        }
-
-        public void resumeServer(UriResource uri) {
-            final URI resource = uri.getResource();
-            final Map<String, BlockServer> servers = serverMap.computeIfAbsent(resource, p-> Maps.newHashMap());
-            final BlockServer blockServer = servers.get(uri.computeResourceKey());
-            if (null != blockServer) {
-                blockServer.setAvailable(true).setNextAvailableTime(0);
-            }
         }
 
         public void onServerStatusChange(UriResource uriResource, CircuitBreaker.State prevState,
                                          CircuitBreaker.State newState, DegradeRule rule,
                                          Set<ServerRootType> serverRootTypes) {
-            updateServerOrder(uriResource.getResource(), serverRootTypes, newState);
-            updateServerStatus(uriResource, rule, newState);
-        }
-
-        // 更新资源池状态
-        private void updateServerStatus(UriResource uriResource, DegradeRule rule,
-                                        CircuitBreaker.State newState) {
-            final long now = System.currentTimeMillis();
-            switch (newState) {
-                case OPEN:
-                    blockServer(uriResource, rule.getTimeWindow() * 1000L + now);
-                    break;
-                case CLOSED:
-                case HALF_OPEN:
-                    resumeServer(uriResource);
-                    break;
-                default:
+            updateServerOrder(uriResource.getResource(), serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
+            if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
+                asyncDiscardOldServers(uriResource);
             }
         }
 
         // 更新熔断列表排序
-
-        private void updateServerOrder(URI serverRoot, Set<ServerRootType> serverRootTypes,
-                                       CircuitBreaker.State newState) {
-            updateServerOrder(serverRoot, serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
-        }
-
         private void updateServerOrder(URI serverRoot, Set<ServerRootType> serverRootTypes,
                                        boolean successInvoked) {
             if (null == serverRoot || CollectionUtils.isEmpty(serverRootTypes)) {
@@ -506,7 +415,16 @@ public class SimpleGateWayRouter implements GateWayRouter {
             } finally {
                 rwl.writeLock().unlock();
             }
-
+        }
+        // 异步，延时清理过期资源
+        private void asyncDiscardOldServers(UriResource uriResource) {
+            BLOCKED_SWEEPER.schedule(() -> {
+                try {
+                    YopDegradeRuleHelper.removeDegradeRule(uriResource.computeResourceKey());
+                } catch (Exception e) {
+                    LOGGER.warn("blocked sweeper failed, ex:", e);
+                }
+            }, 1, TimeUnit.MINUTES);
         }
     }
 }
