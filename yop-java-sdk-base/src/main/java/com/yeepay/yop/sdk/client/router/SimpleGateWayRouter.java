@@ -55,7 +55,6 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
     private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private static final BlockServerPool BLOCK_SERVER_POOL = new BlockServerPool();
-    private static final AtomicLong BLOCKED_SEQUENCE = new AtomicLong(0);
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
 
@@ -355,10 +354,8 @@ public class SimpleGateWayRouter implements GateWayRouter {
     }
 
     private static class BlockServerPool {
-        private Map<URI, Map<String, BlockServer>> serverMap = Maps.newConcurrentMap();
         private static final Map<ServerRootType, List<URI>> serverBlockList = Maps.newConcurrentMap();
-
-        private int size;
+        private static final Map<String, AtomicLong> serverBLockSequence = Maps.newConcurrentMap();
 
         public UriResource select(ServerRootType serverType, URI mainServer) {
             rwl.readLock().lock();
@@ -372,31 +369,53 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 if (null == oldestFailServer) {
                     oldestFailServer = mainServer;
                 }
-                return initServer(oldestFailServer);
+                return initServer(serverType, oldestFailServer);
             } finally {
                 rwl.readLock().unlock();
             }
         }
 
-        private UriResource initServer(URI oldestFailServer) {
-            String resourceId = String.valueOf(BLOCKED_SEQUENCE.getAndAdd(1L));
-            return new UriResource(UriResource.ResourceType.BLOCKED,
-                    resourceId, oldestFailServer);
+        private UriResource initServer(ServerRootType serverType, URI oldestFailServer) {
 
+            final String blockSequenceKey = getBlockSequenceKey(serverType, oldestFailServer);
+            final AtomicLong blockSequence = serverBLockSequence.computeIfAbsent(blockSequenceKey,
+                    p -> new AtomicLong(0));
+
+            String resourcePrefix = getBlockResourcePrefix(serverType, blockSequence.get());
+            return new UriResource(UriResource.ResourceType.BLOCKED,
+                    resourcePrefix, oldestFailServer);
+
+        }
+
+        private ServerRootType parseBlockServerType(String blockResourcePrefix) {
+            return ServerRootType.valueOf(blockResourcePrefix.split(CharacterConstants.COMMA)[0]);
+        }
+
+        private Long parseBLockSequence(String blockResourcePrefix) {
+            return Long.valueOf(blockResourcePrefix.split(CharacterConstants.COMMA)[1]);
+        }
+
+        private String getBlockResourcePrefix(ServerRootType serverType, Long blockSequence) {
+            return serverType + CharacterConstants.COMMA + blockSequence;
+        }
+
+        private String getBlockSequenceKey(ServerRootType serverType, URI server) {
+            return serverType + CharacterConstants.COMMA + server.toString();
         }
 
         public void onServerStatusChange(UriResource uriResource, CircuitBreaker.State prevState,
                                          CircuitBreaker.State newState, DegradeRule rule,
                                          Set<ServerRootType> serverRootTypes) {
-            updateServerOrder(uriResource.getResource(), serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
+            updateBlockedStatus(uriResource, serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
             if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
                 asyncDiscardOldServers(uriResource);
             }
         }
 
         // 更新熔断列表排序
-        private void updateServerOrder(URI serverRoot, Set<ServerRootType> serverRootTypes,
-                                       boolean successInvoked) {
+        private void updateBlockedStatus(UriResource uriResource, Set<ServerRootType> serverRootTypes,
+                                         boolean successInvoked) {
+            URI serverRoot = uriResource.getResource();
             if (null == serverRoot || CollectionUtils.isEmpty(serverRootTypes)) {
                 return;
             }
@@ -412,6 +431,12 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         blockedServers.add(serverRoot);
                     }
                 }
+                if (UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType()) && !successInvoked) {
+                    final ServerRootType serverRootType = parseBlockServerType(uriResource.getResourcePrefix());
+                    serverBLockSequence.computeIfAbsent(getBlockSequenceKey(serverRootType, uriResource.getResource()),
+                            p -> new AtomicLong(0)).getAndAdd(1);
+                }
+
             } finally {
                 rwl.writeLock().unlock();
             }
