@@ -149,7 +149,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 if (!uriResource.isRetained()) {
                     final String resource = uriResource.computeResourceKey();
                     YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
-                    entry = YopSph.getInstance().entry(resource);
+                    entry = YopSph.entry(resource);
                 }
                 final Output output = doExecute(request, invoker);
                 successInvoked = true;

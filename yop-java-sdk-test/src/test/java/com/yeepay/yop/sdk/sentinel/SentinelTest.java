@@ -4,20 +4,27 @@
  */
 package com.yeepay.yop.sdk.sentinel;
 
-import com.alibaba.csp.sentinel.Entry;
-import com.alibaba.csp.sentinel.SphU;
-import com.alibaba.csp.sentinel.Tracer;
+import com.alibaba.csp.sentinel.*;
+import com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
+import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.service.common.YopClient;
+import com.yeepay.yop.sdk.service.common.YopClientBuilder;
+import com.yeepay.yop.sdk.service.common.request.YopRequest;
+import com.yeepay.yop.sdk.service.common.response.YopResponse;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -133,7 +140,53 @@ public class SentinelTest {
                 LOGGER.error("fail:", e);
             }
         }
+    }
 
+
+
+    @Test
+    public void ycTest() throws IOException {
+        System.setProperty("yop.sdk.config.env", "qa");
+        System.setProperty("yop.sdk.debug", "true");
+        YopClient yopClient = YopClientBuilder.builder().build();
+        for (int i = 0; i < 5; i++) {
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        final YopRequest request = new YopRequest("/rest/v1.0/yop/mock/test", "POST");
+                        request.addHeader("mock", "1234");
+                        final YopResponse response = yopClient.request(request);
+                        LOGGER.error(Thread.currentThread().getName() + "\t-succ-\t" + response.getStringResult());
+                    } catch (Exception e) {
+                        LOGGER.error(Thread.currentThread().getName() + "\t-fail-\t" + ExceptionUtils.getRootCauseMessage(e));
+                    }
+                    try {
+                        Thread.sleep(15);
+                    } catch (InterruptedException e) {
+//                        throw new RuntimeException(e);
+                    }
+                }
+            }).start();
+        }
+        System.in.read();
+    }
+
+    @Test
+    public void testReflectSph() throws IllegalAccessException, NoSuchFieldException {
+        final CtSph ctSph = (CtSph) Env.sph;
+        final Class<? extends CtSph> aClass = ctSph.getClass();
+
+        final Field chainMapField = aClass.getDeclaredField("chainMap");
+        chainMapField.setAccessible(true);
+        final Map<ResourceWrapper, ProcessorSlotChain> chainMap =
+                (Map<ResourceWrapper, ProcessorSlotChain>) chainMapField.get(ctSph);
+        assert chainMap.isEmpty();
+
+
+        final Field lockField = aClass.getDeclaredField("LOCK");
+        lockField.setAccessible(true);
+        final Object lock = lockField.get(ctSph);
+        assert null != lock;
 
     }
 
