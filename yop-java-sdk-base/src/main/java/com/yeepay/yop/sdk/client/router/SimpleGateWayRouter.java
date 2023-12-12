@@ -1,13 +1,9 @@
 package com.yeepay.yop.sdk.client.router;
 
-import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
-import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
@@ -17,21 +13,19 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.sentinel.YopSph;
 import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 
@@ -53,14 +47,9 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<URI, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
-    private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
-    private static final BlockServerPool BLOCK_SERVER_POOL = new BlockServerPool();
+    private static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
-
-    private static final ScheduledThreadPoolExecutor BLOCKED_SWEEPER = new ScheduledThreadPoolExecutor(1,
-            new ThreadFactoryBuilder().setNameFormat("yop-blocked-resource-sweeper-%d").setDaemon(true).build(),
-            new ThreadPoolExecutor.CallerRunsPolicy());
 
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
 
@@ -125,9 +114,10 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         LOGGER.info("ServerRoot Block State Changed, serverRoot:{}, old:{}, new:{}, rule:{}",
                                 serverRoot, prevState, newState, rule);
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                        if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverRootTypes);
-                        }
+                        Set<String> serverTypes = CollectionUtils.isEmpty(serverRootTypes) ? Collections.emptySet() :
+                                serverRootTypes.stream().map(ServerRootType::name).collect(Collectors.toSet());
+                        BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverTypes);
+                        // 异步上报
                         ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
                                 new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
                     } catch (Exception e) {
@@ -206,7 +196,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             }
 
             // 备用域名故障，选用最早故障的域名
-            return BLOCK_SERVER_POOL.select(serverRootType, mainServer);
+            return BLOCK_SERVER_POOL.select(serverRootType.name(), mainServer);
         }
     }
 
@@ -281,175 +271,4 @@ public class SimpleGateWayRouter implements GateWayRouter {
         SANDBOX
     }
 
-    private static class BlockServer implements Serializable {
-
-        private static final long serialVersionUID = -1L;
-        private UriResource uri;
-
-        private boolean available;
-
-        private long nextAvailableTime;
-
-        public BlockServer(UriResource uri, boolean available) {
-            this.uri = uri;
-            this.available = available;
-        }
-
-        public BlockServer(UriResource uri, boolean available, long nextAvailableTime) {
-            this.uri = uri;
-            this.available = available;
-            this.nextAvailableTime = nextAvailableTime;
-        }
-
-        public boolean isAvailable() {
-            return available;
-        }
-
-        public BlockServer setAvailable(boolean available) {
-            this.available = available;
-            return this;
-        }
-
-        public long getNextAvailableTime() {
-            return nextAvailableTime;
-        }
-
-        public BlockServer setNextAvailableTime(long nextAvailableTime) {
-            this.nextAvailableTime = nextAvailableTime;
-            return this;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(uri);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof BlockServer) {
-                BlockServer blockServer = (BlockServer) obj;
-                return uri.equals(blockServer.uri);
-            }
-            return false;
-        }
-    }
-
-    private static final Comparator COMPARATOR = new Comparator();
-
-    private static class Comparator implements java.util.Comparator<BlockServer> {
-
-        @Override
-        public int compare(BlockServer o1, BlockServer o2) {
-            if (o1.available) {
-                return 1;
-            }
-            if (o2.available) {
-                return -1;
-            }
-            if (o1.getNextAvailableTime() < o2.getNextAvailableTime()) {
-                return 1;
-            }
-            return 0;
-        }
-    }
-
-    private static class BlockServerPool {
-        private static final Map<ServerRootType, List<URI>> serverBlockList = Maps.newConcurrentMap();
-        private static final Map<String, AtomicLong> serverBLockSequence = Maps.newConcurrentMap();
-
-        public UriResource select(ServerRootType serverType, URI mainServer) {
-            rwl.readLock().lock();
-            try {
-                URI oldestFailServer = null;
-                final List<URI> failedServers = serverBlockList.get(serverType);
-                if (null != failedServers && !failedServers.isEmpty()) {
-                    oldestFailServer = failedServers.get(0);
-                }
-                // 熔断列表为空(说明其他线程已半开成功)，选主域名即可
-                if (null == oldestFailServer) {
-                    oldestFailServer = mainServer;
-                }
-                return initServer(serverType, oldestFailServer);
-            } finally {
-                rwl.readLock().unlock();
-            }
-        }
-
-        private UriResource initServer(ServerRootType serverType, URI oldestFailServer) {
-
-            final String blockSequenceKey = getBlockSequenceKey(serverType, oldestFailServer);
-            final AtomicLong blockSequence = serverBLockSequence.computeIfAbsent(blockSequenceKey,
-                    p -> new AtomicLong(0));
-
-            String resourcePrefix = getBlockResourcePrefix(serverType, blockSequence.get());
-            return new UriResource(UriResource.ResourceType.BLOCKED,
-                    resourcePrefix, oldestFailServer);
-
-        }
-
-        private ServerRootType parseBlockServerType(String blockResourcePrefix) {
-            return ServerRootType.valueOf(blockResourcePrefix.split(CharacterConstants.COMMA)[0]);
-        }
-
-        private Long parseBLockSequence(String blockResourcePrefix) {
-            return Long.valueOf(blockResourcePrefix.split(CharacterConstants.COMMA)[1]);
-        }
-
-        private String getBlockResourcePrefix(ServerRootType serverType, Long blockSequence) {
-            return serverType + CharacterConstants.COMMA + blockSequence;
-        }
-
-        private String getBlockSequenceKey(ServerRootType serverType, URI server) {
-            return serverType + CharacterConstants.COMMA + server.toString();
-        }
-
-        public void onServerStatusChange(UriResource uriResource, CircuitBreaker.State prevState,
-                                         CircuitBreaker.State newState, DegradeRule rule,
-                                         Set<ServerRootType> serverRootTypes) {
-            updateBlockedStatus(uriResource, serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
-            if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
-                asyncDiscardOldServers(uriResource);
-            }
-        }
-
-        // 更新熔断列表排序
-        private void updateBlockedStatus(UriResource uriResource, Set<ServerRootType> serverRootTypes,
-                                         boolean successInvoked) {
-            URI serverRoot = uriResource.getResource();
-            if (null == serverRoot || CollectionUtils.isEmpty(serverRootTypes)) {
-                return;
-            }
-            rwl.writeLock().lock();
-            try {
-                for (ServerRootType serverRootType : serverRootTypes) {
-                    final List<URI> blockedServers = serverBlockList.computeIfAbsent(serverRootType,
-                            p -> new ArrayList<>());
-                    blockedServers.removeIf(serverRoot::equals);
-                    if (successInvoked) {
-                        blockedServers.add(0, serverRoot);
-                    } else {
-                        blockedServers.add(serverRoot);
-                    }
-                }
-                if (UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType()) && !successInvoked) {
-                    final ServerRootType serverRootType = parseBlockServerType(uriResource.getResourcePrefix());
-                    serverBLockSequence.computeIfAbsent(getBlockSequenceKey(serverRootType, uriResource.getResource()),
-                            p -> new AtomicLong(0)).getAndAdd(1);
-                }
-
-            } finally {
-                rwl.writeLock().unlock();
-            }
-        }
-        // 异步，延时清理过期资源
-        private void asyncDiscardOldServers(UriResource uriResource) {
-            BLOCKED_SWEEPER.schedule(() -> {
-                try {
-                    YopDegradeRuleHelper.removeDegradeRule(uriResource.computeResourceKey());
-                } catch (Exception e) {
-                    LOGGER.warn("blocked sweeper failed, ex:", e);
-                }
-            }, 1, TimeUnit.MINUTES);
-        }
-    }
 }
