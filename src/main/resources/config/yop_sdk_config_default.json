@@ -26,7 +26,8 @@
       "java.net.SocketTimeoutException:connect timed out",
       "java.net.NoRouteToHostException",
       "org.apache.http.conn.ConnectTimeoutException", "com.yeepay.shade.org.apache.http.conn.ConnectTimeoutException",
-      "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException"
+      "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException",
+      "java.net.ConnectException:Connection timed out","java.net.ConnectException:连接超时"
     ],
     "max_retry_count": 3,
     "circuit_breaker": {
@@ -37,9 +38,16 @@
       "rules": [
         {
           "grade": 2,
-          "count": 2,
-          "time_window": 5,
-          "stat_interval_ms": 30000
+          "count": 4,
+          "time_window": 300,
+          "stat_interval_ms": 300000
+        },
+        {
+          "grade": 1,
+          "count": 0.2,
+          "time_window": 300,
+          "stat_interval_ms": 5000,
+          "min_request_amount": 5
         }
       ]
     }

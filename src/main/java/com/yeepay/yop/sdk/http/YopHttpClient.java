@@ -84,7 +84,7 @@ public class YopHttpClient {
      * Logger providing detailed information on requests/responses. Users can enable this logger to get access to YOP
      * request IDs for responses, individual requests and parameters sent to YOP, etc.
      */
-    private static final Logger logger = LoggerFactory.getLogger(YopHttpClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopHttpClient.class);
 
     /**
      * Internal client for sending HTTP requests
@@ -116,14 +116,14 @@ public class YopHttpClient {
                     String value = he.getValue();
                     if (null != value && param.equalsIgnoreCase
                             ("timeout")) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("KeepAliveDuration Parsed From Server, timeout:{}s.", value);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("KeepAliveDuration Parsed From Server, timeout:{}s.", value);
                         }
                         return Long.parseLong(value) * 1000;
                     }
                 }
             } catch (Throwable e) {
-                logger.warn("KeepAliveDuration Parsed Fail, ex:{}", ExceptionUtils.getMessage(e));
+                LOGGER.warn("KeepAliveDuration Parsed Fail, ex:{}", ExceptionUtils.getMessage(e));
             }
             return 60 * 1000;
         }
@@ -196,12 +196,17 @@ public class YopHttpClient {
             if (BooleanUtils.isTrue(yopRequestConfig.getNeedEncrypt())) {
                 encryptRequest(request, executionContext);
             }
-            if (logger.isDebugEnabled()) {
-                logger.debug("Sending Request: {}", request);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Signed Request: {}, elapsed:{}ms", request,
+                        System.currentTimeMillis() - beginTime);
             }
             httpRequest = this.createHttpRequest(request);
             HttpContext httpContext = this.createHttpContext(request, yopRequestConfig);
             httpResponse = this.httpClient.execute(httpRequest, httpContext);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Received Response, elapsed:{}ms",
+                        System.currentTimeMillis() - beginTime);
+            }
             HttpUtils.printRequest(httpRequest);
             yopResponse = responseHandler.handle(new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
             return yopResponse;
@@ -213,6 +218,10 @@ public class YopHttpClient {
             throw new YopHttpException("Unable to execute HTTP request, apiUri:" + request.getResourcePath()
                     + ", serverHost:" + request.getEndpoint(), e);
         } finally {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Analyzed Response: {}, elapsed:{}ms", yopResponse,
+                        System.currentTimeMillis() - beginTime);
+            }
             postExecute(beginTime, executionContext, request, httpResponse, yopResponse, ex);
         }
     }
@@ -229,17 +238,24 @@ public class YopHttpClient {
                     isHostEx = isHttpEx || isUnexpectedEx,
                     needReport = !isEx || isServiceEx || isHostEx;
             if (needReport) {
+                final long elapsedTime = System.currentTimeMillis() - beginTime;
+                YopHostRequestEvent<?> reportEvent;
                 if (isHostEx) {
-                    ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, originEx, System.currentTimeMillis() - beginTime));
+                    reportEvent = toFailRequest(executionContext, request, httpResponse, originEx, elapsedTime);
                 } else {
-                    ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
+                    reportEvent = toSuccessRequest(executionContext, request, httpResponse, elapsedTime);
+                }
+                ClientReporter.reportHostRequest(reportEvent);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Reported Request: {}, elapsed:{}ms", reportEvent,
+                            System.currentTimeMillis() - beginTime);
                 }
             }
             if (!(yopResponse instanceof YosDownloadResponse)) {
                 HttpClientUtils.closeQuietly(httpResponse);
             }
         } catch (Exception e) {
-            logger.error("error when postExecute, ex:", e);
+            LOGGER.error("error when postExecute, ex:", e);
         }
     }
 
@@ -558,7 +574,7 @@ public class YopHttpClient {
         if (method instanceof HttpEntityEnclosingRequest) {
             HttpEntity entity = ((HttpEntityEnclosingRequest) method).getEntity();
             if (entity != null && !entity.isRepeatable()) {
-                logger.debug("Entity not repeatable, stop retrying");
+                LOGGER.debug("Entity not repeatable, stop retrying");
                 return -1;
             }
         }

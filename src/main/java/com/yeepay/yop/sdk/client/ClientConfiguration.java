@@ -176,7 +176,8 @@ public class ClientConfiguration {
             "java.net.SocketTimeoutException:connect timed out",
             "java.net.NoRouteToHostException",
             "org.apache.http.conn.ConnectTimeoutException", "com.yeepay.shade.org.apache.http.conn.ConnectTimeoutException",
-            "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException");
+            "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException",
+            "java.net.ConnectException:Connection timed out","java.net.ConnectException:连接超时");
 
     private YopCircuitBreakerConfig circuitBreakerConfig = YopCircuitBreakerConfig.DEFAULT_CONFIG;
 

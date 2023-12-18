@@ -16,7 +16,7 @@ import java.util.UUID;
  */
 public interface YopConstants {
 
-    String VERSION = "4.1.13";
+    String VERSION = "4.1.15";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -67,5 +67,7 @@ public interface YopConstants {
     String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
 
     String HEADER_LANG_JAVA = "java";
+
+    boolean SDK_DEBUG = Boolean.parseBoolean(System.getProperty("yop.sdk.debug", "false"));
 
 }

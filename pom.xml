@@ -3,9 +3,7 @@
 
     <groupId>com.yeepay.yop.sdk</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <packaging>jar</packaging>
-
-    <version>4.1.13</version>
+    <version>4.1.15-SNAPSHOT</version>
 
     <name>yop-java-sdk</name>
     <url>https://github.com/yop-platform/yop-java-sdk</url>
@@ -375,7 +373,7 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-        <tag>v4.1.13</tag>
+        <tag>v4.1.15</tag>
     </scm>
 
     <developers>
