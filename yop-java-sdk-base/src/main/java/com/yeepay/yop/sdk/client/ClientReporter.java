@@ -47,7 +47,6 @@ public class ClientReporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientReporter.class);
 
     private static final YopReporter REMOTE_REPORTER = YopRemoteReporter.INSTANCE;
-
     private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_COLLECTION = new ConcurrentHashMap<>();
 
     private static final Set<String> EXCLUDE_REPORT_RESOURCES = Sets.newHashSet(REPORT_API_URI);

@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.client.router;
 
 import com.yeepay.yop.sdk.internal.Request;
+import com.yeepay.yop.sdk.invoke.model.UriResource;
 
 import java.net.URI;
 import java.util.List;
@@ -25,6 +26,6 @@ public interface GateWayRouter {
      * @param excludeServerRoots 已失败列表
      * @return serverRoot URI
      */
-    URI route(String appKey, Request<?> request, List<URI> excludeServerRoots);
+    UriResource route(String appKey, Request<?> request, List<URI> excludeServerRoots);
 
 }

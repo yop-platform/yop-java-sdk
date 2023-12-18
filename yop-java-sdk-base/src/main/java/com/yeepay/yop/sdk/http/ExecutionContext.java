@@ -4,12 +4,13 @@ package com.yeepay.yop.sdk.http;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.base.auth.signer.YopSigner;
+import com.yeepay.yop.sdk.invoke.model.RetryContext;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 
 import java.util.concurrent.Future;
 
-public class ExecutionContext {
+public class ExecutionContext implements RetryContext {
 
     private final YopSigner signer;
 
@@ -65,6 +66,16 @@ public class ExecutionContext {
 
     public void addRetryCount(int i) {
         this.retryCount += i;
+    }
+
+    @Override
+    public void markRetried(Object... args) {
+        addRetryCount((int) args[0]);
+    }
+
+    @Override
+    public int retryCount() {
+        return this.getRetryCount();
     }
 
     public static final class Builder {

@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 public interface YopConstants {
 
-    String VERSION = "4.4.7";
+    String VERSION = "4.4.8";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -129,5 +129,7 @@ public interface YopConstants {
     String REPORT_API_URI = "/rest/v1.0/yop/client/report", REPORT_API_METHOD = "POST";
 
     String HEADER_LANG_JAVA = "java";
+
+    boolean SDK_DEBUG = Boolean.parseBoolean(System.getProperty("yop.sdk.debug", "false"));
 
 }

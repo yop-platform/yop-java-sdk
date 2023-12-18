@@ -14,7 +14,7 @@ package com.yeepay.yop.sdk.exception;
  * @version 1.0.0
  * @since 2023/3/27
  */
-public class YopHostBlockException extends YopHostException {
+public class YopHostBlockException extends YopBlockException {
     private static final long serialVersionUID = -1L;
 
     public YopHostBlockException(String message) {

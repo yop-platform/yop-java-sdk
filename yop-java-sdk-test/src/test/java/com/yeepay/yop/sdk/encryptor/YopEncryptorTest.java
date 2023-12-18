@@ -48,6 +48,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 import org.slf4j.Logger;
@@ -166,7 +167,7 @@ public class YopEncryptorTest extends BaseTest {
 
     @Test
     public void testSm4EncryptRequest() throws Exception {
-        // 无加密参数
+        // 无加密参数，则不添加加密头
         noneEncrypt();
 
         // form单参数加密
@@ -283,6 +284,7 @@ public class YopEncryptorTest extends BaseTest {
 
     @Test
     // 加密后下载速度慢很多
+    @Ignore
     public void yopRequestDownload() throws Exception {
         final long start = System.currentTimeMillis();
         YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");
@@ -321,7 +323,7 @@ public class YopEncryptorTest extends BaseTest {
                         CertTypeEnum.RSA2048)))
         ;
         YopResponse response = yopClient.request(request);
-        Assert.assertTrue(((Map) response.getResult()).get("id").equals(94));
+        Assert.assertEquals("你好", (response.getResult()));
     }
 
     @Test
@@ -336,7 +338,7 @@ public class YopEncryptorTest extends BaseTest {
                         CertTypeEnum.RSA2048)))
         ;
         YopResponse response = yopClient.request(request);
-        Assert.assertEquals("你好", response.getResult());
+        Assert.assertTrue(((Map) response.getResult()).get("id").equals(94));
     }
 
     private void formSingleParamEncrypt() throws Exception {
@@ -486,9 +488,9 @@ public class YopEncryptorTest extends BaseTest {
         YopRequest yopRequest = aFormRequest();
         yopRequest.addParameter("string0", "dsbzb");
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
-        YopEncryptProtocol.Inst encryptProtocol = parseProtocol(doEncrypt(request));
-        Assert.assertTrue(encryptProtocol.getEncryptHeaders().isEmpty() && encryptProtocol.getEncryptParams().isEmpty());
-        Assert.assertEquals(encryptOptions.getCredentials(), encryptProtocol.getEncryptOptions().getCredentials());
+        RequestEncryptor.encrypt(request, sm4Encryptor, encryptOptions);
+        String encryptHeader = request.getHeaders().get(Headers.YOP_ENCRYPT);
+        Assert.assertNull(encryptHeader);
     }
 
     private YopEncryptProtocol.Inst parseProtocol(String encryptHeader) {

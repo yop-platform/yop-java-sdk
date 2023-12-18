@@ -41,7 +41,7 @@ public class YopRemoteReporter implements YopReporter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YopRemoteReporter.class);
 
-    public static final YopReporter INSTANCE = new YopRemoteReporter();
+    public static final YopRemoteReporter INSTANCE = new YopRemoteReporter();
     private static final YopReporter BACKUP_REPORTER = YopLocalReporter.INSTANCE;
     private static final YopClient YOP_CLIENT = YopGlobalClient.getClient();
 
@@ -50,21 +50,8 @@ public class YopRemoteReporter implements YopReporter {
         batchReport(Lists.newArrayList(report));
     }
 
-    private void doRemoteReport(List<YopReport> reports) throws YopReportException {
+    private void doRemoteReport(YopRequest request, List<YopReport> reports) throws YopReportException {
         try {
-            YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
-            // 跳过验签、加解密
-            request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false).setReadTimeout(60000);
-
-            // 选择可用凭证
-            final List<String> availableApps = YopCredentialsCache.listKeys();
-            YopCredentials<?> credentials;
-            if (CollectionUtils.isNotEmpty(availableApps)
-                    && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
-                request.getRequestConfig().setAppKey(availableApps.get(0));
-                request.getRequestConfig().setCredentials(credentials);
-            }
-
             YopReportRequest reportRequest = new YopReportRequest();
             reportRequest.setReports(reports);
             request.setContent(JsonUtils.toJsonString(reportRequest));
@@ -79,6 +66,16 @@ public class YopRemoteReporter implements YopReporter {
         }
     }
 
+    private YopRequest initReportRequest() {
+        YopRequest request = new YopRequest(REPORT_API_URI, REPORT_API_METHOD);
+        // 跳过验签、加解密
+        request.getRequestConfig().setSkipVerifySign(true).setNeedEncrypt(false).setReadTimeout(60000);
+
+        // 选择可用凭证
+        chooseAvailableCredentials(request);
+        return request;
+    }
+
     private void handleReportResponse(YopResponse response) throws IOException {
         final YopReportResponse reportResponse = new YopReportResponse();
         JsonUtils.load(response.getStringResult(), reportResponse);
@@ -87,6 +84,17 @@ public class YopRemoteReporter implements YopReporter {
 
     @Override
     public void batchReport(List<YopReport> reports) throws YopReportException {
-        doRemoteReport(reports);
+        YopRequest request = initReportRequest();
+        doRemoteReport(request, reports);
+    }
+
+    private void chooseAvailableCredentials(YopRequest request) {
+        final List<String> availableApps = YopCredentialsCache.listKeys();
+        YopCredentials<?> credentials;
+        if (CollectionUtils.isNotEmpty(availableApps)
+                && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
+            request.getRequestConfig().setAppKey(availableApps.get(0));
+            request.getRequestConfig().setCredentials(credentials);
+        }
     }
 }
