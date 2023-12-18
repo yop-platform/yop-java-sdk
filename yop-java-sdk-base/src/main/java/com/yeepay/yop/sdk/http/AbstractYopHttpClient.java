@@ -81,9 +81,14 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
         try {
             preExecute(request, yopRequestConfig, executionContext);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Sending Request: {}, preElapsed:{}ms", request, System.currentTimeMillis() - beginTime);
+                LOGGER.debug("Signed Request: {}, elapsed:{}ms", request,
+                        System.currentTimeMillis() - beginTime);
             }
             httpResponse = doExecute(request, yopRequestConfig);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Received Response, elapsed:{}ms",
+                        System.currentTimeMillis() - beginTime);
+            }
             analyzedResponse = responseHandler.handle(
                     new HttpResponseHandleContext(httpResponse, request, yopRequestConfig, executionContext));
             return analyzedResponse;
@@ -96,6 +101,10 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                     + request.getHeaders().get(YOP_REQUEST_ID) + ", apiUri:" + request.getResourcePath()
                     + ", serverHost:" + request.getEndpoint(), e);
         } finally {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Analyzed Response: {}, elapsed:{}ms", analyzedResponse,
+                        System.currentTimeMillis() - beginTime);
+            }
             postExecute(beginTime, executionContext, request, analyzedResponse, httpResponse, ex);
         }
     }
@@ -123,10 +132,17 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                     isHostEx = isHttpEx || isUnexpectedEx,
                     needReport = !isEx || isServiceEx || isHostEx;
             if (needReport) {
+                final long elapsedTime = System.currentTimeMillis() - beginTime;
+                YopHostRequestEvent<?> reportEvent;
                 if (isHostEx) {
-                    ClientReporter.reportHostRequest(toFailRequest(executionContext, request, httpResponse, originEx, System.currentTimeMillis() - beginTime));
+                    reportEvent = toFailRequest(executionContext, request, httpResponse, originEx, elapsedTime);
                 } else {
-                    ClientReporter.reportHostRequest(toSuccessRequest(executionContext, request, httpResponse, System.currentTimeMillis() - beginTime));
+                    reportEvent = toSuccessRequest(executionContext, request, httpResponse, elapsedTime);
+                }
+                ClientReporter.reportHostRequest(reportEvent);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Reported Request: {}, elapsed:{}ms", reportEvent,
+                            System.currentTimeMillis() - beginTime);
                 }
             }
 

@@ -53,6 +53,11 @@ public class YopRequestConfig {
      */
     private String serverRoot;
 
+    /**
+     * 启用断路器
+     */
+    private Boolean enableCircuitBreaker = true;
+
     public String getAppKey() {
         return appKey;
     }
@@ -133,6 +138,15 @@ public class YopRequestConfig {
         this.serverRoot = serverRoot;
     }
 
+    public Boolean getEnableCircuitBreaker() {
+        return enableCircuitBreaker;
+    }
+
+    public YopRequestConfig setEnableCircuitBreaker(Boolean enableCircuitBreaker) {
+        this.enableCircuitBreaker = enableCircuitBreaker;
+        return this;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -145,6 +159,8 @@ public class YopRequestConfig {
         private Boolean skipVerifySign;
 
         private String serverRoot;
+
+        private Boolean enableCircuitBreaker = true;
 
         private Builder() {
         }
@@ -203,6 +219,11 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withEnableCircuitBreaker(Boolean enableCircuitBreaker) {
+            this.enableCircuitBreaker = enableCircuitBreaker;
+            return this;
+        }
+
         public YopRequestConfig build() {
             YopRequestConfig requestConfig = new YopRequestConfig();
             requestConfig.setAppKey(appKey);
@@ -215,6 +236,7 @@ public class YopRequestConfig {
             requestConfig.setNeedEncrypt(needEncrypt);
             requestConfig.setSkipVerifySign(skipVerifySign);
             requestConfig.setServerRoot(serverRoot);
+            requestConfig.setEnableCircuitBreaker(enableCircuitBreaker);
             return requestConfig;
         }
     }

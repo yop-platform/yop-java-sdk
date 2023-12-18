@@ -26,11 +26,20 @@ public class YopHostStatusChangePayload implements Serializable {
         this.status = status;
     }
 
+    public YopHostStatusChangePayload(String host, String prevStatus, String status, String rule) {
+        this.host = host;
+        this.prevStatus = prevStatus;
+        this.status = status;
+        this.rule = rule;
+    }
+
     private String host;
 
     private String prevStatus;
 
     private String status;
+
+    private String rule = "";
 
     public String getHost() {
         return host;
@@ -54,5 +63,13 @@ public class YopHostStatusChangePayload implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRule() {
+        return rule;
+    }
+
+    public void setRule(String rule) {
+        this.rule = rule;
     }
 }

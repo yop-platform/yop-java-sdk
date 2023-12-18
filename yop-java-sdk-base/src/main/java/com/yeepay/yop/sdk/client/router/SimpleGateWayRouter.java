@@ -10,7 +10,9 @@ import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
 import com.yeepay.yop.sdk.config.enums.ModeEnum;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
+import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.sentinel.YopSph;
 import com.yeepay.yop.sdk.utils.CharacterConstants;
 import com.yeepay.yop.sdk.utils.CheckUtils;
 import com.yeepay.yop.sdk.utils.RouteUtils;
@@ -25,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 
 /**
@@ -46,8 +47,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Map<URI, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
     private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
     private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
-    private static final Map<ServerRootType, LinkedBlockingDeque<URI>> BLOCKED_SERVERS = Maps.newConcurrentMap();
-
+    private static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
     private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
 
@@ -105,35 +105,21 @@ public class SimpleGateWayRouter implements GateWayRouter {
     }
 
     private static void monitorServerRoot() {
+        // sentinel监控
         EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
                 (prevState, newState, rule, snapshotValue) -> {
                     try {
-                        final URI serverRoot = URI.create(rule.getResource());
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
-                        }
+                        final UriResource uriResource = UriResource.parseResourceKey(rule.getResource());
+                        final URI serverRoot = uriResource.getResource();
+                        LOGGER.info("ServerRoot Block State Changed, serverRoot:{}, old:{}, new:{}, rule:{}",
+                                serverRoot, prevState, newState, rule);
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                        if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            for (ServerRootType serverRootType : serverRootTypes) {
-                                switch (newState) {
-                                    case OPEN:
-                                        final LinkedBlockingDeque<URI> oldBlocked =
-                                                BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
-                                        oldBlocked.removeIf(serverRoot::equals);
-                                        oldBlocked.add(serverRoot);
-                                        break;
-                                    case CLOSED:
-                                        final LinkedBlockingDeque<URI> blockedServers = BLOCKED_SERVERS.get(serverRootType);
-                                        if (null != blockedServers) {
-                                            blockedServers.removeIf(serverRoot::equals);
-                                        }
-                                        break;
-                                    default:
-                                }
-                            }
-                        }
+                        Set<String> serverTypes = CollectionUtils.isEmpty(serverRootTypes) ? Collections.emptySet() :
+                                serverRootTypes.stream().map(ServerRootType::name).collect(Collectors.toSet());
+                        BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverTypes);
+                        // 异步上报
                         ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
-                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name())));
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
                     } catch (Exception e) {
                         LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
@@ -149,9 +135,9 @@ public class SimpleGateWayRouter implements GateWayRouter {
     }
 
     @Override
-    public URI route(String appKey, Request<?> request, List<URI> excludeServerRoots) {
+    public UriResource route(String appKey, Request<?> request, List<URI> excludeServerRoots) {
         if (isAppInSandbox(appKey)) {
-            return space.getSandboxServerRoot();
+            return new UriResource(space.getSandboxServerRoot());
         }
 
         final YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
@@ -163,8 +149,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 throw new YopClientException("RequestConfig Error, serverRoot excluded:" + serverRoot);
             }
             addServerRoot(serverRoot, MANUAL_SERVER_ROOT_TYPES);
-            recordMainServer(serverRoot, MANUAL_SERVER_ROOT_TYPES, true);
-            return serverRoot;
+            return new UriResource(serverRoot);
         } else {
             // 独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原
             String apiGroup = request.getServiceName().toLowerCase().replace(CharacterConstants.UNDER_LINE, CharacterConstants.DASH_LINE);
@@ -173,13 +158,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 if (isExcludeServerRoots(independentServerRoot, excludeServerRoots)) {
                     throw new YopClientException("Config Error, ServerRoot excluded:" + independentServerRoot);
                 }
-                return independentServerRoot;
-            }
-
-            // 主域名
-            URI mainServer = MAIN_SERVER.get(serverRootType);
-            if (null != mainServer && !isExcludeServerRoots(mainServer, excludeServerRoots)) {
-                return mainServer;
+                return new UriResource(independentServerRoot);
             }
 
             final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.get(serverRootType);
@@ -187,14 +166,23 @@ public class SimpleGateWayRouter implements GateWayRouter {
                 throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
             }
 
+            // 主域名准备
+            URI mainServer = MAIN_SERVER.get(serverRootType);
             // 随机选主
             if (null == mainServer) {
                 final List<URI> randomList = RouteUtils.randomList(serverRoots);
-                mainServer = randomList.remove(0);
-                if (recordMainServer(mainServer, serverRootType)) {
+                if (recordMainServer(randomList.remove(0), serverRootType)) {
                     BACKUP_SERVERS.put(serverRootType, randomList);
                 }
-                return MAIN_SERVER.get(serverRootType);
+                mainServer = MAIN_SERVER.get(serverRootType);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Main ServerRoot Set, value:{}", mainServer);
+                }
+            }
+
+            // 主域名正常
+            if (null != mainServer && !isExcludeServerRoots(mainServer, excludeServerRoots)) {
+                return new UriResource(mainServer);
             }
 
             // 主域名故障，临时启用备选域名
@@ -202,20 +190,13 @@ public class SimpleGateWayRouter implements GateWayRouter {
             if (CollectionUtils.isNotEmpty(backupServers)) {
                 for (URI backup : backupServers) {
                     if (!isExcludeServerRoots(backup, excludeServerRoots)) {
-                        return backup;
+                        return new UriResource(backup);
                     }
                 }
             }
 
             // 备用域名故障，选用最早故障的域名
-            final LinkedBlockingDeque<URI> failedServers = BLOCKED_SERVERS.get(serverRootType);
-            URI oldestFailServer = null;
-            if (null != failedServers && !failedServers.isEmpty()) {
-                oldestFailServer = failedServers.peek();
-            }
-
-            // 主域名兜底
-            return null != oldestFailServer ? oldestFailServer : mainServer;
+            return BLOCK_SERVER_POOL.select(serverRootType.name(), mainServer);
         }
     }
 
@@ -289,4 +270,5 @@ public class SimpleGateWayRouter implements GateWayRouter {
         YOS,
         SANDBOX
     }
+
 }
