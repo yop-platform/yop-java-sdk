@@ -488,7 +488,7 @@ public class YopEncryptorTest extends BaseTest {
         YopRequest yopRequest = aFormRequest();
         yopRequest.addParameter("string0", "dsbzb");
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
-        RequestEncryptor.encrypt(request, sm4Encryptor, encryptOptions);
+        RequestEncryptor.encrypt(request, appKey, sm4Encryptor, sm2OptionsEnhanced);
         String encryptHeader = request.getHeaders().get(Headers.YOP_ENCRYPT);
         Assert.assertNull(encryptHeader);
     }
@@ -502,7 +502,7 @@ public class YopEncryptorTest extends BaseTest {
     }
 
     private String doEncrypt(Request<YopRequest> request) throws Exception {
-        RequestEncryptor.encrypt(request, sm4Encryptor, encryptOptions);
+        RequestEncryptor.encrypt(request, appKey, sm4Encryptor, sm2OptionsEnhanced);
         String encryptHeader = request.getHeaders().get(Headers.YOP_ENCRYPT);
         Assert.assertTrue(encryptHeader.startsWith(YopConstants.YOP_ENCRYPT_V1));
         String[] items = StringUtils.splitPreserveAllTokens(encryptHeader, CharacterConstants.SLASH);

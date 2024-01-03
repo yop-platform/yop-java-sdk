@@ -10,6 +10,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
@@ -34,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO;
 import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_ENCRYPT_PROTOCOL_V1_REQ;
@@ -59,27 +61,37 @@ public class RequestEncryptor {
     /**
      * 加密并重写Request
      *
-     * @param request        请求
-     * @param encryptor      加密器
-     * @param encryptOptions 加密选项
+     * @param request              请求
+     * @param appKey               应用
+     * @param encryptor            加密器
+     * @param encryptOptionsFuture 加密选项
      */
-    public static void encrypt(Request<? extends BaseRequest> request, YopEncryptor encryptor, EncryptOptions encryptOptions)
+    public static void encrypt(Request<? extends BaseRequest> request, String appKey, YopEncryptor encryptor, Future<EncryptOptions> encryptOptionsFuture)
             throws UnsupportedEncodingException {
         YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
         // 商户强制不加密
         if (BooleanUtils.isFalse(requestConfig.getNeedEncrypt())) {
             return;
         }
+
         Set<String> encryptHeaders = Collections.emptySet();
         Set<String> encryptParams = Collections.emptySet();
+        EncryptOptions encryptOptions = null;
         if (BooleanUtils.isTrue(requestConfig.getNeedEncrypt())) {
+            try {
+                encryptOptions = encryptOptionsFuture.get();
+            } catch (Exception e) {
+                LOGGER.warn("request not encrypted, EncryptOptions InitFail, ex:", e);
+                EncryptOptionsCache.invalidateEncryptOptions(appKey, requestConfig.getEncryptAlg(), requestConfig.getServerRoot());
+                return;
+            }
             encryptHeaders = encryptHeaders(encryptor, requestConfig.getEncryptHeaders(), request, encryptOptions);
             encryptParams = encryptParams(encryptor, requestConfig.getEncryptParams(), request, requestConfig, encryptOptions);
         }
 
         // 请求、响应参数均不加密时，不传加密头
         // TODO 支持商户配置响应是否加密，并传给网关
-        if (CollectionUtils.isEmpty(encryptHeaders) && CollectionUtils.isEmpty(encryptParams)) {
+        if (null == encryptOptions || (CollectionUtils.isEmpty(encryptHeaders) && CollectionUtils.isEmpty(encryptParams))) {
             return;
         }
         buildEncryptHeader(request, encryptHeaders, encryptParams, encryptOptions);

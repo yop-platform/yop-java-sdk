@@ -21,6 +21,7 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
+import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -231,7 +232,8 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                     executionContext.getEncryptOptions());
             return;
         }
-        encrypt(request, executionContext.getEncryptor(), executionContext.getEncryptOptions().get());
+        encrypt(request, executionContext.getYopCredentials().getAppKey(),
+                executionContext.getEncryptor(), executionContext.getEncryptOptions());
     }
 
     /**

@@ -70,8 +70,8 @@ public class YopCallbackEngine {
             YopRequestConfig requestConfig = request.getRequestConfig();
             YopCredentials<?> credential = getCredentials(requestConfig, authorizationReq);
             if (isEncryptSupported(credential, requestConfig)) {
-                encrypt(marshalled, getEncryptor(requestConfig), EncryptOptionsCache
-                        .loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()).get());
+                encrypt(marshalled, credential.getAppKey(), getEncryptor(requestConfig), EncryptOptionsCache
+                        .loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()));
             }
             YopSignerFactory.getSigner(authorizationReq.getSignerType()).sign(marshalled, credential, authorizationReq.getSignOptions());
         }
