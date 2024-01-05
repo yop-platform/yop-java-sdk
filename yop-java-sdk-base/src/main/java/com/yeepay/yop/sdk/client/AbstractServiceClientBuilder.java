@@ -43,11 +43,17 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
         if (null == yopSdkConfigProvider) {
             yopSdkConfigProvider = YopSdkConfigProviderRegistry.getProvider();
         }
+        if (null == credentialsProvider) {
+            credentialsProvider = YopCredentialsProviderRegistry.getProvider();
+        }
         YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
+        if (null == clientConfiguration) {
+            clientConfiguration = ClientConfigurationSupport.getClientConfiguration(yopSdkConfig);
+        }
         ClientParams clientParams = ClientParams.Builder.builder()
-                .withCredentialsProvider(credentialsProvider == null ? YopCredentialsProviderRegistry.getProvider() : credentialsProvider)
+                .withCredentialsProvider(credentialsProvider)
                 .withYopSdkConfigProvider(yopSdkConfigProvider)
-                .withClientConfiguration(clientConfiguration == null ? ClientConfigurationSupport.getClientConfiguration(yopSdkConfig) : clientConfiguration)
+                .withClientConfiguration(clientConfiguration)
                 .withEndPoint(endpoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT)) : URI.create(endpoint))
                 .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
                 .withPreferredEndPoint(CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredServerRoots()) ?
