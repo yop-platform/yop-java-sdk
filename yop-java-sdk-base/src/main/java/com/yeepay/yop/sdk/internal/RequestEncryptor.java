@@ -66,12 +66,13 @@ public class RequestEncryptor {
      * @param encryptor            加密器
      * @param encryptOptionsFuture 加密选项
      */
-    public static void encrypt(Request<? extends BaseRequest> request, String appKey, YopEncryptor encryptor, Future<EncryptOptions> encryptOptionsFuture)
+    public static boolean encrypt(Request<? extends BaseRequest> request, String appKey, YopEncryptor encryptor, Future<EncryptOptions> encryptOptionsFuture)
             throws UnsupportedEncodingException {
         YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
         // 商户强制不加密
         if (BooleanUtils.isFalse(requestConfig.getNeedEncrypt())) {
-            return;
+            LOGGER.info("request not encrypted for requestConfig needEncrypt:false");
+            return false;
         }
 
         Set<String> encryptHeaders = Collections.emptySet();
@@ -83,7 +84,7 @@ public class RequestEncryptor {
             } catch (Exception e) {
                 LOGGER.warn("request not encrypted, EncryptOptions InitFail, ex:", e);
                 EncryptOptionsCache.invalidateEncryptOptions(appKey, requestConfig.getEncryptAlg(), requestConfig.getServerRoot());
-                return;
+                return false;
             }
             encryptHeaders = encryptHeaders(encryptor, requestConfig.getEncryptHeaders(), request, encryptOptions);
             encryptParams = encryptParams(encryptor, requestConfig.getEncryptParams(), request, requestConfig, encryptOptions);
@@ -92,9 +93,12 @@ public class RequestEncryptor {
         // 请求、响应参数均不加密时，不传加密头
         // TODO 支持商户配置响应是否加密，并传给网关
         if (null == encryptOptions || (CollectionUtils.isEmpty(encryptHeaders) && CollectionUtils.isEmpty(encryptParams))) {
-            return;
+            LOGGER.info("request not encrypted for requestConfig headers:{}, params:{}",
+                    requestConfig.getEncryptHeaders(), requestConfig.getEncryptParams());
+            return false;
         }
         buildEncryptHeader(request, encryptHeaders, encryptParams, encryptOptions);
+        return true;
     }
 
 

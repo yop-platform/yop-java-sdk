@@ -78,6 +78,10 @@ public class ExecutionContext implements RetryContext {
         return this.getRetryCount();
     }
 
+    public void setEncryptSupported(boolean encryptSupported) {
+        this.encryptSupported = encryptSupported;
+    }
+
     public static final class Builder {
         private YopSigner signer;
         private SignOptions signOptions;
