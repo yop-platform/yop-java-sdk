@@ -29,6 +29,11 @@ public class X509CertUtilsTest {
         Assert.assertEquals(X509CertUtils.parseToHex("275568425014"), "4029287836");
         Assert.assertEquals(X509CertUtils.parseToHex("289782695477"), "4378650635");
         Assert.assertEquals(X509CertUtils.parseToHex("289798445125"), "4379555845");
+        Assert.assertEquals(X509CertUtils.parseToHex("276263683189"), "4052994475");
+        Assert.assertEquals(X509CertUtils.parseToHex("276263634789"), "4052988765");
+        Assert.assertEquals(X509CertUtils.parseToHex("276374708793"), "4059376239");
+        Assert.assertEquals(X509CertUtils.parseToHex("301491249940"), "4632476314");
+        Assert.assertEquals(X509CertUtils.parseToHex("301461755703"), "4630855737");
     }
 
     @Test

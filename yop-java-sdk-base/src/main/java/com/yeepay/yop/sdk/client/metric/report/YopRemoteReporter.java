@@ -91,6 +91,7 @@ public class YopRemoteReporter implements YopReporter {
     private void chooseAvailableCredentials(YopRequest request) {
         final List<String> availableApps = YopCredentialsCache.listKeys();
         YopCredentials<?> credentials;
+        // TODO 根据参数来选择凭证
         if (CollectionUtils.isNotEmpty(availableApps)
                 && null != (credentials = YopCredentialsCache.get(availableApps.get(0)))) {
             request.getRequestConfig().setAppKey(availableApps.get(0));

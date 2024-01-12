@@ -4,6 +4,7 @@ import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
@@ -21,6 +22,7 @@ import com.yeepay.yop.sdk.client.router.YopRouter;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.exception.*;
 import com.yeepay.yop.sdk.http.ExecutionContext;
+import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopHttpClient;
 import com.yeepay.yop.sdk.http.YopHttpClientFactory;
 import com.yeepay.yop.sdk.internal.Request;
@@ -35,6 +37,7 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.sentinel.YopSph;
+import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +51,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
+import static com.yeepay.yop.sdk.utils.ClientUtils.isBasicClient;
 
 /**
  * title: 默认客户端处理器<br>
@@ -62,6 +66,9 @@ import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 public class ClientHandlerImpl implements ClientHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandlerImpl.class);
+    private final String provider;
+
+    private final String env;
 
     private final YopCredentialsProvider yopCredentialsProvider;
 
@@ -77,6 +84,10 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final YopCircuitBreaker circuitBreaker;
 
+    private final String sdkSource;
+
+    private final String clientId;
+
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
@@ -89,6 +100,14 @@ public class ClientHandlerImpl implements ClientHandler {
         this.client = buildHttpClient(handlerParams);
         this.circuitBreakerConfig = this.clientConfiguration.getCircuitBreakerConfig();
         this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace, this.circuitBreakerConfig);
+        this.clientId = handlerParams.getClientParams().getClientId();
+        if (isBasicClient(clientId)) {
+            sdkSource = YopConstants.YOP_SDK_SOURCE_BASIC;
+        } else {
+            sdkSource = YopConstants.YOP_SDK_SOURCE_BIZ;
+        }
+        this.provider = handlerParams.getClientParams().getProvider();
+        this.env = handlerParams.getClientParams().getEnv();
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
@@ -104,13 +123,18 @@ public class ClientHandlerImpl implements ClientHandler {
     @Override
     public <Input extends BaseRequest, Output extends BaseResponse> Output execute(
             ClientExecutionParams<Input, Output> executionParams) {
-        ExecutionContext executionContext = getExecutionContext(executionParams);
-        return new UriResourceRouteInvokerWrapper<>(
-                new YopInvoker<>(executionParams, executionContext, new SimpleExceptionAnalyzer(null != circuitBreakerConfig ?
-                        circuitBreakerConfig.getExcludeExceptions() : Collections.emptySet(),
-                        clientConfiguration.getRetryExceptions()), true),
-                new SimpleUriRetryPolicy(clientConfiguration.getMaxRetryCount()),
-                new YopRouter<>(gateWayRouter)).invoke();
+        ClientUtils.setCurrentClientId(clientId);
+        try {
+            ExecutionContext executionContext = getExecutionContext(executionParams);
+            return new UriResourceRouteInvokerWrapper<>(
+                    new YopInvoker<>(executionParams, executionContext, new SimpleExceptionAnalyzer(null != circuitBreakerConfig ?
+                            circuitBreakerConfig.getExcludeExceptions() : Collections.emptySet(),
+                            clientConfiguration.getRetryExceptions()), true),
+                    new SimpleUriRetryPolicy(clientConfiguration.getMaxRetryCount()),
+                    new YopRouter<>(gateWayRouter)).invoke();
+        } finally {
+            ClientUtils.removeCurrentClientId();
+        }
     }
 
     private interface YopCircuitBreaker {
@@ -238,6 +262,7 @@ public class ClientHandlerImpl implements ClientHandler {
             // 准备http参数
             Request<Input> request = getInput().getRequestMarshaller().marshall(getInput().getInput());
             request.setEndpoint(getUriResource().getResource());
+            request.addHeader(Headers.YOP_SDK_SOURCE, sdkSource);
 
             // 发起http调用
             if (isCircuitBreakerEnable() && null != circuitBreaker && !BooleanUtils.isFalse(request.getOriginalRequestObject()
@@ -256,15 +281,17 @@ public class ClientHandlerImpl implements ClientHandler {
             throw new YopClientException("no authenticate req defined");
         } else {
             YopRequestConfig requestConfig = executionParams.getInput().getRequestConfig();
-            YopCredentials<?> credential = getCredentials(requestConfig, authorizationReq);
+            YopCredentials<?> credential = getCredentials(provider, env, requestConfig, authorizationReq);
             YopEncryptor encryptor = null;
             Future<EncryptOptions> encryptOptions = null;
             if (isEncryptSupported(credential, requestConfig)) {
                 encryptor = getEncryptor(requestConfig);
-                encryptOptions = EncryptOptionsCache.loadEncryptOptions(credential.getAppKey(),
+                encryptOptions = EncryptOptionsCache.loadEncryptOptions(provider, env, credential.getAppKey(),
                         requestConfig.getEncryptAlg(), requestConfig.getServerRoot());
             }
             ExecutionContext.Builder builder = ExecutionContext.Builder.anExecutionContext()
+                    .withProvider(provider)
+                    .withEnv(env)
                     .withYopCredentials(credential)
                     .withEncryptor(encryptor)
                     .withEncryptOptions(encryptOptions)

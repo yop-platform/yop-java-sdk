@@ -126,4 +126,6 @@ public interface Headers {
 
     String YOP_SERVER_IP = "x-yop-server-ip";
 
+    String YOP_SDK_SOURCE = "x-yop-sdk-source";
+
 }

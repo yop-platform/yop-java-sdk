@@ -7,7 +7,6 @@ package com.yeepay.yop.sdk.internal;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.base.cache.YopCredentialsCache;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
@@ -15,10 +14,11 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENCRYPT_ALG;
+import static com.yeepay.yop.sdk.YopConstants.*;
 
 /**
  * title: 请求分析器<br>
@@ -40,16 +40,20 @@ public class RequestAnalyzer {
      * @return YOP凭证
      */
     public static YopCredentials<?> getCredentials(YopRequestConfig requestConfig, AuthorizationReq authorizationReq) {
+        return getCredentials(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, requestConfig, authorizationReq);
+    }
+
+    public static YopCredentials<?> getCredentials(String provider, String env, YopRequestConfig requestConfig, AuthorizationReq authorizationReq) {
         YopCredentials<?> credential = requestConfig.getCredentials();
         if (null == credential) {
-            credential = YopCredentialsProviderRegistry.getProvider().getCredentials(requestConfig.getAppKey()
+            credential = ClientUtils.getCurrentYopCredentialsProvider().getCredentials(provider, env, requestConfig.getAppKey()
                     , authorizationReq.getCredentialType());
         }
         if (null == credential) {
             throw new YopClientException("No credentials specified");
         }
         // 缓存最新调用凭证
-        YopCredentialsCache.put(credential.getAppKey(), credential);
+        YopCredentialsCache.put(provider, env, credential.getAppKey(), credential);
         return credential;
     }
 

@@ -3,17 +3,27 @@ package com.yeepay.yop.sdk.client;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
+import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.HASH;
+import static com.yeepay.yop.sdk.utils.ClientUtils.cacheClientConfig;
+import static com.yeepay.yop.sdk.utils.ClientUtils.computeClientIdSuffix;
 
 /**
  * title: 服务客户端builder<br>
@@ -27,43 +37,71 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServiceClientBuilder, ServiceInterfaceToBuild> {
 
+    private String provider;
+
+    private String env;
+
     private YopCredentialsProvider credentialsProvider;
 
     private YopSdkConfigProvider yopSdkConfigProvider;
 
+    private YopPlatformCredentialsProvider platformCredentialsProvider;
+
     private String endpoint;
 
+    private List<URI> preferredEndPoint;
+
     private String yosEndPoint;
+
+    private List<URI> preferredYosEndPoint;
 
     private String sandboxEndPoint;
 
     private ClientConfiguration clientConfiguration;
 
     public final ServiceInterfaceToBuild build() {
+        provider = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER);
+        env = StringUtils.defaultString(env, YOP_DEFAULT_ENV);
         if (null == yopSdkConfigProvider) {
             yopSdkConfigProvider = YopSdkConfigProviderRegistry.getProvider();
         }
         if (null == credentialsProvider) {
             credentialsProvider = YopCredentialsProviderRegistry.getProvider();
         }
-        YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig();
+        if (null == platformCredentialsProvider) {
+            platformCredentialsProvider = YopPlatformCredentialsProviderRegistry.getProvider();
+        }
+        YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig(provider, env);
         if (null == clientConfiguration) {
             clientConfiguration = ClientConfigurationSupport.getClientConfiguration(yopSdkConfig);
+        }
+        if (CollectionUtils.isEmpty(preferredEndPoint)) {
+            preferredEndPoint = CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredServerRoots()) ?
+                    yopSdkConfig.getPreferredServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
+        }
+        if (CollectionUtils.isEmpty(preferredYosEndPoint)) {
+            preferredYosEndPoint = CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredYosServerRoots()) ?
+                    yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
         }
         ClientParams clientParams = ClientParams.Builder.builder()
                 .withCredentialsProvider(credentialsProvider)
                 .withYopSdkConfigProvider(yopSdkConfigProvider)
+                .withPlatformCredentialsProvider(platformCredentialsProvider)
                 .withClientConfiguration(clientConfiguration)
                 .withEndPoint(endpoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT)) : URI.create(endpoint))
                 .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
-                .withPreferredEndPoint(CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredServerRoots()) ?
-                        yopSdkConfig.getPreferredServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList())
-                .withPreferredYosEndPoint(CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredYosServerRoots())
-                        ? yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) :Collections.emptyList())
+                .withPreferredEndPoint(preferredEndPoint)
+                .withPreferredYosEndPoint(preferredYosEndPoint)
                 .withSandboxEndPoint(sandboxEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT)) : URI.create(sandboxEndPoint))
                 .withAuthorizationReqRegistry(authorizationReqRegistry())
                 .build();
-        return build(clientParams);
+        final String clientIdSuffix = computeClientIdSuffix(clientParams);
+        final SubClass subclass = getSubclass();
+        final String clientBuilderClass = subclass.getClass().getCanonicalName();
+        final String clientId = clientBuilderClass + HASH + clientIdSuffix;
+        clientParams.setClientId(clientId);
+        cacheClientConfig(clientId, clientParams);
+        return ClientUtils.getOrBuildClientInst(clientParams, AbstractServiceClientBuilder.this::build);
     }
 
     @SuppressWarnings("unchecked")
@@ -76,8 +114,23 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
         return getSubclass();
     }
 
+    public SubClass withProvider(String provider) {
+        this.provider = provider;
+        return getSubclass();
+    }
+
+    public SubClass withEnv(String env) {
+        this.env = env;
+        return getSubclass();
+    }
+
     public SubClass withYopSdkConfigProvider(YopSdkConfigProvider yopSdkConfigProvider) {
         this.yopSdkConfigProvider = yopSdkConfigProvider;
+        return getSubclass();
+    }
+
+    public SubClass withPlatformCredentialsProvider(YopPlatformCredentialsProvider platformCredentialsProvider) {
+        this.platformCredentialsProvider = platformCredentialsProvider;
         return getSubclass();
     }
 
@@ -91,8 +144,18 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
         return getSubclass();
     }
 
+    public SubClass withPreferredEndPoint(List<URI> preferredEndPoint) {
+        this.preferredEndPoint = preferredEndPoint;
+        return getSubclass();
+    }
+
     public SubClass withYosEndpoint(String yosEndpoint) {
         this.yosEndPoint = yosEndpoint;
+        return getSubclass();
+    }
+
+    public SubClass withPreferredYosEndPoint(List<URI> preferredYosEndPoint) {
+        this.preferredYosEndPoint = preferredYosEndPoint;
         return getSubclass();
     }
 

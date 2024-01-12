@@ -37,6 +37,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 import static com.yeepay.yop.sdk.internal.RequestEncryptor.encrypt;
@@ -62,16 +64,20 @@ public class YopCallbackEngine {
      * @return Yop回调请求
      */
     public static YopCallbackRequest build(YopRequest request) throws ExecutionException, InterruptedException, UnsupportedEncodingException {
+        return build(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, request);
+    }
+
+    public static YopCallbackRequest build(String provider, String env, YopRequest request) throws ExecutionException, InterruptedException, UnsupportedEncodingException {
         Request<YopRequest> marshalled = YopCallbackRequestMarshaller.getInstance().marshall(request);
         AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(request.getRequestConfig().getSecurityReq());
         if (null == authorizationReq) {
             throw new YopClientException("no authenticate req defined");
         } else {
             YopRequestConfig requestConfig = request.getRequestConfig();
-            YopCredentials<?> credential = getCredentials(requestConfig, authorizationReq);
+            YopCredentials<?> credential = getCredentials(provider, env, requestConfig, authorizationReq);
             if (isEncryptSupported(credential, requestConfig)) {
-                encrypt(marshalled, credential.getAppKey(), getEncryptor(requestConfig), EncryptOptionsCache
-                        .loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()));
+                encrypt(provider, env, marshalled, credential.getAppKey(), getEncryptor(requestConfig), EncryptOptionsCache
+                        .loadEncryptOptions(provider, env, credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()));
             }
             YopSignerFactory.getSigner(authorizationReq.getSignerType()).sign(marshalled, credential, authorizationReq.getSignOptions());
         }

@@ -22,6 +22,17 @@ public interface YopSdkConfigProvider {
     YopSdkConfig getConfig();
 
     /**
+     * 获取指定服务方、环境的服务端配置
+     *
+     * @param provider 服务方
+     * @param env      环境
+     * @return 服务端配置
+     */
+    default YopSdkConfig getConfig(String provider, String env) {
+        return getConfig();
+    }
+
+    /**
      * 移除SDK配置
      *
      * @param key key

@@ -61,12 +61,14 @@ public class RequestEncryptor {
     /**
      * 加密并重写Request
      *
+     * @param provider             服务方
+     * @param env                  环境
      * @param request              请求
      * @param appKey               应用
      * @param encryptor            加密器
      * @param encryptOptionsFuture 加密选项
      */
-    public static boolean encrypt(Request<? extends BaseRequest> request, String appKey, YopEncryptor encryptor, Future<EncryptOptions> encryptOptionsFuture)
+    public static boolean encrypt(String provider, String env, Request<? extends BaseRequest> request, String appKey, YopEncryptor encryptor, Future<EncryptOptions> encryptOptionsFuture)
             throws UnsupportedEncodingException {
         YopRequestConfig requestConfig = request.getOriginalRequestObject().getRequestConfig();
         // 商户强制不加密
@@ -83,7 +85,7 @@ public class RequestEncryptor {
                 encryptOptions = encryptOptionsFuture.get();
             } catch (Exception e) {
                 LOGGER.warn("request not encrypted, EncryptOptions InitFail, ex:", e);
-                EncryptOptionsCache.invalidateEncryptOptions(appKey, requestConfig.getEncryptAlg(), requestConfig.getServerRoot());
+                EncryptOptionsCache.invalidateEncryptOptions(provider, env, appKey, requestConfig.getEncryptAlg(), requestConfig.getServerRoot());
                 return false;
             }
             encryptHeaders = encryptHeaders(encryptor, requestConfig.getEncryptHeaders(), request, encryptOptions);

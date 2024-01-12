@@ -40,12 +40,37 @@ public interface YopCredentialsProvider {
     YopCredentials<?> getCredentials(String appKey, String credentialType);
 
     /**
+     * 加载指定服务方、环境下的客户端凭证
+     *
+     * @param provider       服务方
+     * @param env            环境
+     * @param appKey         应用
+     * @param credentialType 密钥类型
+     * @return 客户端凭证
+     */
+    default YopCredentials<?> getCredentials(String provider, String env, String appKey, String credentialType) {
+        return getCredentials(appKey, credentialType);
+    }
+
+    /**
      * 根据appKey获取应用下可用密钥类型
      *
      * @param appKey 应用标识
      * @return 密钥类型列表
      */
     List<CertTypeEnum> getSupportCertTypes(String appKey);
+
+    /**
+     * 获取指定服务方、环境、应用下的可用密钥类型
+     *
+     * @param provider 服务方
+     * @param env      环境
+     * @param appKey   应用
+     * @return 可用密钥类型列表
+     */
+    default List<CertTypeEnum> getSupportCertTypes(String provider, String env, String appKey) {
+        return getSupportCertTypes(appKey);
+    }
 
     /**
      * 单应用时，用于加载默认配置
@@ -55,6 +80,17 @@ public interface YopCredentialsProvider {
      */
     default String getDefaultAppKey() {
         return "default";
+    }
+
+    /**
+     * 获取指定服务方、环境下默认应用
+     *
+     * @param provider 服务方
+     * @param env      环境
+     * @return 默认应用
+     */
+    default String getDefaultAppKey(String provider, String env) {
+        return getDefaultAppKey();
     }
 
     /**
@@ -68,6 +104,19 @@ public interface YopCredentialsProvider {
     @Deprecated
     default List<YopCertConfig> getIsvEncryptKey(String appKey) {
         return Collections.emptyList();
+    }
+
+    /**
+     * 获取指定服务方、环境、应用的加密密钥列表(老国密)
+     *
+     * @param provider 服务方
+     * @param env      环境
+     * @param appKey   应用
+     * @return 加密密钥列表
+     */
+    @Deprecated
+    default List<YopCertConfig> getIsvEncryptKey(String provider, String env, String appKey) {
+        return getIsvEncryptKey(appKey);
     }
 
 }
