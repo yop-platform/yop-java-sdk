@@ -34,7 +34,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
-import static com.yeepay.yop.sdk.utils.ClientUtils.getCurrentYopSdkConfigProvider;
+import static com.yeepay.yop.sdk.utils.ClientUtils.getCurrentSdkConfigProvider;
 import static com.yeepay.yop.sdk.utils.X509CertUtils.getLocalCertDir;
 
 /**
@@ -63,7 +63,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
     @Override
     protected YopPlatformCredentials loadCredentialsFromStore(String provider, String env, String appKey, String serialNo) {
         // 从指定目录加载
-        YopCertStore yopCertStore = getCurrentYopSdkConfigProvider().getConfig(provider, env).getYopCertStore();
+        YopCertStore yopCertStore = getCurrentSdkConfigProvider().getConfig(provider, env).getYopCertStore();
         Map<String, X509Certificate> localCerts = loadAndVerify(provider, env, appKey, yopCertStore, serialNo, true);
 
         // 从内置路径加载
@@ -92,7 +92,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
 
     private YopPlatformCredentials doStore(String provider, String env, String appKey, String credentialType,
                                            X509Certificate cert) {
-        YopCertStore yopCertStore = getCurrentYopSdkConfigProvider().getConfig(provider, env).getYopCertStore();
+        YopCertStore yopCertStore = getCurrentSdkConfigProvider().getConfig(provider, env).getYopCertStore();
         YopPlatformCredentials result = convertCredentials(appKey, credentialType, cert);
 
         // 默认仅放内存，商户可配置存放磁盘

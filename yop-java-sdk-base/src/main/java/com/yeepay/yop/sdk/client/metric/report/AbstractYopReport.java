@@ -23,11 +23,33 @@ public abstract class AbstractYopReport implements YopReport {
 
     private static final long serialVersionUID = -1L;
 
+    private String provider;
+
+    private String env;
+
     private int version = 1;
 
     private Date beginDate = new Date();
 
     private Date endDate;
+
+    @Override
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    @Override
+    public String getEnv() {
+        return env;
+    }
+
+    public void setEnv(String env) {
+        this.env = env;
+    }
 
     @Override
     public int getVersion() {

@@ -46,7 +46,7 @@ public class RequestAnalyzer {
     public static YopCredentials<?> getCredentials(String provider, String env, YopRequestConfig requestConfig, AuthorizationReq authorizationReq) {
         YopCredentials<?> credential = requestConfig.getCredentials();
         if (null == credential) {
-            credential = ClientUtils.getCurrentYopCredentialsProvider().getCredentials(provider, env, requestConfig.getAppKey()
+            credential = ClientUtils.getCurrentCredentialsProvider().getCredentials(provider, env, requestConfig.getAppKey()
                     , authorizationReq.getCredentialType());
         }
         if (null == credential) {

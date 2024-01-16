@@ -4,6 +4,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserver
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
@@ -22,11 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 
 /**
@@ -44,7 +41,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleGateWayRouter.class);
 
     private static final Map<ServerRootSpace, ServerRootRouting> SERVER_ROOT_ROUTING = Maps.newConcurrentMap();
-    private static final Map<URI, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
+    private static final Map<URI, Set<ServerRootInfo>> ALL_SERVER_INFOS = Maps.newConcurrentMap();
     private static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
 
     static {
@@ -149,21 +146,22 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private void collectServerRootTypes(ServerRootSpace space) {
         if (CollectionUtils.isNotEmpty(space.getPreferredEndPoint())) {
             for (URI uri : space.getPreferredEndPoint()) {
-                collectServerRootType(uri, ServerRootType.COMMON);
+                collectServerRootType(space.getProvider(), space.getEnv(), uri, ServerRootType.COMMON);
             }
         }
 
         if (CollectionUtils.isNotEmpty(space.getPreferredYosEndPoint())) {
             for (URI uri : space.getPreferredYosEndPoint()) {
-                collectServerRootType(uri, ServerRootType.YOS);
+                collectServerRootType(space.getProvider(), space.getEnv(), uri, ServerRootType.YOS);
             }
         }
-        collectServerRootType(space.getYosServerRoot(), ServerRootType.YOS);
+        collectServerRootType(space.getProvider(), space.getEnv(), space.getYosServerRoot(), ServerRootType.YOS);
     }
 
-    private void collectServerRootType(URI serverRoot, ServerRootType serverRootType) {
+    private void collectServerRootType(String provider, String env, URI serverRoot, ServerRootType serverRootType) {
         if (null != serverRoot) {
-            ALL_SERVER_TYPES.computeIfAbsent(serverRoot, p -> Sets.newHashSet()).add(serverRootType);
+            ALL_SERVER_INFOS.computeIfAbsent(serverRoot,
+                    p -> Sets.newHashSet()).add(new ServerRootInfo(provider, env, serverRootType));
         }
     }
 
@@ -176,13 +174,23 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         final URI serverRoot = uriResource.getResource();
                         LOGGER.info("ServerRoot Block State Changed, serverRoot:{}, old:{}, new:{}, rule:{}",
                                 serverRoot, prevState, newState, rule);
-                        Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                        Set<String> serverTypes = CollectionUtils.isEmpty(serverRootTypes) ? Collections.emptySet() :
-                                serverRootTypes.stream().map(ServerRootType::name).collect(Collectors.toSet());
+                        Set<ServerRootInfo> serverRootInfos = ALL_SERVER_INFOS.get(serverRoot);
+                        ServerRootInfo choosedServerRootInfo = ServerRootInfo.DEFAULT_INFO;
+                        Set<String> serverTypes = Collections.emptySet();
+                        if (CollectionUtils.isNotEmpty(serverRootInfos)) {
+                            serverTypes = Sets.newHashSet();
+                            for (ServerRootInfo serverRootInfo : serverRootInfos) {
+                                serverTypes.add(serverRootInfo.getServerRootType().name());
+                            }
+                            choosedServerRootInfo = serverRootInfos.iterator().next();
+                        }
                         BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverTypes);
                         // 异步上报
-                        ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
-                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
+                        final YopHostStatusChangeReport report = new YopHostStatusChangeReport(
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString()));
+                        report.setProvider(choosedServerRootInfo.getProvider());
+                        report.setEnv(choosedServerRootInfo.getEnv());
+                        ClientReporter.asyncReportToQueue(report);
                     } catch (Exception e) {
                         LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
@@ -204,7 +212,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             if (isExcludeServerRoots(serverRoot, excludeServerRoots)) {
                 throw new YopClientException("RequestConfig Error, serverRoot excluded:" + serverRoot);
             }
-            collectServerRootType(serverRoot, serverRootType);
+            collectServerRootType(space.getProvider(), space.getEnv(), serverRoot, serverRootType);
             return new UriResource(serverRoot);
         } else {
             // 独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原
@@ -273,6 +281,48 @@ public class SimpleGateWayRouter implements GateWayRouter {
         YOS,
         @Deprecated
         SANDBOX
+    }
+
+    private static class ServerRootInfo {
+        public static ServerRootInfo DEFAULT_INFO = new ServerRootInfo(YopConstants.YOP_DEFAULT_PROVIDER,
+                YopConstants.YOP_DEFAULT_ENV, ServerRootType.COMMON);
+        private String provider;
+        private String env;
+        private ServerRootType serverRootType;
+
+        public ServerRootInfo(String provider, String env, ServerRootType serverRootType) {
+            this.provider = provider;
+            this.env = env;
+            this.serverRootType = serverRootType;
+        }
+
+        public String getProvider() {
+            return provider;
+        }
+
+        public String getEnv() {
+            return env;
+        }
+
+        public ServerRootType getServerRootType() {
+            return serverRootType;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(provider, env, serverRootType);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof ServerRootInfo) {
+                ServerRootInfo that = (ServerRootInfo) obj;
+                return Objects.equals(this.provider, that.provider) &&
+                        Objects.equals(this.env, that.env) &&
+                        Objects.equals(this.serverRootType, that.serverRootType);
+            }
+            return false;
+        }
     }
 
 }

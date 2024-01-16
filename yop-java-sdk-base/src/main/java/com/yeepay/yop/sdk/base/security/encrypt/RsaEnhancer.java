@@ -13,7 +13,7 @@ import com.yeepay.yop.sdk.utils.Encodes;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_CREDENTIALS_ENCRYPT_ALG_RSA;
 import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_PLATFORM_CERT_SERIAL_NO;
-import static com.yeepay.yop.sdk.utils.ClientUtils.getCurrentYopPlatformCredentialsProvider;
+import static com.yeepay.yop.sdk.utils.ClientUtils.getCurrentPlatformCredentialsProvider;
 
 /**
  * title: RSA增强会话密钥<br>
@@ -50,7 +50,7 @@ public class RsaEnhancer extends AbstractEncryptOptionsEnhancer {
         YopSymmetricCredentials sourceCredentials = (YopSymmetricCredentials) source.getCredentials();
         String credentialStr = sourceCredentials.getCredential();
         byte[] credentialBytes = Encodes.decodeBase64(credentialStr);
-        final YopPlatformCredentials yopPlatformCredentials = getCurrentYopPlatformCredentialsProvider()
+        final YopPlatformCredentials yopPlatformCredentials = getCurrentPlatformCredentialsProvider()
                 .getLatestCredentials(provider, env, appKey, CertTypeEnum.RSA2048.getValue(), null);
         source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_RSA).encryptToBase64(credentialBytes,
                 new EncryptOptions(yopPlatformCredentials)));

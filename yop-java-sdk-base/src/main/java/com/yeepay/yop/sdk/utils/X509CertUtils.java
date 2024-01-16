@@ -68,7 +68,7 @@ public class X509CertUtils {
 
     public static boolean checkCertDate(String provider, String env, X509Certificate certificate)
             throws CertificateExpiredException, CertificateNotYetValidException {
-        final YopCertStore yopCertStore = ClientUtils.getCurrentYopSdkConfigProvider().getConfig(provider, env).getYopCertStore();
+        final YopCertStore yopCertStore = ClientUtils.getCurrentSdkConfigProvider().getConfig(provider, env).getYopCertStore();
         long validAfterExpire = getValidAfterExpire(yopCertStore),
             refreshBeforeExpire = getRefreshBeforeExpire(yopCertStore);
         Date now = new Date();

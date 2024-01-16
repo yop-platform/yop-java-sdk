@@ -174,6 +174,8 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, ExecutionContext executionContext,
                                                       Request<Input> request, YopHttpResponse httpResponse,
                                                       long elapsedTime) {
+        event.setProvider(executionContext.getProvider());
+        event.setEnv(executionContext.getEnv());
         event.setAppKey(executionContext.getYopCredentials().getAppKey());
         event.setServerResource(request.getResourcePath());
         event.setServerHost(HttpUtils.generateHostHeader(request.getEndpoint()));

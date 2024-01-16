@@ -297,7 +297,7 @@ public class YopCertificateCache {
                 request.getRequestConfig().setServerRoot(serverRoot);
             }
             request.addParameter(CERT_DOWNLOAD_API_PARAM_CERT_TYPE, CertTypeEnum.SM2.getValue());
-            YopResponse response = ClientUtils.getCurrentBasicClient(provider, env).request(request);
+            YopResponse response = ClientUtils.getAvailableYopClient(provider, env).request(request);
 
             // 响应解析
             List<YopPlatformPlainCert> platformCerts = parseYopResponse(response);

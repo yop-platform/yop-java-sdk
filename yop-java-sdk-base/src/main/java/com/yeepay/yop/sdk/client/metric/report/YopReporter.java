@@ -22,4 +22,12 @@ public interface YopReporter {
 
     void batchReport(List<YopReport> report) throws YopReportException;
 
+    default void report(String provider, String env, YopReport report) throws YopReportException {
+        report(report);
+    }
+
+    default void batchReport(String provider, String env, List<YopReport> report) throws YopReportException {
+        batchReport(report);
+    }
+
 }

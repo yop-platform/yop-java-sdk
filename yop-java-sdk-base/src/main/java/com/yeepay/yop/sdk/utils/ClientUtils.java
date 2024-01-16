@@ -116,8 +116,8 @@ public class ClientUtils {
         return CURRENT_CLIENT_ID.get();
     }
 
-    public static YopClient getCurrentBasicClient() {
-        return getCurrentBasicClient(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV);
+    public static YopClient getDefaultYopClient() {
+        return getAvailableYopClient(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV);
     }
 
     /**
@@ -127,7 +127,7 @@ public class ClientUtils {
      * @param env 环境
      * @return YopClient
      */
-    public static YopClient getCurrentBasicClient(String provider, String env) {
+    public static YopClient getAvailableYopClient(String provider, String env) {
         YopClient clientInst = null;
         String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
@@ -154,7 +154,7 @@ public class ClientUtils {
         CURRENT_CLIENT_ID.remove();
     }
 
-    public static YopSdkConfigProvider getCurrentYopSdkConfigProvider() {
+    public static YopSdkConfigProvider getCurrentSdkConfigProvider() {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
             final ClientParams clientParams = CLIENT_CONFIG_MAP.get(currentClientId);
@@ -165,7 +165,7 @@ public class ClientUtils {
         return YopSdkConfigProviderRegistry.getProvider();
     }
 
-    public static YopCredentialsProvider getCurrentYopCredentialsProvider() {
+    public static YopCredentialsProvider getCurrentCredentialsProvider() {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
             final ClientParams clientParams = CLIENT_CONFIG_MAP.get(currentClientId);
@@ -176,7 +176,7 @@ public class ClientUtils {
         return YopCredentialsProviderRegistry.getProvider();
     }
 
-    public static YopPlatformCredentialsProvider getCurrentYopPlatformCredentialsProvider() {
+    public static YopPlatformCredentialsProvider getCurrentPlatformCredentialsProvider() {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
             final ClientParams clientParams = CLIENT_CONFIG_MAP.get(currentClientId);

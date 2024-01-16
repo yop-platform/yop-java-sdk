@@ -11,10 +11,12 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 
 /**
  * title: YOP调用凭证缓存<br>
@@ -81,6 +83,11 @@ public class YopCredentialsCache {
      */
     public static List<String> listKeys() {
         return new ArrayList<>(CREDENTIALS_MAP.keySet());
+    }
+
+    public static List<String> listKeys(String provider, String env) {
+        return CREDENTIALS_MAP.keySet().stream()
+                .filter(p -> p.startsWith(cacheKey(provider, env, EMPTY))).collect(Collectors.toList());
     }
 
 }

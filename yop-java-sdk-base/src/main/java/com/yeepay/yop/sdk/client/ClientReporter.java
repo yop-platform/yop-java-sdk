@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.client;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -30,7 +31,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.yeepay.yop.sdk.YopConstants.REPORT_API_URI;
+import static com.yeepay.yop.sdk.YopConstants.*;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
 
 /**
  * title: 客户端上报<br>
@@ -50,6 +52,7 @@ public class ClientReporter {
     private static final ConcurrentMap<String, AtomicReference<YopHostRequestReport>> YOP_HOST_REQUEST_COLLECTION = new ConcurrentHashMap<>();
 
     private static final Set<String> EXCLUDE_REPORT_RESOURCES = Sets.newHashSet(REPORT_API_URI);
+    private static final Set<String> EXCLUDE_REPORT_ENVS = Sets.newHashSet(ENV_SANDBOX);
 
     private static final Deque<YopReport> YOP_HOST_REQUEST_QUEUE;
 
@@ -222,7 +225,8 @@ public class ClientReporter {
             }
 
             if (StringUtils.isBlank(newEvent.getServerResource()) ||
-                    EXCLUDE_REPORT_RESOURCES.contains(newEvent.getServerResource())) {
+                    EXCLUDE_REPORT_RESOURCES.contains(newEvent.getServerResource()) ||
+                    (StringUtils.isNotBlank(newEvent.getEnv()) && EXCLUDE_REPORT_ENVS.contains(newEvent.getEnv()))) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Ignore ReportEvent For Resource Excluded, value:{}", newEvent);
                 }
@@ -250,6 +254,8 @@ public class ClientReporter {
         @Override
         public void run() {
             try {
+                final String provider = StringUtils.defaultString(event.getProvider(), YOP_DEFAULT_PROVIDER);
+                final String env = StringUtils.defaultString(event.getEnv(), YOP_DEFAULT_ENV);
                 final String appKey = event.getAppKey();
                 final String serverHost = event.getServerHost();
                 final String serverIp = event.getServerIp();
@@ -268,12 +274,14 @@ public class ClientReporter {
                     failDetail = (YopFailureItem) event.getData();
                 }
 
-                final String reportKey = StringUtils.joinWith("###", appKey, serverHost, serverIp);
+                final String reportKey = StringUtils.joinWith("###", provider, env, appKey, serverHost, serverIp);
                 AtomicReference<YopHostRequestReport> reportReference =
                         YOP_HOST_REQUEST_COLLECTION.computeIfAbsent(reportKey, p -> new AtomicReference<>());
 
                 YopHostRequestReport current;
                 YopHostRequestReport update = new YopHostRequestReport();
+                update.setProvider(provider);
+                update.setEnv(env);
                 YopHostRequestPayload payload = new YopHostRequestPayload();
                 payload.setAppKey(appKey);
                 payload.setServerIp(serverIp);
@@ -331,21 +339,24 @@ public class ClientReporter {
     }
 
     private static void sendHostReport() throws InterruptedException {
-        List<YopReport> reports = Lists.newLinkedList();
-        int packetSize = 0;
+        Map<String, List<YopReport>> sendReports = Maps.newHashMap();
         YopReport report;
-        while ((packetSize++ < MAX_PACKET_SIZE) && null != (report = YOP_HOST_REQUEST_QUEUE.poll())) {
+        while (null != (report = YOP_HOST_REQUEST_QUEUE.poll())) {
+            final String provider = StringUtils.defaultString(report.getProvider(), YOP_DEFAULT_PROVIDER);
+            final String env = StringUtils.defaultString(report.getEnv(), YOP_DEFAULT_ENV);
+            final String providerEnv = StringUtils.joinWith(COMMA, provider, env);
+            final List<YopReport> reports = sendReports.computeIfAbsent(providerEnv, p -> new LinkedList<>());
             reports.add(report);
+            if (reports.size() >= MAX_PACKET_SIZE) {
+                sendWithRetry(provider, env, reports);
+                sendReports.remove(providerEnv);
+            }
         }
-        if (CollectionUtils.isEmpty(reports)) {
-            return;
-        }
-        sendWithRetry(reports);
     }
 
-    private static void sendWithRetry(List<YopReport> reports) {
+    private static void sendWithRetry(String provider, String env, List<YopReport> reports) {
         try {
-            REMOTE_REPORTER.batchReport(reports);
+            REMOTE_REPORTER.batchReport(provider, env, reports);
         } catch (Exception ex) {
             LOGGER.warn("Remote Report Fail, exType:{}, exMsg:{}, But Will Retry.", ex.getClass().getCanonicalName(),
                     StringUtils.defaultString(ex.getMessage()));

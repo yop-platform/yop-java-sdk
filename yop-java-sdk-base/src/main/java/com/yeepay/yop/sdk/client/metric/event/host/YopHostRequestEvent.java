@@ -25,6 +25,16 @@ public class YopHostRequestEvent<T> implements Serializable {
     private static final long serialVersionUID = -1L;
 
     /**
+     * 服务方
+     */
+    private String provider;
+
+    /**
+     * 服务环境
+     */
+    private String env;
+
+    /**
      * 应用
      */
     private String appKey;
@@ -60,6 +70,22 @@ public class YopHostRequestEvent<T> implements Serializable {
     private T data;
 
     private boolean retry;
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
+    public void setEnv(String env) {
+        this.env = env;
+    }
 
     public String getAppKey() {
         return appKey;
