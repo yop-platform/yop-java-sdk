@@ -11,8 +11,10 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+import com.yeepay.yop.sdk.utils.ClientUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -33,9 +35,11 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class YopEncryptorAdaptor implements YopEncryptor {
 
+    private static final String ENCRYPT_OPTIONS_INIT_THREAD_NAME_PREFIX = "yop-encrypt-options-init-task-";
+
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
             3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
-            new ThreadFactoryBuilder().setNameFormat("yop-encryptor-task-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
+            new ThreadFactoryBuilder().setNameFormat(ENCRYPT_OPTIONS_INIT_THREAD_NAME_PREFIX + "%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     @Override
     public Future<EncryptOptions> initOptions(String encryptAlg, List<EncryptOptionsEnhancer> enhancers) {
@@ -91,13 +95,20 @@ public abstract class YopEncryptorAdaptor implements YopEncryptor {
 
         @Override
         public EncryptOptions call() throws Exception {
-            EncryptOptions inited = doInitEncryptOptions(encryptAlg);
-            if (CollectionUtils.isNotEmpty(enhancers)) {
-                for (EncryptOptionsEnhancer enhancer : enhancers) {
-                    inited = enhancer.enhance(inited);
+            try {
+                EncryptOptions inited = doInitEncryptOptions(encryptAlg);
+                if (CollectionUtils.isNotEmpty(enhancers)) {
+                    for (EncryptOptionsEnhancer enhancer : enhancers) {
+                        inited = enhancer.enhance(inited);
+                    }
+                }
+                return inited;
+            } finally {
+                if (StringUtils.startsWith(Thread.currentThread().getName(), ENCRYPT_OPTIONS_INIT_THREAD_NAME_PREFIX)
+                        && StringUtils.isNotBlank(ClientUtils.getCurrentClientId())) {
+                    ClientUtils.removeCurrentClientId();
                 }
             }
-            return inited;
         }
     }
 }

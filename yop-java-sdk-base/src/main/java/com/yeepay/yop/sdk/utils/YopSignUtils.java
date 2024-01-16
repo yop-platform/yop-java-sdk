@@ -59,6 +59,10 @@ public class YopSignUtils {
      * @param serverRoot 平台证书请求端点
      */
     public static void verify(String data, String signature, String appKey, String serverRoot) {
+        verify(data, signature, appKey, serverRoot, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
+    }
+
+    public static void verify(String data, String signature, String appKey, String serverRoot, String provider, String env) {
         validSignature(signature);
         String args[] = StringUtils.split(signature, "$");
         CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
@@ -66,7 +70,7 @@ public class YopSignUtils {
                 ? YopConstants.YOP_SM_PLATFORM_CERT_DEFAULT_SERIAL_NO
                 : YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
         final YopPlatformCredentials yopPlatformCredentials = YopPlatformCredentialsProviderRegistry.getProvider()
-                .getCredentials(appKey, serialNo, serverRoot);
+                .getCredentials(provider, env, appKey, serialNo, serverRoot);
         if (null != yopPlatformCredentials) {
             verify(data, signature, yopPlatformCredentials.getCredential());
         } else {
@@ -116,8 +120,12 @@ public class YopSignUtils {
      * @return
      */
     public static String sign(String data, String certType, String appKey) {
+        return sign(data, certType, appKey, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
+    }
+
+    public static String sign(String data, String certType, String appKey, String provider, String env) {
         YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
-                .getCredentials(appKey, certType);
+                .getCredentials(provider, env, appKey, certType);
         PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
         return sign(data, certType, pkiCredentialsItem.getPrivateKey());
     }

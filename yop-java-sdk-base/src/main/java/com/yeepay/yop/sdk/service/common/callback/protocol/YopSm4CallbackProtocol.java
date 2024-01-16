@@ -6,12 +6,12 @@ package com.yeepay.yop.sdk.service.common.callback.protocol;
 
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -70,7 +70,8 @@ public class YopSm4CallbackProtocol extends AbstractYopCallbackProtocol {
     @Override
     public YopCallback parse() {
         final String encryptAlg = "SM4/GCM/NoPadding";
-        final List<YopCertConfig> isvEncryptKeys = YopCredentialsProviderRegistry.getProvider().getIsvEncryptKey(customerIdentification);
+        final List<YopCertConfig> isvEncryptKeys = YopCredentialsProviderRegistry.getProvider()
+                .getIsvEncryptKey(originRequest.getProvider(), originRequest.getEnv(), customerIdentification);
         if (CollectionUtils.isEmpty(isvEncryptKeys)) {
             throw new YopClientException("no isvEncryptKeys found for appKey:" + customerIdentification);
         }

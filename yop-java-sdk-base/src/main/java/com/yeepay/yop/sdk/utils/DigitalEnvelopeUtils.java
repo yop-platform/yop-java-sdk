@@ -70,7 +70,11 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, PrivateKey privateKey) {
-        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), privateKey);
+        return decrypt(cipherText, privateKey, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
+    }
+
+    public static String decrypt(String cipherText, PrivateKey privateKey, String provider, String env) {
+        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(provider, env), privateKey);
     }
 
     /**
@@ -95,6 +99,9 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, PrivateKey privateKey, String serverRoot) {
+        return decrypt(cipherText, appKey, privateKey, serverRoot, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
+    }
+    public static String decrypt(String cipherText, String appKey, PrivateKey privateKey, String serverRoot, String provider, String env) {
         //分解参数
         String[] args = cipherText.split("\\" + SEPARATOR);
         if (args.length != 4) {
@@ -125,7 +132,7 @@ public class DigitalEnvelopeUtils {
 
         //验证签名
         YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
-                getLatestCredentials(appKey, certType.getValue(), serverRoot);
+                getLatestCredentials(provider, env, appKey, certType.getValue(), serverRoot);
 
         final YopSignProcessor yopSignProcess = YopSignProcessorFactory.getSignProcessor(SIGNER_MAP.get(digestAlg));
         boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, platformCredentials.getCredential());
@@ -144,7 +151,11 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String credentialType) {
-        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(), credentialType);
+        return decrypt(cipherText, credentialType, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
+    }
+
+    public static String decrypt(String cipherText, String credentialType, String provider, String env) {
+        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(provider, env), credentialType);
     }
 
     /**
@@ -156,8 +167,12 @@ public class DigitalEnvelopeUtils {
      * @return 已解密内容
      */
     public static String decrypt(String cipherText, String appKey, String credentialType) {
+        return decrypt(cipherText, appKey, credentialType, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
+    }
+
+    public static String decrypt(String cipherText, String appKey, String credentialType, String provider, String env) {
         YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
-                .getCredentials(appKey, credentialType);
+                .getCredentials(provider, env, appKey, credentialType);
         PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
         return decrypt(cipherText, appKey, pkiCredentialsItem.getPrivateKey());
     }

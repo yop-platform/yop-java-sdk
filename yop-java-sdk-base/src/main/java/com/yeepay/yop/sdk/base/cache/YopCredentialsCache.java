@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.base.cache;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 
 /**
  * title: YOP调用凭证缓存<br>
@@ -58,7 +60,8 @@ public class YopCredentialsCache {
     }
 
     public static String cacheKey(String provider, String env, String appKey) {
-        return provider + ":" + env + ":" + appKey;
+        return StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER) + COLON +
+                StringUtils.defaultString(env, YOP_DEFAULT_ENV) + COLON + appKey;
     }
 
     /**

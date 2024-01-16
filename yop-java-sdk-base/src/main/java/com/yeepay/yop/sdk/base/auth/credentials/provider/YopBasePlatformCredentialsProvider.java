@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 
 /**
@@ -56,7 +57,9 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     }
 
     private String cacheKey(String provider, String env, String appKey, String serialNo) {
-        return provider + ":" + env + ":" + appKey + ":" + serialNo;
+        return StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER) + COLON
+                + StringUtils.defaultString(env, YOP_DEFAULT_ENV) + COLON
+                + appKey + COLON + serialNo;
     }
 
     @Override

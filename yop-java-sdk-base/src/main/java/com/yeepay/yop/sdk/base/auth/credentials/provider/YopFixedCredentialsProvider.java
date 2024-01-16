@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 
 /**
  * title: 固定的应用sdk配置提供方基类<br>
@@ -36,7 +37,8 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
 
     @Override
     public final YopCredentials<?> getCredentials(String provider, String env, String appKey, String credentialType) {
-        String key = provider + ":" + env + ":" + appKey + ":" + credentialType;
+        String key = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER) + COLON +
+                StringUtils.defaultString(env, YOP_DEFAULT_ENV) + COLON + appKey + COLON + credentialType;
         return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(provider, env, appKey), credentialType));
     }
 
@@ -53,7 +55,7 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
     private YopAppConfig getAppConfig(String provider, String env, String appKey) {
         final String theProvider = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER);
         final String theEnv = StringUtils.defaultString(env, YOP_DEFAULT_ENV);
-        final String theAppKey = useDefaultIfBlank(provider, env, appKey);
+        final String theAppKey = useDefaultIfBlank(theProvider, theEnv, appKey);
         return appConfigs.computeIfAbsent(theAppKey, k -> loadAppConfig(theProvider, theEnv, theAppKey));
     }
 

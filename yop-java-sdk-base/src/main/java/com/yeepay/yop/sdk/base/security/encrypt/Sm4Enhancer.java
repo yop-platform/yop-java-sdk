@@ -4,11 +4,12 @@
  */
 package com.yeepay.yop.sdk.base.security.encrypt;
 
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
+import com.yeepay.yop.sdk.utils.ClientUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -28,9 +29,19 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_ENCRYPT_OPTIONS_YOP_SM4_MAIN_C
  * @since 2022/4/27
  */
 public class Sm4Enhancer extends AbstractEncryptOptionsEnhancer {
+    private final String provider;
+    private final String env;
     private final String appKey;
 
     public Sm4Enhancer(String appKey) {
+        this.provider = YopConstants.YOP_DEFAULT_PROVIDER;
+        this.env = YopConstants.YOP_DEFAULT_ENV;
+        this.appKey = appKey;
+    }
+
+    public Sm4Enhancer(String provider, String env, String appKey) {
+        this.provider = provider;
+        this.env = env;
         this.appKey = appKey;
     }
 
@@ -39,7 +50,8 @@ public class Sm4Enhancer extends AbstractEncryptOptionsEnhancer {
         if (!checkForEnhance(source)) {
             return source;
         }
-        List<YopCertConfig> mainKeys = YopCredentialsProviderRegistry.getProvider().getIsvEncryptKey(appKey);
+        List<YopCertConfig> mainKeys = ClientUtils.getCurrentYopCredentialsProvider()
+                .getIsvEncryptKey(provider, env, appKey);
         if (CollectionUtils.isEmpty(mainKeys)) {
             throw new YopClientException("ConfigProblem, IsvEncryptKey NotFound, appKey:" + appKey);
         }

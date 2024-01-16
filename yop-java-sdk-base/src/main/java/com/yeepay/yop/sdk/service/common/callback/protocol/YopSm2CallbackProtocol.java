@@ -139,13 +139,14 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         String[] args = sign.split("\\$");
         String plainText = preparePlainText();
         final YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
-                getCredentials(appKey, platformSerialNo, serverRoot);
+                getCredentials(originRequest.getProvider(), originRequest.getEnv(), appKey, platformSerialNo, serverRoot);
         YopSignProcessorFactory.getSignProcessor(certType.getValue()).verify(plainText, args[0], platformCredentials.getCredential());
     }
 
     private String decryptBizContent() {
         // 解析加密密钥&加密参数
-        YopCredentials<?> yopCredentials = YopCredentialsProviderRegistry.getProvider().getCredentials(appKey, certType.getValue());
+        YopCredentials<?> yopCredentials = YopCredentialsProviderRegistry.getProvider()
+                .getCredentials(originRequest.getProvider(), originRequest.getEnv(), appKey, certType.getValue());
         final EncryptOptions templateOptions = new EncryptOptions();
         templateOptions.setCredentials(new YopSymmetricCredentials(appKey, ""));
         templateOptions.setCredentialsAlg(certType.getValue());

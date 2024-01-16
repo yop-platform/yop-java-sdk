@@ -1,11 +1,13 @@
 package com.yeepay.yop.sdk.client.router;
 
+import com.yeepay.yop.sdk.YopConstants;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static com.yeepay.yop.sdk.YopConstants.DEFAULT_PREFERRED_SERVER_ROOT;
 
@@ -23,6 +25,10 @@ public class ServerRootSpace implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    private final String provider;
+
+    private final String env;
+
     private final URI serverRoot;
 
     private final URI yosServerRoot;
@@ -34,6 +40,8 @@ public class ServerRootSpace implements Serializable {
     private final URI sandboxServerRoot;
 
     public ServerRootSpace(URI serverRoot, URI yosServerRoot, URI sandboxServerRoot) {
+        this.provider = YopConstants.YOP_DEFAULT_PROVIDER;
+        this.env = YopConstants.YOP_DEFAULT_ENV;
         this.serverRoot = serverRoot;
         this.yosServerRoot = yosServerRoot;
         this.preferredEndPoint = DEFAULT_PREFERRED_SERVER_ROOT;
@@ -41,12 +49,37 @@ public class ServerRootSpace implements Serializable {
         this.sandboxServerRoot = sandboxServerRoot;
     }
 
-    public ServerRootSpace(URI serverRoot, URI yosServerRoot, List<URI> preferredEndPoint, List<URI> preferredYosEndPoint, URI sandboxServerRoot) {
+    public ServerRootSpace(URI serverRoot, URI yosServerRoot,
+                           List<URI> preferredEndPoint, List<URI> preferredYosEndPoint,
+                           URI sandboxServerRoot) {
+        this.provider = YopConstants.YOP_DEFAULT_PROVIDER;
+        this.env = YopConstants.YOP_DEFAULT_ENV;
         this.serverRoot = serverRoot;
         this.yosServerRoot = yosServerRoot;
         this.preferredEndPoint = CollectionUtils.isEmpty(preferredEndPoint) ? DEFAULT_PREFERRED_SERVER_ROOT : preferredEndPoint;
         this.preferredYosEndPoint = preferredYosEndPoint;
         this.sandboxServerRoot = sandboxServerRoot;
+    }
+
+    public ServerRootSpace(String provider, String env,
+                           URI serverRoot, URI yosServerRoot,
+                           List<URI> preferredEndPoint, List<URI> preferredYosEndPoint,
+                           URI sandboxServerRoot) {
+        this.provider = provider;
+        this.env = env;
+        this.serverRoot = serverRoot;
+        this.yosServerRoot = yosServerRoot;
+        this.preferredEndPoint = CollectionUtils.isEmpty(preferredEndPoint) ? DEFAULT_PREFERRED_SERVER_ROOT : preferredEndPoint;
+        this.preferredYosEndPoint = preferredYosEndPoint;
+        this.sandboxServerRoot = sandboxServerRoot;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getEnv() {
+        return env;
     }
 
     public URI getServerRoot() {
@@ -67,5 +100,26 @@ public class ServerRootSpace implements Serializable {
 
     public URI getSandboxServerRoot() {
         return sandboxServerRoot;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.provider, this.env, this.serverRoot,
+                this.yosServerRoot, this.sandboxServerRoot, this.preferredEndPoint, this.preferredYosEndPoint);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ServerRootSpace) {
+            final ServerRootSpace that = (ServerRootSpace) obj;
+            return Objects.equals(this.provider, that.provider) &&
+                    Objects.equals(this.env, that.env) &&
+                    Objects.equals(this.serverRoot, that.serverRoot) &&
+                    Objects.equals(this.yosServerRoot, that.yosServerRoot) &&
+                    Objects.equals(this.sandboxServerRoot, that.sandboxServerRoot) &&
+                    Objects.equals(this.preferredEndPoint, that.preferredEndPoint) &&
+                    Objects.equals(this.preferredYosEndPoint, that.preferredYosEndPoint);
+        }
+        return false;
     }
 }

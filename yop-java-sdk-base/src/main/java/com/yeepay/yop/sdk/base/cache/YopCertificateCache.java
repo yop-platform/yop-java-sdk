@@ -99,7 +99,8 @@ public class YopCertificateCache {
     }
 
     private static String localCertKey(String provider, String env, String appKey, String serialNo) {
-        return provider + COMMA + env + COMMA + appKey + COMMA + serialNo;
+        return StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER) + COMMA
+                + StringUtils.defaultString(env, YOP_DEFAULT_ENV) + COMMA + appKey + COMMA + serialNo;
     }
 
     /**
@@ -296,7 +297,7 @@ public class YopCertificateCache {
                 request.getRequestConfig().setServerRoot(serverRoot);
             }
             request.addParameter(CERT_DOWNLOAD_API_PARAM_CERT_TYPE, CertTypeEnum.SM2.getValue());
-            YopResponse response = ClientUtils.getCurrentBasicClient().request(request);
+            YopResponse response = ClientUtils.getCurrentBasicClient(provider, env).request(request);
 
             // 响应解析
             List<YopPlatformPlainCert> platformCerts = parseYopResponse(response);

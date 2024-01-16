@@ -1,14 +1,19 @@
 package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.ServiceLoader;
+
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 
 /**
  * title: YopHttpClient工厂<br>
@@ -22,7 +27,7 @@ import java.util.ServiceLoader;
  */
 public class YopHttpClientFactory {
 
-    private static volatile YopHttpClient defaultClient;
+    private static final Map<String, YopHttpClient> DEFAULT_CLIENT_MAP = Maps.newConcurrentMap();
     private static final Map<String, YopHttpClientProvider> httpClientProviderMap;
 
     static {
@@ -36,17 +41,21 @@ public class YopHttpClientFactory {
         }
     }
 
+    @Deprecated
     public static YopHttpClient getDefaultClient() {
-        if (defaultClient == null) {
-            synchronized (YopHttpClientFactory.class) {
-                if (defaultClient == null) {
-                    YopSdkConfigProvider yopSdkConfigProvider = YopSdkConfigProviderRegistry.getProvider();
-                    ClientConfiguration clientConfiguration = ClientConfigurationSupport.getClientConfiguration(yopSdkConfigProvider.getConfig());
-                    defaultClient = getClient(clientConfiguration);
-                }
-            }
-        }
-        return defaultClient;
+        return getDefaultClient(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, null);
+    }
+
+    public static YopHttpClient getDefaultClient(String provider, String env, YopSdkConfigProvider yopSdkConfigProvider) {
+        final String clientKey = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER)
+                + COLON + StringUtils.defaultString(env, YOP_DEFAULT_ENV);
+        return DEFAULT_CLIENT_MAP.computeIfAbsent(clientKey, p -> {
+            final YopSdkConfigProvider sdkConfigProvider = null == yopSdkConfigProvider ?
+                    YopSdkConfigProviderRegistry.getProvider() : yopSdkConfigProvider;
+            ClientConfiguration clientConfiguration = ClientConfigurationSupport
+                    .getClientConfiguration(sdkConfigProvider.getConfig(provider, env));
+            return getClient(clientConfiguration);
+        });
     }
 
     public static YopHttpClient getClient(ClientConfiguration clientConfig) {

@@ -9,6 +9,7 @@ import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
+import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
@@ -19,6 +20,7 @@ import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
 import com.yeepay.yop.sdk.client.router.YopRouter;
+import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.exception.*;
 import com.yeepay.yop.sdk.http.ExecutionContext;
@@ -72,6 +74,10 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final YopCredentialsProvider yopCredentialsProvider;
 
+    private final YopSdkConfigProvider yopSdkConfigProvider;
+
+    private final YopPlatformCredentialsProvider platformCredentialsProvider;
+
     private final AuthorizationReqRegistry authorizationReqRegistry;
 
     private final ClientConfiguration clientConfiguration;
@@ -90,9 +96,13 @@ public class ClientHandlerImpl implements ClientHandler {
 
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
+        this.provider = handlerParams.getClientParams().getProvider();
+        this.env = handlerParams.getClientParams().getEnv();
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
+        this.yopSdkConfigProvider = handlerParams.getClientParams().getYopSdkConfigProvider();
+        this.platformCredentialsProvider = handlerParams.getClientParams().getPlatformCredentialsProvider();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
-        ServerRootSpace serverRootSpace = new ServerRootSpace(handlerParams.getClientParams().getEndPoint(),
+        ServerRootSpace serverRootSpace = new ServerRootSpace(provider, env, handlerParams.getClientParams().getEndPoint(),
                 handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
                 handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
         this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
@@ -106,14 +116,12 @@ public class ClientHandlerImpl implements ClientHandler {
         } else {
             sdkSource = YopConstants.YOP_SDK_SOURCE_BIZ;
         }
-        this.provider = handlerParams.getClientParams().getProvider();
-        this.env = handlerParams.getClientParams().getEnv();
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
         YopHttpClient yopHttpClient;
         if (null == handlerParams) {
-            yopHttpClient = YopHttpClientFactory.getDefaultClient();
+            yopHttpClient = YopHttpClientFactory.getDefaultClient(provider, env, this.yopSdkConfigProvider);
         } else {
             yopHttpClient = YopHttpClientFactory.getClient(handlerParams.getClientParams().getClientConfiguration());
         }
@@ -326,7 +334,7 @@ public class ClientHandlerImpl implements ClientHandler {
         }
 
         // 根据商户配置的密钥识别可用的安全需求
-        List<CertTypeEnum> availableCerts = checkAvailableCerts(customAppKey);
+        List<CertTypeEnum> availableCerts = checkAvailableCerts(customAppKey, provider, env);
         List<AuthorizationReq> authReqsForApi = checkAuthReqsByApi(input.getOperationId());
         return computeSecurityReq(availableCerts, authReqsForApi);
     }
@@ -357,10 +365,11 @@ public class ClientHandlerImpl implements ClientHandler {
         return authorizationReq;
     }
 
-    private List<CertTypeEnum> checkAvailableCerts(String appKey) {
-        List<CertTypeEnum> configPrivateCerts = yopCredentialsProvider.getSupportCertTypes(appKey);
+    private List<CertTypeEnum> checkAvailableCerts(String appKey, String provider, String env) {
+        List<CertTypeEnum> configPrivateCerts = yopCredentialsProvider.getSupportCertTypes(provider, env, appKey);
         if (CollectionUtils.isEmpty(configPrivateCerts)) {
-            throw new YopClientException("can not find private key for appKey:" + appKey);
+            throw new YopClientException("can not find private key for provider: "
+                    + provider + "env:" + env + "appKey:" + appKey);
         }
         return configPrivateCerts;
     }

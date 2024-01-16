@@ -141,7 +141,7 @@ public interface YopConstants {
     String DEFAULT_SNADBOX_ENV = "sandbox";
 
     @Deprecated
-    String DEFAULT_PROVIDER = "yeepay";
+    String DEFAULT_YEEPAY_PROVIDER = "yeepay";
 
     String ENV_PROD = "prod";
     String ENV_SANDBOX = "sandbox";

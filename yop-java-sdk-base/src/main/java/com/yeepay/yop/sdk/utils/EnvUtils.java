@@ -30,9 +30,8 @@ public final class EnvUtils {
         return ENV_PROD.equals(currentEnv());
     }
 
-    public static boolean isSandBox() {
-        return ENV_SANDBOX.equals(currentEnv())
-                || ENV_SANDBOX.equals(System.getProperty(MODE_PROP));
+    public static boolean isSandBoxEnv(String env) {
+        return ENV_SANDBOX.equals(env);
     }
 
     @Deprecated

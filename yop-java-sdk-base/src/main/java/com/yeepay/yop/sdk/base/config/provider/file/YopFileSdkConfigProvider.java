@@ -96,6 +96,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
             env = currentEnv;
             configDir += "/" + currentEnv;
         } else if (StringUtils.isNotBlank(env)) {
+            // 兼容旧版env指定方式
             logger.info("指定了-Dyop.sdk.config.env，值为：{}", env);
             configDir += "/" + env;
         }
@@ -125,7 +126,8 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         }
 
         // 全局default配置
-        if (!StringUtils.equals(DEFAULT_CONFIG_FILE, configFile)) {
+        if (!StringUtils.equals(DEFAULT_CONFIG_FILE, configFile)
+                && !StringUtils.equals(DEFAULT_CONFIG_FILE, envConfigDefaultFile)) {
             YopFileSdkConfig globalDefaultConfig = loadSdkConfigFile(DEFAULT_CONFIG_FILE);
             customSdkConfig = fillNullConfig(globalDefaultConfig, customSdkConfig);
         }

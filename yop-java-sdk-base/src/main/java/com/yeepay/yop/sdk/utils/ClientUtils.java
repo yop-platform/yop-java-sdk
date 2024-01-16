@@ -14,15 +14,17 @@ import com.yeepay.yop.sdk.client.ClientParams;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
-import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
-import static com.yeepay.yop.sdk.constants.CharacterConstants.HASH;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 
 /**
  * title: 客户端缓存<br>
@@ -39,7 +41,7 @@ public class ClientUtils {
     private static final String BASIC_CLIENT_PREFIX = YopClientBuilder.class.getCanonicalName();
 
     // 当前线程上下文中的clientId
-    private static InheritableThreadLocal<String> CURRENT_CLIENT_ID = new InheritableThreadLocal<>();
+    private static ThreadLocal<String> CURRENT_CLIENT_ID = new ThreadLocal<>();
 
     // 各个环境的不同配置的基础Client列表<{provider}####{env}, List<{clientId}>>
     private static final Map<String, List<String>> BASIC_CLIENT_MAP = Maps.newConcurrentMap();
@@ -62,6 +64,7 @@ public class ClientUtils {
             if (!isBasicClient(p)) {
                 final String basicClientId = toBasicClientId(p);
                 CLIENT_INST_MAP.computeIfAbsent(basicClientId, h -> YopClientBuilder.builder()
+                        .withClientId(basicClientId)
                         .withProvider(clientParams.getProvider())
                         .withEnv(clientParams.getEnv())
                         .withCredentialsProvider(clientParams.getCredentialsProvider())
@@ -74,7 +77,6 @@ public class ClientUtils {
                         .withPreferredYosEndPoint(clientParams.getPreferredYosEndPoint())
                         .withSandboxEndPoint(null != clientParams.getSandboxEndPoint() ? clientParams.getSandboxEndPoint().toString() : null)
                         .build());
-
             }
             return instBuilder.build(clientParams);
         });
@@ -89,26 +91,25 @@ public class ClientUtils {
     }
 
     public static String toBasicClientId(String clientId) {
-        return BASIC_CLIENT_PREFIX + HASH + clientId.substring(0, clientId.indexOf(HASH));
+        return BASIC_CLIENT_PREFIX + COLON + clientId.substring(clientId.indexOf(COLON) + 1);
     }
 
     public static String computeClientIdSuffix(ClientParams clientParams) {
-        // TODO 确认后缀参数
-        return StringUtils.defaultString(clientParams.getProvider(), EMPTY) +
-                HASH + StringUtils.defaultString(clientParams.getEnv(), EMPTY) +
-                HASH + clientParams.getEndPoint() +
-                HASH + clientParams.getYosEndPoint() +
-                HASH + clientParams.getPreferredEndPoint() +
-                HASH + clientParams.getPreferredYosEndPoint() +
-                HASH + clientParams.getSandboxEndPoint() +
-                HASH + clientParams.getClientId() +
-                HASH + (null == clientParams.getCredentialsProvider() ? EMPTY : clientParams.getCredentialsProvider().hashCode()) +
-                HASH + (null == clientParams.getYopSdkConfigProvider() ? EMPTY : clientParams.getYopSdkConfigProvider().hashCode()) +
-                HASH + (null == clientParams.getPlatformCredentialsProvider() ? EMPTY : clientParams.getPlatformCredentialsProvider().hashCode());
+        // TODO 优化，可以根据配置参数来避免用户重复构造client（但要考虑到用户根据业务拆分client的需要）
+        return UUID.randomUUID().toString();
     }
 
     public static void cacheClientConfig(String clientId, ClientParams clientParams) {
         CLIENT_CONFIG_MAP.put(clientId, clientParams);
+        if (isBasicClient(clientId)) {
+            BASIC_CLIENT_MAP.computeIfAbsent(getClientEnvCacheKey(clientParams.getProvider(), clientParams.getEnv()),
+                    p -> new LinkedList<>()).add(clientId);
+        }
+    }
+
+    private static String getClientEnvCacheKey(String provider, String env) {
+        return StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER)
+                + COLON + StringUtils.defaultString(env, YOP_DEFAULT_ENV);
     }
 
     public static String getCurrentClientId() {
@@ -119,12 +120,30 @@ public class ClientUtils {
         return getCurrentBasicClient(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV);
     }
 
+    /**
+     * 获取可用的基础SDK调用client
+     *
+     * @param provider 服务方
+     * @param env 环境
+     * @return YopClient
+     */
     public static YopClient getCurrentBasicClient(String provider, String env) {
-        final String currentClientId = getCurrentClientId();
+        YopClient clientInst = null;
+        String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
-            return getClientInst(toBasicClientId(currentClientId));
+            clientInst = getClientInst(toBasicClientId(currentClientId));
         }
-        return YopClientBuilder.builder().withProvider(provider).withEnv(env).build();
+        if (null == clientInst) {
+            final String clientEnvCacheKey = getClientEnvCacheKey(provider, env);
+            final List<String> clientIds = BASIC_CLIENT_MAP.get(clientEnvCacheKey);
+            if (CollectionUtils.isNotEmpty(clientIds)) {
+                clientInst = getClientInst(clientIds.get(0));
+            }
+        }
+        if (null == clientInst) {
+            clientInst = YopClientBuilder.builder().withProvider(provider).withEnv(env).build();
+        }
+        return clientInst;
     }
 
     public static void setCurrentClientId(String clientId) {

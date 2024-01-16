@@ -21,8 +21,7 @@ import java.util.stream.Collectors;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
-import static com.yeepay.yop.sdk.constants.CharacterConstants.HASH;
-import static com.yeepay.yop.sdk.utils.ClientUtils.cacheClientConfig;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.utils.ClientUtils.computeClientIdSuffix;
 
 /**
@@ -36,6 +35,8 @@ import static com.yeepay.yop.sdk.utils.ClientUtils.computeClientIdSuffix;
  * @since 17/12/1 18:23
  */
 public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServiceClientBuilder, ServiceInterfaceToBuild> {
+
+    private String clientId;
 
     private String provider;
 
@@ -95,12 +96,14 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                 .withSandboxEndPoint(sandboxEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT)) : URI.create(sandboxEndPoint))
                 .withAuthorizationReqRegistry(authorizationReqRegistry())
                 .build();
-        final String clientIdSuffix = computeClientIdSuffix(clientParams);
-        final SubClass subclass = getSubclass();
-        final String clientBuilderClass = subclass.getClass().getCanonicalName();
-        final String clientId = clientBuilderClass + HASH + clientIdSuffix;
-        clientParams.setClientId(clientId);
-        cacheClientConfig(clientId, clientParams);
+        if (StringUtils.isBlank(this.clientId)) {
+            final String clientIdSuffix = computeClientIdSuffix(clientParams);
+            final SubClass subclass = getSubclass();
+            final String clientBuilderClass = subclass.getClass().getCanonicalName();
+            this.clientId = clientBuilderClass + COLON + clientIdSuffix;
+        }
+        clientParams.setClientId(this.clientId);
+        ClientUtils.cacheClientConfig(this.clientId, clientParams);
         return ClientUtils.getOrBuildClientInst(clientParams, AbstractServiceClientBuilder.this::build);
     }
 
@@ -111,6 +114,11 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     public SubClass withCredentialsProvider(YopCredentialsProvider credentialsProvider) {
         this.credentialsProvider = credentialsProvider;
+        return getSubclass();
+    }
+
+    public SubClass withClientId(String clientId) {
+        this.clientId = clientId;
         return getSubclass();
     }
 

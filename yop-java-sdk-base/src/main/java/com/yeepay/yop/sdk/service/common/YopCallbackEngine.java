@@ -82,7 +82,7 @@ public class YopCallbackEngine {
             YopSignerFactory.getSigner(authorizationReq.getSignerType()).sign(marshalled, credential, authorizationReq.getSignOptions());
         }
 
-        final YopCallbackRequest callbackRequest = YopCallbackRequest.fromYopRequest(marshalled);
+        final YopCallbackRequest callbackRequest = YopCallbackRequest.fromYopRequest(marshalled).setProvider(provider).setEnv(env);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("YopCallbackRequest build:{}", callbackRequest);
         }
@@ -133,11 +133,12 @@ public class YopCallbackEngine {
         }
 
         // 签名
-        signIfNecessary(result, protocol, callback);
+        signIfNecessary(request, result, protocol, callback);
         return result;
     }
 
-    private static void signIfNecessary(YopCallbackResponse response, YopCallbackProtocol protocol, YopCallback callback) {
+    private static void signIfNecessary(YopCallbackRequest request, YopCallbackResponse response,
+                                        YopCallbackProtocol protocol, YopCallback callback) {
         try {
             if (!(protocol instanceof YopSm2CallbackProtocol)) {
                 return;
@@ -145,7 +146,7 @@ public class YopCallbackEngine {
             response.setContentType(YopContentType.JSON);
             HashMap<String, String> headers = Maps.newHashMap();
             YopCredentials<?> credentials = YopCredentialsProviderRegistry.getProvider()
-                    .getCredentials(callback.getAppKey(), CertTypeEnum.SM2.name());
+                    .getCredentials(request.getProvider(), request.getEnv(), callback.getAppKey(), CertTypeEnum.SM2.name());
             // 与网关保持一致
             final SignOptions signOptions = AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3")
                     .getSignOptions();
