@@ -59,7 +59,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
 
     @Override
     protected YopSdkConfig loadSdkConfig(String provider, String env) {
-        return super.loadSdkConfig(provider, env);
+        return convertYopSdkConfig(loadSdkConfig(provider, env, ""));
     }
 
     public YopFileSdkConfig loadSdkConfig(String appKey) {

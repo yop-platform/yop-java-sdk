@@ -85,6 +85,8 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                     yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
         }
         ClientParams clientParams = ClientParams.Builder.builder()
+                .withProvider(this.provider)
+                .withEnv(this.env)
                 .withCredentialsProvider(credentialsProvider)
                 .withYopSdkConfigProvider(yopSdkConfigProvider)
                 .withPlatformCredentialsProvider(platformCredentialsProvider)

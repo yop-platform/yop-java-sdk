@@ -1,6 +1,10 @@
 {
   "server_root": "https://openapi.yeepay.com/yop-center",
   "yos_server_root": "https://yos.yeepay.com/yop-center",
+  "preferred_server_roots":[
+    "https://openapi-a.yeepay.com/yop-center",
+    "https://openapi-h.yeepay.com/yop-center"
+  ],
   "yop_cert_store": {
     "enable": true,
     "lazy": false

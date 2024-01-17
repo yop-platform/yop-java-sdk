@@ -368,8 +368,8 @@ public class ClientHandlerImpl implements ClientHandler {
     private List<CertTypeEnum> checkAvailableCerts(String appKey, String provider, String env) {
         List<CertTypeEnum> configPrivateCerts = yopCredentialsProvider.getSupportCertTypes(provider, env, appKey);
         if (CollectionUtils.isEmpty(configPrivateCerts)) {
-            throw new YopClientException("can not find private key for provider: "
-                    + provider + "env:" + env + "appKey:" + appKey);
+            throw new YopClientException("can not find private key for provider:"
+                    + provider + ",env:" + env + ",appKey:" + appKey);
         }
         return configPrivateCerts;
     }

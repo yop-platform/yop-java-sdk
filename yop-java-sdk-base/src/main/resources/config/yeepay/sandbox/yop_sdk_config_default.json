@@ -1,0 +1,7 @@
+{
+  "server_root": "https://sandbox.yeepay.com/yop-center",
+  "preferred_server_roots":[
+    "https://sandbox.yeepay.com/yop-center"
+  ],
+  "yos_server_root": "https://sandbox.yeepay.com/yop-center"
+}

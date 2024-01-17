@@ -1,0 +1,7 @@
+{
+  "server_root": "http://ycetest.yeepay.com:30228/yop-center",
+  "preferred_server_roots":[
+    "http://ycetest.yeepay.com:30228/yop-center"
+  ],
+  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center"
+}

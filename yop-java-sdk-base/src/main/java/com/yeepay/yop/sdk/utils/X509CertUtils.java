@@ -153,7 +153,7 @@ public class X509CertUtils {
             // 兼容yeepay特有的旧逻辑，设置env和mode方式
             if (EnvUtils.isSandboxApp(appKey) || EnvUtils.isSandBoxMode() ||
                     (null != customEnvProperty && !EnvUtils.isProd())) {
-                return certDir + "/" + DEFAULT_YEEPAY_PROVIDER + "/" + ENV_QA;
+                return certDir + "/" + PROVIDER_YEEPAY + "/" + ENV_QA;
             }
         }
         return certDir;
