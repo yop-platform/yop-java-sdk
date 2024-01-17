@@ -220,7 +220,7 @@ public class ClientHandlerImpl implements ClientHandler {
         Throwable throwable = null;
         try {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Begin HttpInvoke, value:{}", serverRoot);
+                LOGGER.debug("Begin HttpInvoke, server:{}, resource:{}", serverRoot, request.getResourcePath());
             }
             return client.execute(request, request.getOriginalRequestObject().getRequestConfig(),
                     invoker.getContext(), invoker.getInput().getResponseHandler());
@@ -241,8 +241,8 @@ public class ClientHandlerImpl implements ClientHandler {
                 result = "fail caused by " + analyzeResult.getExDetail();
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Finish HttpInvoke, value:{}, result:{}, elapsed:{}.",
-                        serverRoot, result, System.currentTimeMillis() - start);
+                LOGGER.debug("Finish HttpInvoke, server:{}, resource:{}, result:{}, elapsed:{}.",
+                        serverRoot, request.getResourcePath(), result, System.currentTimeMillis() - start);
             }
         }
     }

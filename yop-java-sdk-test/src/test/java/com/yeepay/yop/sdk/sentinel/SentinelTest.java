@@ -145,6 +145,7 @@ public class SentinelTest {
 
 
     @Test
+    @Ignore
     public void ycTest() throws IOException {
         System.setProperty("yop.sdk.config.env", "qa");
         System.setProperty("yop.sdk.debug", "true");

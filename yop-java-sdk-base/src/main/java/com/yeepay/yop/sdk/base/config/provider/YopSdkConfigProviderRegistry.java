@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.base.config.provider;
 
-import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
+import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
 
 /**
@@ -16,7 +16,7 @@ import com.yeepay.yop.sdk.exception.YopClientException;
  */
 public class YopSdkConfigProviderRegistry {
 
-    private static final YopSdkConfigProvider DEFAULT_PROVIDER = new YopFileSdkConfigProvider();
+    private static final YopSdkConfigProvider DEFAULT_PROVIDER = YopFileSdkConfigProvider.instance();
 
     private static volatile YopSdkConfigProvider customProvider;
 

@@ -38,6 +38,8 @@ import static com.yeepay.yop.sdk.constants.CharacterConstants.HASH;
  */
 public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
 
+    private static final YopFileSdkConfigProvider INSTANCE = new YopFileSdkConfigProvider();
+
     private static final Logger LOGGER = LoggerFactory.getLogger(YopFileSdkConfigProvider.class);
 
     public static final String SDK_CONFIG_ENV_PROPERTY_KEY = "yop.sdk.config.env";
@@ -141,8 +143,8 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
 
     private String getEnvConfigDefaultFile(String provider, String env) {
         return SDK_CONFIG_DIR + "/"
-                + (StringUtils.isNotBlank(provider) ? "/" + provider : "")
-                + (StringUtils.isNotBlank(env) ? "/" + env : "")
+                + (StringUtils.isNotBlank(provider) ? (provider + "/") : "")
+                + (StringUtils.isNotBlank(env) ? (env + "/") : "")
                 + DEFAULT_CONFIG_FILE_NAME;
     }
 
@@ -244,4 +246,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         sdkConfigs.remove(key);
     }
 
+    public static YopFileSdkConfigProvider instance() {
+        return INSTANCE;
+    }
 }

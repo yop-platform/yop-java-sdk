@@ -173,6 +173,7 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
                 certMap.put(serialNo, cert);
             }
             certMap.put(realSerialNo, cert);
+            return certMap;
         } catch (Exception e) {
             LOGGER.error("error when load sm2 cert from local file, serialNo:" + serialNo + ", ex:", e);
         }

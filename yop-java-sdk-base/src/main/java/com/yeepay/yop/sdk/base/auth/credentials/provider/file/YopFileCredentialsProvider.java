@@ -30,7 +30,7 @@ import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
  */
 public class YopFileCredentialsProvider extends YopFixedCredentialsProvider {
 
-    private static final YopFileSdkConfigProvider yopFileSdkConfigProvider = new YopFileSdkConfigProvider();
+    private static final YopFileSdkConfigProvider yopFileSdkConfigProvider = YopFileSdkConfigProvider.instance();
 
     @Override
     protected YopAppConfig loadAppConfig(String appKey) {
