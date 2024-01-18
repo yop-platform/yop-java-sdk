@@ -3,5 +3,12 @@
   "preferred_server_roots":[
     "http://ycetest.yeepay.com:30228/yop-center"
   ],
-  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center"
+  "yos_server_root": "http://ycetest.yeepay.com:30203/yop-center",
+  "yop_public_key": [
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "config/certs/yeepay/qa/yop_platform_rsa_cert_rsa.cer"
+    }
+  ]
 }

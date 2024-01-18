@@ -227,6 +227,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         yopSdkConfig.setPreferredServerRoots(yopFileSdkConfig.getPreferredServerRoots());
         yopSdkConfig.setPreferredYosServerRoots(yopFileSdkConfig.getPreferredYosServerRoots());
         yopSdkConfig.setSandboxServerRoot(yopFileSdkConfig.getSandboxServerRoot());
+        yopSdkConfig.setYopPublicKey(yopFileSdkConfig.getYopPublicKey());
         yopSdkConfig.setTrustAllCerts(yopFileSdkConfig.getTrustAllCerts());
         yopSdkConfig.setProxy(yopFileSdkConfig.getProxy());
         yopSdkConfig.setRegion(yopFileSdkConfig.getRegion());

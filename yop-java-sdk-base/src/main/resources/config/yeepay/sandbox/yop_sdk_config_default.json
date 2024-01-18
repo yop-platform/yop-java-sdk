@@ -3,5 +3,12 @@
   "preferred_server_roots":[
     "https://sandbox.yeepay.com/yop-center"
   ],
-  "yos_server_root": "https://sandbox.yeepay.com/yop-center"
+  "yos_server_root": "https://sandbox.yeepay.com/yop-center",
+  "yop_public_key": [
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "config/certs/yeepay/sandbox/yop_platform_rsa_cert_rsa.cer"
+    }
+  ]
 }

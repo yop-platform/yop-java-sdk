@@ -26,33 +26,31 @@ import org.junit.Test;
 public class YopPlatformCredentialsProviderTest {
 
     @Test
-    @Ignore
     public void testPro() {
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
-        final CredentialsItem rsaPlatformCredentials = provider.getCredentials("", YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
+        final CredentialsItem rsaPlatformCredentials = provider.getCredentials(YopConstants.PROVIDER_YEEPAY, YopConstants.ENV_PROD, "", YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
         Assert.assertNotNull(rsaPlatformCredentials);
         Assert.assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        final CredentialsItem sm2PlatformCredentials = provider.getCredentials("", "289782695477").getCredential();
+        final CredentialsItem sm2PlatformCredentials = provider.getCredentials(YopConstants.PROVIDER_YEEPAY, YopConstants.ENV_PROD, "", "4632476314").getCredential();
         Assert.assertNotNull(sm2PlatformCredentials);
         Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }
 
     @Test
     public void testQa() {
-        System.setProperty("yop.sdk.config.env", "qa");
-        System.setProperty("yop.sdk.config.file", "yop_sdk_config_test_sm.json");
+        System.setProperty("yop.sdk.config.file", "qa/yop_sdk_config_test_sm.json");
         final YopPlatformCredentialsProvider provider = YopPlatformCredentialsProviderRegistry.getProvider();
-        final CredentialsItem rsaPlatformCredentials = provider.getCredentials("",
+        final CredentialsItem rsaPlatformCredentials = provider.getCredentials(YopConstants.PROVIDER_YEEPAY, YopConstants.ENV_QA, "",
                 YopConstants.YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO).getCredential();
         Assert.assertNotNull(rsaPlatformCredentials);
         Assert.assertEquals(CertTypeEnum.RSA2048, rsaPlatformCredentials.getCertType());
 
-        CredentialsItem sm2PlatformCredentials = provider.getCredentials("", "4028129061").getCredential();
+        CredentialsItem sm2PlatformCredentials = provider.getCredentials(YopConstants.PROVIDER_YEEPAY, YopConstants.ENV_QA, "", "4028129061").getCredential();
         Assert.assertNotNull(sm2PlatformCredentials);
         Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
 
-        sm2PlatformCredentials = provider.getCredentials("", "4052988765").getCredential();
+        sm2PlatformCredentials = provider.getCredentials(YopConstants.PROVIDER_YEEPAY, YopConstants.ENV_QA, "", "4052988765").getCredential();
         Assert.assertNotNull(sm2PlatformCredentials);
         Assert.assertEquals(CertTypeEnum.SM2, sm2PlatformCredentials.getCertType());
     }

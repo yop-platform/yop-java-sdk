@@ -27,7 +27,7 @@ public class FileUtilsTest {
     public void testLoadClassPathResource() {
         InputStream resourceAsStream = null;
         try {
-            resourceAsStream = FileUtils.getResourceAsStream("config/certs/qa_cfca_root.pem");
+            resourceAsStream = FileUtils.getResourceAsStream("config/certs/yeepay/qa/cfca_root.pem");
             Assert.assertNotNull(resourceAsStream);
         } finally {
             StreamUtils.closeQuietly(resourceAsStream);
@@ -37,7 +37,7 @@ public class FileUtilsTest {
     @Test
     public void testLoadAbsPathResource() throws URISyntaxException {
         final String absolutePath = new File(FileUtils.getContextClassLoader()
-                .getResource("config/certs/qa_cfca_root.pem").toURI()).getAbsolutePath();
+                .getResource("config/certs/yeepay/qa/cfca_root.pem").toURI()).getAbsolutePath();
         InputStream resourceAsStream = null;
         try {
             resourceAsStream = FileUtils.getResourceAsStream(absolutePath);

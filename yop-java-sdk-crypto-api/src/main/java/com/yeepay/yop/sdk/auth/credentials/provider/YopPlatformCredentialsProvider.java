@@ -55,6 +55,10 @@ public interface YopPlatformCredentialsProvider {
         return getCredentials(appKey, serialNo, serverRoot);
     }
 
+    default YopPlatformCredentials getCredentials(String provider, String env, String appKey, String serialNo) {
+        return getCredentials(provider, env, appKey, serialNo, null);
+    }
+
     /**
      * 获取应用下某类型的最新可用平台凭证
      *

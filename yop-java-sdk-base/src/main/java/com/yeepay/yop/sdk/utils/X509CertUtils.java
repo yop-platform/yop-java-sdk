@@ -148,13 +148,9 @@ public class X509CertUtils {
             certDir += "/" + env;
         }
 
-        if (StringUtils.isAllBlank(provider, env)) {
-            final String customEnvProperty = EnvUtils.getCustomEnvProperty();
-            // 兼容yeepay特有的旧逻辑，设置env和mode方式
-            if (EnvUtils.isSandboxApp(appKey) || EnvUtils.isSandBoxMode() ||
-                    (null != customEnvProperty && !EnvUtils.isProd())) {
-                return certDir + "/" + PROVIDER_YEEPAY + "/" + ENV_QA;
-            }
+        // 兼容yeepay特有的旧逻辑
+        if (EnvUtils.isOldSetting(provider, env, appKey)) {
+            return certDir + "/" + PROVIDER_YEEPAY + "/" + ENV_QA;
         }
         return certDir;
     }

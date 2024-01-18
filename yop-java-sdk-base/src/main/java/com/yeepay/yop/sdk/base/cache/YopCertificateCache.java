@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
+import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -23,6 +24,7 @@ import com.yeepay.yop.sdk.security.cert.YopPublicKey;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.utils.ClientUtils;
+import com.yeepay.yop.sdk.utils.EnvUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -30,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
@@ -69,6 +72,7 @@ public class YopCertificateCache {
     private static final Map<String, X509Certificate> CFCA_ROOT_CERT_MAP = Maps.newConcurrentMap();
     private static final Map<String, X509Certificate> YOP_INTER_CERT_MAP = Maps.newConcurrentMap();
     private static final Map<String, X509Certificate> YOP_PLATFORM_RSA_CERT_MAP = Maps.newConcurrentMap();
+    private static final Map<String, PublicKey> YOP_PLATFORM_RSA_KEY_MAP = Maps.newConcurrentMap();
 
     /**
      * 本地加载cfca根证书
@@ -79,7 +83,7 @@ public class YopCertificateCache {
         return getCfcaRootCertFromLocal(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, YOP_DEFAULT_APPKEY);
     }
     public static X509Certificate getCfcaRootCertFromLocal(String provider, String env, String appKey) {
-        return CFCA_ROOT_CERT_MAP.computeIfAbsent(localCertKey(provider, env, appKey, ""),
+        return CFCA_ROOT_CERT_MAP.computeIfAbsent(localKeyId(provider, env, appKey, ""),
                 p -> loadRootCertFromLocal(provider, env, appKey));
     }
 
@@ -98,7 +102,7 @@ public class YopCertificateCache {
         }
     }
 
-    private static String localCertKey(String provider, String env, String appKey, String serialNo) {
+    private static String localKeyId(String provider, String env, String appKey, String serialNo) {
         return StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER) + COMMA
                 + StringUtils.defaultString(env, YOP_DEFAULT_ENV) + COMMA + appKey + COMMA + serialNo;
     }
@@ -113,7 +117,7 @@ public class YopCertificateCache {
     }
 
     public static X509Certificate getYopInterCertFromLocal(String provider, String env, String appKey) {
-        return YOP_INTER_CERT_MAP.computeIfAbsent(localCertKey(provider, env, appKey, ""),
+        return YOP_INTER_CERT_MAP.computeIfAbsent(localKeyId(provider, env, appKey, ""),
                 p -> loadInterCertFromLocal(provider, env, appKey));
     }
 
@@ -145,8 +149,14 @@ public class YopCertificateCache {
 
     public static X509Certificate getYopPlatformRsaCertFromLocal(String provider, String env,
                                                                  String appKey, String serialNo) {
-        return YOP_PLATFORM_RSA_CERT_MAP.computeIfAbsent(localCertKey(provider, env, appKey, serialNo),
+        return YOP_PLATFORM_RSA_CERT_MAP.computeIfAbsent(localKeyId(provider, env, appKey, serialNo),
                 p -> loadPlatformRsaCertFromLocal(provider, env, appKey, serialNo));
+    }
+
+    public static PublicKey getYopPlatformRsaKeyFromLocal(String provider, String env,
+                                                          String appKey, String serialNo) {
+        return YOP_PLATFORM_RSA_KEY_MAP.computeIfAbsent(localKeyId(provider, env, appKey, serialNo),
+                p -> loadPlatformRsaKeyFromLocal(provider, env, appKey, serialNo));
     }
 
     private static X509Certificate loadPlatformRsaCertFromLocal(String provider, String env,
@@ -162,6 +172,53 @@ public class YopCertificateCache {
             LOGGER.warn("error when load yop rsa certs，if you dont use rsa just ignore it, ex:", e);
             return null;
         }
+    }
+
+    private static PublicKey loadPlatformRsaKeyFromLocal(String provider, String env,
+                                                                String appKey, String serialNo) {
+        try {
+            // YOP—RSA公钥配置
+            // 兼容yeepay特有的旧逻辑
+            if (EnvUtils.isOldSetting(provider, env, appKey)) {
+                provider = PROVIDER_YEEPAY;
+                env = ENV_QA;
+            }
+
+            // 优先读取用户配置
+            final YopSdkConfig sdkConfig = ClientUtils.getCurrentSdkConfigProvider().getConfig(provider, env);
+            final YopCertConfig[] yopPublicKey = sdkConfig.getYopPublicKey();
+            final PublicKey publicKeyFound = choosePlatformRsaKeyFromLocal(yopPublicKey);
+            if (null != publicKeyFound) {
+                return publicKeyFound;
+            }
+
+            // 兜底读取内置证书
+            final X509Certificate cert = loadPlatformRsaCertFromLocal(provider, env, appKey, serialNo);
+            return null != cert ? cert.getPublicKey() : null;
+        } catch (YopClientException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.warn("error when load yop rsa certs，if you dont use rsa just ignore it, ex:", e);
+            return null;
+        }
+    }
+
+    private static PublicKey choosePlatformRsaKeyFromLocal(YopCertConfig[] yopPublicKey) {
+        if (null != yopPublicKey && yopPublicKey.length > 0) {
+            for (int i = 0; i < yopPublicKey.length; i++) {
+                YopCertConfig certConfig = yopPublicKey[i];
+                try {
+                    if (!CertTypeEnum.RSA2048.equals(certConfig)) {
+                        continue;
+                    }
+                    return ((YopPublicKey) YopCertParserFactory.getCertParser(YopCertCategory.PUBLIC,
+                            CertTypeEnum.RSA2048).parse(certConfig)).getPublicKey();
+                } catch (Exception e) {
+                    LOGGER.warn("Config Error, yopPublicKey:{}", certConfig);
+                }
+            }
+        }
+        return null;
     }
 
     /**

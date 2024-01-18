@@ -1,9 +1,6 @@
 package com.yeepay.yop.sdk.config;
 
-import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
-import com.yeepay.yop.sdk.config.provider.file.YopHttpClientConfig;
-import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
-import com.yeepay.yop.sdk.config.provider.file.YopReportConfig;
+import com.yeepay.yop.sdk.config.provider.file.*;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
@@ -34,6 +31,8 @@ public final class YopSdkConfig implements Serializable {
     private List<String> preferredYosServerRoots;
 
     private String sandboxServerRoot;
+
+    private YopCertConfig[] yopPublicKey;
 
     private YopHttpClientConfig yopHttpClientConfig;
 
@@ -85,6 +84,14 @@ public final class YopSdkConfig implements Serializable {
 
     public void setSandboxServerRoot(String sandboxServerRoot) {
         this.sandboxServerRoot = sandboxServerRoot;
+    }
+
+    public YopCertConfig[] getYopPublicKey() {
+        return yopPublicKey;
+    }
+
+    public void setYopPublicKey(YopCertConfig[] yopPublicKey) {
+        this.yopPublicKey = yopPublicKey;
     }
 
     public YopHttpClientConfig getYopHttpClientConfig() {

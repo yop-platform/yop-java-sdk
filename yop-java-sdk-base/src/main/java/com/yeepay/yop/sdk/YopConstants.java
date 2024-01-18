@@ -139,6 +139,7 @@ public interface YopConstants {
     String YOP_SDK_SOURCE_BIZ = "biz";
 
     String PROVIDER_YEEPAY = "yeepay";
+    String PROVIDER_GPT = "gpt";
 
     String ENV_PROD = "prod";
     String ENV_SANDBOX = "sandbox";

@@ -62,6 +62,10 @@ public class YopSignUtils {
         verify(data, signature, appKey, serverRoot, YopConstants.YOP_DEFAULT_PROVIDER, YopConstants.YOP_DEFAULT_ENV);
     }
 
+    public static void verify(String data, String signature, String appKey, String provider, String env) {
+        verify(data, signature, appKey, "", provider, env);
+    }
+
     public static void verify(String data, String signature, String appKey, String serverRoot, String provider, String env) {
         validSignature(signature);
         String args[] = StringUtils.split(signature, "$");

@@ -44,6 +44,19 @@ public final class EnvUtils {
         return StringUtils.startsWith(appKey, ENV_SANDBOX_APP_PREFIX);
     }
 
+    @Deprecated
+    public static boolean isOldSetting(String provider, String env, String appKey) {
+        if (StringUtils.isAllBlank(provider, env)) {
+            final String customEnvProperty = EnvUtils.getCustomEnvProperty();
+            // 兼容yeepay特有的旧逻辑，设置env和mode方式
+            if (EnvUtils.isSandboxApp(appKey) || EnvUtils.isSandBoxMode() ||
+                    (null != customEnvProperty && !EnvUtils.isProd())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static String currentEnv() {
         return System.getProperty(ENV_PROP, ENV_PROD);
     }

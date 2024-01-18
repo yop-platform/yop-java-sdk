@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -70,17 +71,19 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         String key = cacheKey(provider, env, appKey, serialNo);
         YopPlatformCredentials foundCredentials = credentialsMap.computeIfAbsent(key, p -> {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
-                X509Certificate rsaCert = loadLocalRsaCert(provider, env, appKey, serialNo);
-                if (null == rsaCert) {
-                    throw new YopClientException("ConfigProblem, LocalRsaCert NotFound, serialNo:" + serialNo);
+                PublicKey rsaPublicKey = loadLocalRsaKey(provider, env, appKey, serialNo);
+                if (null == rsaPublicKey) {
+                    throw new YopClientException("ConfigProblem, LocalRsaCert NotFound, " +
+                            "provider:" + provider + ",env:" + env + ",serialNo:" + serialNo);
                 }
-                return convertCredentials(appKey, CertTypeEnum.RSA2048.getValue(), rsaCert);
+                return convertCredentials(appKey, CertTypeEnum.RSA2048.getValue(), rsaPublicKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
             } else {
                 YopPlatformCredentials localCredentials = loadCredentialsFromStore(provider, env, appKey, serialNo);
                 if (null == localCredentials) {
                     X509Certificate remoteCert = loadRemoteSm2Cert(provider, env, appKey, serialNo, serverRoot);
                     if (null == remoteCert) {
-                        throw new YopClientException("ConfigProblem, RemoteSm2Cert NotFound, serialNo:" + serialNo);
+                        throw new YopClientException("ConfigProblem, LocalRsaCert NotFound, " +
+                                "provider:" + provider + ",env:" + env + ",serialNo:" + serialNo);
                     }
                     return storeCredentials(provider, env, appKey, CertTypeEnum.SM2.name(), remoteCert);
                 } else {
@@ -159,6 +162,10 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         return YopCertificateCache.getYopPlatformRsaCertFromLocal(provider, env, appKey, serialNo);
     }
 
+    protected PublicKey loadLocalRsaKey(String provider, String env, String appKey, String serialNo) {
+        return YopCertificateCache.getYopPlatformRsaKeyFromLocal(provider, env, appKey, serialNo);
+    }
+
     @Override
     public YopPlatformCredentials getLatestCredentials(String appKey, String credentialType) {
         return getLatestCredentials(appKey, credentialType, null);
@@ -230,5 +237,21 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
         final CertTypeEnum certType = CertTypeEnum.parse(credentialType);
         return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(cert.getPublicKey(), certType))
                 .withSerialNo(X509CertUtils.parseToHex(cert.getSerialNumber().toString())).withAppKey(appKey);
+    }
+
+    /**
+     * 将普通公钥转换为凭证
+     *
+     * @param appKey 应用
+     * @param credentialType 密钥类型
+     * @param publicKey 公钥
+     * @param keyId 凭证标识
+     * @return YopPlatformCredentials
+     */
+    protected YopPlatformCredentials convertCredentials(String appKey, String credentialType, PublicKey publicKey, String keyId) {
+        if (null == publicKey) return null;
+        final CertTypeEnum certType = CertTypeEnum.parse(credentialType);
+        return new YopPlatformCredentialsHolder().withCredentials(new PKICredentialsItem(publicKey, certType))
+                .withSerialNo(keyId).withAppKey(appKey);
     }
 }
