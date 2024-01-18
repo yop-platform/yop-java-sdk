@@ -50,7 +50,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
     private static final String DEFAULT_CONFIG_FILE_NAME = "yop_sdk_config_default.json";
     private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/" + DEFAULT_CONFIG_FILE_NAME;
 
-    private Map<String, YopFileSdkConfig> sdkConfigs = Maps.newHashMap();
+    private Map<String, YopFileSdkConfig> sdkConfigs = Maps.newConcurrentMap();
 
     @Override
     protected YopSdkConfig loadSdkConfig() {
