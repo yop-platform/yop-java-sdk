@@ -20,6 +20,8 @@ import java.util.List;
  */
 public class ClientParams {
 
+    private final boolean inner;
+
     private final String provider;
 
     private final String env;
@@ -46,12 +48,13 @@ public class ClientParams {
 
     private String clientId;
 
-    private ClientParams(String provider,String env,
+    private ClientParams(boolean inner, String provider,String env,
                          URI endPoint, URI yosEndPoint, List<URI> preferredEndPoint, List<URI> preferredYosEndPoint, URI sandboxEndPoint,
                          ClientConfiguration clientConfiguration,
                          AuthorizationReqRegistry authorizationReqRegistry,
                          YopCredentialsProvider credentialsProvider, YopSdkConfigProvider yopSdkConfigProvider,
                          YopPlatformCredentialsProvider platformCredentialsProvider) {
+        this.inner = inner;
         this.endPoint = endPoint;
         this.yosEndPoint = yosEndPoint;
         this.preferredEndPoint = preferredEndPoint;
@@ -124,6 +127,7 @@ public class ClientParams {
 
     public static final class Builder {
 
+        private boolean inner;
         private String provider;
         private String env;
         private URI endPoint;
@@ -142,6 +146,11 @@ public class ClientParams {
 
         public static Builder builder() {
             return new Builder();
+        }
+
+        public Builder withInner(boolean inner) {
+            this.inner = inner;
+            return this;
         }
 
         public Builder withProvider(String provider) {
@@ -205,7 +214,7 @@ public class ClientParams {
         }
 
         public ClientParams build() {
-            return new ClientParams(provider, env, endPoint, yosEndPoint, preferredEndPoint, preferredYosEndPoint, sandboxEndPoint,
+            return new ClientParams(inner, provider, env, endPoint, yosEndPoint, preferredEndPoint, preferredYosEndPoint, sandboxEndPoint,
                     clientConfiguration, authorizationReqRegistry,
                     credentialsProvider, yopSdkConfigProvider, platformCredentialsProvider);
         }

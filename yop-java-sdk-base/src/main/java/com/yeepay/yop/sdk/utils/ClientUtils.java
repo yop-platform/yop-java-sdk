@@ -40,11 +40,13 @@ public class ClientUtils {
 
     private static final String BASIC_CLIENT_PREFIX = YopClientBuilder.class.getCanonicalName();
 
+    private static final String INNER_CLIENT_TYPE = "inner";
+
     // 当前线程上下文中的clientId
     private static ThreadLocal<String> CURRENT_CLIENT_ID = new ThreadLocal<>();
 
     // 各个环境的不同配置的基础Client列表<{provider}####{env}, List<{clientId}>>
-    private static final Map<String, List<String>> BASIC_CLIENT_MAP = Maps.newConcurrentMap();
+    private static final Map<String, List<String>> INNER_BASIC_CLIENT_MAP = Maps.newConcurrentMap();
 
     // 各个环境的不同配置的Client实例<{clientId}, {ClientInst}>
     private static final Map<String, Object> CLIENT_INST_MAP = Maps.newConcurrentMap();
@@ -60,26 +62,28 @@ public class ClientUtils {
      * @return client实例
      */
     public static <ClientInst> ClientInst getOrBuildClientInst(ClientParams clientParams, ClientInstBuilder<ClientInst> instBuilder) {
-        return (ClientInst) CLIENT_INST_MAP.computeIfAbsent(clientParams.getClientId(), p -> {
-            if (!isBasicClient(p)) {
-                final String basicClientId = toBasicClientId(p);
-                CLIENT_INST_MAP.computeIfAbsent(basicClientId, h -> YopClientBuilder.builder()
-                        .withClientId(basicClientId)
-                        .withProvider(clientParams.getProvider())
-                        .withEnv(clientParams.getEnv())
-                        .withCredentialsProvider(clientParams.getCredentialsProvider())
-                        .withYopSdkConfigProvider(clientParams.getYopSdkConfigProvider())
-                        .withPlatformCredentialsProvider(clientParams.getPlatformCredentialsProvider())
-                        .withClientConfiguration(clientParams.getClientConfiguration())
-                        .withEndpoint(null != clientParams.getEndPoint() ? clientParams.getEndPoint().toString() : null)
-                        .withYosEndpoint(null != clientParams.getYosEndPoint() ? clientParams.getYosEndPoint().toString() : null)
-                        .withPreferredEndPoint(clientParams.getPreferredEndPoint())
-                        .withPreferredYosEndPoint(clientParams.getPreferredYosEndPoint())
-                        .withSandboxEndPoint(null != clientParams.getSandboxEndPoint() ? clientParams.getSandboxEndPoint().toString() : null)
-                        .build());
-            }
-            return instBuilder.build(clientParams);
-        });
+        final ClientInst clientInst = instBuilder.build(clientParams);
+        CLIENT_INST_MAP.put(clientParams.getClientId(), clientInst);
+
+        if (!isInnerBasicClient(clientParams.getClientId())) {
+            final String innerBasicClientId = toInnerBasicClientId(clientParams.getClientId());
+            CLIENT_INST_MAP.put(innerBasicClientId, YopClientBuilder.builder()
+                    .withInner(true)
+                    .withClientId(innerBasicClientId)
+                    .withProvider(clientParams.getProvider())
+                    .withEnv(clientParams.getEnv())
+                    .withCredentialsProvider(clientParams.getCredentialsProvider())
+                    .withYopSdkConfigProvider(clientParams.getYopSdkConfigProvider())
+                    .withPlatformCredentialsProvider(clientParams.getPlatformCredentialsProvider())
+                    .withClientConfiguration(clientParams.getClientConfiguration())
+                    .withEndpoint(null != clientParams.getEndPoint() ? clientParams.getEndPoint().toString() : null)
+                    .withYosEndpoint(null != clientParams.getYosEndPoint() ? clientParams.getYosEndPoint().toString() : null)
+                    .withPreferredEndPoint(clientParams.getPreferredEndPoint())
+                    .withPreferredYosEndPoint(clientParams.getPreferredYosEndPoint())
+                    .withSandboxEndPoint(null != clientParams.getSandboxEndPoint() ? clientParams.getSandboxEndPoint().toString() : null)
+                    .build());
+        }
+        return clientInst;
     }
 
     public static <ClientInst> ClientInst getClientInst(String clientId) {
@@ -87,11 +91,18 @@ public class ClientUtils {
     }
 
     public static boolean isBasicClient(String clientId) {
-        return StringUtils.startsWith(clientId, BASIC_CLIENT_PREFIX);
+        return StringUtils.startsWith(clientId, BASIC_CLIENT_PREFIX + COLON);
     }
 
-    public static String toBasicClientId(String clientId) {
-        return BASIC_CLIENT_PREFIX + COLON + clientId.substring(clientId.indexOf(COLON) + 1);
+    public static boolean isInnerBasicClient(String clientId) {
+        return StringUtils.startsWith(clientId, BASIC_CLIENT_PREFIX + COLON + INNER_CLIENT_TYPE + COLON);
+    }
+
+    public static String toInnerBasicClientId(String clientId) {
+        if (isInnerBasicClient(clientId)) {
+            return clientId;
+        }
+        return BASIC_CLIENT_PREFIX + COLON + INNER_CLIENT_TYPE + COLON + clientId.substring(clientId.indexOf(COLON) + 1);
     }
 
     public static String computeClientIdSuffix(ClientParams clientParams) {
@@ -101,8 +112,8 @@ public class ClientUtils {
 
     public static void cacheClientConfig(String clientId, ClientParams clientParams) {
         CLIENT_CONFIG_MAP.put(clientId, clientParams);
-        if (isBasicClient(clientId)) {
-            BASIC_CLIENT_MAP.computeIfAbsent(getClientEnvCacheKey(clientParams.getProvider(), clientParams.getEnv()),
+        if (isInnerBasicClient(clientId)) {
+            INNER_BASIC_CLIENT_MAP.computeIfAbsent(getClientEnvCacheKey(clientParams.getProvider(), clientParams.getEnv()),
                     p -> new LinkedList<>()).add(clientId);
         }
     }
@@ -131,11 +142,11 @@ public class ClientUtils {
         YopClient clientInst = null;
         String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
-            clientInst = getClientInst(toBasicClientId(currentClientId));
+            clientInst = getClientInst(toInnerBasicClientId(currentClientId));
         }
         if (null == clientInst) {
             final String clientEnvCacheKey = getClientEnvCacheKey(provider, env);
-            final List<String> clientIds = BASIC_CLIENT_MAP.get(clientEnvCacheKey);
+            final List<String> clientIds = INNER_BASIC_CLIENT_MAP.get(clientEnvCacheKey);
             if (CollectionUtils.isNotEmpty(clientIds)) {
                 clientInst = getClientInst(clientIds.get(0));
             }

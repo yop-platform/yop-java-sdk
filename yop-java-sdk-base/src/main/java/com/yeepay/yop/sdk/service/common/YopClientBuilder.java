@@ -25,7 +25,7 @@ public class YopClientBuilder extends AbstractServiceClientBuilder<YopClientBuil
     }
 
     @Override
-    protected YopClientImpl build(ClientParams params) {
+    public YopClientImpl build(ClientParams params) {
         return new YopClientImpl(params);
     }
 

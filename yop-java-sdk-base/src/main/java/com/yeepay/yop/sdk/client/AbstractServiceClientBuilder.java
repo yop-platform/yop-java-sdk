@@ -38,6 +38,8 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     private String clientId;
 
+    private boolean inner;
+
     private String provider;
 
     private String env;
@@ -85,6 +87,7 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                     yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
         }
         ClientParams clientParams = ClientParams.Builder.builder()
+                .withInner(this.inner)
                 .withProvider(this.provider)
                 .withEnv(this.env)
                 .withCredentialsProvider(credentialsProvider)
@@ -121,6 +124,11 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     public SubClass withClientId(String clientId) {
         this.clientId = clientId;
+        return getSubclass();
+    }
+
+    public SubClass withInner(boolean inner) {
+        this.inner = inner;
         return getSubclass();
     }
 
