@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.base.config.provider.file;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.base.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
@@ -22,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.HASH;
@@ -119,18 +121,26 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
 
         logger.info("加载配置文件{}", configFile);
         YopFileSdkConfig customSdkConfig = loadSdkConfigFile(configFile);
+        Set<String> loadedFiles = Sets.newHashSet(configFile);
 
-        // 环境相关default配置
+        // env相关default配置(存放特定provider、特定env的配置)
         String envConfigDefaultFile = getEnvConfigDefaultFile(provider, env);
-        if (!StringUtils.equals(envConfigDefaultFile, configFile)) {
+        if (!loadedFiles.contains(envConfigDefaultFile)) {
             YopFileSdkConfig envDefaultConfig = loadSdkConfigFile(envConfigDefaultFile);
             customSdkConfig = fillNullConfig(envDefaultConfig, customSdkConfig);
         }
 
-        // 全局default配置
-        if (!StringUtils.equals(DEFAULT_CONFIG_FILE, configFile)
-                && !StringUtils.equals(DEFAULT_CONFIG_FILE, envConfigDefaultFile)) {
-            YopFileSdkConfig globalDefaultConfig = loadSdkConfigFile(DEFAULT_CONFIG_FILE);
+        // provider相关default配置(存放该provider生产环境配置)
+        final String providerConfigDefaultFile = getProviderConfigDefaultFile(provider);
+        if (!loadedFiles.contains(providerConfigDefaultFile)) {
+            YopFileSdkConfig providerDefaultConfig = loadSdkConfigFile(providerConfigDefaultFile);
+            customSdkConfig = fillNullConfig(providerDefaultConfig, customSdkConfig);
+        }
+
+        // 全局default配置(存放默认provider生产环境配置)
+        final String globalConfigDefaultFile = DEFAULT_CONFIG_FILE;
+        if (!loadedFiles.contains(globalConfigDefaultFile)) {
+            YopFileSdkConfig globalDefaultConfig = loadSdkConfigFile(globalConfigDefaultFile);
             customSdkConfig = fillNullConfig(globalDefaultConfig, customSdkConfig);
         }
 
@@ -145,6 +155,12 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         return SDK_CONFIG_DIR + "/"
                 + (StringUtils.isNotBlank(provider) ? (provider + "/") : "")
                 + (StringUtils.isNotBlank(env) ? (env + "/") : "")
+                + DEFAULT_CONFIG_FILE_NAME;
+    }
+
+    private String getProviderConfigDefaultFile(String provider) {
+        return SDK_CONFIG_DIR + "/"
+                + (StringUtils.isNotBlank(provider) ? (provider + "/") : "")
                 + DEFAULT_CONFIG_FILE_NAME;
     }
 

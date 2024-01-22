@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
 import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
@@ -18,6 +19,7 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
 
@@ -137,7 +139,20 @@ public class X509CertUtils {
         return Long.valueOf(hexSerialNo, 16).toString();
     }
 
-    public static String getLocalCertDir(String baseDir, String provider, String env, String appKey) {
+    public static Set<String> getLocalCertDirs(String baseDir, String provider, String env, String appKey) {
+        Set<String> certDirsOrdered = Sets.newLinkedHashSet();
+        certDirsOrdered.add(getLocalCertDirByProviderAndEnv(baseDir, provider, env, appKey));
+        certDirsOrdered.add(getLocalCertDirByProvider(baseDir, provider));
+        certDirsOrdered.add(baseDir);
+        return certDirsOrdered;
+    }
+
+    public static String getLocalCertDirByProviderAndEnv(String baseDir, String provider, String env, String appKey) {
+        // 兼容yeepay特有的旧逻辑
+        if (EnvUtils.isOldSetting(provider, env, appKey)) {
+            return baseDir + "/" + PROVIDER_YEEPAY + "/" + ENV_QA;
+        }
+
         String certDir = baseDir;
 
         if (StringUtils.isNotBlank(provider)) {
@@ -147,10 +162,14 @@ public class X509CertUtils {
         if (StringUtils.isNotBlank(env)) {
             certDir += "/" + env;
         }
+        return certDir;
+    }
 
-        // 兼容yeepay特有的旧逻辑
-        if (EnvUtils.isOldSetting(provider, env, appKey)) {
-            return certDir + "/" + PROVIDER_YEEPAY + "/" + ENV_QA;
+    public static String getLocalCertDirByProvider(String baseDir, String provider) {
+        String certDir = baseDir;
+
+        if (StringUtils.isNotBlank(provider)) {
+            certDir += "/" + provider;
         }
         return certDir;
     }

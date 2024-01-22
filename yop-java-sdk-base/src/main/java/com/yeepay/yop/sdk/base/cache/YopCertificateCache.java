@@ -29,6 +29,7 @@ import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +38,13 @@ import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
-import static com.yeepay.yop.sdk.utils.X509CertUtils.getLocalCertDir;
+import static com.yeepay.yop.sdk.utils.X509CertUtils.getLocalCertDirs;
 
 /**
  * title: Yop证书缓存类<br>
@@ -90,16 +92,17 @@ public class YopCertificateCache {
     private static X509Certificate loadRootCertFromLocal(String provider, String env, String appKey) {
         try {
             // 根证书
-            X509Certificate cfcaRootCert = getX509Cert(getLocalCertDir(DEFAULT_CERT_PATH, provider, env, appKey)
-                    + "/" + DEFAULT_CFCA_ROOT_FILE, CertTypeEnum.SM2);
+            final X509Certificate cfcaRootCert = loadPlatformCertFromLocal(provider, env, appKey,
+                    DEFAULT_CFCA_ROOT_FILE, CertTypeEnum.SM2);
             X509CertUtils.verifyCertificate(provider, env, CertTypeEnum.SM2, null, cfcaRootCert);
             return cfcaRootCert;
         } catch (YopClientException e) {
             throw e;
         } catch (Exception e) {
-            LOGGER.error("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:", e);
-            return null;
+            LOGGER.error("error when load sm2 root cert, ex:", e);
         }
+        throw new YopClientException("Config Error, platform sm2 root cert not found, provider:"
+                + provider + ", env:" + env + ", appKey:" + appKey);
     }
 
     private static String localKeyId(String provider, String env, String appKey, String serialNo) {
@@ -124,17 +127,32 @@ public class YopCertificateCache {
     private static X509Certificate loadInterCertFromLocal(String provider, String env, String appKey) {
         try {
             // 中间证书
-            X509Certificate yopInterCert = getX509Cert(getLocalCertDir(DEFAULT_CERT_PATH, provider, env, appKey)
-                    + "/" + DEFAULT_YOP_INTER_FILE, CertTypeEnum.SM2);
+            final X509Certificate yopInterCert = loadPlatformCertFromLocal(provider, env, appKey,
+                    DEFAULT_YOP_INTER_FILE, CertTypeEnum.SM2);
+            // 校验中间证书
             X509CertUtils.verifyCertificate(provider, env, CertTypeEnum.SM2,
                     getCfcaRootCertFromLocal(provider, env, appKey).getPublicKey(), yopInterCert);
             return yopInterCert;
         } catch (YopClientException e) {
             throw e;
         } catch (Exception e) {
-            LOGGER.error("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:", e);
-            return null;
+            LOGGER.error("error when load sm2 inter certs, ex:", e);
         }
+        throw new YopClientException("Config Error, platform sm2 inter cert not found, provider:"
+                + provider + ", env:" + env + ", appKey:" + appKey);
+    }
+
+    private static X509Certificate loadPlatformCertFromLocal(String provider, String env, String appKey,
+                                                             String certFile, CertTypeEnum certType) {
+        Set<String> certDirsOrdered = getLocalCertDirs(DEFAULT_CERT_PATH, provider, env, appKey);
+        for (String certDir : certDirsOrdered) {
+            X509Certificate cert = doLoadPlatformCertFromLocal(certDir + "/" + certFile, certType);
+            if (null != cert) {
+                return cert;
+            }
+        }
+        throw new YopClientException("Config Error, platform cert not found, provider:"
+                + provider + ", env:" + env + ", appKey:" + appKey + ", certType:" + certType + ", certFile:" + certFile);
     }
 
     /**
@@ -150,7 +168,8 @@ public class YopCertificateCache {
     public static X509Certificate getYopPlatformRsaCertFromLocal(String provider, String env,
                                                                  String appKey, String serialNo) {
         return YOP_PLATFORM_RSA_CERT_MAP.computeIfAbsent(localKeyId(provider, env, appKey, serialNo),
-                p -> loadPlatformRsaCertFromLocal(provider, env, appKey, serialNo));
+                p -> loadPlatformCertFromLocal(provider, env, appKey, YOP_RSA_PLATFORM_CERT_PREFIX +
+                        serialNo + YOP_PLATFORM_CERT_POSTFIX, CertTypeEnum.RSA2048));
     }
 
     public static PublicKey getYopPlatformRsaKeyFromLocal(String provider, String env,
@@ -159,23 +178,17 @@ public class YopCertificateCache {
                 p -> loadPlatformRsaKeyFromLocal(provider, env, appKey, serialNo));
     }
 
-    private static X509Certificate loadPlatformRsaCertFromLocal(String provider, String env,
-                                                                String appKey, String serialNo) {
+    private static X509Certificate doLoadPlatformCertFromLocal(String certPath, CertTypeEnum certType) {
         try {
-            // YOP—RSA证书
-            String certDir = getLocalCertDir(DEFAULT_CERT_PATH, provider, env, appKey);
-            return getX509Cert(certDir + "/" + YOP_RSA_PLATFORM_CERT_PREFIX +
-                    serialNo + YOP_PLATFORM_CERT_POSTFIX, CertTypeEnum.RSA2048);
-        } catch (YopClientException e) {
-            throw e;
+            return getX509Cert(certPath, certType);
         } catch (Exception e) {
-            LOGGER.warn("error when load yop rsa certs，if you dont use rsa just ignore it, ex:", e);
-            return null;
+            LOGGER.warn("error when load local yop rsa certs, ex:{}", ExceptionUtils.getMessage(e));
         }
+        return null;
     }
 
     private static PublicKey loadPlatformRsaKeyFromLocal(String provider, String env,
-                                                                String appKey, String serialNo) {
+                                                         String appKey, String serialNo) {
         try {
             // YOP—RSA公钥配置
             // 兼容yeepay特有的旧逻辑
@@ -193,14 +206,15 @@ public class YopCertificateCache {
             }
 
             // 兜底读取内置证书
-            final X509Certificate cert = loadPlatformRsaCertFromLocal(provider, env, appKey, serialNo);
-            return null != cert ? cert.getPublicKey() : null;
+            return loadPlatformCertFromLocal(provider, env, appKey, YOP_RSA_PLATFORM_CERT_PREFIX +
+                    serialNo + YOP_PLATFORM_CERT_POSTFIX, CertTypeEnum.RSA2048).getPublicKey();
         } catch (YopClientException e) {
             throw e;
         } catch (Exception e) {
-            LOGGER.warn("error when load yop rsa certs，if you dont use rsa just ignore it, ex:", e);
-            return null;
+            LOGGER.warn("error when load yop rsa certs, ex:", e);
         }
+        throw new YopClientException("Config Error, platform rsa certs not found, provider:"
+                + provider + ", env:" + env + ", appKey:" + appKey + ", serialNo:" + serialNo);
     }
 
     private static PublicKey choosePlatformRsaKeyFromLocal(YopCertConfig[] yopPublicKey) {
