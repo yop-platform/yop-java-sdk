@@ -182,7 +182,10 @@ public class YopCertificateCache {
         try {
             return getX509Cert(certPath, certType);
         } catch (Exception e) {
-            LOGGER.warn("error when load local yop rsa certs, ex:{}", ExceptionUtils.getMessage(e));
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("local platform cert not found, certType:{}, certPath:{}, msg:{}",
+                        certType, certPath, ExceptionUtils.getMessage(e));
+            }
         }
         return null;
     }
