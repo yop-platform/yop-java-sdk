@@ -23,6 +23,8 @@ public class YopReportConfig implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    public static YopReportConfig DEFAULT_YOP_REPORT_CONFIG = new YopReportConfig();
+
     /**
      * 上报总开关
      */
