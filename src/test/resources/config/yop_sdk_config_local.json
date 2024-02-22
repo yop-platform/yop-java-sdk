@@ -3,6 +3,9 @@
   "aes_secret_key": "PdZ74F6sxapgOWJ31QKmYw==",
   "server_root": "http://127.0.0.1:8064/yop-center",
   "yos_server_root": "http://127.0.0.1:8064/yop-center",
+  "preferred_server_roots": [
+    "http://127.0.0.1:8064/yop-center"
+  ],
   "yop_public_key": [
     {
       "store_type": "string",

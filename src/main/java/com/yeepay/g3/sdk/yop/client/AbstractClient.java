@@ -1,7 +1,6 @@
 package com.yeepay.g3.sdk.yop.client;
 
 import com.alibaba.csp.sentinel.Entry;
-import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
@@ -31,9 +30,11 @@ import com.yeepay.g3.sdk.yop.http.HttpMethodName;
 import com.yeepay.g3.sdk.yop.http.HttpUtils;
 import com.yeepay.g3.sdk.yop.http.YopHttpResponse;
 import com.yeepay.g3.sdk.yop.internal.RestartableInputStream;
-import com.yeepay.g3.sdk.yop.internal.YopDegradeRuleHelper;
+import com.yeepay.g3.sdk.yop.invoke.model.UriResource;
 import com.yeepay.g3.sdk.yop.model.DownloadInputStream;
 import com.yeepay.g3.sdk.yop.model.YopErrorResponse;
+import com.yeepay.g3.sdk.yop.sentinel.YopDegradeRuleHelper;
+import com.yeepay.g3.sdk.yop.sentinel.YopSph;
 import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
 import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
 import com.yeepay.g3.sdk.yop.utils.FileUtils;
@@ -707,10 +708,10 @@ public class AbstractClient {
     }
 
     protected static String routeRequest(String methodOrUri, YopRequest request) {
-        return GATE_WAY_ROUTER.route(methodOrUri, request, Collections.emptyList());
+        return GATE_WAY_ROUTER.route(methodOrUri, request, Collections.emptyList()).getResource().toString();
     }
 
-    protected static String routeRequest(String methodOrUri, YopRequest request, List<String> excludeServerRoots) {
+    protected static UriResource routeRequest(String methodOrUri, YopRequest request, List<URI> excludeServerRoots) {
         return GATE_WAY_ROUTER.route(methodOrUri, request, excludeServerRoots);
     }
 
@@ -720,34 +721,63 @@ public class AbstractClient {
     }
 
     protected static YopResponse handleRequest(String apiUri, YopRequest request, HttpMethodName method, YopRequestType requestType) throws IOException {
-        return handleRequest(apiUri, request, method, requestType, YopSecurityType.RSA2048);
+        return handleRequestWithRetry(apiUri, request, method, requestType, YopSecurityType.RSA2048);
     }
 
-    protected static YopResponse handleRequest(String apiUri, YopRequest request, HttpMethodName method,
-                                               YopRequestType requestType, YopSecurityType securityType) throws IOException {
-        List<String> excludeServerRoots = Lists.newArrayList();
-        String lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
+    protected static YopResponse handleRequestWithRetry(String apiUri, YopRequest request, HttpMethodName method,
+                                                        YopRequestType requestType, YopSecurityType securityType) throws IOException {
+        final long start = System.currentTimeMillis();
+        List<URI> excludeServerRoots = Lists.newArrayList();
+        UriResource lastServerRoot = null;
+        Throwable currentEx;
         int retryCount = 0;
-        while (!excludeServerRoots.contains(lastServerRoot)) {
+        boolean needRetry;
+        do {
             try {
-                return handleRequestWithDegrade(lastServerRoot, apiUri, request, method, requestType, securityType, retryCount);
-            } catch (YopHostException hostError) {//域名异常
-                excludeServerRoots.add(lastServerRoot);
                 lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
-                retryCount++;
-            } /*catch (Exception otherError) {客户端异常、业务异常、其他未知异常，交给上层处理}*/
-        }
+                final YopResponse result = handleRequestWithDegrade(lastServerRoot, apiUri,
+                        request, method, requestType, securityType, retryCount);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Success ServerRoot, {}, elapsed:{}, retryCount:{}", lastServerRoot,
+                            System.currentTimeMillis() - start, retryCount);
+                }
+                return result;
+            } catch (Throwable throwable) {
+                currentEx = throwable;
+                // 路由异常，客户端配置问题
+                if (null == lastServerRoot || null == lastServerRoot.getResource()) {
+                    throw new YopClientException("Config Error, No ServerRoot Found");
+                }
 
-        // 如果所有域名均熔断，则用最早熔断域名兜底
-        lastServerRoot = routeRequest(apiUri, request, excludeServerRoots);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("All ServerRoots Unavailable, Last Try, tried:{}, last:{}", excludeServerRoots, lastServerRoot);
-        }
+                // 客户端异常、业务异常，直接抛给上层
+                if (throwable instanceof YopClientException) {
+                    throw (YopClientException) throwable;
+                }
 
-        return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType, retryCount);
+                // 可重试异常
+                if (throwable instanceof YopHostException) {
+                    needRetry = true;
+                    excludeServerRoots.add(lastServerRoot.getResource());
+                    // 熔断异常
+                    if (!(throwable instanceof YopBlockException)) {
+                        retryCount++;
+                    }
+                } else {
+                    needRetry = false;
+                }
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Fail ServerRoot, {}, exDetail:{}, elapsed:{}, needRetry:{}", lastServerRoot,
+                            ExceptionUtils.getMessage(currentEx), System.currentTimeMillis() - start, needRetry);
+                }
+            }
+        } while (needRetry);
+
+        // 非预期异常处理
+        throw handleUnExpectedError(currentEx);
     }
 
-    private static YopResponse handleRequestWithDegrade(String lastServerRoot, String apiUri, YopRequest request,
+    private static YopResponse handleRequestWithDegrade(UriResource lastServerRoot, String apiUri, YopRequest request,
                                                         HttpMethodName method, YopRequestType requestType, YopSecurityType securityType,
                                                         int retryCount) {
 
@@ -757,9 +787,11 @@ public class AbstractClient {
         Entry entry = null;
         Throwable degradeError = null;
         try {
-            YopDegradeRuleHelper.addDegradeRule(lastServerRoot, InternalConfig.getCircuitBreakerConfig());
-            entry = SphU.entry(lastServerRoot);
-            return doHandleRequest(lastServerRoot, apiUri, request, method, requestType, securityType, retryCount);
+            final String resource = lastServerRoot.computeResourceKey();
+            YopDegradeRuleHelper.addDegradeRule(resource, InternalConfig.getCircuitBreakerConfig());
+            entry = YopSph.getInstance().entry(resource);
+            return doHandleRequest(lastServerRoot.getResource().toString(), apiUri, request, method,
+                    requestType, securityType, retryCount);
         } catch (YopClientException clientError) {//客户端异常&业务异常
             throw clientError;
         } catch (YopHostException | YopUnknownException serverError) {//域名异常&未知异常
@@ -770,7 +802,7 @@ public class AbstractClient {
                 throw new YopHostBlockException("ServerRoot Blocked, ex:", ex);
             } else {
                 degradeError = ex;
-                handleUnExpectedError(ex);
+                throw handleUnExpectedError(ex);
             }
         } finally {
             if (null != entry) {
@@ -780,7 +812,6 @@ public class AbstractClient {
                 entry.exit();
             }
         }
-        throw new YopUnknownException("UnExpected Situation, Cant Be Here.");
     }
 
     private static YopResponse doHandleRequest(String serverRoot, String apiUri, YopRequest request,
@@ -814,21 +845,28 @@ public class AbstractClient {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Fail ServerRoot, {}, exDetail:{}", serverRoot, analyzedEx.getExDetail());
             }
-            if (analyzedEx.isNeedRetry()) {//域名异常
-                throw new YopHostException("Need Change Host, ex:", serverEx);
+            if (analyzedEx.isNeedRetry()) {
+                //发生可重试异常且还有重试次数
+                if (retryCount < InternalConfig.getMaxRetryCount()) {
+                    throw new YopHostException("Need Change Host, ex:", serverEx);
+                } else {
+                    throw new YopUnknownException("last retry failure, ", serverEx);
+                }
             }
             if (analyzedEx.isServerError()) {
-                handleUnExpectedError(serverEx);
+                throw handleUnExpectedError(serverEx);
             }
             throw new YopClientException("Client Error, ex:", serverEx);
         } catch (Exception ex) {//未知异常
-            handleUnExpectedError(ex);
+            throw handleUnExpectedError(ex);
         }
-        throw new YopUnknownException("UnExpected Situation, Cant Be Here.");
     }
 
-    private static void handleUnExpectedError(Exception ex) {
-        throw new YopUnknownException("UnExpected Error, ", ex);
+    private static RuntimeException handleUnExpectedError(Throwable ex) {
+        if (ex instanceof YopUnknownException) {
+            return (YopUnknownException) ex;
+        }
+        return new YopUnknownException("UnExpected Error, ", ex);
     }
 
     protected static void handleResult(YopResponse response) {

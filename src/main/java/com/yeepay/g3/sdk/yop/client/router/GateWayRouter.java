@@ -1,7 +1,9 @@
 package com.yeepay.g3.sdk.yop.client.router;
 
 import com.yeepay.g3.sdk.yop.client.YopRequest;
+import com.yeepay.g3.sdk.yop.invoke.model.UriResource;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -19,21 +21,11 @@ public interface GateWayRouter {
     /**
      * 路由
      *
-     * @param apiUri  apiUri
-     * @param request 请求
-     * @return 路由地址
-     */
-    @Deprecated
-    String route(String apiUri, YopRequest request);
-
-    /**
-     * 路由
-     *
      * @param apiUri             apiUri
      * @param request            请求
      * @param excludeServerRoots 已失败列表
      * @return 路由地址
      */
-    String route(String apiUri, YopRequest request, List<String> excludeServerRoots);
+    UriResource route(String apiUri, YopRequest request, List<URI> excludeServerRoots);
 
 }

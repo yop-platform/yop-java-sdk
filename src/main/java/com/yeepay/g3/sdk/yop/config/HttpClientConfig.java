@@ -36,6 +36,9 @@ public final class HttpClientConfig implements Serializable {
     @JsonProperty("retry_exceptions")
     private Set<String> retryExceptions;
 
+    @JsonProperty("max_retry_count")
+    private int maxRetryCount = 3;
+
     @JsonProperty("circuit_breaker")
     private YopCircuitBreakerConfig circuitBreakerConfig;
 
@@ -77,6 +80,14 @@ public final class HttpClientConfig implements Serializable {
 
     public void setRetryExceptions(Set<String> retryExceptions) {
         this.retryExceptions = retryExceptions;
+    }
+
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
     }
 
     public YopCircuitBreakerConfig getCircuitBreakerConfig() {

@@ -33,7 +33,7 @@ public class YopConstants {
                 .replace(' ', '_');
     }
 
-    public static final String CLIENT_VERSION = "3.3.7";
+    public static final String CLIENT_VERSION = "3.3.11";
     public static final String CLIENT_LANGS = "java";
 
     public static String USER_AGENT;
@@ -133,4 +133,6 @@ public class YopConstants {
         }
         return false;
     }
+
+    public static final boolean SDK_DEBUG = Boolean.parseBoolean(System.getProperty("yop.sdk.debug", "false"));
 }

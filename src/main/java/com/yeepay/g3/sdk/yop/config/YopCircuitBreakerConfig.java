@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import static com.yeepay.g3.sdk.yop.config.YopCircuitBreakerRuleConfig.DEFAULT_ERROR_COUNT_CONFIG;
+import static com.yeepay.g3.sdk.yop.config.YopCircuitBreakerRuleConfig.DEFAULT_ERROR_RATIO_CONFIG;
 
 /**
  * title: 熔断配置<br>
@@ -42,14 +43,14 @@ public class YopCircuitBreakerConfig implements Serializable {
      * 熔断规则
      */
     @JsonProperty("rules")
-    private List<YopCircuitBreakerRuleConfig> rules = Lists.newArrayList(DEFAULT_ERROR_COUNT_CONFIG);
+    private List<YopCircuitBreakerRuleConfig> rules = Lists.newArrayList(DEFAULT_ERROR_COUNT_CONFIG, DEFAULT_ERROR_RATIO_CONFIG);
 
     // region yop扩展
     /**
      * 非短路异常
      */
     @JsonProperty("yop_exclude_exceptions")
-    private Set<String> excludeExceptions = Sets.newHashSet("com.yeepay.yop.sdk.exception.YopClientException");
+    private Set<String> excludeExceptions = Sets.newHashSet("com.yeepay.g3.sdk.yop.exception.YopClientException");
     // endRegion
 
     public boolean isEnable() {

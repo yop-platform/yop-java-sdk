@@ -48,7 +48,10 @@ public final class InternalConfig {
             "java.net.SocketTimeoutException:connect timed out",
             "java.net.NoRouteToHostException",
             "org.apache.http.conn.ConnectTimeoutException", "com.yeepay.shade.org.apache.http.conn.ConnectTimeoutException",
-            "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException");
+            "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException",
+            "java.net.ConnectException:Connection timed out","java.net.ConnectException:连接超时");
+
+    private static int maxRetryCount = 3;
 
     static {
         init();
@@ -79,6 +82,10 @@ public final class InternalConfig {
 
             if (CollectionUtils.isNotEmpty(clientConfig.getRetryExceptions())) {
                 retryExceptions = clientConfig.getRetryExceptions();
+            }
+
+            if (clientConfig.getMaxRetryCount() > 0) {
+                maxRetryCount = clientConfig.getMaxRetryCount();
             }
         }
 
@@ -111,5 +118,9 @@ public final class InternalConfig {
 
     public static Set<String> getRetryExceptions() {
         return retryExceptions;
+    }
+
+    public static int getMaxRetryCount() {
+        return maxRetryCount;
     }
 }

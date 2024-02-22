@@ -12,6 +12,8 @@ import com.yeepay.g3.sdk.yop.config.AppSdkConfig;
 import com.yeepay.g3.sdk.yop.config.AppSdkConfigProviderRegistry;
 import com.yeepay.g3.sdk.yop.config.enums.ModeEnum;
 import com.yeepay.g3.sdk.yop.exception.YopClientException;
+import com.yeepay.g3.sdk.yop.invoke.model.UriResource;
+import com.yeepay.g3.sdk.yop.sentinel.YopSph;
 import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
 import com.yeepay.g3.sdk.yop.utils.RouteUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -27,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.stream.Collectors;
 
 /**
  * title: 简单网关路由<br/>
@@ -43,13 +45,13 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleGateWayRouter.class);
 
+    private static final Map<ServerRootType, CopyOnWriteArrayList<URI>> ALL_SERVER = Maps.newConcurrentMap();
+    private static final Map<URI, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
+    private static final Map<ServerRootType, URI> MAIN_SERVER = Maps.newConcurrentMap();
+    private static final Map<ServerRootType, List<URI>> BACKUP_SERVERS = Maps.newConcurrentMap();
+    private static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
     private static final String SYSTEM_SDK_MODE_KEY = "yop.sdk.mode";
-
-    private static final Map<ServerRootType, CopyOnWriteArrayList<String>> ALL_SERVER = Maps.newConcurrentMap();
-    private static final Map<String, Set<ServerRootType>> ALL_SERVER_TYPES = Maps.newConcurrentMap();
-    private static final Map<ServerRootType, String> MAIN_SERVER = Maps.newConcurrentMap();
-    private static final Map<ServerRootType, List<String>> BACKUP_SERVERS = Maps.newConcurrentMap();
-    private static final Map<ServerRootType, LinkedBlockingDeque<String>> BLOCKED_SERVERS = Maps.newConcurrentMap();
+    private static final String SANDBOX_APP_ID_PREFIX = "sandbox_";
 
     private static final List<ServerRootType> MANUAL_SERVER_ROOT_TYPES = Lists.newArrayList(ServerRootType.COMMON, ServerRootType.YOS);
 
@@ -58,35 +60,21 @@ public class SimpleGateWayRouter implements GateWayRouter {
     }
 
     private static void monitorServerRoot() {
+        // sentinel监控
         EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
                 (prevState, newState, rule, snapshotValue) -> {
                     try {
-                        final String serverRoot = rule.getResource();
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("ServerRoot Block State Changed, value:{}, old:{}, new:{}", serverRoot, prevState, newState);
-                        }
+                        final UriResource uriResource = UriResource.parseResourceKey(rule.getResource());
+                        final URI serverRoot = uriResource.getResource();
+                        LOGGER.info("ServerRoot Block State Changed, serverRoot:{}, old:{}, new:{}, rule:{}",
+                                serverRoot, prevState, newState, rule);
                         Set<ServerRootType> serverRootTypes = ALL_SERVER_TYPES.get(serverRoot);
-                        if (CollectionUtils.isNotEmpty(serverRootTypes)) {
-                            for (ServerRootType serverRootType : serverRootTypes) {
-                                switch (newState) {
-                                    case OPEN:
-                                        final LinkedBlockingDeque<String> oldBlocked =
-                                                BLOCKED_SERVERS.computeIfAbsent(serverRootType, p -> new LinkedBlockingDeque<>());
-                                        oldBlocked.removeIf(serverRoot::equals);
-                                        oldBlocked.add(serverRoot);
-                                        break;
-                                    case CLOSED:
-                                        final LinkedBlockingDeque<String> blockedServers = BLOCKED_SERVERS.get(serverRootType);
-                                        if (null != blockedServers) {
-                                            blockedServers.removeIf(serverRoot::equals);
-                                        }
-                                        break;
-                                    default:
-                                }
-                            }
-                        }
+                        Set<String> serverTypes = CollectionUtils.isEmpty(serverRootTypes) ? Collections.emptySet() :
+                                serverRootTypes.stream().map(ServerRootType::name).collect(Collectors.toSet());
+                        BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverTypes);
+                        // 异步上报
                         ClientReporter.asyncReportToQueue(new YopHostStatusChangeReport(
-                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name())));
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString())));
                     } catch (Exception e) {
                         LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);
                     }
@@ -110,66 +98,32 @@ public class SimpleGateWayRouter implements GateWayRouter {
     private static void addServerRoots(ServerRootSpace space) {
         if (CollectionUtils.isNotEmpty(space.getPreferredEndPoint())) {
             for (String uri : space.getPreferredEndPoint()) {
-                addServerRoot(uri, ServerRootType.COMMON);
+                addServerRoot(URI.create(uri), ServerRootType.COMMON);
             }
         }
 
         if (CollectionUtils.isNotEmpty(space.getPreferredYosEndPoint())) {
             for (String uri : space.getPreferredYosEndPoint()) {
-                addServerRoot(uri, ServerRootType.YOS);
+                addServerRoot(URI.create(uri), ServerRootType.YOS);
             }
         }
-        addServerRoot(space.getYosServerRoot(), ServerRootType.YOS);
+        addServerRoot(space.getYosServerRootURL(), ServerRootType.YOS);
     }
 
-    private static boolean addServerRoot(String serverRoot, ServerRootType serverRootType) {
+    private static boolean addServerRoot(URI serverRoot, ServerRootType serverRootType) {
         if (null != serverRoot) {
             ALL_SERVER_TYPES.computeIfAbsent(serverRoot, p -> Sets.newHashSet()).add(serverRootType);
-            final CopyOnWriteArrayList<String> serverRoots = ALL_SERVER.computeIfAbsent(serverRootType, p -> Lists.newCopyOnWriteArrayList());
+            final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.computeIfAbsent(serverRootType, p -> Lists.newCopyOnWriteArrayList());
             return serverRoots.addIfAbsent(serverRoot);
         }
         return false;
     }
 
-    private static void addServerRoot(String serverRoot, List<ServerRootType> serverRootTypes) {
-        if (null != serverRoot && CollectionUtils.isNotEmpty(serverRootTypes)) {
-            for (ServerRootType serverRootType : serverRootTypes) {
-                addServerRoot(serverRoot, serverRootType);
-            }
-        }
-    }
-
     @Override
-    public String route(String apiUri, YopRequest request) {
-        String serverRoot;
-        if (isAppInSandbox(request.getAppSdkConfig().getAppKey())) {
-            serverRoot = space.getSandboxServerRoot();
-        } else {
-            String apiGroup = extractApiGroupFromApiUri(apiUri);
-            if (independentApiGroups.contains(apiGroup)) {
-                boolean isYosRequest = isYosRequest(apiUri, request);
-                URI serverRootURL = isYosRequest ? space.getYosServerRootURL() : space.getServerRootURL();
-                URI independentServerRootURL;
-                try {
-                    independentServerRootURL = new URI(serverRootURL.getScheme(), serverRootURL.getUserInfo(),
-                            getIndependentApiGroupHost(apiGroup, serverRootURL.getHost(), isYosRequest),
-                            serverRootURL.getPort(), serverRootURL.getPath(), serverRootURL.getQuery(), serverRootURL.getFragment());
-                } catch (URISyntaxException e) {
-                    throw new YopClientException("route request failure");
-                }
-                serverRoot = independentServerRootURL.toString();
-            } else {
-                serverRoot = isYosRequest(apiUri, request) ? space.getYosServerRoot() : space.getServerRoot();
-            }
-        }
-        return serverRoot;
-    }
-
-    @Override
-    public String route(String apiUri, YopRequest request, List<String> excludeServerRoots) {
+    public UriResource route(String apiUri, YopRequest request, List<URI> excludeServerRoots) {
         final String appKey = request.getAppSdkConfig().getAppKey();
         if (isAppInSandbox(appKey)) {
-            return space.getSandboxServerRoot();
+            return new UriResource(space.getSandboxServerRootURL());
         }
 
         final ServerRootType serverRootType = isYosRequest(apiUri, request) ? ServerRootType.YOS : ServerRootType.COMMON;
@@ -177,66 +131,62 @@ public class SimpleGateWayRouter implements GateWayRouter {
         // 独立网关，依然走openapi，serviceName是apiGroup的变形，需要还原
         String apiGroup = extractApiGroupFromApiUri(apiUri);
         if (independentApiGroups.contains(apiGroup)) {
-            final String independentServerRoot = independentServerRoot(serverRootType, apiGroup, request);
+            final URI independentServerRoot = independentServerRoot(serverRootType, apiGroup, request);
             if (isExcludeServerRoots(independentServerRoot, excludeServerRoots)) {
                 throw new YopClientException("Config Error, ServerRoot excluded:" + independentServerRoot);
             }
-            return independentServerRoot;
+            return new UriResource(independentServerRoot);
         }
 
-        // 主域名
-        String mainServer = MAIN_SERVER.get(serverRootType);
-        if (null != mainServer && !isExcludeServerRoots(mainServer, excludeServerRoots)) {
-            return mainServer;
-        }
-
-        final CopyOnWriteArrayList<String> serverRoots = ALL_SERVER.get(serverRootType);
+        final CopyOnWriteArrayList<URI> serverRoots = ALL_SERVER.get(serverRootType);
         if (CollectionUtils.isEmpty(serverRoots)) {
             throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
         }
 
+        // 主域名准备
+        URI mainServer = MAIN_SERVER.get(serverRootType);
         // 随机选主
         if (null == mainServer) {
-            final List<String> randomList = RouteUtils.randomList(serverRoots);
-            mainServer = randomList.remove(0);
-            if (recordMainServer(mainServer, serverRootType)) {
+            final List<URI> randomList = RouteUtils.randomList(serverRoots);
+            if (recordMainServer(randomList.remove(0), serverRootType)) {
                 BACKUP_SERVERS.put(serverRootType, randomList);
             }
-            return MAIN_SERVER.get(serverRootType);
+            mainServer = MAIN_SERVER.get(serverRootType);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Main ServerRoot Set, value:{}", mainServer);
+            }
+        }
+
+        // 主域名正常
+        if (null != mainServer && !isExcludeServerRoots(mainServer, excludeServerRoots)) {
+            return new UriResource(mainServer);
         }
 
         // 主域名故障，临时启用备选域名
-        final List<String> backupServers = BACKUP_SERVERS.get(serverRootType);
+        final List<URI> backupServers = BACKUP_SERVERS.get(serverRootType);
         if (CollectionUtils.isNotEmpty(backupServers)) {
-            for (String backup : backupServers) {
+            for (URI backup : backupServers) {
                 if (!isExcludeServerRoots(backup, excludeServerRoots)) {
-                    return backup;
+                    return new UriResource(backup);
                 }
             }
         }
 
         // 备用域名故障，选用最早故障的域名
-        final LinkedBlockingDeque<String> failedServers = BLOCKED_SERVERS.get(serverRootType);
-        String oldestFailServer = null;
-        if (null != failedServers && !failedServers.isEmpty()) {
-            oldestFailServer = failedServers.peek();
-        }
-
-        // 主域名兜底
-        return null != oldestFailServer ? oldestFailServer : mainServer;
+        return BLOCK_SERVER_POOL.select(serverRootType.name(), mainServer);
     }
 
-    private boolean isExcludeServerRoots(String serverRoot, List<String> excludeServerRoots) {
+    private boolean isExcludeServerRoots(URI serverRoot, List<URI> excludeServerRoots) {
         return null != excludeServerRoots && null != serverRoot && excludeServerRoots.contains(serverRoot);
     }
 
-    private String independentServerRoot(ServerRootType serverRootType, String apiGroup, YopRequest request) {
+    private URI independentServerRoot(ServerRootType serverRootType, String apiGroup, YopRequest request) {
         final boolean isYosRequest = ServerRootType.YOS.equals(serverRootType);
         URI serverRootURL = isYosRequest ? space.getYosServerRootURL() : space.getServerRootURL();
         try {
             return new URI(serverRootURL.getScheme(), serverRootURL.getUserInfo(),
                     getIndependentApiGroupHost(apiGroup, serverRootURL.getHost(), isYosRequest),
-                    serverRootURL.getPort(), serverRootURL.getPath(), serverRootURL.getQuery(), serverRootURL.getFragment()).toString();
+                    serverRootURL.getPort(), serverRootURL.getPath(), serverRootURL.getQuery(), serverRootURL.getFragment());
         } catch (URISyntaxException e) {
             throw new YopClientException("route request failure");
         }
@@ -286,24 +236,15 @@ public class SimpleGateWayRouter implements GateWayRouter {
         return StringUtils.substring(originHost, 0, index) + CharacterConstants.DASH_LINE + apiGroup + StringUtils.substring(originHost, index);
     }
 
-    private static boolean recordMainServer(String serverRoot, ServerRootType serverRootType) {
+    private static boolean recordMainServer(URI serverRoot, ServerRootType serverRootType) {
         return recordMainServer(serverRoot, serverRootType, false);
     }
 
-    private static void recordMainServer(String serverRoot, List<ServerRootType> serverRootTypes, boolean force) {
-        if (CollectionUtils.isEmpty(serverRootTypes)) {
-            throw new YopClientException("Config Error, No ServerRootType Specified");
-        }
-        for (ServerRootType serverRootType : serverRootTypes) {
-            recordMainServer(serverRoot, serverRootType, force);
-        }
-    }
-
-    private static boolean recordMainServer(String serverRoot, ServerRootType serverRootType, boolean force) {
+    private static boolean recordMainServer(URI serverRoot, ServerRootType serverRootType, boolean force) {
         if (null == serverRoot) {
             throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
         }
-        final String oldMain = MAIN_SERVER.putIfAbsent(serverRootType, serverRoot);
+        final URI oldMain = MAIN_SERVER.putIfAbsent(serverRootType, serverRoot);
         if (null != oldMain) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Main ServerRoot Already Set, value:{}", oldMain);

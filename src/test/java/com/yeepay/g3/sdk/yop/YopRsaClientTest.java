@@ -42,7 +42,6 @@ public class YopRsaClientTest {
         final com.yeepay.g3.sdk.yop.client.YopResponse response = com.yeepay.g3.sdk.yop.client.YopRsaClient.post("/rest/v1.0/test-wdc/product/find/rvs", request);
         Assert.assertNotNull(response);
         Assert.assertTrue(((Map) response.getResult()).get("id").equals(140));
-        System.in.read();
     }
 
     @Test

@@ -5,7 +5,6 @@
 package com.yeepay.g3.sdk.yop.client.metric.report;
 
 import com.google.common.collect.Lists;
-import com.yeepay.g3.sdk.yop.YopServiceException;
 import com.yeepay.g3.sdk.yop.cache.YopCredentialsCache;
 import com.yeepay.g3.sdk.yop.client.YopClient;
 import com.yeepay.g3.sdk.yop.client.YopRequest;
@@ -82,6 +81,8 @@ public class YopRemoteReporter implements YopReporter {
             LOGGER.warn("Remote Report Fail For Client Error, exType:{}, exMsg:{}", ex.getClass().getCanonicalName(),
                     StringUtils.defaultString(ex.getMessage()));
             BACKUP_REPORTER.batchReport(reports);
+        } catch (YopReportException e) {
+            throw e;
         } catch (Exception e) {
             throw new YopReportException("Remote Report Fail For Server Error, ex:", e);
         }

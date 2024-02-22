@@ -1,6 +1,9 @@
 {
   "server_root": "http://10.151.30.88:8064/yop-center/",
   //https://open.yeepay.com/yop-center
+  "preferred_server_roots": [
+    "http://ycetest.yeepay.com:30228/yop-center"
+  ],
   "app_key": "app_oEdCdceLQF63hvYz",
   "yop_public_key": [
     {

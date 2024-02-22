@@ -42,7 +42,7 @@ public class YopClient extends AbstractClient {
         normalize(request);
         sign(apiUri, request);
 
-        return handleRequest(apiUri, request, HttpMethodName.POST, YopRequestType.WEB, YopSecurityType.AES);
+        return handleRequestWithRetry(apiUri, request, HttpMethodName.POST, YopRequestType.WEB, YopSecurityType.AES);
     }
 
     /**
@@ -57,7 +57,7 @@ public class YopClient extends AbstractClient {
         normalize(request);
         sign(apiUri, request);
 
-        return handleRequest(apiUri, request, HttpMethodName.GET, YopRequestType.WEB, YopSecurityType.AES);
+        return handleRequestWithRetry(apiUri, request, HttpMethodName.GET, YopRequestType.WEB, YopSecurityType.AES);
     }
 
     /**
@@ -72,7 +72,7 @@ public class YopClient extends AbstractClient {
         normalize(request);
         sign(apiUri, request);
 
-        return handleRequest(apiUri, request, HttpMethodName.POST, YopRequestType.MULTI_FILE_UPLOAD, YopSecurityType.AES);
+        return handleRequestWithRetry(apiUri, request, HttpMethodName.POST, YopRequestType.MULTI_FILE_UPLOAD, YopSecurityType.AES);
     }
 
     /**
