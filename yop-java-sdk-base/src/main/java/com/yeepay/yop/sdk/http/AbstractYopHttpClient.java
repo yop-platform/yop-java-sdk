@@ -118,9 +118,9 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                                                                                       YopHttpResponse httpResponse, Exception originEx) {
         try {
             // 兼容旧版沙箱
-            if (EnvUtils.isSandBoxEnv(executionContext.getEnv())
+            if (!(EnvUtils.isSandBoxEnv(executionContext.getEnv())
                     || EnvUtils.isSandBoxMode()
-                    || EnvUtils.isSandboxApp(executionContext.getYopCredentials().getAppKey())) {
+                    || EnvUtils.isSandboxApp(executionContext.getYopCredentials().getAppKey()))) {
                 boolean isEx = null != originEx,
                         isClientEx = originEx instanceof YopClientException,
                         isServiceEx = originEx instanceof YopServiceException,
