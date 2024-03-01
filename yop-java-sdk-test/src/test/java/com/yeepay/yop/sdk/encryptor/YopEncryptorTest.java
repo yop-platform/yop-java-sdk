@@ -98,7 +98,7 @@ public class YopEncryptorTest extends BaseTest {
             sm2Encryptor = YopEncryptorFactory.getEncryptor(YopConstants.YOP_CREDENTIALS_ENCRYPT_ALG_SM2);
             sm4Options = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING, null);
             sm4OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
-                    Collections.singletonList(new Sm4Enhancer(appKey)));
+                    Collections.singletonList(new Sm4Enhancer("config/yeepay", "qa", appKey)));
             sm2OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
                     Collections.singletonList(new Sm2Enhancer(appKey, "4028129061")));
             encryptOptions = sm2OptionsEnhanced.get();
@@ -488,7 +488,7 @@ public class YopEncryptorTest extends BaseTest {
         YopRequest yopRequest = aFormRequest();
         yopRequest.addParameter("string0", "dsbzb");
         Request<YopRequest> request = YopRequestMarshaller.getInstance().marshall(yopRequest);
-        RequestEncryptor.encrypt(request, sm4Encryptor, encryptOptions);
+        RequestEncryptor.encrypt("config/yeepay", "qa", request, appKey, sm4Encryptor, sm2OptionsEnhanced);
         String encryptHeader = request.getHeaders().get(Headers.YOP_ENCRYPT);
         Assert.assertNull(encryptHeader);
     }
@@ -502,7 +502,7 @@ public class YopEncryptorTest extends BaseTest {
     }
 
     private String doEncrypt(Request<YopRequest> request) throws Exception {
-        RequestEncryptor.encrypt(request, sm4Encryptor, encryptOptions);
+        RequestEncryptor.encrypt("config/yeepay", "qa", request, appKey, sm4Encryptor, sm2OptionsEnhanced);
         String encryptHeader = request.getHeaders().get(Headers.YOP_ENCRYPT);
         Assert.assertTrue(encryptHeader.startsWith(YopConstants.YOP_ENCRYPT_V1));
         String[] items = StringUtils.splitPreserveAllTokens(encryptHeader, CharacterConstants.SLASH);

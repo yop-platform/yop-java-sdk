@@ -7,13 +7,13 @@ package com.yeepay.yop.sdk;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
+import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParserFactory;
 import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
@@ -56,11 +56,12 @@ public class YopClientBenchmarkTest {
 
     static {
         System.setProperty("yop.sdk.http", "true");
-        System.setProperty("yop.sdk.config.env", "qa");
-        yopClient = YopClientBuilder.builder().build();
+        yopClient = YopClientBuilder.builder()
+                .withProvider(YopConstants.PROVIDER_YEEPAY).withEnv(YopConstants.ENV_QA).build();
     }
 
     @Test
+    @Ignore
     public void runBenchmarks() throws Exception {
         Options options = new OptionsBuilder()
                 .include(this.getClass().getName() + ".*")
@@ -117,9 +118,8 @@ public class YopClientBenchmarkTest {
     @Group
     public void testGetDownload() {
         try {
-            YopRequest request = new YopRequest("/yos/v1.0/std/bill/fundbill/download", "GET");
-            request.addParameter("fileId", "30343");
-            request.addParameter("merchantNo", "10040040287");
+            YopRequest request = new YopRequest("/yos/v1.0/test/test/ceph-download", "GET");
+            request.addParameter("fileName", "wym-test.txt");//正确;
             String appKey = "OPR:10040040287";
             request.getRequestConfig().setAppKey(appKey);
             request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
@@ -209,7 +209,7 @@ public class YopClientBenchmarkTest {
                 , CertTypeEnum.RSA2048)));
         request.addMultiPartFile("_file", getClass().getResourceAsStream("/simplelogger.properties"));
         YosUploadResponse resp = yopClient.upload(request);
-        assert resp.getResult() instanceof Map && !((Map) resp.getResult()).get("success_count").equals(1);
+        assert resp.getResult() instanceof Map && ((Map) resp.getResult()).get("success_count").equals(1);
     }
 
 }

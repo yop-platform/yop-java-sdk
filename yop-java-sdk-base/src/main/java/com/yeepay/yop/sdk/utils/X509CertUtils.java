@@ -4,10 +4,10 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
-import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
+import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,6 +19,9 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Set;
+
+import static com.yeepay.yop.sdk.YopConstants.*;
 
 /**
  * title: x509证书工具类<br/>
@@ -41,7 +44,13 @@ public class X509CertUtils {
      */
     public static void verifyCertificate(CertTypeEnum certType, PublicKey issuerPubKey, X509Certificate cert) throws NoSuchProviderException, CertificateException,
             NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        checkCertDate(cert);
+        verifyCertificate(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, certType, issuerPubKey, cert);
+    }
+
+    public static void verifyCertificate(String provider, String env, CertTypeEnum certType,
+                                         PublicKey issuerPubKey, X509Certificate cert) throws NoSuchProviderException, CertificateException,
+            NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        checkCertDate(provider, env, cert);
         if (null != issuerPubKey) {
             X509CertSupportFactory.getSupport(certType.getValue()).verifyCertificate(issuerPubKey, cert);
         }
@@ -56,7 +65,12 @@ public class X509CertUtils {
      * @return true: 需要刷新，false：不需要
      */
     public static boolean checkCertDate(X509Certificate certificate) throws CertificateExpiredException, CertificateNotYetValidException {
-        final YopCertStore yopCertStore = globalCertStoreConfig();
+        return checkCertDate(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, certificate);
+    }
+
+    public static boolean checkCertDate(String provider, String env, X509Certificate certificate)
+            throws CertificateExpiredException, CertificateNotYetValidException {
+        final YopCertStore yopCertStore = ClientUtils.getCurrentSdkConfigProvider().getConfig(provider, env).getYopCertStore();
         long validAfterExpire = getValidAfterExpire(yopCertStore),
             refreshBeforeExpire = getRefreshBeforeExpire(yopCertStore);
         Date now = new Date();
@@ -99,10 +113,6 @@ public class X509CertUtils {
         return X509CertSupportFactory.getSupport(certType.getValue()).generate(is);
     }
 
-    private static YopCertStore globalCertStoreConfig() {
-        return YopSdkConfigProviderRegistry.getProvider().getConfig().getYopCertStore();
-    }
-
     /**
      * (CFCA证书在Windows操作系统解析出来的证书序列号是16进制)将10进制转换成16进制
      *
@@ -127,6 +137,41 @@ public class X509CertUtils {
             return hexSerialNo;
         }
         return Long.valueOf(hexSerialNo, 16).toString();
+    }
+
+    public static Set<String> getLocalCertDirs(String baseDir, String provider, String env, String appKey) {
+        Set<String> certDirsOrdered = Sets.newLinkedHashSet();
+        certDirsOrdered.add(getLocalCertDirByProviderAndEnv(baseDir, provider, env, appKey));
+        certDirsOrdered.add(getLocalCertDirByProvider(baseDir, provider));
+        certDirsOrdered.add(baseDir);
+        return certDirsOrdered;
+    }
+
+    public static String getLocalCertDirByProviderAndEnv(String baseDir, String provider, String env, String appKey) {
+        // 兼容yeepay特有的旧逻辑
+        if (EnvUtils.isOldSetting(provider, env, appKey)) {
+            return baseDir + "/" + PROVIDER_YEEPAY + "/" + ENV_QA;
+        }
+
+        String certDir = baseDir;
+
+        if (StringUtils.isNotBlank(provider)) {
+            certDir += "/" + provider;
+        }
+
+        if (StringUtils.isNotBlank(env)) {
+            certDir += "/" + env;
+        }
+        return certDir;
+    }
+
+    public static String getLocalCertDirByProvider(String baseDir, String provider) {
+        String certDir = baseDir;
+
+        if (StringUtils.isNotBlank(provider)) {
+            certDir += "/" + provider;
+        }
+        return certDir;
     }
 }
 

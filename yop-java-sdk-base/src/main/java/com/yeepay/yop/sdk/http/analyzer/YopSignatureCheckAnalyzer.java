@@ -2,13 +2,13 @@ package com.yeepay.yop.sdk.http.analyzer;
 
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
-import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -50,7 +50,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
                 LOGGER.debug("response sign verify begin, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());
             }
             final SignOptions reqOptions = context.getSignOptions();
-            YopPlatformCredentials platformCredentials = getPlatformCredential(reqOptions, context.getAppKey(),
+            YopPlatformCredentials platformCredentials = getPlatformCredential(context.getProvider(), context.getEnv(), reqOptions, context.getAppKey(),
                     metadata.getYopCertSerialNo(), context.getOriginRequest().getOriginalRequestObject().getRequestConfig().getServerRoot());
             if (null != platformCredentials) {
                 // 目前 YOP响应签名非urlsafe
@@ -69,7 +69,8 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
         return false;
     }
 
-    private YopPlatformCredentials getPlatformCredential(SignOptions signOptions, String appKey, String serialNo, String serverRoot) {
+    private YopPlatformCredentials getPlatformCredential(String provider, String env,
+                                                         SignOptions signOptions, String appKey, String serialNo, String serverRoot) {
         CertTypeEnum certType = SM2_PROTOCOL_PREFIX.equals(signOptions.getProtocolPrefix()) ? CertTypeEnum.SM2 : CertTypeEnum.RSA2048;
         if (certType == CertTypeEnum.RSA2048) {
             if (StringUtils.isNotBlank(serialNo)) {
@@ -78,7 +79,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
             serialNo = YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO;
         }
 
-        return YopPlatformCredentialsProviderRegistry.getProvider().getCredentials(appKey, serialNo, serverRoot);
+        return ClientUtils.getCurrentPlatformCredentialsProvider().getCredentials(provider, env, appKey, serialNo, serverRoot);
     }
 
 }

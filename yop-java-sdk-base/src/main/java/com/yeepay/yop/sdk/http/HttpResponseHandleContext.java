@@ -25,6 +25,10 @@ public class HttpResponseHandleContext implements Serializable {
 
     private static final long serialVersionUID = -1L;
 
+    private final String provider;
+
+    private final String env;
+
     private final String appKey;
 
     private final YopHttpResponse response;
@@ -48,6 +52,8 @@ public class HttpResponseHandleContext implements Serializable {
     public HttpResponseHandleContext(YopHttpResponse httpResponse,
                                      Request originRequest,
                                      ExecutionContext executionContext) throws IOException, ExecutionException, InterruptedException {
+        this.provider = executionContext.getProvider();
+        this.env = executionContext.getEnv();
         this.appKey = (String) originRequest.getHeaders().get(Headers.YOP_APPKEY);
         this.response = httpResponse;
         this.originRequest = originRequest;
@@ -63,6 +69,14 @@ public class HttpResponseHandleContext implements Serializable {
             this.encryptor = null;
             this.encryptOptions = null;
         }
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getEnv() {
+        return env;
     }
 
     public String getAppKey() {

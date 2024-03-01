@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -196,47 +195,6 @@ public class YopHttpClient extends AbstractYopHttpClient {
             tlsVersion = TLS_VERSION_1_1;
         }
 
-        // 加载证书文件
-//        KeyManager[] kms = null;
-//        String keyStoreFileName = "";
-//        char[] keyStorePwd = "".toCharArray();
-//
-//        try {
-//            KeyStore ks = KeyStore.getInstance("JKS");
-//            ks.load(new FileInputStream(keyStoreFileName), keyStorePwd);
-//
-//            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-//            kmf.init(ks, keyStorePwd);
-//            kms = kmf.getKeyManagers();
-//        } catch (Exception e) {
-//            logger.error("Load KeyStore fail, keyStoreFileName:" + keyStoreFileName, e);
-//        }
-//
-//        TrustManager[] tms = null;
-//        String trustKeyStoreFileName = "config/certs/openapi_chain_rsa.jks";
-//        char[] trustKeyStorePwd = "xDf2e-Ex3Kl-0iuoS-56Msn".toCharArray();
-//
-//        InputStream is = null;
-//        try {
-//            is = FileUtils.getResourceAsStream(trustKeyStoreFileName);
-//            KeyStore tks = KeyStore.getInstance("JKS");
-//            tks.load(is, trustKeyStorePwd);
-//
-//            TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
-//            tmf.init(tks);
-//            tms = tmf.getTrustManagers();
-//        } catch (Exception e) {
-//            logger.error("Load TrustKeyStore fail, trustKeyStoreFileName:" + trustKeyStoreFileName, e);
-//        } finally {
-//            if (null != is) {
-//                try {
-//                    is.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-
         SSLContext s;
         if (StringUtils.isNotEmpty(tlsVersion)) {
             s = SSLContext.getInstance(tlsVersion);
@@ -337,7 +295,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
                 if (request.getContent() != null) {
                     postMethod.setEntity(new InputStreamEntity(request.getContent(), contentLength));
                 } else if (encodedParams != null) {
-                    postMethod.setEntity(new StringEntity(encodedParams, Charset.defaultCharset()));
+                    postMethod.setEntity(new StringEntity(encodedParams, DEFAULT_CHARSET));
                 }
             } else if (request.getHttpMethod() == HttpMethodName.DELETE) {
                 httpRequest = new HttpDelete(uri);

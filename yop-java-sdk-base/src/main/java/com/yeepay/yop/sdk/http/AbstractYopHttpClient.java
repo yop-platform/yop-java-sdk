@@ -21,6 +21,7 @@ import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
+import com.yeepay.yop.sdk.utils.EnvUtils;
 import com.yeepay.yop.sdk.utils.HttpUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -116,25 +117,30 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                                                                                         Request<Input> request, Output analyzedResponse,
                                                                                       YopHttpResponse httpResponse, Exception originEx) {
         try {
-            boolean isEx = null != originEx,
-                    isClientEx = originEx instanceof YopClientException,
-                    isServiceEx = originEx instanceof YopServiceException,
-                    isHttpEx = originEx instanceof YopHttpException,
-                    isUnexpectedEx = isEx && !(isClientEx || isHttpEx),
-                    isHostEx = isHttpEx || isUnexpectedEx,
-                    needReport = !isEx || isServiceEx || isHostEx;
-            if (needReport) {
-                final long elapsedTime = System.currentTimeMillis() - beginTime;
-                YopHostRequestEvent<?> reportEvent;
-                if (isHostEx) {
-                    reportEvent = toFailRequest(executionContext, request, httpResponse, originEx, elapsedTime);
-                } else {
-                    reportEvent = toSuccessRequest(executionContext, request, httpResponse, elapsedTime);
-                }
-                ClientReporter.reportHostRequest(reportEvent);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Reported Request: {}, elapsed:{}ms", reportEvent,
-                            System.currentTimeMillis() - beginTime);
+            // 兼容旧版沙箱
+            if (!(EnvUtils.isSandBoxEnv(executionContext.getEnv())
+                    || EnvUtils.isSandBoxMode()
+                    || EnvUtils.isSandboxApp(executionContext.getYopCredentials().getAppKey()))) {
+                boolean isEx = null != originEx,
+                        isClientEx = originEx instanceof YopClientException,
+                        isServiceEx = originEx instanceof YopServiceException,
+                        isHttpEx = originEx instanceof YopHttpException,
+                        isUnexpectedEx = isEx && !(isClientEx || isHttpEx),
+                        isHostEx = isHttpEx || isUnexpectedEx,
+                        needReport = !isEx || isServiceEx || isHostEx;
+                if (needReport) {
+                    final long elapsedTime = System.currentTimeMillis() - beginTime;
+                    YopHostRequestEvent<?> reportEvent;
+                    if (isHostEx) {
+                        reportEvent = toFailRequest(executionContext, request, httpResponse, originEx, elapsedTime);
+                    } else {
+                        reportEvent = toSuccessRequest(executionContext, request, httpResponse, elapsedTime);
+                    }
+                    ClientReporter.reportHostRequest(reportEvent);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Reported Request: {}, elapsed:{}ms", reportEvent,
+                                System.currentTimeMillis() - beginTime);
+                    }
                 }
             }
             if (!(analyzedResponse instanceof YosDownloadResponse) && null != httpResponse) {
@@ -168,6 +174,8 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     private <Input extends BaseRequest> void setBasic(YopHostRequestEvent<?> event, ExecutionContext executionContext,
                                                       Request<Input> request, YopHttpResponse httpResponse,
                                                       long elapsedTime) {
+        event.setProvider(executionContext.getProvider());
+        event.setEnv(executionContext.getEnv());
         event.setAppKey(executionContext.getYopCredentials().getAppKey());
         event.setServerResource(request.getResourcePath());
         event.setServerHost(HttpUtils.generateHostHeader(request.getEndpoint()));
@@ -231,7 +239,10 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
                     executionContext.getEncryptOptions());
             return;
         }
-        encrypt(request, executionContext.getEncryptor(), executionContext.getEncryptOptions().get());
+        if (!encrypt(executionContext.getProvider(), executionContext.getEnv(), request, executionContext.getYopCredentials().getAppKey(),
+                executionContext.getEncryptor(), executionContext.getEncryptOptions())) {
+            executionContext.setEncryptSupported(false);
+        }
     }
 
     /**

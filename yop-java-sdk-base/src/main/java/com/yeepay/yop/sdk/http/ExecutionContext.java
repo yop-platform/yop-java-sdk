@@ -12,6 +12,10 @@ import java.util.concurrent.Future;
 
 public class ExecutionContext implements RetryContext {
 
+    private String provider;
+
+    private String env;
+
     private final YopSigner signer;
 
     private final SignOptions signOptions;
@@ -26,14 +30,25 @@ public class ExecutionContext implements RetryContext {
 
     private int retryCount = 0;
 
-    private ExecutionContext(YopSigner signer, SignOptions signOptions, YopCredentials<?> yopCredentials,
+    private ExecutionContext(String provider, String env,
+                             YopSigner signer, SignOptions signOptions, YopCredentials<?> yopCredentials,
                              YopEncryptor encryptor, Future<EncryptOptions> encryptOptions) {
+        this.provider = provider;
+        this.env = env;
         this.signer = signer;
         this.signOptions = signOptions;
         this.encryptor = encryptor;
         this.yopCredentials = yopCredentials;
         this.encryptOptions = encryptOptions;
         this.encryptSupported = null != encryptor && null != encryptOptions;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getEnv() {
+        return env;
     }
 
     public YopSigner getSigner() {
@@ -78,7 +93,14 @@ public class ExecutionContext implements RetryContext {
         return this.getRetryCount();
     }
 
+    public void setEncryptSupported(boolean encryptSupported) {
+        this.encryptSupported = encryptSupported;
+    }
+
     public static final class Builder {
+
+        private String provider;
+        private String env;
         private YopSigner signer;
         private SignOptions signOptions;
         private YopCredentials<?> yopCredentials;
@@ -94,6 +116,16 @@ public class ExecutionContext implements RetryContext {
 
         public Builder withSigner(YopSigner signer) {
             this.signer = signer;
+            return this;
+        }
+
+        public Builder withProvider(String provider) {
+            this.provider = provider;
+            return this;
+        }
+
+        public Builder withEnv(String env) {
+            this.env = env;
             return this;
         }
 
@@ -118,7 +150,7 @@ public class ExecutionContext implements RetryContext {
         }
 
         public ExecutionContext build() {
-            return new ExecutionContext(signer, signOptions, yopCredentials, encryptor, encryptOptions);
+            return new ExecutionContext(provider, env, signer, signOptions, yopCredentials, encryptor, encryptOptions);
         }
     }
 }

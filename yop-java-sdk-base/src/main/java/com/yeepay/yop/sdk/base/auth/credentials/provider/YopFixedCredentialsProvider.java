@@ -11,9 +11,14 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.base.config.YopAppConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 
 /**
  * title: 固定的应用sdk配置提供方基类<br>
@@ -31,19 +36,27 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
     private final Map<String, YopCredentials> yopCredentialsMap = Maps.newConcurrentMap();
 
     @Override
-    public final YopCredentials<?> getCredentials(String appKey, String credentialType) {
-        String key = appKey + ":" + credentialType;
-        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(appKey), credentialType));
+    public final YopCredentials<?> getCredentials(String provider, String env, String appKey, String credentialType) {
+        String key = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER) + COLON +
+                StringUtils.defaultString(env, YOP_DEFAULT_ENV) + COLON + appKey + COLON + credentialType;
+        return yopCredentialsMap.computeIfAbsent(key, k -> buildCredentials(getAppConfig(provider, env, appKey), credentialType));
     }
 
     @Override
     public List<CertTypeEnum> getSupportCertTypes(String appKey) {
-        return Lists.newArrayList(getAppConfig(appKey).getIsvPrivateKeys().keySet());
+        return getSupportCertTypes(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey);
     }
 
-    private YopAppConfig getAppConfig(String appKey) {
-        String appKeyHandled = useDefaultIfBlank(appKey);
-        return appConfigs.computeIfAbsent(appKeyHandled, k -> loadAppConfig(appKeyHandled));
+    @Override
+    public List<CertTypeEnum> getSupportCertTypes(String provider, String env, String appKey) {
+        return Lists.newArrayList(getAppConfig(provider, env, appKey).getIsvPrivateKeys().keySet());
+    }
+
+    private YopAppConfig getAppConfig(String provider, String env, String appKey) {
+        final String theProvider = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER);
+        final String theEnv = StringUtils.defaultString(env, YOP_DEFAULT_ENV);
+        final String theAppKey = useDefaultIfBlank(theProvider, theEnv, appKey);
+        return appConfigs.computeIfAbsent(theAppKey, k -> loadAppConfig(theProvider, theEnv, theAppKey));
     }
 
     /**
@@ -54,9 +67,18 @@ public abstract class YopFixedCredentialsProvider extends YopBaseCredentialsProv
      */
     protected abstract YopAppConfig loadAppConfig(String appKey);
 
+    protected YopAppConfig loadAppConfig(String provider, String env, String appKey) {
+        return loadAppConfig(appKey);
+    }
+
     @Override
     public List<YopCertConfig> getIsvEncryptKey(String appKey) {
-        return getAppConfig(appKey).getIsvEncryptKey();
+        return getIsvEncryptKey(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey);
+    }
+
+    @Override
+    public List<YopCertConfig> getIsvEncryptKey(String provider, String env, String appKey) {
+        return getAppConfig(provider, env, appKey).getIsvEncryptKey();
     }
 
 }

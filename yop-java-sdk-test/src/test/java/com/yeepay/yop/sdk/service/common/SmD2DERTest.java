@@ -39,7 +39,6 @@ import java.security.spec.X509EncodedKeySpec;
  * @version 1.0.0
  * @since 2021/4/25 15:58
  */
-@Ignore
 public class SmD2DERTest {
 
     private String name = "sm2p256v1";

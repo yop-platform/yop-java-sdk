@@ -65,8 +65,12 @@ public class EncryptOptionsCache {
      * @return Future<EncryptOptions>
      */
     public static Future<EncryptOptions> loadEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
+        return loadEncryptOptions(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey, encryptAlg, serverRoot);
+    }
+
+    public static Future<EncryptOptions> loadEncryptOptions(String provider, String env, String appKey, String encryptAlg, String serverRoot) {
         try {
-            return ENCRYPT_OPTIONS_CACHE.get(getCacheKey(appKey, encryptAlg, serverRoot));
+            return ENCRYPT_OPTIONS_CACHE.get(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (ExecutionException e) {
             throw new YopClientException("ConfigProblem, LoadEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
@@ -101,8 +105,12 @@ public class EncryptOptionsCache {
      * @param serverRoot 平台证书请求端点
      */
     public static void refreshEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
+        refreshEncryptOptions(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey, encryptAlg, serverRoot);
+    }
+
+    public static void refreshEncryptOptions(String provider, String env, String appKey, String encryptAlg, String serverRoot) {
         try {
-            ENCRYPT_OPTIONS_CACHE.refresh(getCacheKey(appKey, encryptAlg, serverRoot));
+            ENCRYPT_OPTIONS_CACHE.refresh(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (Exception e) {
             throw new YopClientException("ConfigProblem, RefreshEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
@@ -127,8 +135,12 @@ public class EncryptOptionsCache {
      * @param serverRoot 平台证书请求端点
      */
     public static void invalidateEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
+        invalidateEncryptOptions(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey, encryptAlg, serverRoot);
+    }
+
+    public static void invalidateEncryptOptions(String provider, String env, String appKey, String encryptAlg, String serverRoot) {
         try {
-            ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(appKey, encryptAlg, serverRoot));
+            ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (Exception e) {
             throw new YopClientException("ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
@@ -155,17 +167,23 @@ public class EncryptOptionsCache {
      * @return Future<EncryptOptions>
      */
     public static Future<EncryptOptions> reloadEncryptOptions(String appKey, String encryptAlg, String serverRoot) {
+        return reloadEncryptOptions(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey, encryptAlg, serverRoot);
+    }
+
+    public static Future<EncryptOptions> reloadEncryptOptions(String provider, String env, String appKey, String encryptAlg, String serverRoot) {
         try {
-            ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(appKey, encryptAlg, serverRoot));
+            ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (Exception e) {
             throw new YopClientException("ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
-        return loadEncryptOptions(appKey, encryptAlg, serverRoot);
+        return loadEncryptOptions(provider, env, appKey, encryptAlg, serverRoot);
     }
 
-    private static String getCacheKey(String appKey, String encryptAlg, String serverRoot) {
-        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY),
+    private static String getCacheKey(String provider, String env, String appKey, String encryptAlg, String serverRoot) {
+        return StringUtils.joinWith(COMMA, StringUtils.defaultIfBlank(provider, YOP_DEFAULT_PROVIDER),
+                StringUtils.defaultIfBlank(env, YOP_DEFAULT_ENV),
+                StringUtils.defaultIfBlank(appKey, YOP_DEFAULT_APPKEY),
                 StringUtils.defaultIfBlank(encryptAlg, EMPTY), StringUtils.defaultIfBlank(serverRoot, EMPTY));
     }
 
@@ -181,10 +199,11 @@ public class EncryptOptionsCache {
                 Future<EncryptOptions> encryptOptions = null;
                 try {
                     String[] split = StringUtils.splitPreserveAllTokens(cacheKey, COMMA);
-                    String appKey = split[0], encryptAlg = split[1]
-                            , serverRoot = split.length > 2 ? split[2]: null;
+                    String provider = split[0], env = split[1]
+                            ,appKey = split[2], encryptAlg = split[3]
+                            , serverRoot = split.length > 4 ? split[4]: null;
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
-                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(getEnhancer(appKey, encryptAlg, serverRoot));
+                    List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(getEnhancer(provider, env, appKey, encryptAlg, serverRoot));
                     encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
                 } catch (Exception ex) {
                     LOGGER.warn("UnexpectedException occurred when init encryptOptions for cacheKey:" + cacheKey, ex);
@@ -194,15 +213,16 @@ public class EncryptOptionsCache {
         });
     }
 
-    private static EncryptOptionsEnhancer getEnhancer(String appKey,
+    private static EncryptOptionsEnhancer getEnhancer(String provider, String env,
+                                                      String appKey,
                                                       String encryptAlg,
                                                       String serverRoot) {
         switch (encryptAlg) {
             case SM4_CBC_PKCS5PADDING:
-                return new Sm2Enhancer(appKey, EMPTY, serverRoot);
+                return new Sm2Enhancer(provider, env, appKey, EMPTY, serverRoot);
             case AES:
             case AES_ECB_PKCS5PADDING:
-                return new RsaEnhancer(appKey);
+                return new RsaEnhancer(provider, env, appKey);
             default:
                 throw new YopClientException("not supported encryptAlg:" + encryptAlg);
         }

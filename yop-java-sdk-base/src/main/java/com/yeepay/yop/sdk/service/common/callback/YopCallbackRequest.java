@@ -33,6 +33,16 @@ public class YopCallbackRequest implements Serializable {
     private static final long serialVersionUID = -1L;
 
     /**
+     * 服务方
+     */
+    private String provider;
+
+    /**
+     * 服务环境
+     */
+    private String env;
+
+    /**
      * 请求路径
      */
     private String httpPath;
@@ -171,6 +181,24 @@ public class YopCallbackRequest implements Serializable {
 
     public YopCallbackRequest setPlatformServerRoot(String platformServerRoot) {
         this.platformServerRoot = platformServerRoot;
+        return this;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
+    public YopCallbackRequest setProvider(String provider) {
+        this.provider = provider;
+        return this;
+    }
+
+    public YopCallbackRequest setEnv(String env) {
+        this.env = env;
         return this;
     }
 

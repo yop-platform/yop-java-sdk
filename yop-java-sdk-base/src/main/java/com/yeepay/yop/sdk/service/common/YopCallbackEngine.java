@@ -37,6 +37,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
 import static com.yeepay.yop.sdk.internal.RequestEncryptor.encrypt;
@@ -62,21 +64,25 @@ public class YopCallbackEngine {
      * @return Yop回调请求
      */
     public static YopCallbackRequest build(YopRequest request) throws ExecutionException, InterruptedException, UnsupportedEncodingException {
+        return build(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, request);
+    }
+
+    public static YopCallbackRequest build(String provider, String env, YopRequest request) throws ExecutionException, InterruptedException, UnsupportedEncodingException {
         Request<YopRequest> marshalled = YopCallbackRequestMarshaller.getInstance().marshall(request);
         AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(request.getRequestConfig().getSecurityReq());
         if (null == authorizationReq) {
             throw new YopClientException("no authenticate req defined");
         } else {
             YopRequestConfig requestConfig = request.getRequestConfig();
-            YopCredentials<?> credential = getCredentials(requestConfig, authorizationReq);
+            YopCredentials<?> credential = getCredentials(provider, env, requestConfig, authorizationReq);
             if (isEncryptSupported(credential, requestConfig)) {
-                encrypt(marshalled, getEncryptor(requestConfig), EncryptOptionsCache
-                        .loadEncryptOptions(credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()).get());
+                encrypt(provider, env, marshalled, credential.getAppKey(), getEncryptor(requestConfig), EncryptOptionsCache
+                        .loadEncryptOptions(provider, env, credential.getAppKey(), requestConfig.getEncryptAlg(), requestConfig.getServerRoot()));
             }
             YopSignerFactory.getSigner(authorizationReq.getSignerType()).sign(marshalled, credential, authorizationReq.getSignOptions());
         }
 
-        final YopCallbackRequest callbackRequest = YopCallbackRequest.fromYopRequest(marshalled);
+        final YopCallbackRequest callbackRequest = YopCallbackRequest.fromYopRequest(marshalled).setProvider(provider).setEnv(env);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("YopCallbackRequest build:{}", callbackRequest);
         }
@@ -127,11 +133,12 @@ public class YopCallbackEngine {
         }
 
         // 签名
-        signIfNecessary(result, protocol, callback);
+        signIfNecessary(request, result, protocol, callback);
         return result;
     }
 
-    private static void signIfNecessary(YopCallbackResponse response, YopCallbackProtocol protocol, YopCallback callback) {
+    private static void signIfNecessary(YopCallbackRequest request, YopCallbackResponse response,
+                                        YopCallbackProtocol protocol, YopCallback callback) {
         try {
             if (!(protocol instanceof YopSm2CallbackProtocol)) {
                 return;
@@ -139,7 +146,7 @@ public class YopCallbackEngine {
             response.setContentType(YopContentType.JSON);
             HashMap<String, String> headers = Maps.newHashMap();
             YopCredentials<?> credentials = YopCredentialsProviderRegistry.getProvider()
-                    .getCredentials(callback.getAppKey(), CertTypeEnum.SM2.name());
+                    .getCredentials(request.getProvider(), request.getEnv(), callback.getAppKey(), CertTypeEnum.SM2.name());
             // 与网关保持一致
             final SignOptions signOptions = AuthorizationReqSupport.getAuthorizationReq("YOP-SM2-SM3")
                     .getSignOptions();

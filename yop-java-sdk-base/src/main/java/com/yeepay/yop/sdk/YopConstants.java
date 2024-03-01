@@ -21,7 +21,7 @@ import java.util.UUID;
  */
 public interface YopConstants {
 
-    String VERSION = "4.4.8";
+    String VERSION = "4.4.9";
 
     String DEFAULT_ENCODING = "UTF-8";
 
@@ -78,6 +78,8 @@ public interface YopConstants {
     String YOP_HTTP_CONTENT_TYPE_TEXT = "text/plain;charset=UTF-8";
 
     String YOP_DEFAULT_APPKEY = "default";
+    String YOP_DEFAULT_PROVIDER = "";
+    String YOP_DEFAULT_ENV = "";
 
     /**
      * 加密
@@ -131,5 +133,16 @@ public interface YopConstants {
     String HEADER_LANG_JAVA = "java";
 
     boolean SDK_DEBUG = Boolean.parseBoolean(System.getProperty("yop.sdk.debug", "false"));
+
+    // SDK来源
+    String YOP_SDK_SOURCE_BASIC = "basic";
+    String YOP_SDK_SOURCE_BIZ = "biz";
+
+    String PROVIDER_YEEPAY = "yeepay";
+    String PROVIDER_GPT = "gpt";
+
+    String ENV_PROD = "prod";
+    String ENV_SANDBOX = "sandbox";
+    String ENV_QA = "qa";
 
 }

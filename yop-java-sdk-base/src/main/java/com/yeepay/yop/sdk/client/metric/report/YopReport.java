@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.client.metric.report;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -20,6 +21,22 @@ import java.util.Date;
  * @since 2023/3/20
  */
 public interface YopReport extends Serializable {
+
+    /**
+     * 服务方
+     *
+     * @return string
+     */
+    @JsonIgnore
+    String getProvider();
+
+    /**
+     * 服务环境
+     *
+     * @return string
+     */
+    @JsonIgnore
+    String getEnv();
 
     /**
      * 内容类型

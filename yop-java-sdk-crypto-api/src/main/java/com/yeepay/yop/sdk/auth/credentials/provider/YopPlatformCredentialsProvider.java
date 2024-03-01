@@ -42,6 +42,24 @@ public interface YopPlatformCredentialsProvider {
     }
 
     /**
+     * 获取指定服务方、环境、端点下平台凭证
+     *
+     * @param provider   服务方
+     * @param env        环境
+     * @param appKey     应用
+     * @param serialNo   凭证标识
+     * @param serverRoot 端点
+     * @return YopPlatformCredentials
+     */
+    default YopPlatformCredentials getCredentials(String provider, String env, String appKey, String serialNo, String serverRoot) {
+        return getCredentials(appKey, serialNo, serverRoot);
+    }
+
+    default YopPlatformCredentials getCredentials(String provider, String env, String appKey, String serialNo) {
+        return getCredentials(provider, env, appKey, serialNo, null);
+    }
+
+    /**
      * 获取应用下某类型的最新可用平台凭证
      *
      * @param appKey         应用标识
@@ -63,6 +81,20 @@ public interface YopPlatformCredentialsProvider {
     }
 
     /**
+     * 获取应用下某类型的最新可用平台凭证
+     *
+     * @param provider       服务方
+     * @param env            环境
+     * @param appKey         应用
+     * @param credentialType 凭证类型
+     * @param serverRoot     端点
+     * @return YopPlatformCredentials
+     */
+    default YopPlatformCredentials getLatestCredentials(String provider, String env, String appKey, String credentialType, String serverRoot) {
+        return getLatestCredentials(appKey, credentialType, serverRoot);
+    }
+
+    /**
      * 将应用下平台证书转换并存入加密机
      *
      * @param appKey         应用标识
@@ -71,4 +103,16 @@ public interface YopPlatformCredentialsProvider {
      * @return YopPlatformCredentials
      */
     YopPlatformCredentials storeCredentials(String appKey, String credentialType, X509Certificate certificate);
+
+    /**
+     * 将应用下平台证书转换并存储
+     *
+     * @param provider       服务方
+     * @param env            环境
+     * @param appKey         应用
+     * @param credentialType 凭证类型
+     * @param certificate    证书
+     * @return YopPlatformCredentials
+     */
+    YopPlatformCredentials storeCredentials(String provider, String env, String appKey, String credentialType, X509Certificate certificate);
 }

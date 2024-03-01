@@ -1,6 +1,18 @@
 {
   "server_root": "https://openapi.yeepay.com/yop-center",
   "yos_server_root": "https://yos.yeepay.com/yop-center",
+  "sandbox_server_root": "https://sandbox.yeepay.com/yop-center",
+  "preferred_server_roots":[
+    "https://openapi-a.yeepay.com/yop-center",
+    "https://openapi-h.yeepay.com/yop-center"
+  ],
+  "yop_public_key": [
+    {
+      "store_type": "file_cer",
+      "cert_type": "RSA2048",
+      "value": "config/certs/yop_platform_rsa_cert_rsa.cer"
+    }
+  ],
   "yop_cert_store": {
     "enable": true,
     "lazy": false

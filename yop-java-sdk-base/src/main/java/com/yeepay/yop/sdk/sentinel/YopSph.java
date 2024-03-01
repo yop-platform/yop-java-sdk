@@ -23,6 +23,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,13 +202,18 @@ public class YopSph {
     public static class BlockResourcePool {
         private static final Map<String, List<URI>> serverBlockList = Maps.newConcurrentMap();
         private static final Map<String, AtomicLong> serverBLockSequence = Maps.newConcurrentMap();
-        public UriResource select(String serverType, URI mainServer) {
+        public UriResource select(String serverType, URI mainServer, List<URI> allServers) {
             rwl.readLock().lock();
             try {
                 URI oldestFailServer = null;
                 final List<URI> failedServers = serverBlockList.get(serverType);
                 if (null != failedServers && !failedServers.isEmpty()) {
-                    oldestFailServer = failedServers.get(0);
+                    for (URI failedServer : failedServers) {
+                        if (CollectionUtils.isNotEmpty(allServers) && allServers.contains(failedServer)) {
+                            oldestFailServer = failedServer;
+                            break;
+                        }
+                    }
                 }
                 // 熔断列表为空(说明其他线程已半开成功)，选主域名即可
                 if (null == oldestFailServer) {
