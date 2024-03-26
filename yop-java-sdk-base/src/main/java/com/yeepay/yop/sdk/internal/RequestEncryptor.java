@@ -20,6 +20,7 @@ import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.utils.Encodes;
+import com.yeepay.yop.sdk.utils.EncryptUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -42,7 +43,6 @@ import static com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol.YOP_EN
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
 import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonContentType;
-import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 
 /**
  * title: 负责加密YopRequest<br>
@@ -215,9 +215,9 @@ public class RequestEncryptor {
             // 默认整体加
             boolean totalEncrypt = true;
             if (BooleanUtils.isFalse(requestConfig.getTotalEncrypt())) {
-                encryptPaths = resolveAllJsonPaths(originJson, requestConfig.getEncryptParams());
+                encryptPaths = EncryptUtils.resolveAllJsonPaths(originJson, requestConfig.getEncryptParams());
                 // 防止设置非法的jsonpath，再次校验参数
-                totalEncrypt = JsonUtils.isTotalEncrypt(encryptPaths);
+                totalEncrypt = EncryptUtils.isTotalEncrypt(encryptPaths);
             }
 
             if (!totalEncrypt) {
