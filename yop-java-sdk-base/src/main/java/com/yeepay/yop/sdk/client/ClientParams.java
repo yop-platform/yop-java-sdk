@@ -4,6 +4,7 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
+import com.yeepay.yop.sdk.router.config.YopRouteConfigProvider;
 
 import java.net.URI;
 import java.util.List;
@@ -46,6 +47,8 @@ public class ClientParams {
 
     private final YopPlatformCredentialsProvider platformCredentialsProvider;
 
+    private final YopRouteConfigProvider routeConfigProvider;
+
     private String clientId;
 
     private ClientParams(boolean inner, String provider,String env,
@@ -53,7 +56,7 @@ public class ClientParams {
                          ClientConfiguration clientConfiguration,
                          AuthorizationReqRegistry authorizationReqRegistry,
                          YopCredentialsProvider credentialsProvider, YopSdkConfigProvider yopSdkConfigProvider,
-                         YopPlatformCredentialsProvider platformCredentialsProvider) {
+                         YopPlatformCredentialsProvider platformCredentialsProvider, YopRouteConfigProvider routeConfigProvider) {
         this.inner = inner;
         this.endPoint = endPoint;
         this.yosEndPoint = yosEndPoint;
@@ -65,6 +68,7 @@ public class ClientParams {
         this.credentialsProvider = credentialsProvider;
         this.yopSdkConfigProvider = yopSdkConfigProvider;
         this.platformCredentialsProvider = platformCredentialsProvider;
+        this.routeConfigProvider = routeConfigProvider;
         this.provider = provider;
         this.env = env;
     }
@@ -117,6 +121,10 @@ public class ClientParams {
         return platformCredentialsProvider;
     }
 
+    public YopRouteConfigProvider getRouteConfigProvider() {
+        return routeConfigProvider;
+    }
+
     void setClientId(String clientId) {
         this.clientId = clientId;
     }
@@ -140,6 +148,7 @@ public class ClientParams {
         private YopCredentialsProvider credentialsProvider;
         private YopSdkConfigProvider yopSdkConfigProvider;
         private YopPlatformCredentialsProvider platformCredentialsProvider;
+        private YopRouteConfigProvider routeConfigProvider;
 
         private Builder() {
         }
@@ -213,10 +222,15 @@ public class ClientParams {
             return this;
         }
 
+        public Builder withRouteConfigProvider(YopRouteConfigProvider routeConfigProvider) {
+            this.routeConfigProvider = routeConfigProvider;
+            return this;
+        }
+
         public ClientParams build() {
             return new ClientParams(inner, provider, env, endPoint, yosEndPoint, preferredEndPoint, preferredYosEndPoint, sandboxEndPoint,
                     clientConfiguration, authorizationReqRegistry,
-                    credentialsProvider, yopSdkConfigProvider, platformCredentialsProvider);
+                    credentialsProvider, yopSdkConfigProvider, platformCredentialsProvider, routeConfigProvider);
         }
     }
 }

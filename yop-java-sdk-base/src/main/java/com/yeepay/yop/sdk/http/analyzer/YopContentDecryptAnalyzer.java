@@ -3,14 +3,15 @@ package com.yeepay.yop.sdk.http.analyzer;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
+import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopResponseMetadata;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
-import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
+import com.yeepay.yop.sdk.utils.EncryptUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -24,8 +25,6 @@ import java.util.Set;
 import static com.yeepay.yop.sdk.YopConstants.YOP_JSON_CONTENT_BIZ_KEY;
 import static com.yeepay.yop.sdk.YopConstants.YOP_JSON_CONTENT_FORMAT;
 import static com.yeepay.yop.sdk.utils.HttpUtils.isJsonResponse;
-import static com.yeepay.yop.sdk.utils.JsonUtils.isTotalEncrypt;
-import static com.yeepay.yop.sdk.utils.JsonUtils.resolveAllJsonPaths;
 
 /**
  * title: 结果解密<br>
@@ -88,14 +87,14 @@ public class YopContentDecryptAnalyzer implements HttpResponseAnalyzer {
 
         Map<String, Object> yopResp = JsonUtils.fromJsonString(content, Map.class);
         Object encryptBizContent = yopResp.get(YOP_JSON_CONTENT_BIZ_KEY);
-        if (isTotalEncrypt(parsedEncryptProtocol.getEncryptParams())) {
+        if (EncryptUtils.isTotalEncrypt(parsedEncryptProtocol.getEncryptParams())) {
             httpResponse.setContent(String.format(YOP_JSON_CONTENT_FORMAT,
                     encryptor.decryptFromBase64((String) encryptBizContent, encryptOptions)));
             return;
         }
 
         String jsonBizContent = JsonUtils.toJsonString(encryptBizContent);
-        Set<String> encryptPaths = resolveAllJsonPaths(jsonBizContent, parsedEncryptProtocol.getEncryptParams());
+        Set<String> encryptPaths = EncryptUtils.resolveAllJsonPaths(jsonBizContent, parsedEncryptProtocol.getEncryptParams());
         DocumentContext valReadWriteCtx = JsonPath.parse(jsonBizContent);
         for (String path : encryptPaths) {
             try {

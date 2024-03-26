@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.invoke;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.exception.YopBlockException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
@@ -15,6 +16,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
@@ -34,6 +36,15 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
     private final Set<String> excludeExceptions;
 
     private final Set<String> retryExceptions;
+
+    private static final Map<String, SimpleExceptionAnalyzer> CACHED_ANALYZERS = Maps.newHashMap();
+
+    public static SimpleExceptionAnalyzer from(Set<String> excludeExceptions, Set<String> retryExceptions) {
+        Set<String> excludes = null != excludeExceptions ? excludeExceptions : Collections.emptySet();
+        Set<String> retries = null != retryExceptions ? retryExceptions : Collections.emptySet();
+        return CACHED_ANALYZERS.computeIfAbsent(StringUtils.join(excludes, "##") + "," + StringUtils.join(retries, "$$"),
+                p -> new SimpleExceptionAnalyzer(excludeExceptions, retryExceptions));
+    }
 
     public SimpleExceptionAnalyzer(Set<String> excludeExceptions, Set<String> retryExceptions) {
         this.excludeExceptions = null != excludeExceptions ? excludeExceptions : Collections.emptySet();

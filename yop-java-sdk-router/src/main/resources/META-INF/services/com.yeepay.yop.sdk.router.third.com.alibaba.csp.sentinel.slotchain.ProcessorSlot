@@ -1,0 +1,10 @@
+# Sentinel default ProcessorSlots
+# TODO 注释掉多余slot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.nodeselector.NodeSelectorSlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.clusterbuilder.ClusterBuilderSlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.logger.LogSlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.statistic.StatisticSlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.authority.AuthoritySlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.system.SystemSlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.flow.FlowSlot
+com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.DegradeSlot

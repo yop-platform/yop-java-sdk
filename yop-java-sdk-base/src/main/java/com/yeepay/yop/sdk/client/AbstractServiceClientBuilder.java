@@ -10,6 +10,8 @@ import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
+import com.yeepay.yop.sdk.router.config.YopRouteConfigProvider;
+import com.yeepay.yop.sdk.router.config.YopRouteConfigProviderRegistry;
 import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +52,8 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     private YopPlatformCredentialsProvider platformCredentialsProvider;
 
+    private YopRouteConfigProvider routeConfigProvider;
+
     private String endpoint;
 
     private List<URI> preferredEndPoint;
@@ -74,6 +78,9 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
         if (null == platformCredentialsProvider) {
             platformCredentialsProvider = YopPlatformCredentialsProviderRegistry.getProvider();
         }
+        if (null == routeConfigProvider) {
+            routeConfigProvider = YopRouteConfigProviderRegistry.getProvider();
+        }
         YopSdkConfig yopSdkConfig = yopSdkConfigProvider.getConfig(provider, env);
         if (null == clientConfiguration) {
             clientConfiguration = ClientConfigurationSupport.getClientConfiguration(yopSdkConfig);
@@ -93,6 +100,7 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                 .withCredentialsProvider(credentialsProvider)
                 .withYopSdkConfigProvider(yopSdkConfigProvider)
                 .withPlatformCredentialsProvider(platformCredentialsProvider)
+                .withRouteConfigProvider(routeConfigProvider)
                 .withClientConfiguration(clientConfiguration)
                 .withEndPoint(endpoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT)) : URI.create(endpoint))
                 .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
@@ -149,6 +157,11 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     public SubClass withPlatformCredentialsProvider(YopPlatformCredentialsProvider platformCredentialsProvider) {
         this.platformCredentialsProvider = platformCredentialsProvider;
+        return getSubclass();
+    }
+
+    public SubClass withRouteConfigProvider(YopRouteConfigProvider routeConfigProvider) {
+        this.routeConfigProvider = routeConfigProvider;
         return getSubclass();
     }
 
