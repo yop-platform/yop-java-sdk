@@ -86,8 +86,6 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final AuthorizationReqRegistry authorizationReqRegistry;
 
-    private final ClientConfiguration clientConfiguration;
-
     private final YopHttpClient client;
 
     private final GateWayRouter gateWayRouter;
@@ -117,7 +115,6 @@ public class ClientHandlerImpl implements ClientHandler {
                 handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
                 handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
         this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
-        this.clientConfiguration = handlerParams.getClientParams().getClientConfiguration();
         this.client = buildHttpClient(handlerParams);
         this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace);
     }

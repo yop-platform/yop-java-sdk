@@ -2,7 +2,9 @@ package com.yeepay.yop.sdk.client.router;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
@@ -12,7 +14,9 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
-import com.yeepay.yop.sdk.router.sentinel.YopSph;
+import com.yeepay.yop.sdk.router.sentinel.YopDegradeRuleHelper;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
 import com.yeepay.yop.sdk.router.utils.RouteUtils;
 import com.yeepay.yop.sdk.utils.CheckUtils;
@@ -25,6 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -43,7 +51,11 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private static final Map<ServerRootSpace, ServerRootRouting> SERVER_ROOT_ROUTING = Maps.newConcurrentMap();
     private static final Map<String, Set<ServerRootInfo>> COMMON_SERVER_ROOT_INFOS = Maps.newConcurrentMap();
-    private static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
+    private static final BlockResourcePool BLOCK_SERVER_POOL = new BlockResourcePool();
+    private static final ThreadPoolExecutor BLOCKED_SWEEPER = new ThreadPoolExecutor(2, 20,
+            3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(1000),
+            new ThreadFactoryBuilder().setNameFormat("yop-blocked-resource-sweeper-%d").setDaemon(true).build(),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
     static {
         monitorServerRoot();
@@ -340,6 +352,118 @@ public class SimpleGateWayRouter implements GateWayRouter {
                         Objects.equals(this.serverRootType, that.serverRootType);
             }
             return false;
+        }
+    }
+
+    public static class BlockResourcePool {
+        private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+        private static final Map<String, List<URI>> serverBlockList = Maps.newConcurrentMap();
+        private static final Map<String, AtomicLong> serverBLockSequence = Maps.newConcurrentMap();
+        public UriResource select(String serverGroup, String serverType, URI mainServer, List<URI> allServers) {
+            rwl.readLock().lock();
+            try {
+                URI oldestFailServer = null;
+                final String serverBlockKey = serverBlockKey(serverGroup, serverType);
+                final List<URI> failedServers = serverBlockList.get(serverBlockKey);
+                if (null != failedServers && !failedServers.isEmpty()) {
+                    for (URI failedServer : failedServers) {
+                        if (CollectionUtils.isNotEmpty(allServers) && allServers.contains(failedServer)) {
+                            oldestFailServer = failedServer;
+                            break;
+                        }
+                    }
+                }
+                // 熔断列表为空(说明其他线程已半开成功)，选主域名即可
+                if (null == oldestFailServer) {
+                    oldestFailServer = mainServer;
+                }
+                return initServer(serverGroup, serverType, oldestFailServer);
+            } finally {
+                rwl.readLock().unlock();
+            }
+        }
+
+        private String serverBlockKey(String serverGroup, String serverType) {
+            return serverGroup + CharacterConstants.COMMA + serverType;
+        }
+
+        private UriResource initServer(String serverGroup, String serverType, URI oldestFailServer) {
+
+            final String blockSequenceKey = getBlockSequenceKey(serverGroup, serverType, oldestFailServer);
+            final AtomicLong blockSequence = serverBLockSequence.computeIfAbsent(blockSequenceKey,
+                    p -> new AtomicLong(0));
+
+            String resourcePrefix = getBlockResourcePrefix(serverType, blockSequence.get());
+            return new UriResource(UriResource.ResourceType.BLOCKED, serverGroup,
+                    resourcePrefix, oldestFailServer);
+
+        }
+
+        private String parseBlockServerType(String blockResourcePrefix) {
+            return blockResourcePrefix.split(CharacterConstants.COMMA)[0];
+        }
+
+        private Long parseBLockSequence(String blockResourcePrefix) {
+            return Long.valueOf(blockResourcePrefix.split(CharacterConstants.COMMA)[1]);
+        }
+
+        private String getBlockResourcePrefix(String serverType, Long blockSequence) {
+            return serverType + CharacterConstants.COMMA + blockSequence;
+        }
+
+        private String getBlockSequenceKey(String serverGroup, String serverType, URI server) {
+            return serverGroup + CharacterConstants.COMMA + serverType + CharacterConstants.COMMA + server.toString();
+        }
+
+        public void onServerStatusChange(UriResource uriResource, CircuitBreaker.State prevState,
+                                         CircuitBreaker.State newState, DegradeRule rule,
+                                         Set<String> serverRootTypes) {
+            updateBlockedStatus(uriResource, serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
+            if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
+                asyncDiscardOldServers(uriResource);
+            }
+        }
+
+        // 更新熔断列表排序
+        private void updateBlockedStatus(UriResource uriResource, Set<String> serverRootTypes,
+                                         boolean successInvoked) {
+            rwl.writeLock().lock();
+            try {
+                final String resourceGroup = uriResource.getResourceGroup();
+                URI serverRoot = uriResource.getResource();
+                for (String serverRootType : serverRootTypes) {
+                    final List<URI> blockedServers = serverBlockList.computeIfAbsent(serverBlockKey(resourceGroup, serverRootType),
+                            p -> new ArrayList<>());
+                    blockedServers.removeIf(serverRoot::equals);
+                    if (successInvoked) {
+                        blockedServers.add(0, serverRoot);
+                    } else {
+                        blockedServers.add(serverRoot);
+                    }
+                }
+                if (UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType()) && !successInvoked) {
+                    final String serverRootType = parseBlockServerType(uriResource.getResourcePrefix());
+                    serverBLockSequence.computeIfAbsent(getBlockSequenceKey(uriResource.getResourceGroup(),
+                                    serverRootType, uriResource.getResource()),
+                            p -> new AtomicLong(0)).getAndAdd(1);
+                }
+
+            } finally {
+                rwl.writeLock().unlock();
+            }
+        }
+
+        // 异步清理过期资源
+        private void asyncDiscardOldServers(UriResource uriResource) {
+            BLOCKED_SWEEPER.submit(() -> {
+                try {
+                    final String resource = uriResource.computeResourceKey();
+                    // 清理资源配置
+                    YopDegradeRuleHelper.removeDegradeRule(resource);
+                } catch (Exception e) {
+                    LOGGER.warn("blocked sweeper failed, ex:", e);
+                }
+            });
         }
     }
 

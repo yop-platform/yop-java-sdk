@@ -45,14 +45,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class YopSph {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(YopSph.class);
-    private static final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
     private static final YopSph yopSph = new YopSph();
-
-    private static final ThreadPoolExecutor BLOCKED_SWEEPER = new ThreadPoolExecutor(2, 20,
-            3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(1000),
-            new ThreadFactoryBuilder().setNameFormat("yop-blocked-resource-sweeper-%d").setDaemon(true).build(),
-            new ThreadPoolExecutor.CallerRunsPolicy());
 
     static {
         // If init fails, the process will exit.
@@ -196,116 +189,5 @@ public class YopSph {
     public Entry entry(String name) throws BlockException {
         StringResourceWrapper resource = new StringResourceWrapper(name, EntryType.OUT);
         return entry(resource, 1, OBJECTS0);
-    }
-
-    public static class BlockResourcePool {
-        private static final Map<String, List<URI>> serverBlockList = Maps.newConcurrentMap();
-        private static final Map<String, AtomicLong> serverBLockSequence = Maps.newConcurrentMap();
-        public UriResource select(String serverGroup, String serverType, URI mainServer, List<URI> allServers) {
-            rwl.readLock().lock();
-            try {
-                URI oldestFailServer = null;
-                final String serverBlockKey = serverBlockKey(serverGroup, serverType);
-                final List<URI> failedServers = serverBlockList.get(serverBlockKey);
-                if (null != failedServers && !failedServers.isEmpty()) {
-                    for (URI failedServer : failedServers) {
-                        if (CollectionUtils.isNotEmpty(allServers) && allServers.contains(failedServer)) {
-                            oldestFailServer = failedServer;
-                            break;
-                        }
-                    }
-                }
-                // 熔断列表为空(说明其他线程已半开成功)，选主域名即可
-                if (null == oldestFailServer) {
-                    oldestFailServer = mainServer;
-                }
-                return initServer(serverGroup, serverType, oldestFailServer);
-            } finally {
-                rwl.readLock().unlock();
-            }
-        }
-
-        private String serverBlockKey(String serverGroup, String serverType) {
-            return serverGroup + CharacterConstants.COMMA + serverType;
-        }
-
-        private UriResource initServer(String serverGroup, String serverType, URI oldestFailServer) {
-
-            final String blockSequenceKey = getBlockSequenceKey(serverGroup, serverType, oldestFailServer);
-            final AtomicLong blockSequence = serverBLockSequence.computeIfAbsent(blockSequenceKey,
-                    p -> new AtomicLong(0));
-
-            String resourcePrefix = getBlockResourcePrefix(serverType, blockSequence.get());
-            return new UriResource(UriResource.ResourceType.BLOCKED, serverGroup,
-                    resourcePrefix, oldestFailServer);
-
-        }
-
-        private String parseBlockServerType(String blockResourcePrefix) {
-            return blockResourcePrefix.split(CharacterConstants.COMMA)[0];
-        }
-
-        private Long parseBLockSequence(String blockResourcePrefix) {
-            return Long.valueOf(blockResourcePrefix.split(CharacterConstants.COMMA)[1]);
-        }
-
-        private String getBlockResourcePrefix(String serverType, Long blockSequence) {
-            return serverType + CharacterConstants.COMMA + blockSequence;
-        }
-
-        private String getBlockSequenceKey(String serverGroup, String serverType, URI server) {
-            return serverGroup + CharacterConstants.COMMA + serverType + CharacterConstants.COMMA + server.toString();
-        }
-
-        public void onServerStatusChange(UriResource uriResource, CircuitBreaker.State prevState,
-                                         CircuitBreaker.State newState, DegradeRule rule,
-                                         Set<String> serverRootTypes) {
-            updateBlockedStatus(uriResource, serverRootTypes, !CircuitBreaker.State.OPEN.equals(newState));
-            if (newState.equals(CircuitBreaker.State.OPEN) && UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType())) {
-                asyncDiscardOldServers(uriResource);
-            }
-        }
-
-        // 更新熔断列表排序
-        private void updateBlockedStatus(UriResource uriResource, Set<String> serverRootTypes,
-                                         boolean successInvoked) {
-            rwl.writeLock().lock();
-            try {
-                final String resourceGroup = uriResource.getResourceGroup();
-                URI serverRoot = uriResource.getResource();
-                for (String serverRootType : serverRootTypes) {
-                    final List<URI> blockedServers = serverBlockList.computeIfAbsent(serverBlockKey(resourceGroup, serverRootType),
-                            p -> new ArrayList<>());
-                    blockedServers.removeIf(serverRoot::equals);
-                    if (successInvoked) {
-                        blockedServers.add(0, serverRoot);
-                    } else {
-                        blockedServers.add(serverRoot);
-                    }
-                }
-                if (UriResource.ResourceType.BLOCKED.equals(uriResource.getResourceType()) && !successInvoked) {
-                    final String serverRootType = parseBlockServerType(uriResource.getResourcePrefix());
-                    serverBLockSequence.computeIfAbsent(getBlockSequenceKey(uriResource.getResourceGroup(),
-                                    serverRootType, uriResource.getResource()),
-                            p -> new AtomicLong(0)).getAndAdd(1);
-                }
-
-            } finally {
-                rwl.writeLock().unlock();
-            }
-        }
-
-        // 异步清理过期资源
-        private void asyncDiscardOldServers(UriResource uriResource) {
-            BLOCKED_SWEEPER.submit(() -> {
-                try {
-                    final String resource = uriResource.computeResourceKey();
-                    // 清理资源配置
-                    YopDegradeRuleHelper.removeDegradeRule(resource);
-                } catch (Exception e) {
-                    LOGGER.warn("blocked sweeper failed, ex:", e);
-                }
-            });
-        }
     }
 }
