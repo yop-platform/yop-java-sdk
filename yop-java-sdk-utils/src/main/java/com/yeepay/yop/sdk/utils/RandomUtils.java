@@ -7,6 +7,9 @@ package com.yeepay.yop.sdk.utils;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * title: <br>
@@ -34,6 +37,30 @@ public final class RandomUtils {
         } catch (NoSuchAlgorithmException e) {// NOSONAR
             return new SecureRandom();
         }
+    }
+
+    /**
+     * 随机散列列表
+     *
+     * @param origin 原列表
+     * @param <T>    元素
+     * @return List
+     */
+    public static <T> List<T> randomList(List<T> origin) {
+        List<T> tmp = new ArrayList<>(origin);
+        Collections.shuffle(tmp, secureRandom());
+        return tmp;
+    }
+
+    /**
+     * 随机选一个
+     *
+     * @param origin 原列表
+     * @param <T>    列表元素
+     * @return T
+     */
+    public static <T> T randomOne(List<T> origin) {
+        return origin.get(secureRandom().nextInt(origin.size()));
     }
 
 }

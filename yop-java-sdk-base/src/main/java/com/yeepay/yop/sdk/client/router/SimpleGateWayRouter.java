@@ -18,9 +18,9 @@ import com.yeepay.yop.sdk.router.sentinel.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
-import com.yeepay.yop.sdk.router.utils.RouteUtils;
 import com.yeepay.yop.sdk.utils.CheckUtils;
 import com.yeepay.yop.sdk.utils.EnvUtils;
+import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -115,18 +115,18 @@ public class SimpleGateWayRouter implements GateWayRouter {
             final Map<ServerRootType, List<URI>> backupServers = Maps.newConcurrentMap();
 
             // 随机选主:common
-            final List<URI> randomCommonList = RouteUtils.randomList(space.getPreferredEndPoint());
+            final List<URI> randomCommonList = RandomUtils.randomList(space.getPreferredEndPoint());
             if (recordMainServer(randomCommonList.remove(0), ServerRootType.COMMON, mainServers)) {
                 backupServers.put(ServerRootType.COMMON, randomCommonList);
             }
             // yos
-            final List<URI> randomYosList = RouteUtils.randomList(CollectionUtils.isEmpty(space.getPreferredYosEndPoint())
+            final List<URI> randomYosList = RandomUtils.randomList(CollectionUtils.isEmpty(space.getPreferredYosEndPoint())
                     ? Lists.newArrayList(space.getYosServerRoot()) : space.getPreferredYosEndPoint());
             if (recordMainServer(randomYosList.remove(0), ServerRootType.YOS, mainServers)) {
                 backupServers.put(ServerRootType.YOS, randomYosList);
             }
             // sandbox 兼容老沙箱
-            final List<URI> randomSandboxList = RouteUtils.randomList(Lists.newArrayList(space.getSandboxServerRoot()));
+            final List<URI> randomSandboxList = RandomUtils.randomList(Lists.newArrayList(space.getSandboxServerRoot()));
             if (recordMainServer(randomSandboxList.remove(0), ServerRootType.SANDBOX, mainServers)) {
                 backupServers.put(ServerRootType.SANDBOX, randomYosList);
             }
