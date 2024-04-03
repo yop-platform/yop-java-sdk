@@ -28,6 +28,8 @@ public class UriResource implements Serializable {
 
     public static final String RESOURCE_SEPERATOR = "####";
 
+    public static final String RESOURCE_GROUP_SEPERATOR = "::";
+
     public static final String RETAIN_RESOURCE_ID = "0000";
 
     /**
@@ -169,6 +171,28 @@ public class UriResource implements Serializable {
         final String[] resourceSeperated = resourceKey.split(RESOURCE_SEPERATOR);
         return new UriResource(ResourceType.valueOf(resourceSeperated[0]),
                 resourceSeperated[1], resourceSeperated[2], URI.create(resourceSeperated[3]));
+    }
+
+    public String[] parseResourceGroup() {
+        return this.resourceGroup.split(RESOURCE_GROUP_SEPERATOR);
+    }
+
+    public static String computeResourceGroup(Object...args) {
+        if (null == args) {
+            return CharacterConstants.EMPTY;
+        }
+        StringBuilder resourceGroup = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (null == args[i]) {
+                resourceGroup.append(CharacterConstants.EMPTY);
+            } else {
+                resourceGroup.append(args[i]);
+            }
+            if (i != args.length - 1) {
+                resourceGroup.append(RESOURCE_GROUP_SEPERATOR);
+            }
+        }
+        return resourceGroup.toString();
     }
 
     public interface Callback {

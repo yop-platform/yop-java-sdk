@@ -4,10 +4,6 @@
  */
 package com.yeepay.yop.sdk.router.sentinel;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.Constants;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.Entry;
@@ -20,21 +16,12 @@ import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.log.RecordLog;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slotchain.*;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.Rule;
-import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
-import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker;
-import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * title: <br>
+ * title: yop定制sentinel代码，重写部分代码<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>

@@ -9,7 +9,7 @@ import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.log.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * title: <br>
+ * title: yop定制，record-log输出控制<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>

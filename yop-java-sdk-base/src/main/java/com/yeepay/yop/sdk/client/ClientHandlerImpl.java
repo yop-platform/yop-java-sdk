@@ -1,6 +1,5 @@
 package com.yeepay.yop.sdk.client;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
@@ -13,9 +12,7 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
-import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
-import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
 import com.yeepay.yop.sdk.client.router.YopRouter;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
@@ -72,6 +69,7 @@ import static com.yeepay.yop.sdk.utils.ClientUtils.isBasicClient;
 public class ClientHandlerImpl implements ClientHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandlerImpl.class);
+
     private final String provider;
 
     private final String env;
@@ -88,13 +86,15 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final YopHttpClient client;
 
-    private final GateWayRouter gateWayRouter;
+    private final ServerRootSpace serverRootSpace;
 
     private final YopCircuitBreaker circuitBreaker;
 
     private final String sdkSource;
 
     private final String clientId;
+
+    private final RouterPolicy routerPolicy;
 
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
@@ -104,6 +104,7 @@ public class ClientHandlerImpl implements ClientHandler {
         this.yopSdkConfigProvider = handlerParams.getClientParams().getYopSdkConfigProvider();
         this.platformCredentialsProvider = handlerParams.getClientParams().getPlatformCredentialsProvider();
         this.routeConfigProvider = handlerParams.getClientParams().getRouteConfigProvider();
+        this.routerPolicy = handlerParams.getClientParams().getRouterPolicy();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
         this.clientId = handlerParams.getClientParams().getClientId();
         if (isBasicClient(clientId)) {
@@ -111,12 +112,12 @@ public class ClientHandlerImpl implements ClientHandler {
         } else {
             sdkSource = YopConstants.YOP_SDK_SOURCE_BIZ;
         }
-        ServerRootSpace serverRootSpace = new ServerRootSpace(provider, env, this.clientId, handlerParams.getClientParams().getEndPoint(),
+        this.serverRootSpace = new ServerRootSpace(provider, env, this.clientId, handlerParams.getClientParams().getEndPoint(),
                 handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
                 handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
-        this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
+
         this.client = buildHttpClient(handlerParams);
-        this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace);
+        this.circuitBreaker = new YopSentinelCircuitBreaker(this.serverRootSpace);
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
@@ -138,7 +139,7 @@ public class ClientHandlerImpl implements ClientHandler {
             return new UriResourceRouteInvokerWrapper<>(
                     new YopInvoker<>(executionParams, executionContext, true),
                     new SimpleUriRetryPolicy(executionParams.getInput().getRequestConfig().getMaxRetryCount()),
-                    new YopRouter<>(gateWayRouter)).invoke();
+                    new YopRouter<>(serverRootSpace, routerPolicy)).invoke();
         } finally {
             ClientUtils.removeCurrentClientId();
         }
@@ -168,21 +169,24 @@ public class ClientHandlerImpl implements ClientHandler {
     private class YopSentinelCircuitBreaker implements YopCircuitBreaker {
 
         public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace) {
-            List<URI> serverRoots = Lists.newArrayList(serverRootSpace.getYosServerRoot(),
-                    serverRootSpace.getSandboxServerRoot());
-            if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
-                serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
-            }
-            if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredYosEndPoint())) {
-                serverRoots.addAll(serverRootSpace.getPreferredYosEndPoint());
-            }
-
             Map<String, YopCircuitBreakerConfig> circuitBreakerConfigMap = Maps.newHashMap();
-            for (URI serverRoot : serverRoots) {
-                YopRouteConfig routeConfig = findRouteConfig(serverRoot);
-                circuitBreakerConfigMap.put(new UriResource(serverRootSpace.getServerGroup(), serverRoot)
+            serverRootSpace.getMainServers().forEach((serverRootType, uri) -> {
+                YopRouteConfig routeConfig = findRouteConfig(uri);
+                circuitBreakerConfigMap.put(new UriResource(
+                        UriResource.computeResourceGroup(serverRootSpace.getProvider(),
+                                serverRootSpace.getEnv(), serverRootSpace.getServerGroup(), serverRootType), uri)
                         .computeResourceKey(), routeConfig.getCircuitBreakerConfig());
-            }
+            });
+
+            serverRootSpace.getBackupServers().forEach((serverRootType, uris) -> {
+                for (URI uri : uris) {
+                    YopRouteConfig routeConfig = findRouteConfig(uri);
+                    circuitBreakerConfigMap.put(new UriResource(
+                            UriResource.computeResourceGroup(serverRootSpace.getProvider(),
+                                    serverRootSpace.getEnv(), serverRootSpace.getServerGroup(), serverRootType), uri)
+                            .computeResourceKey(), routeConfig.getCircuitBreakerConfig());
+                }
+            });
             YopDegradeRuleHelper.initDegradeRule(circuitBreakerConfigMap);
         }
 

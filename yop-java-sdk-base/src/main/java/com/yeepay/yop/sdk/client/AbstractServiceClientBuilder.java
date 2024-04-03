@@ -10,8 +10,10 @@ import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
+import com.yeepay.yop.sdk.invoke.RouterPolicy;
 import com.yeepay.yop.sdk.router.config.YopRouteConfigProvider;
 import com.yeepay.yop.sdk.router.config.YopRouteConfigProviderRegistry;
+import com.yeepay.yop.sdk.router.policy.RouterPolicyFactory;
 import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,8 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
-import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
+import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.utils.ClientUtils.computeClientIdSuffix;
 
@@ -53,6 +54,8 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
     private YopPlatformCredentialsProvider platformCredentialsProvider;
 
     private YopRouteConfigProvider routeConfigProvider;
+
+    private RouterPolicy routerPolicy;
 
     private String endpoint;
 
@@ -93,6 +96,9 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
             preferredYosEndPoint = CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredYosServerRoots()) ?
                     yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
         }
+        if (null == routerPolicy) {
+            routerPolicy = RouterPolicyFactory.get(ROUTER_POLICY_DEFAULT);
+        }
         ClientParams clientParams = ClientParams.Builder.builder()
                 .withInner(this.inner)
                 .withProvider(this.provider)
@@ -101,6 +107,7 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                 .withYopSdkConfigProvider(yopSdkConfigProvider)
                 .withPlatformCredentialsProvider(platformCredentialsProvider)
                 .withRouteConfigProvider(routeConfigProvider)
+                .withRouterPolicy(routerPolicy)
                 .withClientConfiguration(clientConfiguration)
                 .withEndPoint(endpoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getServerRoot(), YopConstants.DEFAULT_SERVER_ROOT)) : URI.create(endpoint))
                 .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
@@ -162,6 +169,11 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     public SubClass withRouteConfigProvider(YopRouteConfigProvider routeConfigProvider) {
         this.routeConfigProvider = routeConfigProvider;
+        return getSubclass();
+    }
+
+    public SubClass withRouterPolicy(RouterPolicy routerPolicy) {
+        this.routerPolicy = routerPolicy;
         return getSubclass();
     }
 
