@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.router.policy;
 
 import com.yeepay.yop.sdk.invoke.RandomRouterPolicy;
+import com.yeepay.yop.sdk.invoke.model.BlockResource;
 import com.yeepay.yop.sdk.invoke.model.Resource;
 import com.yeepay.yop.sdk.invoke.model.RouterParams;
 import com.yeepay.yop.sdk.invoke.model.SimpleResource;
@@ -43,7 +44,13 @@ public class AbAndFirstBlockPolicy extends BaseRouterPolicy implements RandomRou
             }
         }
 
-        return YopSentinelMetricsHelper.findFirstBlockResourceByGroup(params.getResourceGroup());
+        final BlockResource firstBlockResourceByGroup = YopSentinelMetricsHelper.findFirstBlockResourceByGroup(params.getResourceGroup());
+        // 熔断列表为空(说明其他线程已半开成功)，选主域名即可
+        if (null == firstBlockResourceByGroup) {
+            final String mainResource = availableResources.get(0);
+            return YopSentinelMetricsHelper.findCurrentBlockResource(mainResource);
+        }
+        return firstBlockResourceByGroup;
     }
 
     @Override

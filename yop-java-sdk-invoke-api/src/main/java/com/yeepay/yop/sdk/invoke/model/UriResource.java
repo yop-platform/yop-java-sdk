@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.Objects;
 
+import static com.yeepay.yop.sdk.invoke.model.UriResource.ResourceType.BLOCKED;
 import static com.yeepay.yop.sdk.invoke.model.UriResource.ResourceType.COMMON;
 
 /**
@@ -121,6 +122,10 @@ public class UriResource implements Serializable {
 
     public boolean isRetained() {
         return RETAIN_RESOURCE_ID.equals(this.resourcePrefix);
+    }
+
+    public boolean isBlocked() {
+        return BLOCKED.equals(this.resourceType);
     }
 
     public Callback getCallback() {

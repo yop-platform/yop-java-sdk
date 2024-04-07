@@ -97,7 +97,6 @@ public class InvokeUtils {
     public static <Output> Output mockInvoke(SimpleUriResourceBusinessLogic<Output> businessLogic,
                                              Router<UriResource, Object, SimpleContext> router,
                                              Map<String, Integer> mockFailureConfig, AtomicLong retrySuccessStats) {
-        final SimpleUriRetryPolicy retryPolicy = new SimpleUriRetryPolicy(3);
         final YopRouteConfigProvider routeConfigProvider = YopFileRouteConfigProvider.INSTANCE;
         final UriResourceRouteInvoker<Object, Output, SimpleContext, AnalyzedException> uriResourceRouteInvoker =
                 new SimpleUriResourceInvoker<Output>(businessLogic, new SimpleContext(), routeConfigProvider) {
@@ -116,12 +115,14 @@ public class InvokeUtils {
                     @Override
                     protected void afterBusiness() throws IOException {
                         super.afterBusiness();
-                        retrySuccessStats.addAndGet(1);
+                        if (getContext().getRetryCount() > 0) {
+                            retrySuccessStats.addAndGet(1);
+                        }
                     }
                 };
 
         // 路由切换、重试策略封装
-        return new UriResourceRouteInvokerWrapper<>(uriResourceRouteInvoker, retryPolicy, router).invoke();
+        return new UriResourceRouteInvokerWrapper<>(uriResourceRouteInvoker, new SimpleUriRetryPolicy(3), router).invoke();
     }
 
 }

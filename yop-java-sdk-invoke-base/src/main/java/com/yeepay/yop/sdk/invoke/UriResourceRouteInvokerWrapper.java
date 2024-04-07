@@ -15,7 +15,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -51,13 +50,13 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
     @Override
     public Output invoke() {
         final long start = System.currentTimeMillis();
-        List<URI> excludeServerRoots = Lists.newArrayList();
+        List<String> invokedServerRoots = Lists.newArrayList();
         UriResource lastServerRoot = null;
         Throwable currentEx;
         boolean needRetry;
         do {
             try {
-                lastServerRoot = uriRouter.route(getInput(), getContext(), excludeServerRoots);
+                lastServerRoot = uriRouter.route(getInput(), getContext(), invokedServerRoots);
                 invoker.setUriResource(lastServerRoot);
                 final Output result = invoker.invoke();
                 if (LOGGER.isDebugEnabled()) {
@@ -88,7 +87,9 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
                         && null != retryPolicy
                         && retryPolicy.allowRetry(this);
                 if (needRetry) {
-                    excludeServerRoots.add(lastServerRoot.getResource());
+                    invokedServerRoots.add(lastServerRoot.isBlocked() ?
+                            new UriResource(lastServerRoot.getResourceGroup(), lastServerRoot.getResource()).computeResourceKey()
+                            : lastServerRoot.computeResourceKey());
                     if (!analyzedException.isBlocked()) {
                         getContext().markRetried(1);
                     }

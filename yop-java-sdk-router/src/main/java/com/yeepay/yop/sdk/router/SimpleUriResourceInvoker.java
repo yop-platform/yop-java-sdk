@@ -103,7 +103,7 @@ public class SimpleUriResourceInvoker<Output>
     }
 
     private YopRouteConfig findRouteConfig(URI uri) {
-        String configKey = StringUtils.strip(uri.getHost().replaceAll("^[a-zA-Z0-9]", "_")
+        String configKey = StringUtils.strip(uri.getHost().replaceAll("[^a-zA-Z0-9]", "_")
                 + (uri.getPort() > 0 ? uri.getPort() : ""), "_");
         // 指定配置
         YopRouteConfig routeConfig = routeConfigProvider.getRouteConfig(configKey);
@@ -143,6 +143,10 @@ public class SimpleUriResourceInvoker<Output>
     }
 
     protected void afterBusiness() throws IOException {
+
+    }
+
+    protected void afterFinish() throws IOException {
 
     }
 }

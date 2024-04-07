@@ -1,1 +1,2 @@
 com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.metric.extension.MetricCallbackInit
+com.yeepay.yop.sdk.router.sentinel.YopSentinelInit
