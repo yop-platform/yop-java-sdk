@@ -145,6 +145,4 @@ public interface YopConstants {
     String ENV_SANDBOX = "sandbox";
     String ENV_QA = "qa";
 
-    String ROUTER_POLICY_DEFAULT = "com.yeepay.yop.sdk.router.policy.AbAndFirstBlockPolicy";
-
 }

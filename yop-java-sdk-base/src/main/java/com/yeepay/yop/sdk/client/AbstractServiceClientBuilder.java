@@ -11,6 +11,7 @@ import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.invoke.RouterPolicy;
+import com.yeepay.yop.sdk.router.YopRouterConstants;
 import com.yeepay.yop.sdk.router.config.YopRouteConfigProvider;
 import com.yeepay.yop.sdk.router.config.YopRouteConfigProviderRegistry;
 import com.yeepay.yop.sdk.router.policy.RouterPolicyFactory;
@@ -23,7 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.yeepay.yop.sdk.YopConstants.*;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
+import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
 import static com.yeepay.yop.sdk.utils.ClientUtils.computeClientIdSuffix;
 
@@ -97,7 +99,7 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                     yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
         }
         if (null == routerPolicy) {
-            routerPolicy = RouterPolicyFactory.get(ROUTER_POLICY_DEFAULT);
+            routerPolicy = RouterPolicyFactory.get(YopRouterConstants.ROUTER_POLICY_DEFAULT);
         }
         ClientParams clientParams = ClientParams.Builder.builder()
                 .withInner(this.inner)

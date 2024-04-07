@@ -31,4 +31,8 @@ public class BlockResource extends SimpleResource {
     public long getBlockSequence() {
         return blockSequence;
     }
+
+    public String getBlockResourceKey() {
+        return getResourceKey() + "," + getBlockSequence();
+    }
 }

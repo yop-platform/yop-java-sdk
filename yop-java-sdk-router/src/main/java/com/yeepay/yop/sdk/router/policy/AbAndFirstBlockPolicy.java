@@ -4,10 +4,12 @@
  */
 package com.yeepay.yop.sdk.router.policy;
 
+import com.yeepay.yop.sdk.invoke.RandomRouterPolicy;
 import com.yeepay.yop.sdk.invoke.model.Resource;
 import com.yeepay.yop.sdk.invoke.model.RouterParams;
 import com.yeepay.yop.sdk.invoke.model.SimpleResource;
 import com.yeepay.yop.sdk.router.sentinel.YopSentinelMetricsHelper;
+import com.yeepay.yop.sdk.utils.RandomUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +24,7 @@ import java.util.List;
  * @version 1.0.0
  * @since 2024/3/29
  */
-public class AbAndFirstBlockPolicy extends BaseRouterPolicy {
+public class AbAndFirstBlockPolicy extends BaseRouterPolicy implements RandomRouterPolicy {
 
     @Override
     public Resource select(RouterParams params) {
@@ -42,5 +44,11 @@ public class AbAndFirstBlockPolicy extends BaseRouterPolicy {
         }
 
         return YopSentinelMetricsHelper.findFirstBlockResourceByGroup(params.getResourceGroup());
+    }
+
+    @Override
+    public List<String> shuffle(List<String> originResources) {
+        // 随机选主
+        return RandomUtils.randomList(originResources);
     }
 }

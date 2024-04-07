@@ -63,4 +63,14 @@ public final class RandomUtils {
         return origin.get(secureRandom().nextInt(origin.size()));
     }
 
+    public static boolean randomFailure(int configThreshold) {
+        if (configThreshold <= 0) {
+            return false;
+        }
+        if (configThreshold >= 10000) {
+            return true;
+        }
+        return RandomUtils.secureRandom().nextInt(10000) <= configThreshold;
+    }
+
 }
