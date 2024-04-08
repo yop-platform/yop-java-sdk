@@ -39,6 +39,10 @@ public class SimpleUriResourceRouteClient {
     }
 
     public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy) {
+        this(targetServers, routerPolicy, SimpleUriRetryPolicy.singleton());
+    }
+
+    public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy, RetryPolicy retryPolicy) {
         String serverKey = StringUtils.join(targetServers, ",");
         synchronized (CACHED_ROUTERS) {
             if (!CACHED_ROUTERS.containsKey(serverKey)) {
@@ -51,7 +55,7 @@ public class SimpleUriResourceRouteClient {
                 }
 
                 this.innerRouteClient = new InnerRouteClient(YopFileRouteConfigProvider.INSTANCE,
-                        new SimpleUriResourceRouter<>(resourceGroup, availableServers, routerPolicy), SimpleUriRetryPolicy.singleton());
+                        new SimpleUriResourceRouter<>(resourceGroup, availableServers, routerPolicy), retryPolicy);
                 CACHED_ROUTERS.put(serverKey, this.innerRouteClient);
             } else {
                 this.innerRouteClient = CACHED_ROUTERS.get(serverKey);
@@ -67,7 +71,18 @@ public class SimpleUriResourceRouteClient {
      * @return 业务出参
      */
     public <Output> Output route(SimpleUriResourceBusinessLogic<Output> businessLogic) {
-        return this.innerRouteClient.route(businessLogic);
+        return this.innerRouteClient.route(businessLogic, new SimpleContext());
+    }
+
+    /**
+     * 发起路由调用
+     *
+     * @param businessLogic 业务逻辑
+     * @param <Output>      出参范型
+     * @return 业务出参
+     */
+    public <Output> Output route(SimpleUriResourceBusinessLogic<Output> businessLogic, SimpleContext context) {
+        return this.innerRouteClient.route(businessLogic, context);
     }
 
     private class InnerRouteClient {
@@ -90,10 +105,10 @@ public class SimpleUriResourceRouteClient {
          * @param <Output>      出参范型
          * @return 业务出参
          */
-        private <Output> Output route(SimpleUriResourceBusinessLogic<Output> businessLogic) {
+        private <Output> Output route(SimpleUriResourceBusinessLogic<Output> businessLogic, SimpleContext context) {
             // 业务处理、熔断操作、异常分析封装
             UriResourceRouteInvoker<Object, Output, SimpleContext, AnalyzedException> uriResourceRouteInvoker
-                    = new SimpleUriResourceInvoker<>(businessLogic, new SimpleContext(), this.routeConfigProvider);
+                    = new SimpleUriResourceInvoker<>(businessLogic, context, this.routeConfigProvider);
             return InvokeUtils.invoke(uriResourceRouteInvoker, this.router, this.retryPolicy);
         }
 

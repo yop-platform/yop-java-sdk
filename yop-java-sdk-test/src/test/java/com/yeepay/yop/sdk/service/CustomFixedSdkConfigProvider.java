@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.service;
 
+import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.base.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
@@ -27,12 +28,14 @@ public class CustomFixedSdkConfigProvider extends YopFixedSdkConfigProvider {
         yopSdkConfig.setServerRoot(YopConstants.DEFAULT_SERVER_ROOT);
         yopSdkConfig.setYosServerRoot(YopConstants.DEFAULT_YOS_SERVER_ROOT);
         yopSdkConfig.setSandboxServerRoot(YopConstants.DEFAULT_SANDBOX_SERVER_ROOT);
+        yopSdkConfig.setPreferredServerRoots(Lists.newArrayList(
+                "https://openapi-a.yeepay.com/yop-center",
+                "https://openapi-h.yeepay.com/yop-center"));
         // 连接超时时间、读取超时时间等其他配置，可根据需要setXXX即可
         return yopSdkConfig;
     }
 
     @Override
     public void removeConfig(String key) {
-        // 可以不实现
     }
 }
