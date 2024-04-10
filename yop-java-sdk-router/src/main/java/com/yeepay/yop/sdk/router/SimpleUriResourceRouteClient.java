@@ -47,15 +47,8 @@ public class SimpleUriResourceRouteClient {
         synchronized (CACHED_ROUTERS) {
             if (!CACHED_ROUTERS.containsKey(serverKey)) {
                 String resourceGroup = UUID.randomUUID().toString();
-                List<String> availableServers;
-                if (routerPolicy instanceof RandomRouterPolicy) {
-                    availableServers = ((RandomRouterPolicy) routerPolicy).shuffle(targetServers);
-                } else {
-                    availableServers = targetServers;
-                }
-
                 this.innerRouteClient = new InnerRouteClient(YopFileRouteConfigProvider.INSTANCE,
-                        new SimpleUriResourceRouter<>(resourceGroup, availableServers, routerPolicy), retryPolicy);
+                        new SimpleUriResourceRouter<>(resourceGroup, targetServers, routerPolicy), retryPolicy);
                 CACHED_ROUTERS.put(serverKey, this.innerRouteClient);
             } else {
                 this.innerRouteClient = CACHED_ROUTERS.get(serverKey);

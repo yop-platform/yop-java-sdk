@@ -216,7 +216,13 @@ public class ResourceRouteClient {
             if (CollectionUtils.isEmpty(availableResources)) {
                 throw new YopClientException("availableResources is empty");
             }
-            this.availableResources = availableResources;
+            List<String> targetResources;
+            if (routerPolicy instanceof RandomRouterPolicy) {
+                targetResources = ((RandomRouterPolicy) routerPolicy).shuffle(availableResources);
+            } else {
+                targetResources = availableResources;
+            }
+            this.availableResources = targetResources;
             this.routerPolicy = routerPolicy;
         }
 

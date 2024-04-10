@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.router;
 
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.invoke.RandomRouterPolicy;
 import com.yeepay.yop.sdk.invoke.Router;
 import com.yeepay.yop.sdk.invoke.RouterPolicy;
 import com.yeepay.yop.sdk.invoke.model.BlockResource;
@@ -41,8 +42,16 @@ public class SimpleUriResourceRouter<Context> implements Router<UriResource, Obj
             throw new YopClientException("availableServerRoots is empty");
         }
         this.resourceGroup = StringUtils.defaultString(resourceGroup, "");
-        this.availableResources = new ArrayList<>(availableUris.size());
-        for (String uri : availableUris) {
+
+        List<String> targetServers;
+        if (routerPolicy instanceof RandomRouterPolicy) {
+            targetServers = ((RandomRouterPolicy) routerPolicy).shuffle(availableUris);
+        } else {
+            targetServers = availableUris;
+        }
+
+        this.availableResources = new ArrayList<>(targetServers.size());
+        for (String uri : targetServers) {
             this.availableResources.add(new UriResource(resourceGroup, URI.create(uri)).computeResourceKey());
         }
         this.routerPolicy = routerPolicy;
