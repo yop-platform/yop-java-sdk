@@ -49,7 +49,7 @@ public class ResourceRouteClient {
     }
 
     public ResourceRouteClient(List<String> targetResources, RouterPolicy routerPolicy) {
-        this(targetResources, routerPolicy, SimpleUriRetryPolicy.singleton());
+        this(targetResources, routerPolicy, SimpleRetryPolicy.singleton());
     }
 
     public ResourceRouteClient(List<String> targetResources, RouterPolicy routerPolicy, RetryPolicy retryPolicy) {

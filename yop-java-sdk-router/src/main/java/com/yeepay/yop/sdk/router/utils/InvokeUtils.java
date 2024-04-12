@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.router.utils;
 
 import com.yeepay.yop.sdk.invoke.Router;
-import com.yeepay.yop.sdk.invoke.SimpleUriRetryPolicy;
+import com.yeepay.yop.sdk.invoke.SimpleRetryPolicy;
 import com.yeepay.yop.sdk.invoke.UriResourceRouteInvoker;
 import com.yeepay.yop.sdk.invoke.UriResourceRouteInvokerWrapper;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
@@ -45,7 +45,7 @@ public class InvokeUtils {
      */
     public static <Output> Output invoke(SimpleUriResourceBusinessLogic<Output> businessLogic,
                                          Router<UriResource, Object, SimpleContext> router) {
-        return invoke(businessLogic, router, YopFileRouteConfigProvider.INSTANCE, new SimpleUriRetryPolicy(3));
+        return invoke(businessLogic, router, YopFileRouteConfigProvider.INSTANCE, new SimpleRetryPolicy(3));
     }
 
     /**
@@ -122,7 +122,7 @@ public class InvokeUtils {
                 };
 
         // 路由切换、重试策略封装
-        return new UriResourceRouteInvokerWrapper<>(uriResourceRouteInvoker, new SimpleUriRetryPolicy(3), router).invoke();
+        return new UriResourceRouteInvokerWrapper<>(uriResourceRouteInvoker, new SimpleRetryPolicy(3), router).invoke();
     }
 
 }

@@ -39,7 +39,7 @@ public class SimpleUriResourceRouteClient {
     }
 
     public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy) {
-        this(targetServers, routerPolicy, SimpleUriRetryPolicy.singleton());
+        this(targetServers, routerPolicy, SimpleRetryPolicy.singleton());
     }
 
     public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy, RetryPolicy retryPolicy) {

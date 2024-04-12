@@ -138,7 +138,7 @@ public class ClientHandlerImpl implements ClientHandler {
             ExecutionContext executionContext = getExecutionContext(executionParams);
             return new UriResourceRouteInvokerWrapper<>(
                     new YopInvoker<>(executionParams, executionContext, true),
-                    new SimpleUriRetryPolicy(executionParams.getInput().getRequestConfig().getMaxRetryCount()),
+                    new SimpleRetryPolicy(executionParams.getInput().getRequestConfig().getMaxRetryCount()),
                     new YopRouter<>(serverRootSpace, routerPolicy)).invoke();
         } finally {
             ClientUtils.removeCurrentClientId();

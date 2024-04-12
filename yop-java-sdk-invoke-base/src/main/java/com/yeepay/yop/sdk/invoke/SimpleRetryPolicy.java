@@ -17,14 +17,14 @@ import com.yeepay.yop.sdk.invoke.model.RetryPolicy;
  * @version 1.0.0
  * @since 2023/11/7
  */
-public class SimpleUriRetryPolicy implements RetryPolicy {
+public class SimpleRetryPolicy implements RetryPolicy {
 
-    private static final SimpleUriRetryPolicy INSTANCE = new SimpleUriRetryPolicy();
+    private static final SimpleRetryPolicy INSTANCE = new SimpleRetryPolicy();
 
-    public SimpleUriRetryPolicy() {
+    public SimpleRetryPolicy() {
     }
 
-    public SimpleUriRetryPolicy(int maxRetryCount) {
+    public SimpleRetryPolicy(int maxRetryCount) {
         if (maxRetryCount > 0) {
             this.maxRetryCount = maxRetryCount;
         }
