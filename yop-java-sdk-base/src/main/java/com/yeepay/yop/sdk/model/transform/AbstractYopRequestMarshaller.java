@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
+import com.yeepay.yop.sdk.model.FileParam;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 
 import java.io.File;
@@ -54,6 +55,9 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
                     } else if (value instanceof InputStream) {
                         resetStreamIfNecessary((InputStream) value);
                         internalRequest.addMultiPartFile(name, (InputStream) value);
+                    } else if (value instanceof FileParam) {
+                        resetStreamIfNecessary(((FileParam) value).getFileStream());
+                        internalRequest.addMultiPartFile(name, (FileParam) value);
                     } else {
                         throw new YopClientException("ReqParam Illegal, FileParamType NotSupport, name:" + name + ", type:" + value.getClass() + ".");
                     }

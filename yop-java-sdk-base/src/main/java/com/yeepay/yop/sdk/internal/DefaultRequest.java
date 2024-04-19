@@ -2,12 +2,13 @@ package com.yeepay.yop.sdk.internal;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
-import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.model.FileParam;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 
 import java.io.File;
@@ -279,6 +280,20 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         }
         try {
             files.add(new MultiPartFile(in));
+        } catch (Exception ex) {
+            throw new YopClientException("ReqParam Illegal, InputStreamParam, name:" + name + ", ex:", ex);
+        }
+    }
+
+    @Override
+    public void addMultiPartFile(String name, FileParam fileParam) {
+        List<MultiPartFile> files = multiPartFiles.get(name);
+        if (files == null) {
+            files = Lists.newArrayList();
+            multiPartFiles.put(name, files);
+        }
+        try {
+            files.add(new MultiPartFile(fileParam.getFileStream(), fileParam.getFileName()));
         } catch (Exception ex) {
             throw new YopClientException("ReqParam Illegal, InputStreamParam, name:" + name + ", ex:", ex);
         }

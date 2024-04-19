@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.regex.Pattern;
 import java.util.zip.CheckedInputStream;
 
 /**
@@ -28,31 +29,32 @@ public class MultiPartFile implements Serializable {
 
     private static final int EXT_READ_BUFFER_SIZE = 64 * 1024;
 
+    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("[^.]+\\.[^.\\s]+");
+
     private final CheckedInputStream inputStream;
 
     private final String fileName;
 
     public MultiPartFile(File file) throws IOException {
-        this(new FileInputStream(file));
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("filename parsed, origin:{}, current:{}", file.getName(), this.fileName);
-        }
+        this(new FileInputStream(file), file.getName());
     }
 
     public MultiPartFile(InputStream in) throws IOException {
-        Pair<String, CheckedInputStream> inputStreamPair;
-        if (in instanceof FileInputStream) {
-            inputStreamPair = getCheckedInputStreamPair((FileInputStream) in);
-        } else {
-            inputStreamPair = getCheckedInputStreamPair(in);
-        }
+        Pair<String, CheckedInputStream> inputStreamPair = getCheckedInputStreamPair(in);
         this.fileName = inputStreamPair.getLeft();
         this.inputStream = inputStreamPair.getRight();
     }
 
     public MultiPartFile(InputStream in, String originFileName) throws IOException {
-        this.fileName = originFileName;
-        this.inputStream = getCheckedInputStream(in);
+        if (null != originFileName && FILE_NAME_PATTERN.matcher(originFileName).matches()) {
+            this.fileName = originFileName;
+            this.inputStream = getCheckedInputStream(in);
+        } else {
+            final Pair<String, CheckedInputStream> checkedInputStreamPair = getCheckedInputStreamPair(in);
+            this.fileName = checkedInputStreamPair.getLeft();
+            this.inputStream = checkedInputStreamPair.getRight();
+            LOGGER.warn("illegal param fileName, origin:{}, tika:{}", originFileName, this.fileName);
+        }
     }
 
     public CheckedInputStream getInputStream() {
@@ -63,16 +65,15 @@ public class MultiPartFile implements Serializable {
         return fileName;
     }
 
-    private static Pair<String, CheckedInputStream> getCheckedInputStreamPair(FileInputStream fileInputStream) throws IOException {
-        MarkableFileInputStream in = new MarkableFileInputStream(fileInputStream);
-        in.mark(0);
-        //解析文件扩展名的时候会读取流的前64*1024个字节,需要reset文件流
-        String fileName = FileUtils.getFileName(in);
-        in.reset();
-        return new ImmutablePair<String, CheckedInputStream>(fileName, getCheckedInputStream(in));
-    }
-
     private static Pair<String, CheckedInputStream> getCheckedInputStreamPair(InputStream inputStream) throws IOException {
+        if (inputStream instanceof FileInputStream) {
+            MarkableFileInputStream in = new MarkableFileInputStream((FileInputStream) inputStream);
+            in.mark(0);
+            //解析文件扩展名的时候会读取流的前64*1024个字节,需要reset文件流
+            String fileName = FileUtils.getFileName(in);
+            in.reset();
+            return new ImmutablePair<String, CheckedInputStream>(fileName, getCheckedInputStream(in));
+        }
         //解析文件扩展名的时候会读取流的前64*1024个字节
         byte[] extReadBuffer = new byte[EXT_READ_BUFFER_SIZE];
         int totalRead = 0;

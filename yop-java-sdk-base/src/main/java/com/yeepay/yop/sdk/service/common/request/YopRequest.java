@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.yop.sdk.model.FileParam;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.utils.CheckUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -149,6 +150,12 @@ public class YopRequest extends BaseRequest {
         return this;
     }
 
+    public YopRequest addMultiPartFile(String name, InputStream inputStream, String originFileName) {
+        validateParameter(name, inputStream);
+        multipartFiles.put(name, new FileParam(restartStream(inputStream), originFileName));
+        return this;
+    }
+
     private InputStream restartStream(InputStream inputStream) {
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -166,6 +173,12 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest addEncryptMultiPartFile(String name, InputStream inputStream) {
         addMultiPartFile(name, inputStream);
+        getRequestConfig().addEncryptParam(name);
+        return this;
+    }
+
+    public YopRequest addEncryptMultiPartFile(String name, InputStream inputStream, String originFileName) {
+        addMultiPartFile(name, inputStream, originFileName);
         getRequestConfig().addEncryptParam(name);
         return this;
     }
