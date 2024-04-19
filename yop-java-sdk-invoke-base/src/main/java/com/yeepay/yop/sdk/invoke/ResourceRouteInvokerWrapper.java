@@ -68,7 +68,7 @@ public class ResourceRouteInvokerWrapper<Input, Output, Context extends RetryCon
                 currentEx = throwable;
                 // 路由异常，客户端配置问题
                 if (null == lastInvokedResource || null == lastInvokedResource.getResourceKey()) {
-                    throw new YopClientException("Config Error, No RouteResource Found");
+                    throw new YopClientException("Config Error, No RouteResource Found", throwable);
                 }
 
                 // 客户端异常、业务异常，直接抛给上层
@@ -83,9 +83,8 @@ public class ResourceRouteInvokerWrapper<Input, Output, Context extends RetryCon
                 }
 
                 // 重试准备
-                needRetry = analyzedException.isNeedRetry()
-                        && null != retryPolicy
-                        && retryPolicy.allowRetry(this);
+                needRetry = analyzedException.isBlocked() ||
+                        (analyzedException.isNeedRetry() && null != retryPolicy && retryPolicy.allowRetry(this));
                 if (needRetry) {
                     invokedResources.add(lastInvokedResource.getResourceKey());
                     if (!analyzedException.isBlocked()) {

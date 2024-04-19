@@ -4,12 +4,15 @@
  */
 package com.yeepay.yop.sdk.router;
 
-import com.yeepay.yop.sdk.invoke.*;
+import com.yeepay.yop.sdk.invoke.Router;
+import com.yeepay.yop.sdk.invoke.RouterPolicy;
+import com.yeepay.yop.sdk.invoke.SimpleRetryPolicy;
+import com.yeepay.yop.sdk.invoke.UriResourceRouteInvoker;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 import com.yeepay.yop.sdk.invoke.model.RetryPolicy;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
-import com.yeepay.yop.sdk.router.config.YopFileRouteConfigProvider;
 import com.yeepay.yop.sdk.router.config.YopRouteConfigProvider;
+import com.yeepay.yop.sdk.router.config.YopRouteConfigProviderRegistry;
 import com.yeepay.yop.sdk.router.policy.RouterPolicyFactory;
 import com.yeepay.yop.sdk.router.utils.InvokeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -43,11 +46,16 @@ public class SimpleUriResourceRouteClient {
     }
 
     public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy, RetryPolicy retryPolicy) {
+        this(targetServers, routerPolicy, retryPolicy, YopRouteConfigProviderRegistry.getProvider());
+    }
+
+    public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy,
+                                        RetryPolicy retryPolicy, YopRouteConfigProvider routeConfigProvider) {
         String serverKey = StringUtils.join(targetServers, ",");
         synchronized (CACHED_ROUTERS) {
             if (!CACHED_ROUTERS.containsKey(serverKey)) {
                 String resourceGroup = UUID.randomUUID().toString();
-                this.innerRouteClient = new InnerRouteClient(YopFileRouteConfigProvider.INSTANCE,
+                this.innerRouteClient = new InnerRouteClient(routeConfigProvider,
                         new SimpleUriResourceRouter<>(resourceGroup, targetServers, routerPolicy), retryPolicy);
                 CACHED_ROUTERS.put(serverKey, this.innerRouteClient);
             } else {

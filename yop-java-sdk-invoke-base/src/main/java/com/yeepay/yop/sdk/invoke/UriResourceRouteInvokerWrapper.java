@@ -83,9 +83,8 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
                 }
 
                 // 重试准备
-                needRetry = analyzedException.isNeedRetry()
-                        && null != retryPolicy
-                        && retryPolicy.allowRetry(this);
+                needRetry = analyzedException.isBlocked() ||
+                        (analyzedException.isNeedRetry() && null != retryPolicy && retryPolicy.allowRetry(this));
                 if (needRetry) {
                     invokedServerRoots.add(lastServerRoot.isBlocked() ?
                             new UriResource(lastServerRoot.getResourceGroup(), lastServerRoot.getResource()).computeResourceKey()
