@@ -2,6 +2,7 @@ package com.yeepay.yop.sdk.internal;
 
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.checksum.CRC64;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class MultiPartFile implements Serializable {
 
     private static final int EXT_READ_BUFFER_SIZE = 64 * 1024;
 
-    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("[^.]+\\.[^.\\s]+");
+    private static final Pattern FILE_EXT_NAME_PATTERN = Pattern.compile("^\\.[^.\\s]+");
 
     private final CheckedInputStream inputStream;
 
@@ -41,7 +42,10 @@ public class MultiPartFile implements Serializable {
 
     public MultiPartFile(InputStream in) throws IOException {
         Pair<String, CheckedInputStream> inputStreamPair = getCheckedInputStreamPair(in);
-        this.fileName = inputStreamPair.getLeft();
+        this.fileName = FileUtils.randomFileName(8, inputStreamPair.getLeft());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.info("file autoDetect, auto:{}", this.fileName);
+        }
         this.inputStream = inputStreamPair.getRight();
     }
 
@@ -52,9 +56,12 @@ public class MultiPartFile implements Serializable {
     public MultiPartFile(InputStream in, String originFileName, boolean autoDetect) throws IOException {
         if (autoDetect) {
             final Pair<String, CheckedInputStream> checkedInputStreamPair = getCheckedInputStreamPair(in);
-            final String autoFileName = checkedInputStreamPair.getLeft();
-            if (null != autoFileName && FILE_NAME_PATTERN.matcher(autoFileName).matches()) {
-                this.fileName = autoFileName;
+            final String autoFileExtName = checkedInputStreamPair.getLeft();
+            if (null != autoFileExtName && FILE_EXT_NAME_PATTERN.matcher(autoFileExtName).matches()) {
+                this.fileName = StringUtils.substringBeforeLast(originFileName, ".") + autoFileExtName;
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.info("file autoDetect, origin:{}, auto:{}", originFileName, this.fileName);
+                }
             } else {
                 this.fileName = originFileName;
             }
@@ -83,9 +90,9 @@ public class MultiPartFile implements Serializable {
             MarkableFileInputStream in = new MarkableFileInputStream((FileInputStream) inputStream);
             in.mark(0);
             //解析文件扩展名的时候会读取流的前64*1024个字节,需要reset文件流
-            String fileName = FileUtils.getFileName(in);
+            String fileExtName = FileUtils.getFileExt(in);
             in.reset();
-            return new ImmutablePair<String, CheckedInputStream>(fileName, getCheckedInputStream(in));
+            return new ImmutablePair<String, CheckedInputStream>(fileExtName, getCheckedInputStream(in));
         }
         //解析文件扩展名的时候会读取流的前64*1024个字节
         byte[] extReadBuffer = new byte[EXT_READ_BUFFER_SIZE];
@@ -99,10 +106,10 @@ public class MultiPartFile implements Serializable {
             lastRead = inputStream.read(extReadBuffer, totalRead, EXT_READ_BUFFER_SIZE - totalRead);
         }
         ByteArrayInputStream extReadIn = new ByteArrayInputStream(extReadBuffer, 0, totalRead);
-        String fileName = FileUtils.getFileName(extReadIn);
+        String fileExtName = FileUtils.getFileExt(extReadIn);
         extReadIn.reset();
         SequenceInputStream sequenceInputStream = new SequenceInputStream(extReadIn, inputStream);
-        return new ImmutablePair<String, CheckedInputStream>(fileName, getCheckedInputStream(sequenceInputStream));
+        return new ImmutablePair<String, CheckedInputStream>(fileExtName, getCheckedInputStream(sequenceInputStream));
     }
 
     private static CheckedInputStream getCheckedInputStream(InputStream inputStream) throws IOException {
