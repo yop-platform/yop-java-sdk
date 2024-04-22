@@ -177,8 +177,8 @@ public class YopRequest extends BaseRequest {
         return this;
     }
 
-    public YopRequest addEncryptMultiPartFile(String name, InputStream inputStream, String originFileName) {
-        addMultiPartFile(name, inputStream, originFileName);
+    public YopRequest addEncryptMultiPartFile(String name, InputStream inputStream, String fileExtName) {
+        addMultiPartFile(name, inputStream, fileExtName);
         getRequestConfig().addEncryptParam(name);
         return this;
     }
