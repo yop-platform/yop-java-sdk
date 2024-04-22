@@ -150,9 +150,9 @@ public class YopRequest extends BaseRequest {
         return this;
     }
 
-    public YopRequest addMultiPartFile(String name, InputStream inputStream, String originFileName) {
+    public YopRequest addMultiPartFile(String name, InputStream inputStream, String fileExtName) {
         validateParameter(name, inputStream);
-        multipartFiles.put(name, new FileParam(restartStream(inputStream), originFileName));
+        multipartFiles.put(name, new FileParam(restartStream(inputStream), fileExtName));
         return this;
     }
 

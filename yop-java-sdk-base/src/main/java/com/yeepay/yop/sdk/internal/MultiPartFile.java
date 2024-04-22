@@ -36,7 +36,7 @@ public class MultiPartFile implements Serializable {
     private final String fileName;
 
     public MultiPartFile(File file) throws IOException {
-        this(new FileInputStream(file), file.getName());
+        this(new FileInputStream(file), file.getName(), true);
     }
 
     public MultiPartFile(InputStream in) throws IOException {
@@ -46,15 +46,28 @@ public class MultiPartFile implements Serializable {
     }
 
     public MultiPartFile(InputStream in, String originFileName) throws IOException {
-        if (null != originFileName && FILE_NAME_PATTERN.matcher(originFileName).matches()) {
+        this(in, originFileName, false);
+    }
+
+    public MultiPartFile(InputStream in, String originFileName, boolean autoDetect) throws IOException {
+        if (autoDetect) {
+            final Pair<String, CheckedInputStream> checkedInputStreamPair = getCheckedInputStreamPair(in);
+            final String autoFileName = checkedInputStreamPair.getLeft();
+            if (null != autoFileName && FILE_NAME_PATTERN.matcher(autoFileName).matches()) {
+                this.fileName = autoFileName;
+            } else {
+                this.fileName = originFileName;
+            }
+            this.inputStream = checkedInputStreamPair.getRight();
+        } else {
             this.fileName = originFileName;
             this.inputStream = getCheckedInputStream(in);
-        } else {
-            final Pair<String, CheckedInputStream> checkedInputStreamPair = getCheckedInputStreamPair(in);
-            this.fileName = checkedInputStreamPair.getLeft();
-            this.inputStream = checkedInputStreamPair.getRight();
-            LOGGER.warn("illegal param fileName, origin:{}, tika:{}", originFileName, this.fileName);
         }
+    }
+
+    public MultiPartFile(String fileExtName, InputStream in) throws IOException {
+        this.fileName = FileUtils.randomFileName(8, fileExtName);
+        this.inputStream = getCheckedInputStream(in);
     }
 
     public CheckedInputStream getInputStream() {

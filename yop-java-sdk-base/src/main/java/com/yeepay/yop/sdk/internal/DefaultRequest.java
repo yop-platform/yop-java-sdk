@@ -293,7 +293,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
             multiPartFiles.put(name, files);
         }
         try {
-            files.add(new MultiPartFile(fileParam.getFileStream(), fileParam.getFileName()));
+            files.add(new MultiPartFile(fileParam.getFileExtName(), fileParam.getFileStream()));
         } catch (Exception ex) {
             throw new YopClientException("ReqParam Illegal, InputStreamParam, name:" + name + ", ex:", ex);
         }

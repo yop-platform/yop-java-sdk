@@ -23,18 +23,18 @@ public class FileParam implements Serializable {
 
     private InputStream fileStream;
 
-    private String fileName;
+    private String fileExtName;
 
-    public FileParam(InputStream fileStream, String fileName) {
+    public FileParam(InputStream fileStream, String fileExtName) {
         this.fileStream = fileStream;
-        this.fileName = fileName;
+        this.fileExtName = fileExtName;
     }
 
     public InputStream getFileStream() {
         return fileStream;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getFileExtName() {
+        return fileExtName;
     }
 }

@@ -72,7 +72,7 @@ public final class FileUtils {
     }
 
     private static String getMimeType(InputStream stream) {
-        String mimeType = null;
+        String mimeType = "application/octet-stream";
         AutoDetectParser parser = new AutoDetectParser();
         parser.setParsers(Maps.newHashMap());
 
@@ -86,7 +86,7 @@ public final class FileUtils {
             LOGGER.error("error when getMimeType, ex:", e);
         }
 
-        return StringUtils.isBlank(mimeType) ? "application/octet-stream" : mimeType;
+        return mimeType;
     }
 
     public static String getFileExt(File file) {
@@ -105,14 +105,14 @@ public final class FileUtils {
     }
 
     public static String getFileExt(InputStream stream) {
-        String fileExt = null;
+        String fileExt = ".bin";
         try {
             String mimeType = getMimeType(stream);
             fileExt = TikaConfig.getDefaultConfig().getMimeRepository().getRegisteredMimeType(mimeType).getExtension();
         } catch (MimeTypeException e) {
             LOGGER.error("error when getFileExt, ex:", e);
         }
-        return StringUtils.isBlank(fileExt) ? ".bin" : fileExt;
+        return fileExt;
     }
 
     public static InputStream getResourceAsStream(String resource) {
