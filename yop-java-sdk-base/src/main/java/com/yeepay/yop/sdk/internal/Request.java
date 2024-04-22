@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.internal;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
+import com.yeepay.yop.sdk.model.FileParam;
 
 import java.io.File;
 import java.io.InputStream;
@@ -168,6 +169,14 @@ public interface Request<T extends BaseRequest> {
      * @param in   the file
      */
     void addMultiPartFile(String name, InputStream in);
+
+    /**
+     * Adds the specified FileParam to this request
+     *
+     * @param name      The name of the file parameter
+     * @param fileParam the fileParam
+     */
+    void addMultiPartFile(String name, FileParam fileParam);
 
     /**
      * Returns the service endpoint to which this request should be sent.

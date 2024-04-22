@@ -69,7 +69,7 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
                 currentEx = throwable;
                 // 路由异常，客户端配置问题
                 if (null == lastServerRoot || null == lastServerRoot.getResource()) {
-                    throw new YopClientException("Config Error, No ServerRoot Found");
+                    throw new YopClientException("Config Error, No ServerRoot Found", throwable);
                 }
 
                 // 客户端异常、业务异常，直接抛给上层
