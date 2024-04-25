@@ -59,13 +59,13 @@ public class SimpleCustomExceptionAnalyzer implements ExceptionAnalyzer<Analyzed
         // 客户端异常&业务异常，不重试，不计入熔断笔数
         if (exception instanceof YopClientException) {
             result.setExDetail(exception.getClass().getCanonicalName() + COLON +
-                    StringUtils.defaultString(exception.getMessage()));
+                    StringUtils.defaultString(exception.getMessage()).trim());
             return result;
         }
 
         // 熔断异常，直接重试
         if (exception instanceof YopBlockException) {
-            result.setExDetail(exception.getClass().getCanonicalName() + COLON + StringUtils.defaultString(exception.getMessage()));
+            result.setExDetail(exception.getClass().getCanonicalName() + COLON + StringUtils.defaultString(exception.getMessage()).trim());
             result.setNeedRetry(true);
             result.setBlocked(true);
             return result;
@@ -78,7 +78,7 @@ public class SimpleCustomExceptionAnalyzer implements ExceptionAnalyzer<Analyzed
             Throwable rootCause = allExceptions[i];
             // 当前异常
             final String exType = rootCause.getClass().getCanonicalName(),
-                    exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage());
+                    exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage()).trim();
             exceptionDetails.add(exType);
             exceptionDetails.add(exTypeAndMsg);
 
@@ -96,7 +96,7 @@ public class SimpleCustomExceptionAnalyzer implements ExceptionAnalyzer<Analyzed
             superClasses.addAll(ClassUtils.getAllInterfaces(rootCause.getClass()));
             for (Class<?> superClass : superClasses) {
                 final String superExType = superClass.getCanonicalName(),
-                        superExTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage());
+                        superExTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage()).trim();
                 exceptionDetails.add(superExType);
                 exceptionDetails.add(superExTypeAndMsg);
 
@@ -113,7 +113,7 @@ public class SimpleCustomExceptionAnalyzer implements ExceptionAnalyzer<Analyzed
         // 默认异常消息，取最后一个caused by
         Throwable lastCause = allExceptions[allExceptions.length -1];
         result.setExDetail(lastCause.getClass().getCanonicalName() + COLON +
-                StringUtils.defaultString(lastCause.getMessage()));
+                StringUtils.defaultString(lastCause.getMessage()).trim());
 
         // 预期异常，不重试，不计入熔断笔数
         if (CollectionUtils.containsAny(excludeExceptions, exceptionDetails)) {

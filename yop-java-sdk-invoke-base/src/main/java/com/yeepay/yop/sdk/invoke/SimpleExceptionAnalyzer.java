@@ -59,13 +59,13 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
         // 客户端异常&业务异常，不重试，不计入熔断笔数
         if (e instanceof YopClientException) {
             result.setExDetail(e.getClass().getCanonicalName() + COLON +
-                    StringUtils.defaultString(e.getMessage()));
+                    StringUtils.defaultString(e.getMessage()).trim());
             return result;
         }
 
         // 熔断异常，直接重试
         if (e instanceof YopBlockException) {
-            result.setExDetail(e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage()));
+            result.setExDetail(e.getClass().getCanonicalName() + COLON + StringUtils.defaultString(e.getMessage()).trim());
             result.setNeedRetry(true);
             result.setBlocked(true);
             return result;
@@ -77,7 +77,7 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
         for (int i = 0; i < allExceptions.length; i++) {
             Throwable rootCause = allExceptions[i];
             final String exType = rootCause.getClass().getCanonicalName(),
-                    exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage());
+                    exTypeAndMsg = exType + COLON + StringUtils.defaultString(rootCause.getMessage()).trim();
             exceptionDetails.add(exType);
             exceptionDetails.add(exTypeAndMsg);
             if (retryExceptions.contains(exType) ||
@@ -92,7 +92,7 @@ public class SimpleExceptionAnalyzer implements ExceptionAnalyzer<AnalyzedExcept
         // 默认异常消息，取最后一个caused by
         Throwable lastCause = allExceptions[allExceptions.length -1];
         result.setExDetail(lastCause.getClass().getCanonicalName() + COLON +
-                StringUtils.defaultString(lastCause.getMessage()));
+                StringUtils.defaultString(lastCause.getMessage()).trim());
 
         // 预期异常，不重试，不计入熔断笔数
         if (CollectionUtils.containsAny(excludeExceptions, exceptionDetails)) {

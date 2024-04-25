@@ -49,19 +49,50 @@ public class SimpleUriResourceRouteClient {
         this(targetServers, routerPolicy, retryPolicy, YopRouteConfigProviderRegistry.getProvider());
     }
 
+
+
     public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy,
                                         RetryPolicy retryPolicy, YopRouteConfigProvider routeConfigProvider) {
+        this(targetServers, routerPolicy, retryPolicy, routeConfigProvider, false);
+    }
+
+    /**
+     * 构造路由客户端
+     *
+     * @param targetServers 目标地址
+     * @param routerPolicy 路由策略
+     * @param retryPolicy 重试策略
+     * @param routeConfigProvider 路由配置加载器
+     * @param prototype 是否新建隔离资源池资源池
+     */
+    public SimpleUriResourceRouteClient(List<String> targetServers, RouterPolicy routerPolicy,
+                                        RetryPolicy retryPolicy, YopRouteConfigProvider routeConfigProvider, boolean prototype) {
+        if (prototype) {
+            this.innerRouteClient = newInnerClient(UUID.randomUUID().toString(), targetServers, routerPolicy, retryPolicy, routeConfigProvider);
+            return;
+        }
+
         String serverKey = StringUtils.join(targetServers, ",");
+        if (CACHED_ROUTERS.containsKey(serverKey)) {
+            this.innerRouteClient = CACHED_ROUTERS.get(serverKey);
+            return;
+        }
+
         synchronized (CACHED_ROUTERS) {
-            if (!CACHED_ROUTERS.containsKey(serverKey)) {
-                String resourceGroup = UUID.randomUUID().toString();
-                this.innerRouteClient = new InnerRouteClient(routeConfigProvider,
-                        new SimpleUriResourceRouter<>(resourceGroup, targetServers, routerPolicy), retryPolicy);
-                CACHED_ROUTERS.put(serverKey, this.innerRouteClient);
-            } else {
+            if (CACHED_ROUTERS.containsKey(serverKey)) {
                 this.innerRouteClient = CACHED_ROUTERS.get(serverKey);
+            } else {
+                this.innerRouteClient = newInnerClient(serverKey, targetServers, routerPolicy, retryPolicy, routeConfigProvider);
             }
         }
+    }
+
+    private InnerRouteClient newInnerClient(String clientCacheKey, List<String> targetServers, RouterPolicy routerPolicy,
+                                  RetryPolicy retryPolicy, YopRouteConfigProvider routeConfigProvider) {
+
+        CACHED_ROUTERS.put(clientCacheKey, new InnerRouteClient(routeConfigProvider,
+                new SimpleUriResourceRouter<>(UUID.randomUUID().toString(), targetServers, routerPolicy), retryPolicy));
+        return CACHED_ROUTERS.get(clientCacheKey);
     }
 
     /**
