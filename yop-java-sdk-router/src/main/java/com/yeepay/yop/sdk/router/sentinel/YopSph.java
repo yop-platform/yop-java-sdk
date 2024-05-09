@@ -152,7 +152,7 @@ public class YopSph {
                     Map<ResourceWrapper, ProcessorSlotChain> newMap = new HashMap<ResourceWrapper, ProcessorSlotChain>(
                             chainMap.size() + 1);
                     newMap.putAll(chainMap);
-                    newMap.put(resourceWrapper, chain);
+                    newMap.put(realResource, chain);
                     chainMap = newMap;
                 }
             }
