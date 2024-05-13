@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
-import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
@@ -62,7 +61,7 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: rsa 加密示例<br>
+ * title: Sm2 加密示例<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
