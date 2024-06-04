@@ -6,13 +6,10 @@ package com.yeepay.yop.sdk.router.config;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.utils.JsonUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -26,14 +23,13 @@ import java.util.Map;
  * @since 2024/2/2
  */
 public class YopFileRouteConfigProvider implements YopRouteConfigProvider {
-
-    public static YopRouteConfigProvider INSTANCE = new YopFileRouteConfigProvider();
-
     private static final Logger LOGGER = LoggerFactory.getLogger(YopFileRouteConfigProvider.class);
     private static final String SDK_CONFIG_DIR = "config";
-    private static final String DEFAULT_CONFIG_FILE_NAME = "yop_route_config_default.json";
+    private static final String DEFAULT_CONFIG_FILE_NAME_FORMAT = "yop_route_config_%s.json";
+    private static final String DEFAULT_CONFIG_FILE_NAME = String.format(DEFAULT_CONFIG_FILE_NAME_FORMAT, "default");
     private static final String DEFAULT_CONFIG_FILE = SDK_CONFIG_DIR + "/" + DEFAULT_CONFIG_FILE_NAME;
-    private static final String FILE_PROTOCOL_PREFIX = "file://";
+
+    public static YopRouteConfigProvider INSTANCE = new YopFileRouteConfigProvider();
 
     private final Map<String, YopRouteConfig> ROUTE_CONFIG_MAP = Maps.newHashMap();
 
@@ -54,13 +50,14 @@ public class YopFileRouteConfigProvider implements YopRouteConfigProvider {
 
     @Override
     public YopRouteConfig getRouteConfig(String configKey) {
-        return ROUTE_CONFIG_MAP.computeIfAbsent(configKey, this::loadRouteConfigFile);
+        return ROUTE_CONFIG_MAP.computeIfAbsent(configKey,
+                p -> this.loadRouteConfigFile(SDK_CONFIG_DIR + "/"
+                        + String.format(DEFAULT_CONFIG_FILE_NAME_FORMAT, configKey)));
     }
 
     private YopRouteConfig loadRouteConfigFile(String configFile) {
-        try (InputStream inputStream = StringUtils.startsWith(configFile, FILE_PROTOCOL_PREFIX) ?
-                Files.newInputStream(Paths.get(StringUtils.substringAfter(configFile, FILE_PROTOCOL_PREFIX))) :
-                Thread.currentThread().getContextClassLoader().getResourceAsStream(configFile)){
+        try (InputStream inputStream = Thread.currentThread()
+                .getContextClassLoader().getResourceAsStream(configFile)){
             if (null != inputStream) {
                 return JsonUtils.loadFrom(inputStream, YopRouteConfig.class);
             }
@@ -68,6 +65,9 @@ public class YopFileRouteConfigProvider implements YopRouteConfigProvider {
         } catch (Exception e) {
             LOGGER.error("error when load route config file, ex:", e);
         }
-        return new YopRouteConfig();
+        if (!this.configFile.equals(configFile)) {
+            return getRouteConfig();
+        }
+        return YopRouteConfig.DEFAULT_CONFIG;
     }
 }
