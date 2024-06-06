@@ -20,15 +20,8 @@
       {
         "grade": 2,
         "count": 1,
-        "time_window": 900,
+        "time_window": 600,
         "stat_interval_ms": 300000
-      },
-      {
-        "grade": 1,
-        "count": 0.2,
-        "time_window": 900,
-        "stat_interval_ms": 5000,
-        "min_request_amount": 5
       }
     ]
   }
