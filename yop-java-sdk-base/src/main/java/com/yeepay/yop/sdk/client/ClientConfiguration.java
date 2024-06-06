@@ -22,12 +22,12 @@ public class ClientConfiguration {
     /**
      * The default timeout for creating new connections.
      */
-    public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS = 10 * 1000;
+    public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS = 3 * 1000;
 
     /**
      * The default timeout for request new connections form pool.
      */
-    public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_IN_MILLIS = 10 * 1000;
+    public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_IN_MILLIS = 3 * 1000;
 
     /**
      * The default timeout for reading from a connected socket.
