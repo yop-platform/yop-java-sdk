@@ -10,7 +10,6 @@
     "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException",
     "java.net.ConnectException:Connection timed out","java.net.ConnectException:连接超时"
   ],
-  "max_retry_count": 3,
   "circuit_breaker": {
     "enable": true,
     "yop_exclude_exceptions": [
