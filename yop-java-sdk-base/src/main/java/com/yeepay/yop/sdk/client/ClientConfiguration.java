@@ -1,18 +1,14 @@
 package com.yeepay.yop.sdk.client;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.Region;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
-import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.http.Protocol;
 import com.yeepay.yop.sdk.http.RetryPolicy;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.InetAddress;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -26,12 +22,12 @@ public class ClientConfiguration {
     /**
      * The default timeout for creating new connections.
      */
-    public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS = 10 * 1000;
+    public static final int DEFAULT_CONNECTION_TIMEOUT_IN_MILLIS = 3 * 1000;
 
     /**
      * The default timeout for request new connections form pool.
      */
-    public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_IN_MILLIS = 10 * 1000;
+    public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_IN_MILLIS = 3 * 1000;
 
     /**
      * The default timeout for reading from a connected socket.
@@ -174,20 +170,6 @@ public class ClientConfiguration {
      */
     private String clientImpl = YOP_HTTP_CLIENT_IMPL_DEFAULT;
 
-    private int maxRetryCount = 3;
-
-    private Set<String> retryExceptions = Sets.newHashSet("java.net.UnknownHostException",
-            "java.net.ConnectException:No route to host (connect failed)",
-            "java.net.ConnectException:Connection refused (Connection refused)",
-            "java.net.ConnectException:Connection refused: connect",
-            "java.net.SocketTimeoutException:connect timed out",
-            "java.net.NoRouteToHostException",
-            "org.apache.http.conn.ConnectTimeoutException", "com.yeepay.shade.org.apache.http.conn.ConnectTimeoutException",
-            "org.apache.http.conn.HttpHostConnectException", "com.yeepay.shade.org.apache.http.conn.HttpHostConnectException",
-            "java.net.ConnectException:Connection timed out","java.net.ConnectException:连接超时");
-
-    private YopCircuitBreakerConfig circuitBreakerConfig = YopCircuitBreakerConfig.DEFAULT_CONFIG;
-
     // Initialize DEFAULT_USER_AGENT
     static {
         String language = System.getProperty("user.language");
@@ -238,9 +220,6 @@ public class ClientConfiguration {
         this.region = other.region;
         this.credentials = other.credentials;
         this.clientImpl = other.clientImpl;
-        this.maxRetryCount = other.maxRetryCount;
-        this.retryExceptions = other.retryExceptions;
-        this.circuitBreakerConfig = other.circuitBreakerConfig;
     }
 
     /**
@@ -929,51 +908,6 @@ public class ClientConfiguration {
         return this;
     }
 
-    public int getMaxRetryCount() {
-        return maxRetryCount;
-    }
-
-    public void setMaxRetryCount(int maxRetryCount) {
-        if (maxRetryCount > 0) {
-            this.maxRetryCount = maxRetryCount;
-        }
-    }
-
-    public ClientConfiguration withMaxRetryCount(int maxRetryCount) {
-        setMaxRetryCount(maxRetryCount);
-        return this;
-    }
-
-    public Set<String> getRetryExceptions() {
-        return retryExceptions;
-    }
-
-    public void setRetryExceptions(Set<String> retryExceptions) {
-        if (CollectionUtils.isNotEmpty(retryExceptions)) {
-            this.retryExceptions = retryExceptions;
-        }
-    }
-
-    public ClientConfiguration withRetryExceptions(Set<String> retryExceptions) {
-        setRetryExceptions(retryExceptions);
-        return this;
-    }
-
-    public YopCircuitBreakerConfig getCircuitBreakerConfig() {
-        return circuitBreakerConfig;
-    }
-
-    public void setCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
-        if (null != circuitBreakerConfig) {
-            this.circuitBreakerConfig = circuitBreakerConfig;
-        }
-    }
-
-    public ClientConfiguration withCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
-        setCircuitBreakerConfig(circuitBreakerConfig);
-        return this;
-    }
-
     @Override
     public String toString() {
         return "ClientConfiguration [ \n  userAgent=" + userAgent
@@ -991,10 +925,7 @@ public class ClientConfiguration {
                 + socketBufferSizeInBytes + ", \n  region="
                 + region + ", \n  credentials="
                 + credentials + ", \n  clientImpl="
-                + clientImpl + ", \n  maxRetryCount="
-                + maxRetryCount + ", \n  retryExceptions="
-                + retryExceptions + ", \n  circuitBreakerConfig="
-                + circuitBreakerConfig + "]\n";
+                + clientImpl + "]\n";
     }
 
 }

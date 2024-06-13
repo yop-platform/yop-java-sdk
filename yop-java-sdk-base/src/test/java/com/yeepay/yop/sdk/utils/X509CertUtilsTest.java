@@ -4,6 +4,7 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -46,4 +47,5 @@ public class X509CertUtilsTest {
         Assert.assertEquals(X509CertUtils.parseToDecimal("4378650635"), "289782695477");
         Assert.assertEquals(X509CertUtils.parseToDecimal("4379555845"), "289798445125");
     }
+
 }

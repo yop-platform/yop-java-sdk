@@ -21,7 +21,7 @@ import java.util.Set;
 
 import static com.yeepay.yop.sdk.YopConstants.TOTAL_ENCRYPT_PARAMS;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.DOLLAR;
-import static com.yeepay.yop.sdk.utils.JsonUtils.isTotalEncrypt;
+import static com.yeepay.yop.sdk.utils.EncryptUtils.isTotalEncrypt;
 
 /**
  * title: Yop请求<br>

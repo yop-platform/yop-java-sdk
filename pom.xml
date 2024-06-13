@@ -20,6 +20,8 @@
         <module>yop-java-sdk-invoke-api</module>
         <module>yop-java-sdk-invoke-base</module>
         <module>yop-java-sdk-api</module>
+        <module>yop-java-sdk-router</module>
+        <module>yop-java-sdk-utils</module>
     </modules>
 
     <name>yop-java-sdk-parent</name>
@@ -117,6 +119,16 @@
             <dependency>
                 <groupId>com.yeepay.yop.sdk</groupId>
                 <artifactId>yop-java-sdk-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-router</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.yeepay.yop.sdk</groupId>
+                <artifactId>yop-java-sdk-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -236,12 +248,6 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j-api.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-core</artifactId>
-                <version>${sentinel.version}</version>
             </dependency>
 
             <!-- test dependencies -->

@@ -26,18 +26,12 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
 
     public static final YopCircuitBreakerRuleConfig DEFAULT_CONFIG = new YopCircuitBreakerRuleConfig();
     public static final YopCircuitBreakerRuleConfig DEFAULT_ERROR_COUNT_CONFIG;
-    public static final YopCircuitBreakerRuleConfig DEFAULT_ERROR_RATIO_CONFIG;
 
     static {
         DEFAULT_ERROR_COUNT_CONFIG = new YopCircuitBreakerRuleConfig(5 * 60 * 1000);
         DEFAULT_ERROR_COUNT_CONFIG.setGrade(2);
-        DEFAULT_ERROR_COUNT_CONFIG.setCount(4.0);
-        DEFAULT_ERROR_COUNT_CONFIG.setTimeWindow(5 * 60);
-        DEFAULT_ERROR_RATIO_CONFIG = new YopCircuitBreakerRuleConfig(5 * 1000);
-        DEFAULT_ERROR_RATIO_CONFIG.setGrade(1);
-        DEFAULT_ERROR_RATIO_CONFIG.setCount(0.2);
-        DEFAULT_ERROR_RATIO_CONFIG.setTimeWindow(5 * 60);
-        DEFAULT_ERROR_RATIO_CONFIG.setMinRequestAmount(5);
+        DEFAULT_ERROR_COUNT_CONFIG.setCount(1.0);
+        DEFAULT_ERROR_COUNT_CONFIG.setTimeWindow(10 * 60);
     }
 
     public YopCircuitBreakerRuleConfig() {
@@ -66,7 +60,7 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
      * <ul/>
      */
     @JsonProperty("count")
-    private double count = 2.0;
+    private double count = 1.0;
 
     /**
      * 熔断间歇时长(秒，该窗口期后，会进入半开)
@@ -74,7 +68,7 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
      * transform to half-open state for trying a few requests.
      */
     @JsonProperty("time_window")
-    private int timeWindow = 5;
+    private int timeWindow = 10 * 60;
 
     /**
      * 请求量阈值(达到该数量，才会检查健康数据，进而熔断)
@@ -101,7 +95,7 @@ public class YopCircuitBreakerRuleConfig implements Serializable {
      * @since 1.8.0
      */
     @JsonProperty("stat_interval_ms")
-    private int statIntervalMs = 1000;
+    private int statIntervalMs = 5 * 60 * 1000;
 
     // endregion
 

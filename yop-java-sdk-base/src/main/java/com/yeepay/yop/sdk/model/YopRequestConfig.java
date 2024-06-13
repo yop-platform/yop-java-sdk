@@ -90,6 +90,11 @@ public class YopRequestConfig {
      */
     private Boolean enableCircuitBreaker = true;
 
+    /**
+     * 最大重试次数，默认3次
+     */
+    private int maxRetryCount = 3;
+
     public String getAppKey() {
         return appKey;
     }
@@ -236,6 +241,15 @@ public class YopRequestConfig {
         return this;
     }
 
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public YopRequestConfig setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
+        return this;
+    }
+
     public static final class Builder {
         private String appKey;
         private String securityReq;
@@ -249,6 +263,7 @@ public class YopRequestConfig {
         private int signExpirationInSeconds;
         private String serverRoot;
         private Boolean enableCircuitBreaker = true;
+        private int maxRetryCount = 3;
 
         private Builder() {
         }
@@ -317,6 +332,11 @@ public class YopRequestConfig {
             return this;
         }
 
+        public Builder withMaxRetryCount(int maxRetryCount) {
+            this.maxRetryCount = maxRetryCount;
+            return this;
+        }
+
         public YopRequestConfig build() {
             return new YopRequestConfig().setAppKey(appKey)
                     .setSecurityReq(securityReq)
@@ -329,7 +349,8 @@ public class YopRequestConfig {
                     .setSkipVerifySign(skipVerifySign)
                     .setSignExpirationInSeconds(signExpirationInSeconds)
                     .setServerRoot(serverRoot)
-                    .setEnableCircuitBreaker(enableCircuitBreaker);
+                    .setEnableCircuitBreaker(enableCircuitBreaker)
+                    .setMaxRetryCount(maxRetryCount);
         }
     }
 }

@@ -75,6 +75,8 @@ public class ClientUtils {
                     .withCredentialsProvider(clientParams.getCredentialsProvider())
                     .withYopSdkConfigProvider(clientParams.getYopSdkConfigProvider())
                     .withPlatformCredentialsProvider(clientParams.getPlatformCredentialsProvider())
+                    .withRouteConfigProvider(clientParams.getRouteConfigProvider())
+                    .withRouterPolicy(clientParams.getRouterPolicy())
                     .withClientConfiguration(clientParams.getClientConfiguration())
                     .withEndpoint(null != clientParams.getEndPoint() ? clientParams.getEndPoint().toString() : null)
                     .withYosEndpoint(null != clientParams.getYosEndPoint() ? clientParams.getYosEndPoint().toString() : null)

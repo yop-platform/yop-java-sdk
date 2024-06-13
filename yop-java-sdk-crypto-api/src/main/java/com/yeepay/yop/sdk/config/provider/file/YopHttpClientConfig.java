@@ -5,7 +5,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
-import java.util.Set;
 
 /**
  * title: <br>
@@ -25,13 +24,13 @@ public final class YopHttpClientConfig implements Serializable {
      * 建立连接的超时
      */
     @JsonProperty("connect_timeout")
-    private int connectTimeout = 10000;
+    private int connectTimeout = 3000;
 
     /**
      * 从连接池获取到连接的超时时间
      */
     @JsonProperty("connect_request_timeout")
-    private int connectRequestTimeout = 5000;
+    private int connectRequestTimeout = 3000;
 
     /**
      * 获取数据的超时时间
@@ -47,15 +46,6 @@ public final class YopHttpClientConfig implements Serializable {
 
     @JsonProperty("client_impl")
     private String clientImpl;
-
-    @JsonProperty("retry_exceptions")
-    private Set<String> retryExceptions;
-
-    @JsonProperty("max_retry_count")
-    private int maxRetryCount = 3;
-
-    @JsonProperty("circuit_breaker")
-    private YopCircuitBreakerConfig circuitBreakerConfig;
 
     public int getConnectTimeout() {
         return connectTimeout;
@@ -103,30 +93,6 @@ public final class YopHttpClientConfig implements Serializable {
 
     public void setClientImpl(String clientImpl) {
         this.clientImpl = clientImpl;
-    }
-
-    public Set<String> getRetryExceptions() {
-        return retryExceptions;
-    }
-
-    public void setRetryExceptions(Set<String> retryExceptions) {
-        this.retryExceptions = retryExceptions;
-    }
-
-    public int getMaxRetryCount() {
-        return maxRetryCount;
-    }
-
-    public void setMaxRetryCount(int maxRetryCount) {
-        this.maxRetryCount = maxRetryCount;
-    }
-
-    public YopCircuitBreakerConfig getCircuitBreakerConfig() {
-        return circuitBreakerConfig;
-    }
-
-    public void setCircuitBreakerConfig(YopCircuitBreakerConfig circuitBreakerConfig) {
-        this.circuitBreakerConfig = circuitBreakerConfig;
     }
 
     @Override

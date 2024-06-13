@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.Objects;
 
+import static com.yeepay.yop.sdk.invoke.model.UriResource.ResourceType.BLOCKED;
 import static com.yeepay.yop.sdk.invoke.model.UriResource.ResourceType.COMMON;
 
 /**
@@ -28,7 +29,14 @@ public class UriResource implements Serializable {
 
     public static final String RESOURCE_SEPERATOR = "####";
 
+    public static final String RESOURCE_GROUP_SEPERATOR = "::";
+
     public static final String RETAIN_RESOURCE_ID = "0000";
+
+    /**
+     * 资源分组
+     */
+    private String resourceGroup = CharacterConstants.EMPTY;
 
     /**
      * URI路径
@@ -52,10 +60,16 @@ public class UriResource implements Serializable {
         this.resourceType = COMMON;
     }
 
-    public UriResource(ResourceType resourceType, String resourcePrefix, URI uri) {
+    public UriResource(String resourceGroup, URI uri) {
         this.resource = uri;
+        this.resourceType = COMMON;
+        setResourceGroup(resourceGroup);
+    }
+
+    public UriResource(ResourceType resourceType, String resourcePrefix, URI uri) {
         this.resourceType = resourceType;
         this.resourcePrefix = resourcePrefix;
+        this.resource = uri;
     }
 
     public UriResource(ResourceType resourceType, String resourcePrefix, URI resource, Callback callback) {
@@ -65,12 +79,29 @@ public class UriResource implements Serializable {
         this.callback = callback;
     }
 
+    public UriResource(ResourceType resourceType, String resourceGroup, String resourcePrefix, URI resource) {
+        this.resourceType = resourceType;
+        setResourceGroup(resourceGroup);
+        this.resourcePrefix = resourcePrefix;
+        this.resource = resource;
+    }
+
     public URI getResource() {
         return resource;
     }
 
     public void setResource(URI resource) {
         this.resource = resource;
+    }
+
+    public String getResourceGroup() {
+        return resourceGroup;
+    }
+
+    public void setResourceGroup(String resourceGroup) {
+        if (null != resourceGroup) {
+            this.resourceGroup = resourceGroup;
+        }
     }
 
     public ResourceType getResourceType() {
@@ -93,6 +124,10 @@ public class UriResource implements Serializable {
         return RETAIN_RESOURCE_ID.equals(this.resourcePrefix);
     }
 
+    public boolean isBlocked() {
+        return BLOCKED.equals(this.resourceType);
+    }
+
     public Callback getCallback() {
         return callback;
     }
@@ -111,12 +146,13 @@ public class UriResource implements Serializable {
 
     @Override
     public String toString() {
-        return this.resourceType + RESOURCE_SEPERATOR + this.resourcePrefix + RESOURCE_SEPERATOR + this.resource.toString();
+        return this.resourceType + RESOURCE_SEPERATOR + this.resourceGroup + RESOURCE_SEPERATOR
+                + this.resourcePrefix + RESOURCE_SEPERATOR + this.resource.toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.resourceType, this.resourcePrefix, this.resource);
+        return Objects.hash(this.resourceType, this.resourceGroup, this.resourcePrefix, this.resource);
     }
 
     @Override
@@ -124,6 +160,7 @@ public class UriResource implements Serializable {
         if (obj instanceof UriResource) {
             UriResource that = (UriResource) obj;
             return this.resourceType.equals(that.getResourceType())
+                    && this.resourceGroup.equals(that.resourceGroup)
                     && this.resourcePrefix.equals(that.resourcePrefix)
                     && this.resource.equals(that.resource);
         }
@@ -131,19 +168,36 @@ public class UriResource implements Serializable {
     }
 
     public String computeResourceKey() {
-        if (COMMON.equals(this.resourceType)) {
-            return this.resource.toString();
-        }
-        return this.toString();
+        return this.resourceType + RESOURCE_SEPERATOR + this.resourceGroup + RESOURCE_SEPERATOR
+                + this.resourcePrefix + RESOURCE_SEPERATOR + this.resource.toString();
     }
 
     public static UriResource parseResourceKey(String resourceKey) {
         final String[] resourceSeperated = resourceKey.split(RESOURCE_SEPERATOR);
-        if (resourceSeperated.length == 1) {
-            return new UriResource(URI.create(resourceKey));
-        }
         return new UriResource(ResourceType.valueOf(resourceSeperated[0]),
-                resourceSeperated[1], URI.create(resourceSeperated[2]));
+                resourceSeperated[1], resourceSeperated[2], URI.create(resourceSeperated[3]));
+    }
+
+    public String[] parseResourceGroup() {
+        return this.resourceGroup.split(RESOURCE_GROUP_SEPERATOR);
+    }
+
+    public static String computeResourceGroup(Object...args) {
+        if (null == args) {
+            return CharacterConstants.EMPTY;
+        }
+        StringBuilder resourceGroup = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (null == args[i]) {
+                resourceGroup.append(CharacterConstants.EMPTY);
+            } else {
+                resourceGroup.append(args[i]);
+            }
+            if (i != args.length - 1) {
+                resourceGroup.append(RESOURCE_GROUP_SEPERATOR);
+            }
+        }
+        return resourceGroup.toString();
     }
 
     public interface Callback {

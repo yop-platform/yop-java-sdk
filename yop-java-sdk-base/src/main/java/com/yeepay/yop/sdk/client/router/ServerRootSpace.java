@@ -1,12 +1,17 @@
 package com.yeepay.yop.sdk.client.router;
 
-import com.yeepay.yop.sdk.YopConstants;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.utils.RandomUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.net.URI;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.yeepay.yop.sdk.YopConstants.DEFAULT_PREFERRED_SERVER_ROOT;
@@ -22,6 +27,8 @@ import static com.yeepay.yop.sdk.YopConstants.DEFAULT_PREFERRED_SERVER_ROOT;
  * @since 2019-03-12 17:22
  */
 public class ServerRootSpace implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerRootSpace.class);
 
     private static final long serialVersionUID = -1L;
 
@@ -39,29 +46,13 @@ public class ServerRootSpace implements Serializable {
 
     private final URI sandboxServerRoot;
 
-    public ServerRootSpace(URI serverRoot, URI yosServerRoot, URI sandboxServerRoot) {
-        this.provider = YopConstants.YOP_DEFAULT_PROVIDER;
-        this.env = YopConstants.YOP_DEFAULT_ENV;
-        this.serverRoot = serverRoot;
-        this.yosServerRoot = yosServerRoot;
-        this.preferredEndPoint = DEFAULT_PREFERRED_SERVER_ROOT;
-        this.preferredYosEndPoint = Collections.emptyList();
-        this.sandboxServerRoot = sandboxServerRoot;
-    }
+    private final String serverGroup;
 
-    public ServerRootSpace(URI serverRoot, URI yosServerRoot,
-                           List<URI> preferredEndPoint, List<URI> preferredYosEndPoint,
-                           URI sandboxServerRoot) {
-        this.provider = YopConstants.YOP_DEFAULT_PROVIDER;
-        this.env = YopConstants.YOP_DEFAULT_ENV;
-        this.serverRoot = serverRoot;
-        this.yosServerRoot = yosServerRoot;
-        this.preferredEndPoint = CollectionUtils.isEmpty(preferredEndPoint) ? DEFAULT_PREFERRED_SERVER_ROOT : preferredEndPoint;
-        this.preferredYosEndPoint = preferredYosEndPoint;
-        this.sandboxServerRoot = sandboxServerRoot;
-    }
+    private final Map<ServerRootType, URI> mainServers;
 
-    public ServerRootSpace(String provider, String env,
+    private final Map<ServerRootType, List<URI>> backupServers;
+
+    public ServerRootSpace(String provider, String env, String serverGroup,
                            URI serverRoot, URI yosServerRoot,
                            List<URI> preferredEndPoint, List<URI> preferredYosEndPoint,
                            URI sandboxServerRoot) {
@@ -72,7 +63,57 @@ public class ServerRootSpace implements Serializable {
         this.preferredEndPoint = CollectionUtils.isEmpty(preferredEndPoint) ? DEFAULT_PREFERRED_SERVER_ROOT : preferredEndPoint;
         this.preferredYosEndPoint = preferredYosEndPoint;
         this.sandboxServerRoot = sandboxServerRoot;
+        this.serverGroup = serverGroup;
+
+        this.mainServers = Maps.newConcurrentMap();
+        this.backupServers = Maps.newConcurrentMap();
+
+        // 随机选主:common
+        final List<URI> randomCommonList = RandomUtils.randomList(getPreferredEndPoint());
+        if (recordMainServer(randomCommonList.remove(0), ServerRootType.COMMON, mainServers)) {
+            backupServers.put(ServerRootType.COMMON, randomCommonList);
+        }
+        // yos
+        final List<URI> randomYosList = RandomUtils.randomList(CollectionUtils.isEmpty(getPreferredYosEndPoint())
+                ? Lists.newArrayList(getYosServerRoot()) : getPreferredYosEndPoint());
+        if (recordMainServer(randomYosList.remove(0), ServerRootType.YOS, mainServers)) {
+            backupServers.put(ServerRootType.YOS, randomYosList);
+        }
+        // sandbox 兼容老沙箱
+        final List<URI> randomSandboxList = RandomUtils.randomList(Lists.newArrayList(getSandboxServerRoot()));
+        if (recordMainServer(randomSandboxList.remove(0), ServerRootType.SANDBOX, mainServers)) {
+            backupServers.put(ServerRootType.SANDBOX, randomSandboxList);
+        }
     }
+
+    private boolean recordMainServer(URI serverRoot, ServerRootType serverRootType, Map<ServerRootType, URI> mainServers) {
+        return recordMainServer(serverRoot, serverRootType, mainServers, false);
+    }
+
+    private boolean recordMainServer(URI serverRoot, ServerRootType serverRootType, Map<ServerRootType, URI> mainServers, boolean force) {
+        if (null == serverRoot) {
+            throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
+        }
+        final URI oldMain = mainServers.putIfAbsent(serverRootType, serverRoot);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Main ServerRoot Set, value:{}, type:{}", serverRoot, serverRootType);
+        }
+        if (null != oldMain) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Main ServerRoot Already Set, value:{}", oldMain);
+            }
+            if (force) {
+                mainServers.put(serverRootType, serverRoot);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Main ServerRoot Switched, old:{}, new:{}", oldMain, serverRoot);
+                }
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
 
     public String getProvider() {
         return provider;
@@ -102,9 +143,21 @@ public class ServerRootSpace implements Serializable {
         return sandboxServerRoot;
     }
 
+    public String getServerGroup() {
+        return serverGroup;
+    }
+
+    public Map<ServerRootType, URI> getMainServers() {
+        return mainServers;
+    }
+
+    public Map<ServerRootType, List<URI>> getBackupServers() {
+        return backupServers;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(this.provider, this.env, this.serverRoot,
+        return Objects.hash(this.provider, this.env, this.serverGroup, this.serverRoot,
                 this.yosServerRoot, this.sandboxServerRoot, this.preferredEndPoint, this.preferredYosEndPoint);
     }
 
@@ -114,6 +167,7 @@ public class ServerRootSpace implements Serializable {
             final ServerRootSpace that = (ServerRootSpace) obj;
             return Objects.equals(this.provider, that.provider) &&
                     Objects.equals(this.env, that.env) &&
+                    Objects.equals(this.serverGroup, that.serverGroup) &&
                     Objects.equals(this.serverRoot, that.serverRoot) &&
                     Objects.equals(this.yosServerRoot, that.yosServerRoot) &&
                     Objects.equals(this.sandboxServerRoot, that.sandboxServerRoot) &&
@@ -121,5 +175,12 @@ public class ServerRootSpace implements Serializable {
                     Objects.equals(this.preferredYosEndPoint, that.preferredYosEndPoint);
         }
         return false;
+    }
+
+    public enum ServerRootType {
+        COMMON,
+        YOS,
+        @Deprecated
+        SANDBOX
     }
 }

@@ -4,12 +4,12 @@
  */
 package com.yeepay.yop.sdk.sentinel;
 
-import com.alibaba.csp.sentinel.*;
-import com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
-import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
-import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.*;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slotchain.ProcessorSlotChain;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.service.common.YopClient;
 import com.yeepay.yop.sdk.service.common.YopClientBuilder;

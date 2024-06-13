@@ -1,9 +1,6 @@
 package com.yeepay.yop.sdk.client;
 
-import com.alibaba.csp.sentinel.Entry;
-import com.alibaba.csp.sentinel.Tracer;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
@@ -15,10 +12,7 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
-import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
-import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
-import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
 import com.yeepay.yop.sdk.client.router.YopRouter;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
@@ -35,10 +29,16 @@ import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
+import com.yeepay.yop.sdk.router.config.YopRouteConfig;
+import com.yeepay.yop.sdk.router.config.YopRouteConfigProvider;
+import com.yeepay.yop.sdk.router.sentinel.YopDegradeRuleHelper;
+import com.yeepay.yop.sdk.router.sentinel.YopSph;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.Entry;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.Tracer;
+import com.yeepay.yop.sdk.router.third.com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.sentinel.YopSph;
 import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -47,9 +47,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import static com.yeepay.yop.sdk.internal.RequestAnalyzer.*;
@@ -68,6 +69,7 @@ import static com.yeepay.yop.sdk.utils.ClientUtils.isBasicClient;
 public class ClientHandlerImpl implements ClientHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientHandlerImpl.class);
+
     private final String provider;
 
     private final String env;
@@ -78,21 +80,21 @@ public class ClientHandlerImpl implements ClientHandler {
 
     private final YopPlatformCredentialsProvider platformCredentialsProvider;
 
-    private final AuthorizationReqRegistry authorizationReqRegistry;
+    private final YopRouteConfigProvider routeConfigProvider;
 
-    private final ClientConfiguration clientConfiguration;
+    private final AuthorizationReqRegistry authorizationReqRegistry;
 
     private final YopHttpClient client;
 
-    private final GateWayRouter gateWayRouter;
-
-    private final YopCircuitBreakerConfig circuitBreakerConfig;
+    private final ServerRootSpace serverRootSpace;
 
     private final YopCircuitBreaker circuitBreaker;
 
     private final String sdkSource;
 
     private final String clientId;
+
+    private final RouterPolicy routerPolicy;
 
 
     public ClientHandlerImpl(ClientHandlerParams handlerParams) {
@@ -101,21 +103,21 @@ public class ClientHandlerImpl implements ClientHandler {
         this.yopCredentialsProvider = handlerParams.getClientParams().getCredentialsProvider();
         this.yopSdkConfigProvider = handlerParams.getClientParams().getYopSdkConfigProvider();
         this.platformCredentialsProvider = handlerParams.getClientParams().getPlatformCredentialsProvider();
+        this.routeConfigProvider = handlerParams.getClientParams().getRouteConfigProvider();
+        this.routerPolicy = handlerParams.getClientParams().getRouterPolicy();
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
-        ServerRootSpace serverRootSpace = new ServerRootSpace(provider, env, handlerParams.getClientParams().getEndPoint(),
-                handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
-                handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
-        this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
-        this.clientConfiguration = handlerParams.getClientParams().getClientConfiguration();
-        this.client = buildHttpClient(handlerParams);
-        this.circuitBreakerConfig = this.clientConfiguration.getCircuitBreakerConfig();
-        this.circuitBreaker = new YopSentinelCircuitBreaker(serverRootSpace, this.circuitBreakerConfig);
         this.clientId = handlerParams.getClientParams().getClientId();
         if (isBasicClient(clientId)) {
             sdkSource = YopConstants.YOP_SDK_SOURCE_BASIC;
         } else {
             sdkSource = YopConstants.YOP_SDK_SOURCE_BIZ;
         }
+        this.serverRootSpace = new ServerRootSpace(provider, env, this.clientId, handlerParams.getClientParams().getEndPoint(),
+                handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
+                handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
+
+        this.client = buildHttpClient(handlerParams);
+        this.circuitBreaker = new YopSentinelCircuitBreaker(this.serverRootSpace);
     }
 
     private YopHttpClient buildHttpClient(ClientHandlerParams handlerParams) {
@@ -135,11 +137,9 @@ public class ClientHandlerImpl implements ClientHandler {
         try {
             ExecutionContext executionContext = getExecutionContext(executionParams);
             return new UriResourceRouteInvokerWrapper<>(
-                    new YopInvoker<>(executionParams, executionContext, new SimpleExceptionAnalyzer(null != circuitBreakerConfig ?
-                            circuitBreakerConfig.getExcludeExceptions() : Collections.emptySet(),
-                            clientConfiguration.getRetryExceptions()), true),
-                    new SimpleUriRetryPolicy(clientConfiguration.getMaxRetryCount()),
-                    new YopRouter<>(gateWayRouter)).invoke();
+                    new YopInvoker<>(executionParams, executionContext, true),
+                    new SimpleRetryPolicy(executionParams.getInput().getRequestConfig().getMaxRetryCount()),
+                    new YopRouter<>(serverRootSpace, routerPolicy)).invoke();
         } finally {
             ClientUtils.removeCurrentClientId();
         }
@@ -153,18 +153,41 @@ public class ClientHandlerImpl implements ClientHandler {
 
     }
 
+    private YopRouteConfig findRouteConfig(URI uri) {
+        String configKey = StringUtils.strip(uri.getHost().replaceAll("[^a-zA-Z0-9]", "_")
+                + (uri.getPort() > 0 ? "_" + uri.getPort() : ""), "_");
+        // 指定配置
+        YopRouteConfig routeConfig = routeConfigProvider.getRouteConfig(configKey);
+        // 默认配置
+        if (null == routeConfig) {
+            routeConfig = routeConfigProvider.getRouteConfig();
+        }
+        // 兜底配置
+        return null == routeConfig ? YopRouteConfig.DEFAULT_CONFIG : routeConfig;
+    }
+
     private class YopSentinelCircuitBreaker implements YopCircuitBreaker {
 
-        public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace, YopCircuitBreakerConfig circuitBreakerConfig) {
-            final ArrayList<URI> serverRoots = Lists.newArrayList(serverRootSpace.getYosServerRoot(),
-                    serverRootSpace.getSandboxServerRoot());
-            if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredEndPoint())) {
-                serverRoots.addAll(serverRootSpace.getPreferredEndPoint());
-            }
-            if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredYosEndPoint())) {
-                serverRoots.addAll(serverRootSpace.getPreferredYosEndPoint());
-            }
-            YopDegradeRuleHelper.initDegradeRule(serverRoots, circuitBreakerConfig);
+        public YopSentinelCircuitBreaker(ServerRootSpace serverRootSpace) {
+            Map<String, YopCircuitBreakerConfig> circuitBreakerConfigMap = Maps.newHashMap();
+            serverRootSpace.getMainServers().forEach((serverRootType, uri) -> {
+                YopRouteConfig routeConfig = findRouteConfig(uri);
+                circuitBreakerConfigMap.put(new UriResource(
+                        UriResource.computeResourceGroup(serverRootSpace.getProvider(),
+                                serverRootSpace.getEnv(), serverRootSpace.getServerGroup(), serverRootType), uri)
+                        .computeResourceKey(), routeConfig.getCircuitBreakerConfig());
+            });
+
+            serverRootSpace.getBackupServers().forEach((serverRootType, uris) -> {
+                for (URI uri : uris) {
+                    YopRouteConfig routeConfig = findRouteConfig(uri);
+                    circuitBreakerConfigMap.put(new UriResource(
+                            UriResource.computeResourceGroup(serverRootSpace.getProvider(),
+                                    serverRootSpace.getEnv(), serverRootSpace.getServerGroup(), serverRootType), uri)
+                            .computeResourceKey(), routeConfig.getCircuitBreakerConfig());
+                }
+            });
+            YopDegradeRuleHelper.initDegradeRule(circuitBreakerConfigMap);
         }
 
         @Override
@@ -179,9 +202,10 @@ public class ClientHandlerImpl implements ClientHandler {
             try {
                 // 请求保留资源时，不再熔断
                 if (!uriResource.isRetained()) {
-                    final String resource = uriResource.computeResourceKey();
-                    YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
-                    entry = YopSph.getInstance().entry(resource);
+                    YopRouteConfig routeConfig = findRouteConfig(uriResource.getResource());
+                    final String resourceKey = uriResource.computeResourceKey();
+                    YopDegradeRuleHelper.addDegradeRule(resourceKey, routeConfig.getCircuitBreakerConfig());
+                    entry = YopSph.getInstance().entry(resourceKey);
                 }
                 final Output output = doExecute(request, invoker);
                 successInvoked = true;
@@ -253,16 +277,32 @@ public class ClientHandlerImpl implements ClientHandler {
 
         public YopInvoker(ClientExecutionParams<Input, Output> executionParams,
                           ExecutionContext executionContext,
-                          ExceptionAnalyzer<AnalyzedException> exceptionAnalyzer,
                           boolean circuitBreaker) {
             setInput(executionParams);
             setContext(executionContext);
-            setExceptionAnalyzer(exceptionAnalyzer);
             if (circuitBreaker) {
                 enableCircuitBreaker();
             } else {
                 disableCircuitBreaker();
             }
+        }
+
+        @Override
+        public ExceptionAnalyzer<AnalyzedException> getExceptionAnalyzer() {
+            Set<String> excludeExceptions = Collections.emptySet();
+            Set<String> retryExceptions = Collections.emptySet();
+            final UriResource uriResource = getUriResource();
+            final YopRouteConfig routeConfig = findRouteConfig(uriResource.getResource());
+            if (null != routeConfig) {
+                if (null != routeConfig.getCircuitBreakerConfig()
+                        && null != routeConfig.getCircuitBreakerConfig().getExcludeExceptions()) {
+                    excludeExceptions = routeConfig.getCircuitBreakerConfig().getExcludeExceptions();
+                }
+                if (null != routeConfig.getRetryExceptions()) {
+                    retryExceptions = routeConfig.getRetryExceptions();
+                }
+            }
+            return SimpleExceptionAnalyzer.from(excludeExceptions, retryExceptions);
         }
 
         @Override
