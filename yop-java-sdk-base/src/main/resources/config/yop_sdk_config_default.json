@@ -44,7 +44,7 @@
         {
           "grade": 2,
           "count": 1,
-          "time_window": 1800,
+          "time_window": 900,
           "stat_interval_ms": 300000
         }
       ]
