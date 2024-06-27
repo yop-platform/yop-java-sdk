@@ -74,7 +74,8 @@ public class DigitalEnvelopeUtils {
     }
 
     public static String decrypt(String cipherText, PrivateKey privateKey, String provider, String env) {
-        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(provider, env), privateKey);
+        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(provider, env),
+                privateKey, null, provider, env);
     }
 
     /**
@@ -155,7 +156,8 @@ public class DigitalEnvelopeUtils {
     }
 
     public static String decrypt(String cipherText, String credentialType, String provider, String env) {
-        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(provider, env), credentialType);
+        return decrypt(cipherText, YopCredentialsProviderRegistry.getProvider().getDefaultAppKey(provider, env)
+                , credentialType, provider, env);
     }
 
     /**
@@ -174,7 +176,7 @@ public class DigitalEnvelopeUtils {
         YopPKICredentials yopCredentials = (YopPKICredentials) YopCredentialsProviderRegistry.getProvider()
                 .getCredentials(provider, env, appKey, credentialType);
         PKICredentialsItem pkiCredentialsItem = yopCredentials.getCredential();
-        return decrypt(cipherText, appKey, pkiCredentialsItem.getPrivateKey());
+        return decrypt(cipherText, appKey, pkiCredentialsItem.getPrivateKey(), null, provider, env);
     }
 
     /**
