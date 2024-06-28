@@ -225,7 +225,7 @@ public class YopCertificateCache {
             for (int i = 0; i < yopPublicKey.length; i++) {
                 YopCertConfig certConfig = yopPublicKey[i];
                 try {
-                    if (!CertTypeEnum.RSA2048.equals(certConfig)) {
+                    if (!CertTypeEnum.RSA2048.equals(certConfig.getCertType())) {
                         continue;
                     }
                     return ((YopPublicKey) YopCertParserFactory.getCertParser(YopCertCategory.PUBLIC,

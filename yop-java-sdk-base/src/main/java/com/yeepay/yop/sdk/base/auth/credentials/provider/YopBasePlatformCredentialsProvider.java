@@ -182,7 +182,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
             // rsa
             final CertTypeEnum parsedCertType = CertTypeEnum.parse(credentialType);
             if (CertTypeEnum.RSA2048.equals(parsedCertType)) {
-                return getCredentials(appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, serverRoot);
+                return getCredentials(provider, env, appKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO, serverRoot);
             }
 
             // sm2
