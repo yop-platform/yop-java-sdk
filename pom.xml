@@ -373,7 +373,7 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-        <tag>v4.1.15</tag>
+        <tag>v4.1.16</tag>
     </scm>
 
     <developers>

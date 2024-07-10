@@ -13,8 +13,8 @@
     "lazy": false
   },
   "http_client": {
-    "connect_timeout": 10000,
-    "connect_request_timeout": 10000,
+    "connect_timeout": 3000,
+    "connect_request_timeout": 3000,
     "read_timeout": 30000,
     "max_conn_total": 200,
     "max_conn_per_route": 100,
@@ -38,16 +38,9 @@
       "rules": [
         {
           "grade": 2,
-          "count": 4,
-          "time_window": 300,
+          "count": 1,
+          "time_window": 900,
           "stat_interval_ms": 300000
-        },
-        {
-          "grade": 1,
-          "count": 0.2,
-          "time_window": 300,
-          "stat_interval_ms": 5000,
-          "min_request_amount": 5
         }
       ]
     }

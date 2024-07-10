@@ -58,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import java.nio.charset.Charset;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
@@ -518,7 +517,7 @@ public class YopHttpClient {
                 if (request.getContent() != null) {
                     postMethod.setEntity(new InputStreamEntity(request.getContent(), contentLength));
                 } else if (encodedParams != null) {
-                    postMethod.setEntity(new StringEntity(encodedParams, Charset.defaultCharset()));
+                    postMethod.setEntity(new StringEntity(encodedParams, DEFAULT_CHARSET));
                 }
             } else if (request.getHttpMethod() == HttpMethodName.DELETE) {
                 httpRequest = new HttpDelete(uri);
