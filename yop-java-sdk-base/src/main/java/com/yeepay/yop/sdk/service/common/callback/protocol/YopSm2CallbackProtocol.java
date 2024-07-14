@@ -8,6 +8,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
@@ -17,6 +18,7 @@ import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.protocol.AuthenticateProtocolVersion;
@@ -140,7 +142,10 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         String plainText = preparePlainText();
         final YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
                 getCredentials(originRequest.getProvider(), originRequest.getEnv(), appKey, platformSerialNo, serverRoot);
-        YopSignProcessorFactory.getSignProcessor(certType.getValue()).verify(plainText, args[0], platformCredentials.getCredential());
+        if (!YopSignProcessorFactory.getSignProcessor(certType.getValue()).verify(plainText, args[0], platformCredentials.getCredential())) {
+            throw new VerifySignFailedException(String.format("callback sign verify failure, content:%s, signature:%s, platformSerialNo:%s, requestId:%s."
+                    , plainText, signature, platformCredentials.getSerialNo(), yopRequestId));
+        }
     }
 
     private String decryptBizContent() {
@@ -216,7 +221,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         // Formatting the headers from the request based on signing protocol.
         String canonicalHeader = getCanonicalHeaders();
         return new StringBuilder(authString).append(LF)
-                .append(req.getHttpPath()).append(LF)
+                .append(req.getHttpMethod()).append(LF)
                 .append(canonicalURI).append(LF)
                 .append(canonicalQueryString).append(LF)
                 .append(canonicalHeader).toString();
@@ -237,9 +242,14 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
             final String canonicalKey = key.trim().toLowerCase();
             String value = req.getCanonicalHeaders().get(canonicalKey);
             if (StringUtils.isBlank(value)) {
-                continue;
+                if (canonicalKey.equalsIgnoreCase(Headers.CONTENT_LENGTH)) {
+                    value = calculateContentLengthHeader();
+                } else {
+                    LOGGER.warn("signed header not found, name:{}", canonicalKey);
+                    continue;
+                }
             }
-            kvs.add(HttpUtils.normalize(canonicalKey + COLON + HttpUtils.normalize(value.trim())));
+            kvs.add(HttpUtils.normalize(canonicalKey) + COLON + HttpUtils.normalize(value.trim()));
         }
         Collections.sort(kvs);
         return HEADER_JOINER.join(kvs);
@@ -251,5 +261,16 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
                     .parse(new YopEncryptProtocol.ParseParams(encryptProtocol, yopCredentials, encryptOptions));
         }
         return null;
+    }
+
+    private String calculateContentLengthHeader() {
+        if (null != originRequest.getContent()) {
+            try {
+                return ((String) originRequest.getContent()).getBytes(YopConstants.DEFAULT_CHARSET).length + EMPTY;
+            } catch (Exception e) {
+                LOGGER.error("error happened, ", e);
+            }
+        }
+        return EMPTY;
     }
 }
