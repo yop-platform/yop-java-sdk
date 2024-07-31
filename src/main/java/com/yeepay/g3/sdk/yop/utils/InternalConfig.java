@@ -29,8 +29,8 @@ public final class InternalConfig {
 
     public static final String PROTOCOL_VERSION = "yop-auth-v2";
 
-    public static int CONNECT_TIMEOUT = 30000;
-    public static int READ_TIMEOUT = 60000;
+    public static int CONNECT_TIMEOUT = 3000;
+    public static int READ_TIMEOUT = 30000;
 
     public static int MAX_CONN_TOTAL = 200;
     public static int MAX_CONN_PER_ROUTE = 100;
