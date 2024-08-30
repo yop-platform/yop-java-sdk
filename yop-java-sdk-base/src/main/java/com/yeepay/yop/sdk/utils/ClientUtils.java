@@ -169,7 +169,7 @@ public class ClientUtils {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
             final ClientParams clientParams = CLIENT_CONFIG_MAP.get(currentClientId);
-            if (null != clientParams || null != clientParams.getYopSdkConfigProvider()) {
+            if (null != clientParams && null != clientParams.getYopSdkConfigProvider()) {
                 return clientParams.getYopSdkConfigProvider();
             }
         }
@@ -180,7 +180,7 @@ public class ClientUtils {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
             final ClientParams clientParams = CLIENT_CONFIG_MAP.get(currentClientId);
-            if (null != clientParams || null != clientParams.getCredentialsProvider()) {
+            if (null != clientParams && null != clientParams.getCredentialsProvider()) {
                 return clientParams.getCredentialsProvider();
             }
         }
@@ -191,7 +191,7 @@ public class ClientUtils {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
             final ClientParams clientParams = CLIENT_CONFIG_MAP.get(currentClientId);
-            if (null != clientParams || null != clientParams.getPlatformCredentialsProvider()) {
+            if (null != clientParams && null != clientParams.getPlatformCredentialsProvider()) {
                 return clientParams.getPlatformCredentialsProvider();
             }
         }

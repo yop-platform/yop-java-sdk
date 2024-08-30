@@ -67,6 +67,9 @@ public class YopEntry extends Entry {
     private void callExitHandlersAndCleanUp(Context ctx) {
         if (exitHandlers != null && !exitHandlers.isEmpty()) {
             for (BiConsumer<Context, Entry> handler : this.exitHandlers) {
+                if (null == handler) {
+                    continue;
+                }
                 try {
                     handler.accept(ctx, this);
                 } catch (Exception e) {

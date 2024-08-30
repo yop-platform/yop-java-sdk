@@ -51,9 +51,8 @@
         <httpcore.version>4.4.13</httpcore.version>
         <httpcomponents.version>4.5.13</httpcomponents.version>
         <okhttp.version>4.9.3</okhttp.version>
-        <oklog-java.version>2.3.0</oklog-java.version>
         <jmh.version>1.33</jmh.version>
-        <json-path.version>2.7.0</json-path.version>
+        <json-path.version>2.9.0</json-path.version>
         <sentinel.version>1.8.6</sentinel.version>
     </properties>
 
@@ -185,9 +184,9 @@
                 <version>${okhttp.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.simonpercic</groupId>
-                <artifactId>oklog3-java</artifactId>
-                <version>${oklog-java.version}</version>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${okhttp.version}</version>
             </dependency>
 
             <dependency>

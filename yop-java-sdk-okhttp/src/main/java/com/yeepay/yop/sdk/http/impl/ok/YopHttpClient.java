@@ -4,7 +4,6 @@
  */
 package com.yeepay.yop.sdk.http.impl.ok;
 
-import com.github.simonpercic.oklog3.OkLogInterceptor;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
@@ -20,10 +19,15 @@ import okhttp3.Credentials;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
@@ -45,9 +49,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class YopHttpClient extends AbstractYopHttpClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopHttpClient.class);
+
     private static final RequestBody EMPTY_BODY = RequestBody.create(new byte[0]);
-    private static final OkLogInterceptor logInterceptor = OkLogInterceptor.builder()
-            .withRequestHeaders(true).withResponseHeaders(true).build();
+
+    private static class HttpLogger implements HttpLoggingInterceptor.Logger {
+        @Override
+        public void log(@NotNull String s) {
+            LOGGER.info(s);
+        }
+    }
+
+    private static final HttpLoggingInterceptor logInterceptor =
+            new HttpLoggingInterceptor(new HttpLogger()).setLevel(HttpLoggingInterceptor.Level.BODY);
 
     /**
      * OkHttpClients Should Be Shared
@@ -62,7 +76,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
     static {
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
         if (HttpUtils.isHttpVerbose()) {
-            httpClientBuilder.addInterceptor(logInterceptor);
+            httpClientBuilder.addNetworkInterceptor(logInterceptor);
         }
         sharedHttpClient = httpClientBuilder.build();
     }
@@ -139,7 +153,9 @@ public class YopHttpClient extends AbstractYopHttpClient {
             // bodyParams
             RequestBody requestBody = EMPTY_BODY;
             if (hasBodyParams) {
-                requestBody = RequestBody.create(IOUtils.toByteArray(request.getContent()));
+                try (InputStream content = request.getContent()){
+                    requestBody = RequestBody.create(IOUtils.toByteArray(content));
+                }
             } else if (hasEncodedParams && !useQueryParams) {
                 requestBody = RequestBody.create(encodedParams.getBytes(YopConstants.DEFAULT_CHARSET));
             }
@@ -197,8 +213,10 @@ public class YopHttpClient extends AbstractYopHttpClient {
         for (Map.Entry<String, List<MultiPartFile>> entry : request.getMultiPartFiles().entrySet()) {
             String name = entry.getKey();
             for (MultiPartFile multiPartFile : entry.getValue()) {
-                bodyBuilder.addFormDataPart(name, multiPartFile.getFileName(),
-                        RequestBody.create(IOUtils.toByteArray(multiPartFile.getInputStream())));
+                try (InputStream inputStream = multiPartFile.getInputStream()){
+                    bodyBuilder.addFormDataPart(name, multiPartFile.getFileName(),
+                            RequestBody.create(IOUtils.toByteArray(inputStream)));
+                }
             }
         }
         return bodyBuilder.build();
