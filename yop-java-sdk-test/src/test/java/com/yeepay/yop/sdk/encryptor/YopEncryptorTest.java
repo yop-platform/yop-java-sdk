@@ -102,13 +102,15 @@ public class YopEncryptorTest extends BaseTest {
             sm2OptionsEnhanced = sm4Encryptor.initOptions(YopConstants.SM4_CBC_PKCS5PADDING,
                     Collections.singletonList(new Sm2Enhancer(appKey, "4028129061")));
             encryptOptions = sm2OptionsEnhanced.get();
-            specialCharacters = IOUtils.toString(FileUtils.getResourceAsStream("/test.txt"), YopConstants.DEFAULT_ENCODING);
+            try (final InputStream resourceAsStream = FileUtils.getResourceAsStream("/test.txt")) {
+                specialCharacters = IOUtils.toString(resourceAsStream, YopConstants.DEFAULT_ENCODING);
+            }
             yopClient = YopClientBuilder.builder().withEndpoint("http://ycetest.yeepay.com:30228/yop-center")
                     .withYosEndpoint("http://ycetest.yeepay.com:30228/yop-center").build();
 //        yopClient = YopClientBuilder.builder().withEndpoint("http://localhost:8064/yop-center")
 //                .withYosEndpoint("http://localhost:8064/yop-center").build();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("error when init", e);
         }
     }
 

@@ -78,7 +78,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
         try {
             Cipher initializedCipher = getInitializedCipher(Cipher.ENCRYPT_MODE, options);
             return initializedCipher.doFinal(plain);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new YopClientException("SystemError, Encrypt Fail, options:" + options + ", ex:", t);
         }
     }
@@ -97,7 +97,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
         try {
             Cipher initializedCipher = getInitializedCipher(Cipher.DECRYPT_MODE, options);
             return initializedCipher.doFinal(cipher);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new YopClientException("SystemError, Decrypt Fail, options:" + options + ", ex:", t);
         }
     }
@@ -123,7 +123,7 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             Key secretKey = new SecretKeySpec(key, AES);
             cipher.init(mode, secretKey);
             return cipher;
-        } catch (Throwable throwable) {
+        } catch (Exception throwable) {
             throw new YopClientException("error happened when initialize cipher", throwable);
         }
     }

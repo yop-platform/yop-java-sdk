@@ -55,7 +55,9 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
         return cacheBuilder.build(new CacheLoader<String, YopAppConfig>() {
             @Override
             public YopAppConfig load(String appKey) throws Exception {
-                logger.debug("try to load appSdkConfig for appKey:" + appKey);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("try to load appSdkConfig for appKey:" + appKey);
+                }
                 YopAppConfig yopAppConfig = null;
                 try {
                     yopAppConfig = loadAppConfig(appKey);

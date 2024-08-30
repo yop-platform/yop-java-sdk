@@ -172,7 +172,7 @@ public final class FileUtils {
                 LOGGER.debug("file downloaded to path:{}, size:{}.", tmpFile.getAbsolutePath(), size);
             }
             return tmpFile;
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             LOGGER.error("fail to save file, response:" + yosDownloadResponse, ex);
             throw new YopClientException("fail to save file, response:" + yosDownloadResponse);
         } finally {

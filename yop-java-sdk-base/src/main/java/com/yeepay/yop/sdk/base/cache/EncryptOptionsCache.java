@@ -195,7 +195,9 @@ public class EncryptOptionsCache {
         return cacheBuilder.build(new CacheLoader<String, Future<EncryptOptions>>() {
             @Override
             public Future<EncryptOptions> load(String cacheKey) throws Exception {
-                LOGGER.debug("try to init encryptOptions for cacheKey:" + cacheKey);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("try to init encryptOptions for cacheKey:" + cacheKey);
+                }
                 Future<EncryptOptions> encryptOptions = null;
                 try {
                     String[] split = StringUtils.splitPreserveAllTokens(cacheKey, COMMA);

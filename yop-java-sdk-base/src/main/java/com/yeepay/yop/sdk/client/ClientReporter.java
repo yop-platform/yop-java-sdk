@@ -74,6 +74,18 @@ public class ClientReporter {
                 30, TimeUnit.SECONDS, Queues.newLinkedBlockingQueue(500),
                 new ThreadFactoryBuilder().setNameFormat("client-report-event-collector-%d").setDaemon(true).build(),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            @Override
+            public void run() {
+                boolean finished = false;
+                try {
+                    COLLECT_POOL.shutdown();
+                    finished = COLLECT_POOL.awaitTermination(10, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    LOGGER.error("error when shutdown threadpool, finished:{}, ex:", finished, e);
+                }
+            }
+        });
     }
 
     private static YopReportConfig getReportConfig(String provider, String env) {
@@ -96,7 +108,7 @@ public class ClientReporter {
                     while (!CLOSED) {
                         try {
                             sendHostReport(provider, env);
-                        } catch (Throwable t) {
+                        } catch (Exception t) {
                             LOGGER.error("Unexpected Error, ex:", t);
                         }
                         try {
@@ -129,7 +141,7 @@ public class ClientReporter {
                     while (!CLOSED) {
                         try {
                             sweepReports(provider, env);
-                        } catch (Throwable t) {
+                        } catch (Exception t) {
                             LOGGER.error("Unexpected Error, ex:", t);
                         }
                         try {
@@ -150,7 +162,7 @@ public class ClientReporter {
     private static void sweepReports(String provider, String env) {
         final Map<String, AtomicReference<YopHostRequestReport>> requestCollections =
                 YOP_HOST_REQUEST_COLLECTION_MAP.computeIfAbsent(getMapKey(provider, env), p -> new ConcurrentHashMap<>());
-        final Set<String> collectReports = requestCollections.keySet();
+        final Set<String> collectReports = new HashSet<>(requestCollections.keySet());
         if (CollectionUtils.isEmpty(collectReports)) {
             return;
         }

@@ -65,7 +65,7 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
                             System.currentTimeMillis() - start, getContext().retryCount());
                 }
                 return result;
-            } catch (Throwable throwable) {
+            } catch (java.lang.Exception throwable) {
                 currentEx = throwable;
                 // 路由异常，客户端配置问题
                 if (null == lastServerRoot || null == lastServerRoot.getResource()) {

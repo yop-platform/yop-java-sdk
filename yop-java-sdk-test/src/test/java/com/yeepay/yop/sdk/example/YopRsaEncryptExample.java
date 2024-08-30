@@ -612,7 +612,7 @@ public class YopRsaEncryptExample {
             Key secretKey = new SecretKeySpec(key, "AES");
             cipher.init(mode, secretKey);
             return cipher;
-        } catch (Throwable throwable) {
+        } catch (Exception throwable) {
             throw new RuntimeException("error happened when initialize cipher", throwable);
         }
     }
@@ -763,8 +763,8 @@ public class YopRsaEncryptExample {
             File tmpFile = File.createTempFile(filePrefix, fileSuffix);
             IOUtils.copy(fileContent, Files.newOutputStream(tmpFile.toPath()));
             return tmpFile;
-        } catch (Throwable ex) {
-            throw new RuntimeException("fail to save file");
+        } catch (Exception ex) {
+            throw new RuntimeException("fail to save file", ex);
         } finally {
             closeQuietly(fileContent);
         }

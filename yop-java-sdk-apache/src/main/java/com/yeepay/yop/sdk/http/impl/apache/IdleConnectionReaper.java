@@ -106,12 +106,12 @@ public final class IdleConnectionReaper extends Thread {
                     try {
                         connectionManager.closeExpiredConnections();
                         connectionManager.closeIdleConnections(60, TimeUnit.SECONDS);
-                    } catch (Throwable t) {
+                    } catch (Exception t) {
                         logger.warn("Unable to close idle connections", t);
                     }
                 }
-            } catch (Throwable t) {
-                logger.debug("Reaper thread: ", t);
+            } catch (Exception t) {
+                logger.error("Reaper thread: ", t);
             }
         }
     }

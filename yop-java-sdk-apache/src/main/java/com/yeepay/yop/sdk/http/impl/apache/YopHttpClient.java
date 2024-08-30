@@ -103,7 +103,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
                         return Long.parseLong(value) * 1000;
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.warn("KeepAliveDuration Parsed Fail, ex:{}", ExceptionUtils.getMessage(e));
             }
             return 60 * 1000;

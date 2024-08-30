@@ -57,6 +57,11 @@ public class YopFilePlatformCredentialsProvider extends YopBasePlatformCredentia
             3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
             new ThreadFactoryBuilder().setNameFormat("yop-platform-cert-store-task-%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
 
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(THREAD_POOL::shutdownNow));
+    }
+
+
     @Override
     protected YopPlatformCredentials loadCredentialsFromStore(String appKey, String serialNo) {
         return loadCredentialsFromStore(YOP_DEFAULT_PROVIDER, YOP_DEFAULT_ENV, appKey, serialNo);

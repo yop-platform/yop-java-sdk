@@ -32,6 +32,8 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.PrivateKey;
 import java.util.Collection;
@@ -51,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 @State(value = Scope.Group)
 @Ignore
 public class YopClientBenchmarkTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopClientBenchmarkTest.class);
 
     private static final YopClient yopClient;
 
@@ -139,7 +143,7 @@ public class YopClientBenchmarkTest {
                 StreamUtils.closeQuietly(yosDownloadInputStream);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("", e);
         }
     }
 

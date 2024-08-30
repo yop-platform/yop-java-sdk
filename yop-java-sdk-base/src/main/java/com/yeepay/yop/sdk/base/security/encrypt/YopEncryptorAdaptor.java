@@ -15,6 +15,8 @@ import com.yeepay.yop.sdk.utils.ClientUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -35,11 +37,27 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class YopEncryptorAdaptor implements YopEncryptor {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopEncryptorAdaptor.class);
     private static final String ENCRYPT_OPTIONS_INIT_THREAD_NAME_PREFIX = "yop-encrypt-options-init-task-";
 
     protected static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(2, 20,
             3, TimeUnit.MINUTES, Queues.newLinkedBlockingQueue(200),
             new ThreadFactoryBuilder().setNameFormat(ENCRYPT_OPTIONS_INIT_THREAD_NAME_PREFIX + "%d").setDaemon(true).build(), new ThreadPoolExecutor.CallerRunsPolicy());
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                boolean finished = false;
+                try {
+                    THREAD_POOL.shutdown();
+                    finished = THREAD_POOL.awaitTermination(30, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    LOGGER.error("error when shutdown threadpool, finished:{}, ex:", finished, e);
+                }
+            }
+        });
+    }
 
     @Override
     public Future<EncryptOptions> initOptions(String encryptAlg, List<EncryptOptionsEnhancer> enhancers) {
