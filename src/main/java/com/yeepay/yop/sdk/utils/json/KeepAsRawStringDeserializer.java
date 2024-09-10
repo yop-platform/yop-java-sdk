@@ -28,10 +28,12 @@ public class KeepAsRawStringDeserializer extends JsonDeserializer<String> {
     @Override
     public String deserialize(JsonParser jp, DeserializationContext context) throws IOException {
         if (jp.isExpectedStartObjectToken() || jp.isExpectedStartArrayToken()) {
-            String rawJson = getStringFromSource(jp.getCurrentLocation().getSourceRef());
-            int startLocation = (int) jp.getCurrentLocation().getCharOffset();
+            // 依赖配置项：JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION
+            final Object rawContent = jp.currentLocation().contentReference().getRawContent();
+            String rawJson = getStringFromSource(rawContent);
+            int startLocation = (int) jp.currentLocation().getCharOffset();
             jp.skipChildren();
-            int endLocation = (int) jp.getCurrentLocation().getCharOffset();
+            int endLocation = (int) jp.currentLocation().getCharOffset();
             return rawJson.substring(startLocation - 1, endLocation);
         } else if (jp.getCurrentToken() == JsonToken.VALUE_STRING) {
             return "\"" + jp.getText() + "\"";

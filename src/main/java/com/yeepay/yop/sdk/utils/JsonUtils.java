@@ -28,6 +28,7 @@ public class JsonUtils {
         OBJECT_MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         OBJECT_MAPPER.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
         OBJECT_MAPPER.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
+        OBJECT_MAPPER.enable(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION);
         OBJECT_MAPPER.registerModule(new JodaModule());
         OBJECT_MAPPER.registerModule(new DatetimeModule());
     }

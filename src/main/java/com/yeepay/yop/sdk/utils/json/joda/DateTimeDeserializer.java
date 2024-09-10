@@ -23,6 +23,6 @@ public class DateTimeDeserializer extends StdScalarDeserializer<DateTime> {
             String dateTimeAsString = jsonParser.getText().trim();
             return DateUtils.parseSimpleDateTime(dateTimeAsString);
         }
-        throw deserializationContext.mappingException(getValueClass());
+        throw new RuntimeException(String.valueOf(deserializationContext.handleUnexpectedToken(handledType(), jsonParser)));
     }
 }
