@@ -145,6 +145,7 @@ public class YopRsaClient extends AbstractClient {
         }
 
         Set<String> headersToSignSet = new HashSet<String>();
+        headersToSignSet.add(Headers.YOP_CONTENT_SHA256);
         headersToSignSet.add(Headers.YOP_REQUEST_ID);
 
         String authString = InternalConfig.PROTOCOL_VERSION + "/" + appKey + "/" + timestamp + "/" + EXPIRED_SECONDS;
@@ -153,6 +154,10 @@ public class YopRsaClient extends AbstractClient {
         String canonicalURI = HttpUtils.getCanonicalURIPath(apiUri);
         // Formatting the query string with signing protocol.
         String canonicalQueryString = HttpUtils.getCanonicalQueryString(request.getParams(), true);
+
+        // Calculating the content sha256 with signing protocol.
+        boolean useQueryStringAsPayload = calculateContentSha256(request, httpMethod, canonicalQueryString);
+
         // Sorted the headers should be signed from the request.
         SortedMap<String, String> headersToSign = getHeadersToSign(headers, headersToSignSet);
         // Formatting the headers from the request based on signing protocol.
@@ -160,7 +165,8 @@ public class YopRsaClient extends AbstractClient {
         String signedHeaders = signedHeaderStringJoiner.join(headersToSign.keySet());
         signedHeaders = signedHeaders.trim().toLowerCase();
 
-        String canonicalRequest = authString + "\n" + httpMethod + "\n" + canonicalURI + "\n" + canonicalQueryString + "\n" + canonicalHeader;
+        String canonicalRequest = authString + "\n" + httpMethod + "\n" + canonicalURI + "\n"
+                + (useQueryStringAsPayload ? "" :canonicalQueryString) + "\n" + canonicalHeader;
 
         // Signing the canonical request using key with sha-256 algorithm.
 
@@ -191,6 +197,23 @@ public class YopRsaClient extends AbstractClient {
         }
 
         headers.put(Headers.AUTHORIZATION, "YOP-RSA2048-SHA256 " + InternalConfig.PROTOCOL_VERSION + "/" + appKey + "/" + timestamp + "/" + EXPIRED_SECONDS + "/" + signedHeaders + "/" + digitalSignatureDTO.getSignature());
+    }
+
+    private static boolean calculateContentSha256(YopRequest request, HttpMethodName httpMethod, String canonicalQueryString) {
+        boolean useQueryStringAsPayload = false;
+        String contentStr = "";
+        if (HttpMethodName.POST.equals(httpMethod)) {
+            // json
+            if (null != request.getJsonParam()) {
+                contentStr = request.getJsonParam();
+            } else if (null != request.getParams()) {
+                contentStr = canonicalQueryString;
+                useQueryStringAsPayload = true;
+            }
+        }
+        request.addHeader(Headers.YOP_CONTENT_SHA256, Digests.digest2Hex(contentStr, Digests.SHA256));
+        return useQueryStringAsPayload;
+
     }
 
     private static String getCanonicalHeaders(SortedMap<String, String> headers) {

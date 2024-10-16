@@ -39,7 +39,6 @@ import com.yeepay.g3.sdk.yop.unmarshaller.JacksonJsonMarshaller;
 import com.yeepay.g3.sdk.yop.utils.CharacterConstants;
 import com.yeepay.g3.sdk.yop.utils.FileUtils;
 import com.yeepay.g3.sdk.yop.utils.InternalConfig;
-import com.yeepay.g3.sdk.yop.utils.JsonUtils;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64;
 import com.yeepay.g3.sdk.yop.utils.checksum.CRC64Utils;
 import com.yeepay.g3.sdk.yop.utils.io.MarkableFileInputStream;
@@ -298,8 +297,7 @@ public class AbstractClient {
         }
         HttpUriRequest httpUriRequest;
         if (null != request.getJsonParam()) {
-            String jsonString = request.getJsonParam() instanceof String ? (String) request.getJsonParam() : JsonUtils.toJsonString(request.getJsonParam());
-            httpUriRequest = buildJsonHttpRequest(request, contentUrl, methodName, jsonString);
+            httpUriRequest = buildJsonHttpRequest(request, contentUrl, methodName, request.getJsonParam());
         } else {
             httpUriRequest = buildFormHttpRequest(request, contentUrl, methodName);
         }

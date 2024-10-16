@@ -27,7 +27,7 @@ public final class InternalConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InternalConfig.class);
 
-    public static final String PROTOCOL_VERSION = "yop-auth-v2";
+    public static final String PROTOCOL_VERSION = "yop-auth-v3";
 
     public static int CONNECT_TIMEOUT = 3000;
     public static int READ_TIMEOUT = 30000;

@@ -12,6 +12,7 @@ import com.yeepay.g3.sdk.yop.exception.YopClientException;
 import com.yeepay.g3.sdk.yop.http.Headers;
 import com.yeepay.g3.sdk.yop.internal.RestartableInputStream;
 import com.yeepay.g3.sdk.yop.utils.Assert;
+import com.yeepay.g3.sdk.yop.utils.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ public class YopRequest {
     /**
      * json参数
      */
-    private Object jsonParam;
+    private String jsonParam;
 
     public YopRequest() {
         this.appSdkConfig = AppSdkConfigProviderRegistry.getProvider().getDefaultConfig();
@@ -348,11 +349,19 @@ public class YopRequest {
         return builder.toString();
     }
 
-    public Object getJsonParam() {
+    public String getJsonParam() {
         return jsonParam;
     }
 
     public void setJsonParam(Object jsonParam) {
-        this.jsonParam = jsonParam;
+        if (null == jsonParam) {
+            return;
+        }
+
+        if (jsonParam instanceof String) {
+            this.jsonParam = (String) jsonParam;
+        } else {
+            this.jsonParam = JsonUtils.toJsonString(jsonParam);
+        }
     }
 }
