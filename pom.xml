@@ -651,16 +651,16 @@
         <profile>
             <id>yeepay</id>
             <distributionManagement>
-                <snapshotRepository>
-                    <id>yeepay-snapshots</id>
-                    <name>Yeepay Snapshots Repository</name>
-                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-common-snapshot</url>
-                </snapshotRepository>
                 <repository>
-                    <id>yeepay-staging</id>
-                    <name>Yeepay Release Repository</name>
-                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-common-release</url>
+                    <id>YeepayReleases</id>
+                    <name>Internal Releases</name>
+                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/</url>
                 </repository>
+                <snapshotRepository>
+                    <id>YeepaySnapshots</id>
+                    <name>Internal Snapshots</name>
+                    <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-snapshot/</url>
+                </snapshotRepository>
             </distributionManagement>
         </profile>
     </profiles>
