@@ -256,7 +256,9 @@ public class YopCertificateCache {
             YOP_INTER_CERT = getX509Cert(DEFAULT_CERT_PATH + "/" + yopInterFile, CertTypeEnum.SM2);
             X509CertUtils.verifyCertificate(CertTypeEnum.SM2, CFCA_ROOT_CERT.getPublicKey(), YOP_INTER_CERT);
         } catch (Exception e) {
-            LOGGER.error("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:", e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("error when load sm2 parent certs, if you dont use sm2 just ignore it, ex:", e);
+            }
         }
 
         try {
