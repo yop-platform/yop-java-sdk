@@ -4,6 +4,13 @@
   "yos_server_root": "http://ycetest.yeepay.com:30228/yop-center",
   "isv_private_key": [
     {
+      "app_key": "sandbox_sm_10080041523",
+      "store_type": "string",
+      "cert_type": "SM2",
+      // 公钥：MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAED6ZGTZzp10wlziByW30founmtUJDPB8ZHTvCklivCIJbR2ca+cZcYqkfIpzkRJpq8VEEGoDh+Yt6BC1oF2c/Bg==
+      "value": "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgr0mQ3/jjQOczWI6bnJFdqF4D/DFYHaqXftqXU/jGKpCgCgYIKoEcz1UBgi2hRANCAAQPpkZNnOnXTCXOIHJbfR+i6ea1QkM8HxkdO8KSWK8IgltHZxr5xlxiqR8inOREmmrxUQQagOH5i3oELWgXZz8G"
+    },
+    {
       "store_type": "string",
       "cert_type": "SM2",
       "value": "MIICBQIBADCB7AYHKoZIzj0CATCB4AIBATAsBgcqhkjOPQEBAiEA/////v////////////////////8AAAAA//////////8wRAQg/////v////////////////////8AAAAA//////////wEICjp+p6dn140TVqeS89lCafzl4n1FauPkt28vUFNlA6TBEEEMsSuLB8ZgRlfmQRGajnJlI/jC7/yZgvhcVpFiTNMdMe8Nzai9PZ3nFm9zuNraSFT0KmHfMYqR0AC3zLlITnwoAIhAP////7///////////////9yA99rIcYFK1O79Ak51UEjAgEBBIIBDzCCAQsCAQEEICvBlu1mNV6jIA8FdkKlRSga9cwXa0m+IBx9ERwtO1ZcoIHjMIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD//////////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2fXjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+MLv/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE="
