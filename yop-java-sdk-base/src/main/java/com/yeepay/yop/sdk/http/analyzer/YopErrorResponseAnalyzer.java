@@ -46,7 +46,7 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
             // not an error
             return false;
         }
-        String resource = context.getOriginRequest().getEndpoint() + SLASH + context.getOriginRequest().getResourcePath();
+        String resource = context.getOriginRequest().getEndpoint() + context.getOriginRequest().getResourcePath();
         // 5xx
         if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
             YopServiceException yse = null;
