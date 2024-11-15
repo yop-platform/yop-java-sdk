@@ -61,7 +61,7 @@ public class SentinelTest {
         } catch (BlockException e) {
             LOGGER.info("blocked");
             return true;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             LOGGER.error("error, ex:", ex);
             Tracer.trace(ex);
         } finally {

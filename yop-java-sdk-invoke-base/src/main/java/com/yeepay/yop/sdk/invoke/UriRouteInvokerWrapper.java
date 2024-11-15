@@ -62,7 +62,7 @@ public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext,
                             System.currentTimeMillis() - start, getContext().retryCount());
                 }
                 return result;
-            } catch (java.lang.Exception throwable) {
+            } catch (Throwable throwable) {
                 // 客户端异常、业务异常
                 if (throwable instanceof YopClientException) {
                     throw throwable;

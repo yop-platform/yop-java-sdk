@@ -74,7 +74,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
             ParametersWithRandom pwr = new ParametersWithRandom(pubKeyParameters, new SecureRandom());
             engine.init(true, pwr);
             return engine.processBlock(plain, 0, plain.length);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new YopClientException("SystemError, Encrypt Fail, options:" + options, e);
         }
     }
@@ -93,7 +93,7 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
                     ((YopPKICredentials) options.getCredentials()).getCredential().getPrivateKey());
             engine.init(false, priKeyParameters);
             return engine.processBlock(cipher, 0, cipher.length);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new YopClientException("SystemError, Decrypt Fail, options:" + options, e);
         }
     }

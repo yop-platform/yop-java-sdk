@@ -127,7 +127,7 @@ public class YopCallbackEngine {
         try {
             YopCallbackHandlerFactory.getHandler(callback.getType()).handle(callback);
             result = YopCallbackResponse.success();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.error("error when handle YopCallbackRequest, ex:", e);
             result = YopCallbackResponse.fail(e.getMessage());
         }
@@ -160,7 +160,7 @@ public class YopCallbackEngine {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("YopCallbackResponse signed:{}", response);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOGGER.warn("error when sign the YopCallbackResponse, ex:", e);
         }
     }

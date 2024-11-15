@@ -63,7 +63,7 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
         try {
             return RSA.encrypt(plain, ((PKICredentialsItem) ((YopPlatformCredentials)
                     options.getCredentials()).getCredential()).getPublicKey());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new YopClientException("SystemError, Encrypt Fail, options:" + options + "ex:", e);
         }
     }
@@ -78,7 +78,7 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
     public byte[] decrypt(byte[] cipher, EncryptOptions options) {
         try {
             return RSA.decrypt(cipher, ((YopPKICredentials) options.getCredentials()).getCredential().getPrivateKey());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new YopClientException("SystemError, Decrypt Fail, options:" + options + "ex:", e);
         }
     }

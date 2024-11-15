@@ -188,7 +188,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 return output;
             } catch (YopClientException | YopHttpException | YopUnknownException ex) {
                 throw ex;
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 if (BlockException.isBlockException(ex)) {
                     final YopHostBlockException hostBlockException = new YopHostBlockException("ServerRoot Blocked, ex:", ex);
                     invoker.addException(invoker.getExceptionAnalyzer().analyze(hostBlockException));
@@ -230,7 +230,7 @@ public class ClientHandlerImpl implements ClientHandler {
         } catch (YopHttpException httpException) {//HTTP调用异常
             throwable = httpException;
             throw httpException;
-        } catch (Exception ex) {// 非预期异常
+        } catch (Throwable ex) {// 非预期异常
             throwable = ex;
             throw new YopUnknownException("UnExpected Error, ", ex);
         } finally {

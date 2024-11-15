@@ -89,7 +89,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
         try {
             Cipher initializedCipher = getInitializedCipher(ENCRYPT_MODE, options);
             return initializedCipher.doFinal(plain);
-        } catch (Exception t) {
+        } catch (Throwable t) {
             throw new YopClientException("SystemError, Encrypt Fail, options:" + options + ", ex:", t);
         }
     }
@@ -108,7 +108,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
         try {
             Cipher initializedCipher = getInitializedCipher(DECRYPT_MODE, options);
             return initializedCipher.doFinal(cipher);
-        } catch (Exception t) {
+        } catch (Throwable t) {
             throw new YopClientException("SystemError, Decrypt Fail, options:" + options, t);
         }
     }
@@ -150,7 +150,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             }
             cipher.init(mode, sm4Key);
             return cipher;
-        } catch (Exception throwable) {
+        } catch (Throwable throwable) {
             throw new YopClientException("SystemError, InitCipher Fail, mode:" + mode +
                     ", options:" + encryptOptions + ", ex:", throwable);
         }

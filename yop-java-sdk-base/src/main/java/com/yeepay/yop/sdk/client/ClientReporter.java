@@ -108,7 +108,7 @@ public class ClientReporter {
                     while (!CLOSED) {
                         try {
                             sendHostReport(provider, env);
-                        } catch (Exception t) {
+                        } catch (Throwable t) {
                             LOGGER.error("Unexpected Error, ex:", t);
                         }
                         try {
@@ -141,7 +141,7 @@ public class ClientReporter {
                     while (!CLOSED) {
                         try {
                             sweepReports(provider, env);
-                        } catch (Exception t) {
+                        } catch (Throwable t) {
                             LOGGER.error("Unexpected Error, ex:", t);
                         }
                         try {
