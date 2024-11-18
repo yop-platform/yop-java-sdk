@@ -196,7 +196,7 @@ public class EncryptOptionsCache {
             @Override
             public Future<EncryptOptions> load(String cacheKey) throws Exception {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("try to init encryptOptions for cacheKey:" + cacheKey);
+                    LOGGER.debug("try to init encryptOptions for cacheKey:{}", cacheKey);
                 }
                 Future<EncryptOptions> encryptOptions = null;
                 try {

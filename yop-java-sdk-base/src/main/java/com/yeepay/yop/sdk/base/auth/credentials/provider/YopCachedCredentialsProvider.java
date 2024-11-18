@@ -56,7 +56,7 @@ public abstract class YopCachedCredentialsProvider extends YopBaseCredentialsPro
             @Override
             public YopAppConfig load(String appKey) throws Exception {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("try to load appSdkConfig for appKey:" + appKey);
+                    logger.debug("try to load appSdkConfig for appKey:{}.", appKey);
                 }
                 YopAppConfig yopAppConfig = null;
                 try {
