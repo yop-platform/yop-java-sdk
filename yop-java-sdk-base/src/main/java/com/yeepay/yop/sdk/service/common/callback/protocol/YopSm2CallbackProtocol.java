@@ -18,7 +18,6 @@ import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
-import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.protocol.AuthenticateProtocolVersion;
@@ -124,7 +123,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
     @Override
     public YopCallback parse() {
         // 验签
-        verifySign(platformServerRoot);
+        boolean validSign = verifySign(platformServerRoot);
 
         // 解密
         final String bizContent = decryptBizContent();
@@ -133,19 +132,23 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         return YopCallback.builder().withId(yopRequestId).
                 withAppKey(appKey).withType(originRequest.getHttpPath())
                 .withCreateTime(new Date()).withBizData(bizContent)
-                .withMetaInfo("headers", originRequest.getHeaders()).build();
+                .withMetaInfo("headers", originRequest.getHeaders())
+                .withValidSign(validSign)
+                .build();
     }
 
-    private void verifySign(String serverRoot) {
+    private boolean verifySign(String serverRoot) {
         String sign = signature;
         String[] args = sign.split("\\$");
         String plainText = preparePlainText();
         final YopPlatformCredentials platformCredentials = YopPlatformCredentialsProviderRegistry.getProvider().
                 getCredentials(originRequest.getProvider(), originRequest.getEnv(), appKey, platformSerialNo, serverRoot);
         if (!YopSignProcessorFactory.getSignProcessor(certType.getValue()).verify(plainText, args[0], platformCredentials.getCredential())) {
-            throw new VerifySignFailedException(String.format("callback sign verify failure, content:%s, signature:%s, platformSerialNo:%s, requestId:%s."
-                    , plainText, signature, platformCredentials.getSerialNo(), yopRequestId));
+            LOGGER.warn("callback sign verify failure, content:{}, signature:{}, platformSerialNo:{}, requestId:{}.",
+                    plainText, signature, platformCredentials.getSerialNo(), yopRequestId);
+            return false;
         }
+        return true;
     }
 
     private String decryptBizContent() {
