@@ -34,9 +34,9 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
         internalRequest.setResourcePath(request.getApiUri());
         internalRequest.setHttpMethod(HttpMethodName.valueOf(request.getHttpMethod().toUpperCase()));
         Map<String, String> customerHeaders = request.getHeaders();
-        if (customerHeaders != null) {
-            for (String key : customerHeaders.keySet()) {
-                internalRequest.addHeader(key, customerHeaders.get(key));
+        if (customerHeaders != null && customerHeaders.size() > 0) {
+            for (Map.Entry<String, String> stringStringEntry : customerHeaders.entrySet()) {
+                internalRequest.addHeader(stringStringEntry.getKey(), customerHeaders.get(stringStringEntry.getValue()));
             }
         }
 

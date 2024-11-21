@@ -378,4 +378,13 @@ public class ClientHandlerImpl implements ClientHandler {
     public void shutdown() {
         client.shutdown();
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        try {
+            this.shutdown();
+        } finally {
+            super.finalize();
+        }
+    }
 }

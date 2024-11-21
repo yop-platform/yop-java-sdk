@@ -111,7 +111,7 @@ public final class IdleConnectionReaper extends Thread {
                     }
                 }
             } catch (Throwable t) {
-                logger.debug("Reaper thread: ", t);
+                logger.error("Reaper thread: ", t);
             }
         }
     }

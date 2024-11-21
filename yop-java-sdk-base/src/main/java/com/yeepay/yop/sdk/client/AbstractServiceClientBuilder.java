@@ -62,6 +62,8 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     private ClientConfiguration clientConfiguration;
 
+    private ServiceInterfaceToBuild clientInst;
+
     public final ServiceInterfaceToBuild build() {
         provider = StringUtils.defaultString(provider, YOP_DEFAULT_PROVIDER);
         env = StringUtils.defaultString(env, YOP_DEFAULT_ENV);
@@ -108,13 +110,39 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
             this.clientId = clientBuilderClass + COLON + clientIdSuffix;
         }
         clientParams.setClientId(this.clientId);
-        ClientUtils.cacheClientConfig(this.clientId, clientParams);
-        return ClientUtils.getOrBuildClientInst(clientParams, AbstractServiceClientBuilder.this::build);
+        ServiceInterfaceToBuild buildClient = ClientUtils.getOrBuildClientInst(clientParams, AbstractServiceClientBuilder.this::build);
+        this.clientInst = buildClient;
+        ClientUtils.cacheClientBuilder(this.clientId, this);
+        return buildClient;
     }
 
     @SuppressWarnings("unchecked")
     private SubClass getSubclass() {
         return (SubClass) this;
+    }
+
+    public ServiceInterfaceToBuild getClientInst() {
+        return clientInst;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
+    public YopCredentialsProvider getCredentialsProvider() {
+        return credentialsProvider;
+    }
+
+    public YopSdkConfigProvider getYopSdkConfigProvider() {
+        return yopSdkConfigProvider;
+    }
+
+    public YopPlatformCredentialsProvider getPlatformCredentialsProvider() {
+        return platformCredentialsProvider;
     }
 
     public SubClass withCredentialsProvider(YopCredentialsProvider credentialsProvider) {

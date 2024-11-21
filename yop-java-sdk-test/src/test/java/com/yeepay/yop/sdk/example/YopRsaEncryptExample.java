@@ -764,7 +764,7 @@ public class YopRsaEncryptExample {
             IOUtils.copy(fileContent, Files.newOutputStream(tmpFile.toPath()));
             return tmpFile;
         } catch (Throwable ex) {
-            throw new RuntimeException("fail to save file");
+            throw new RuntimeException("fail to save file", ex);
         } finally {
             closeQuietly(fileContent);
         }

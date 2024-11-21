@@ -5,6 +5,9 @@
 
 package com.yeepay.yop.sdk.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -19,6 +22,8 @@ import java.lang.reflect.Modifier;
  * @since 2020/11/24 下午2:38
  */
 public final class BeanUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeanUtils.class);
 
     public static <T> T merge(T sourceBean, T targetBean) {
         if (null == sourceBean) {
@@ -50,7 +55,7 @@ public final class BeanUtils {
                     targetField.set(targetBean, sourceField.get(sourceBean));
                 }
             } catch (IllegalArgumentException | IllegalAccessException e) {
-                e.printStackTrace();
+                LOGGER.error("", e);
             }
         }
         return targetBean;

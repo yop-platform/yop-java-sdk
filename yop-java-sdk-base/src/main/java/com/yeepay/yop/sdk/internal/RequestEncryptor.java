@@ -229,8 +229,10 @@ public class RequestEncryptor {
                             String encrypted = encryptor.encryptToBase64(plainVal, encryptOptions);
                             valReadWriteCtx.set(encryptPath, encrypted);
                             finalEncryptParams.add(encryptPath);
-                            LOGGER.debug("json request encrypted partly, path:{}, source:{}, target:{}, options:{}",
-                                    encryptPath, plainVal, encrypted, encryptOptions);
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("json request encrypted partly, path:{}, source:{}, target:{}, options:{}",
+                                        encryptPath, plainVal, encrypted, encryptOptions);
+                            }
                         }
                     } catch (PathNotFoundException e) {
                         // ignore 加密父节点后，字节点会找不到

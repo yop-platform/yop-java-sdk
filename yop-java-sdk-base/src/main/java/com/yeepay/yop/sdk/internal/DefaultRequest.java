@@ -421,10 +421,10 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
 
         if (!getHeaders().isEmpty()) {
             builder.append("Headers: (");
-            for (String key : getHeaders().keySet()) {
-                String value = getHeaders().get(key);
-                builder.append(key).append(": ").append(value).append(", ");
+            for (Map.Entry<String, String> stringStringEntry : getHeaders().entrySet()) {
+                builder.append(stringStringEntry.getKey()).append(": ").append(stringStringEntry.getValue()).append(", ");
             }
+
             builder.append(") ");
         }
 

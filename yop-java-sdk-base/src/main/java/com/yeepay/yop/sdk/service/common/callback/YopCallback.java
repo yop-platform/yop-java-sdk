@@ -48,6 +48,11 @@ public class YopCallback implements Serializable {
     private String bizData;
 
     /**
+     * 业务结果签名是否合法
+     */
+    private boolean validSign = true;
+
+    /**
      * 发送时间
      */
     private Date createTime;
@@ -71,6 +76,10 @@ public class YopCallback implements Serializable {
 
     public String getBizData() {
         return bizData;
+    }
+
+    public boolean isValidSign() {
+        return validSign;
     }
 
     public Date getCreateTime() {
@@ -118,6 +127,11 @@ public class YopCallback implements Serializable {
 
         public Builder withCreateTime(Date createTime) {
             callback.createTime = createTime;
+            return this;
+        }
+
+        public Builder withValidSign(boolean validSign) {
+            callback.validSign = validSign;
             return this;
         }
 

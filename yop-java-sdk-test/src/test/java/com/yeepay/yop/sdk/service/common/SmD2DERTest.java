@@ -5,8 +5,8 @@
 
 package com.yeepay.yop.sdk.service.common;
 
-import com.yeepay.yop.sdk.utils.Encodes;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
+import com.yeepay.yop.sdk.utils.Encodes;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.spec.OpenSSHPrivateKeySpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
@@ -17,8 +17,9 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.FixedPointCombMultiplier;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -40,6 +41,8 @@ import java.security.spec.X509EncodedKeySpec;
  * @since 2021/4/25 15:58
  */
 public class SmD2DERTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SmD2DERTest.class);
 
     private String name = "sm2p256v1";
 //    private String name = "secp256r1";
@@ -103,7 +106,7 @@ public class SmD2DERTest {
             KeyFactory keyFactory = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return (BCECPrivateKey) keyFactory.generatePrivate(privateKeySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
-            e.printStackTrace();
+            LOGGER.error("error when gen BCECPrivateKey, ex:", e);
             return null;
         }
     }

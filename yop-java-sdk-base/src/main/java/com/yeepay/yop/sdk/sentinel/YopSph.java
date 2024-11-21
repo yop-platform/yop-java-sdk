@@ -58,6 +58,7 @@ public class YopSph {
     static {
         // If init fails, the process will exit.
         InitExecutor.doInit();
+        Runtime.getRuntime().addShutdownHook(new Thread(BLOCKED_SWEEPER::shutdownNow));
     }
 
     public static YopSph getInstance() {
