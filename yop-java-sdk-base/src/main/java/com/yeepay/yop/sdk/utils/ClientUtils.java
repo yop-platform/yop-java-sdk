@@ -12,6 +12,7 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegist
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
+import com.yeepay.yop.sdk.client.AbstractServiceClientBuilder;
 import com.yeepay.yop.sdk.client.ClientParams;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.service.common.YopClient;
@@ -47,11 +48,8 @@ public class ClientUtils {
     // 各个环境的默认基础Client<{provider}####{env}, {clientId}>，每个环境1个
     private static final Map<String, String> INNER_BASIC_CLIENT_MAP = Maps.newConcurrentMap();
 
-    // 各个环境的不同配置的Client实例<{clientId}, {ClientInst}>，所有环境不超过3000，默认LRU丢弃策略
-    private static Cache<String, Object> CLIENT_INST_CACHE = CacheBuilder.newBuilder().maximumSize(3000).build();
-
-    // 各个环境的不同Client的配置<{clientId}, {ClientParams}>，所有环境不超过3000， 默认LRU丢弃策略
-    private static final Cache<String, ClientParams> CLIENT_CONFIG_CACHE = CacheBuilder.newBuilder().maximumSize(3000).build();
+    // 各个环境的不同配置的Client实例<{clientId}, {ClientBuilder}>，所有环境不超过3000，默认LRU丢弃策略
+    private static Cache<String, AbstractServiceClientBuilder<?,?>> CLIENT_BUILDER_CACHE = CacheBuilder.newBuilder().maximumSize(3000).build();
 
     /**
      * 根据client配置获取client实例
@@ -62,11 +60,10 @@ public class ClientUtils {
      */
     public static <ClientInst> ClientInst getOrBuildClientInst(ClientParams clientParams, ClientInstBuilder<ClientInst> instBuilder) {
         final ClientInst clientInst = instBuilder.build(clientParams);
-        CLIENT_INST_CACHE.put(clientParams.getClientId(), clientInst);
 
         if (!isInnerBasicClient(clientParams.getClientId())) {
             final String innerBasicClientId = toInnerBasicClientId(clientParams.getClientId());
-            CLIENT_INST_CACHE.put(innerBasicClientId, YopClientBuilder.builder()
+            YopClientBuilder.builder()
                     .withInner(true)
                     .withClientId(innerBasicClientId)
                     .withProvider(clientParams.getProvider())
@@ -80,13 +77,17 @@ public class ClientUtils {
                     .withPreferredEndPoint(clientParams.getPreferredEndPoint())
                     .withPreferredYosEndPoint(clientParams.getPreferredYosEndPoint())
                     .withSandboxEndPoint(null != clientParams.getSandboxEndPoint() ? clientParams.getSandboxEndPoint().toString() : null)
-                    .build());
+                    .build();
         }
         return clientInst;
     }
 
     public static <ClientInst> ClientInst getClientInst(String clientId) {
-        return (ClientInst) CLIENT_INST_CACHE.getIfPresent(clientId);
+        AbstractServiceClientBuilder<?, ?> builder = CLIENT_BUILDER_CACHE.getIfPresent(clientId);
+        if (null != builder) {
+            return (ClientInst) builder.getClientInst();
+        }
+        return null;
     }
 
     public static boolean isBasicClient(String clientId) {
@@ -109,10 +110,10 @@ public class ClientUtils {
         return UUID.randomUUID().toString();
     }
 
-    public static void cacheClientConfig(String clientId, ClientParams clientParams) {
-        CLIENT_CONFIG_CACHE.put(clientId, clientParams);
+    public static void cacheClientBuilder(String clientId, AbstractServiceClientBuilder<?,?> clientBuilder) {
+        CLIENT_BUILDER_CACHE.put(clientId, clientBuilder);
         if (isInnerBasicClient(clientId)) {
-            INNER_BASIC_CLIENT_MAP.put(getClientEnvCacheKey(clientParams.getProvider(), clientParams.getEnv()), clientId);
+            INNER_BASIC_CLIENT_MAP.put(getClientEnvCacheKey(clientBuilder.getProvider(), clientBuilder.getEnv()), clientId);
         }
     }
 
@@ -166,9 +167,9 @@ public class ClientUtils {
     public static YopSdkConfigProvider getCurrentSdkConfigProvider() {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
-            final ClientParams clientParams = CLIENT_CONFIG_CACHE.getIfPresent(currentClientId);
-            if (null != clientParams && null != clientParams.getYopSdkConfigProvider()) {
-                return clientParams.getYopSdkConfigProvider();
+            AbstractServiceClientBuilder<?, ?> clientBuilder = CLIENT_BUILDER_CACHE.getIfPresent(currentClientId);
+            if (null != clientBuilder && null != clientBuilder.getYopSdkConfigProvider()) {
+                return clientBuilder.getYopSdkConfigProvider();
             }
         }
         return YopSdkConfigProviderRegistry.getProvider();
@@ -177,9 +178,9 @@ public class ClientUtils {
     public static YopCredentialsProvider getCurrentCredentialsProvider() {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
-            final ClientParams clientParams = CLIENT_CONFIG_CACHE.getIfPresent(currentClientId);
-            if (null != clientParams && null != clientParams.getCredentialsProvider()) {
-                return clientParams.getCredentialsProvider();
+            AbstractServiceClientBuilder<?, ?> clientBuilder = CLIENT_BUILDER_CACHE.getIfPresent(currentClientId);
+            if (null != clientBuilder && null != clientBuilder.getCredentialsProvider()) {
+                return clientBuilder.getCredentialsProvider();
             }
         }
         return YopCredentialsProviderRegistry.getProvider();
@@ -188,9 +189,9 @@ public class ClientUtils {
     public static YopPlatformCredentialsProvider getCurrentPlatformCredentialsProvider() {
         final String currentClientId = getCurrentClientId();
         if (StringUtils.isNotBlank(currentClientId)) {
-            final ClientParams clientParams = CLIENT_CONFIG_CACHE.getIfPresent(currentClientId);
-            if (null != clientParams && null != clientParams.getPlatformCredentialsProvider()) {
-                return clientParams.getPlatformCredentialsProvider();
+            AbstractServiceClientBuilder<?, ?> clientBuilder = CLIENT_BUILDER_CACHE.getIfPresent(currentClientId);
+            if (null != clientBuilder && null != clientBuilder.getPlatformCredentialsProvider()) {
+                return clientBuilder.getPlatformCredentialsProvider();
             }
         }
         return YopPlatformCredentialsProviderRegistry.getProvider();
