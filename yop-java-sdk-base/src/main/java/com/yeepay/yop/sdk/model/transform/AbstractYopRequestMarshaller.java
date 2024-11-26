@@ -36,7 +36,7 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
         Map<String, String> customerHeaders = request.getHeaders();
         if (customerHeaders != null && customerHeaders.size() > 0) {
             for (Map.Entry<String, String> stringStringEntry : customerHeaders.entrySet()) {
-                internalRequest.addHeader(stringStringEntry.getKey(), customerHeaders.get(stringStringEntry.getValue()));
+                internalRequest.addHeader(stringStringEntry.getKey(), customerHeaders.get(stringStringEntry.getKey()));
             }
         }
 
