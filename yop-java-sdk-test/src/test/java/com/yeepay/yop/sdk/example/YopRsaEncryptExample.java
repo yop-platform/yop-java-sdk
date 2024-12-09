@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -54,7 +55,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class YopRsaEncryptExample {
 
-    private static final CloseableHttpClient httpClient = HttpClients.createDefault();
+    private static final CloseableHttpClient httpClient;
+    static {
+        // 自定义连接池大小、默认超时时间
+        httpClient = HttpClients.custom()
+                .setMaxConnPerRoute(100)
+                .setMaxConnTotal(200)
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setConnectionRequestTimeout(3000)
+                        .setConnectTimeout(3000)
+                        .setSocketTimeout(30000)
+                        .build()).build();
+    }
+
     private static final String APP_KEY = "sandbox_rsa_10080041523";
     private static final String ISV_PRIVATE_KEY = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDChomOdGrRa/D889B9ARtsLb/9zVJxq7VPV9yTu6ZjbhtpwS8Qep/95W7pWcK9yvNH5pWPpYZYwRB55z2Z/9SVqn+2sVU18JCxsgw7o35FUg9Qu9eiZeRpCiV8fbjhI9ZJpDh4v48MKcYBRM0LBZSQjA67xh4K90PYxI7UAgnMWW25Ny37oYxmH8ZoihemWvaRPFx4k4c9knBL5aPEspwIQjfDztOcOoRMkhZo5hUuI/GsKlw0REZ5lUdGKzgQ5ec4ZBe4ijFTsEjSvHcLaJbVnw9PdQ7a80Gw0Cf3qwS6dOR9LgsPLoUsKf9XRu0X6csS5uqu4e4I8lJm+WNZb+l3AgMBAAECggEAFeSOCwjXfsiptND8mB0C85VgjsAddRVF+281hYZF2dnqCZMdk2Vhp/G686tPq2Gcfhfu9t2Xta8g22oRjklIfoGpDFbVSBP84kAvd+9/cMN6ssjj928v75HIme63sIBX3S43fCt+/iJIxRrJAuJhZTVGG+RWZus2Pmlnc704/L+qP93XOVwFk/hKXhy7/Aa2S7KjVr5SpEDNUJ94W8WEpFgfccCrlkbuLAWG9nJF1gAoi0w6AJfEsTWpnNjpdHfFDtcT9UdULgJuz9yhzZya+mYbcjmLATqFihXJWsw4AKPnjOyMRPZP3EdtmOdiRddRnj82dsN5pjz651xFk5EuvQKBgQDWScg70XXwXgm527Kytra81VHW/WKcOw1w37GUiLJG4324fJeupXJ2zt4bmILrLhPTJkDNxE/1roX7GR1tn523H9s29b9Dqwfr38MSjfvJ5yPlaXrOLzDD7myDhZHTqvqgV1/id0IJZ3BeXTVEwd8yjfwEuZHW5s8TilOLoIcXswKBgQDoY/WTLfNleJLHFG4iIDbYBdK7zx105WVOmZF893sEP/4XPVq4RakSZG3CpVpYH5bsXyPTjwUoCoLLXmJzSJFLISemkn4Ot8xJRWPgZoDqm1Fi72O6VgNJlu9lX2ZcMKH4pAXqe7WMBSrxZqXL52gZsyv5YM+uBkY29DtHp7zFLQKBgDn1juEPEHVJGhxZHgZUgSymDhK2SjuzhTkoZ+Gi74VY9qI1oNkuCr2zykNwhsiRl+8eg5ykInRzFe4KpvkFmST0ytgcs/Tbh7L2vM6B9L5xdDYSx5KJFQmJrXQNZpn3vv4rY9XfJ89fWPdNAqFsRrBn0uh8QMP9fbjtSxeS/bcdAoGBAJTJqymYegW1tQQRaJIg3fxhfhMRAGMfnEU+vY+tQ+3sqtpmRfdFYoKMGlpNVBKn5xFfuKhzIXIJiMR8obv98kiP6bsUf/EcbIddDh1Wg6Ox3eHiM4/SEjjDknLtKbRMzudK3R7MJeiIRn5Yoj5y4ovR043PFijti3cT2ACAvLPhAoGAX5zTGz4M/JuqF5TWLKARGAZ9HiYoTLtJs5l/yTkKR4NO/E79TsBlUfDBhVYb+A3ChN6P8JX3cSwUplSiUo12eqG9/DPUSmeRrhTXlbul7metzaEVl1fQhaOIHflxkvg+FZIIt+NHyi6oGmDPXYfwUU3QqifMP5mF+v7IjTcPyD4=";
     private static final String YOP_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4g7dPL+CBeuzFmARI2GFjZpKODUROaMG+E6wdNfv5lhPqC3jjTIeljWU8AiruZLGRhl92QWcTjb3XonjaV6k9rf9adQtyv2FLS7bl2Vz2WgjJ0FJ5/qMaoXaT+oAgWFk2GypyvoIZsscsGpUStm6BxpWZpbPrGJR0N95un/130cQI9VCmfvgkkCaXt7TU1BbiYzkc8MDpLScGm/GUCB2wB5PclvOxvf5BR/zNVYywTEFmw2Jo0hIPPSWB5Yyf2mx950Fx8da56co/FxLdMwkDOO51Qg3fbaExQDVzTm8Odi++wVJEP1y34tlmpwFUVbAKIEbyyELmi/2S6GG0j9vNwIDAQAB";
