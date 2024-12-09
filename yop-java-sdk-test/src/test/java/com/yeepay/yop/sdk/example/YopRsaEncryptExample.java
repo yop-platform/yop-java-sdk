@@ -61,11 +61,13 @@ public class YopRsaEncryptExample {
         httpClient = HttpClients.custom()
                 .setMaxConnPerRoute(100)
                 .setMaxConnTotal(200)
-                .setDefaultRequestConfig(RequestConfig.custom()
+                .setDefaultRequestConfig(
+                        RequestConfig.custom()
                         .setConnectionRequestTimeout(3000)
                         .setConnectTimeout(3000)
                         .setSocketTimeout(30000)
-                        .build()).build();
+                        .build())
+                .build();
     }
 
     private static final String APP_KEY = "sandbox_rsa_10080041523";
