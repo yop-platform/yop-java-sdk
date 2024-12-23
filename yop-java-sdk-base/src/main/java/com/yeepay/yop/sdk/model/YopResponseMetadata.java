@@ -45,6 +45,8 @@ public class YopResponseMetadata {
 
     private String yopEncrypt;
 
+    private int httpStatus;
+
     public String getYopRequestId() {
         return this.yopRequestId;
     }
@@ -197,6 +199,14 @@ public class YopResponseMetadata {
         this.yopEncrypt = yopEncrypt;
     }
 
+    public int getHttpStatus() {
+        return httpStatus;
+    }
+
+    public void setHttpStatus(int httpStatus) {
+        this.httpStatus = httpStatus;
+    }
+
     @Override
     public String toString() {
         return "YopResponseMetadata [\n  yopRequestId=" + yopRequestId
@@ -212,6 +222,7 @@ public class YopResponseMetadata {
                 + ", \n  server=" + server + ", \n  location=" + location
                 + ", \n  yopCertSerialNo=" + yopCertSerialNo
                 + ", \n  yopEncrypt=" + yopEncrypt
+                + ", \n  httpStatus=" + httpStatus
                 + "]";
     }
 

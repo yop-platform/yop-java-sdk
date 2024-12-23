@@ -36,7 +36,7 @@ public class YopJsonResponseAnalyzer implements HttpResponseAnalyzer {
         if (!isJsonResponse(response.getMetadata().getContentType())) {
             throw new YopHttpException("ResponseError, Need Json, contentType:" + response.getMetadata().getContentType()
                     + ", content:" + content + ", resource:"
-                    + context.getOriginRequest().getEndpoint() + SLASH + context.getOriginRequest().getResourcePath());
+                    + context.getOriginRequest().getEndpoint() + SLASH + context.getOriginRequest().getResourcePath(), context.getResponse().getStatusCode());
         }
         if (null != content) {
             JsonUtils.load(content, response);

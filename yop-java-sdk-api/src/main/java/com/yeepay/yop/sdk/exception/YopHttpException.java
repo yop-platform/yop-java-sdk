@@ -17,11 +17,30 @@ package com.yeepay.yop.sdk.exception;
 public class YopHttpException extends RuntimeException {
     private static final long serialVersionUID = -1L;
 
+    /**
+     * The HTTP status code that was returned with this error.
+     */
+    private int statusCode;
+
     public YopHttpException(String message) {
         super(message);
     }
 
+    public YopHttpException(String message, int statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+    }
+
     public YopHttpException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public YopHttpException(String message, Throwable cause, int statusCode) {
+        super(message, cause);
+        this.statusCode = statusCode;
+    }
+
+    public int getStatusCode() {
+        return statusCode;
     }
 }

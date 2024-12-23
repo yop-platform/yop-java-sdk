@@ -65,6 +65,7 @@ public class YopMetadataResponseAnalyzer implements HttpResponseAnalyzer {
                 StringUtils.defaultIfBlank(certSerialNo,
                         httpResponse.getHeader(Headers.YOP_CERT_SERIAL_NO))));
         metadata.setYopEncrypt(httpResponse.getHeader(Headers.YOP_ENCRYPT));
+        metadata.setHttpStatus(httpResponse.getStatusCode());
         handleYopResponseMetadata(metadata);
         return false;
     }
