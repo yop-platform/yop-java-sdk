@@ -17,10 +17,14 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.joda.time.DateTime;
@@ -33,6 +37,7 @@ import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.security.*;
@@ -95,13 +100,17 @@ public class YopRsaEncryptExample {
         // 加密会话密钥，可每笔调用都生成，也可以多笔公用一个，建议定时更换
         String encryptKey = encodeUrlSafeBase64(generateRandomKey());
 
-//        // get请求，form参数
+        // get请求，form参数
         getFormExample(YopRequestMethod.GET, "/rest/v1.0/test/errorcode2",
                 YopRequestContentType.FORM_URL_ENCODE, encryptKey);
 
         // post请求，form参数
         postFormExample(YopRequestMethod.POST, "/rest/v1.0/test/old-api-mgr/find-api-by-uri",
                 YopRequestContentType.FORM_URL_ENCODE, encryptKey);
+
+        // post请求，文件参数
+        postMultipartFormExample(YopRequestMethod.POST, "/yos/v1.0/sys/merchant/qual/upload",
+                YopRequestContentType.MULTIPART_FORM, encryptKey);
 
         // post请求，json参数
         postJsonExample(YopRequestMethod.POST, "/rest/v1.0/test-wdc/test/http-json/test",
@@ -202,6 +211,61 @@ public class YopRsaEncryptExample {
         } finally {
             HttpClientUtils.closeQuietly(response);
         }
+    }
+
+    private static void postMultipartFormExample(YopRequestMethod requestMethod, String requestUri,
+                                                 YopRequestContentType requestContentType, String encryptKey) throws Exception {
+
+
+        // 普通参数参与签名,clientId
+        Multimap<String, String> params = ArrayListMultimap.create();
+        params.put("clientId", APP_KEY);
+
+        // 参数不加密
+        Set<String> encryptHeaders = Collections.emptySet();
+        Set<String> encryptParams = Sets.newHashSet();
+
+        // 请求头
+        Map<String, String> headers = buildHeaders(requestMethod, requestUri, params,
+                requestContentType, "", encryptKey, encryptHeaders, encryptParams);
+
+        // 构造http请求
+        HttpPost postMethod = new HttpPost(SERVER_ROOT + requestUri);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+
+        // 添加普通参数
+        for (Map.Entry<String, Collection<String>> entry : params.asMap().entrySet()) {
+            String paramKey = entry.getKey();
+            for (String value : entry.getValue()) {
+                builder.addTextBody(normalize(paramKey), normalize(value));
+            }
+        }
+
+        // 添加文件参数，merQual
+        // 方式一：本地文件流
+//        builder.addBinaryBody("merQual", new FileInputStream("abc.txt"),
+//                ContentType.DEFAULT_BINARY, "abc.txt");
+        // 方式二：远程文件流
+        builder.addBinaryBody("merQual", new URL("https://open.yeepay.com/apis/docs/apis/common/ALL.json").openStream(),
+                ContentType.DEFAULT_BINARY, "abc.txt");
+
+        postMethod.setEntity(builder.build());
+
+        // 添加请求头
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            postMethod.addHeader(entry.getKey(), entry.getValue());
+        }
+
+        // 发起http调用
+        CloseableHttpResponse response = null;
+        try {
+            response = httpClient.execute(postMethod);
+            handleResponse(YopRequestType.WEB, response, encryptKey);
+        } finally {
+            HttpClientUtils.closeQuietly(response);
+        }
+
     }
 
     private static void postJsonExample(YopRequestMethod requestMethod, String requestUri,

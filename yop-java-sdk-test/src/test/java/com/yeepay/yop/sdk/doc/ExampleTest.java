@@ -17,10 +17,14 @@ import com.yeepay.yop.sdk.service.common.YopClientBuilder;
 import com.yeepay.yop.sdk.service.common.request.YopRequest;
 import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import com.yeepay.yop.sdk.service.common.response.YosUploadResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.security.PrivateKey;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * title: <br>
@@ -84,11 +88,24 @@ public class ExampleTest {
                 "MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQg/WsUu5NQDTDJjjaXWLlNfBNZhamXAqCLcyLPSHDSD4qgCgYIKoEcz1UBgi2hRANCAAQUC8TdvSHnCXGlQzm62w+sqHK8wt/ZDXmuhyU4qOEJ8jRMiTzQWoX8BC0fB7ggzWIobHrJouBgnEm3AxVhShpZ",
                         CertTypeEnum.SM2)
                 , CertTypeEnum.SM2)));
-        request.addParameter("parentMerchantNo", "1234321");
-        request.addParameter("orderId", "1234321");
-        request.addParameter("orderAmount", "100.05");
-        request.addParameter("notifyUrl", "https://xxx.com/notify");
+        try {
+            request.addParameter("parentMerchantNo", "1234321");
+            request.addParameter("orderId", "1234321");
+            request.addParameter("orderAmount", "100.05");
+            request.addParameter("notifyUrl", "https://xxx.com/notify");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         assertTheRequest(yopClient, request);
+    }
+
+    @Test
+    public void testCaused() {
+        try {
+            throw new RuntimeException("1", new RuntimeException("2", new RuntimeException("3")));
+        } catch (RuntimeException e) {
+            System.out.println(Arrays.stream(ExceptionUtils.getThrowables(e)).map(t -> t.getClass().getCanonicalName() + ":" + t.getMessage()).collect(Collectors.joining(",")));
+        }
     }
 
     @Test
