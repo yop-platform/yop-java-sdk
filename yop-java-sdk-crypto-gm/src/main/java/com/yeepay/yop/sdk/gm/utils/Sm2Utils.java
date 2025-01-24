@@ -181,6 +181,25 @@ public class Sm2Utils {
     }
 
     /**
+     * sm2密钥进行签名验证-withId
+     *
+     * @param data
+     * @param signature
+     * @param publicKey
+     * @return
+     */
+    public static boolean verifySignWithId(String data, String signature, BCECPublicKey publicKey, byte[] withId) {
+        try {
+            byte[] signByte = Encodes.decodeBase64(signature);
+            byte[] dataByte = data.getBytes(Charsets.UTF_8);
+            return verifyWithId(publicKey, dataByte, encodeSM2SignToDER(signByte), withId);
+        } catch (IOException e) {
+            throw new YopClientException("UnexpectedError, VerifySign Fail, data:" +
+                    data + ", sign:" + signature + ", key:" + publicKey + ", ex:", e);
+        }
+    }
+
+    /**
      * 把64字节的纯R+S字节数组编码成DER编码
      *
      * @param rawSign 64字节数组形式的SM2签名值，前32字节为R，后32字节为S
@@ -233,6 +252,35 @@ public class Sm2Utils {
     }
 
     /**
+     * 签名-withId
+     *
+     * @param priKey  私钥
+     * @param srcData 原文
+     * @return 64字节的纯R+S字节流
+     * @throws CryptoException
+     */
+    public static byte[] signWithId(BCECPrivateKey priKey, byte[] srcData, byte[] withId) throws CryptoException {
+        ECParameterSpec parameterSpec = priKey.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                parameterSpec.getN(), parameterSpec.getH());
+        ECPrivateKeyParameters priKeyParameters = new ECPrivateKeyParameters(priKey.getD(), domainParameters);
+        //der编码后的签名值
+        byte[] derSign = sign(priKeyParameters, withId, srcData);
+
+        //der解码过程
+        ASN1Sequence as = DERSequence.getInstance(derSign);
+        byte[] rBytes = ((ASN1Integer) as.getObjectAt(0)).getValue().toByteArray();
+        byte[] sBytes = ((ASN1Integer) as.getObjectAt(1)).getValue().toByteArray();
+        //由于大数的补0规则，所以可能会出现33个字节的情况，要修正回32个字节
+        rBytes = fixToCurveLengthBytes(rBytes);
+        sBytes = fixToCurveLengthBytes(sBytes);
+        byte[] rawSign = new byte[rBytes.length + sBytes.length];
+        System.arraycopy(rBytes, 0, rawSign, 0, rBytes.length);
+        System.arraycopy(sBytes, 0, rawSign, rBytes.length, sBytes.length);
+        return rawSign;
+    }
+
+    /**
      * 签名
      *
      * @param priKeyParameters 私钥
@@ -270,6 +318,22 @@ public class Sm2Utils {
                 parameterSpec.getN(), parameterSpec.getH());
         ECPublicKeyParameters pubKeyParameters = new ECPublicKeyParameters(pubKey.getQ(), domainParameters);
         return verify(pubKeyParameters, null, srcData, sign);
+    }
+
+    /**
+     * 验签
+     *
+     * @param pubKey  公钥
+     * @param srcData 原文
+     * @param sign    DER编码的签名值
+     * @return
+     */
+    public static boolean verifyWithId(BCECPublicKey pubKey, byte[] srcData, byte[] sign, byte[] withId) {
+        ECParameterSpec parameterSpec = pubKey.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                parameterSpec.getN(), parameterSpec.getH());
+        ECPublicKeyParameters pubKeyParameters = new ECPublicKeyParameters(pubKey.getQ(), domainParameters);
+        return verify(pubKeyParameters, withId, srcData, sign);
     }
 
     /**
