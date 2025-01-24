@@ -1168,4 +1168,65 @@ public class YopSM2EncryptExample {
             this.value = value;
         }
     }
+
+
+    // 附录：jar包依赖情况
+    /**
+     * <dependency>
+     *             <groupId>org.apache.httpcomponents</groupId>
+     *             <artifactId>httpcore</artifactId>
+     *             <version>4.4.13</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.apache.httpcomponents</groupId>
+     *             <artifactId>httpclient</artifactId>
+     *             <version>4.5.13</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.apache.httpcomponents</groupId>
+     *             <artifactId>httpmime</artifactId>
+     *             <version>4.5.13</version>
+     *         </dependency>
+     *
+     *         <dependency>
+     *             <artifactId>commons-codec</artifactId>
+     *             <groupId>commons-codec</groupId>
+     *             <version>1.10</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>commons-io</groupId>
+     *             <artifactId>commons-io</artifactId>
+     *             <version>2.8.0</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>com.google.guava</groupId>
+     *             <artifactId>guava</artifactId>
+     *             <version>30.0-jre</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>joda-time</groupId>
+     *             <artifactId>joda-time</artifactId>
+     *             <version>2.9.4</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.apache.commons</groupId>
+     *             <artifactId>commons-lang3</artifactId>
+     *             <version>3.6</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>com.fasterxml.jackson.core</groupId>
+     *             <artifactId>jackson-databind</artifactId>
+     *             <version>2.13.2</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.bouncycastle</groupId>
+     *             <artifactId>bcprov-jdk15on</artifactId>
+     *             <version>1.67</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.bouncycastle</groupId>
+     *             <artifactId>bcpkix-jdk15on</artifactId>
+     *             <version>1.67</version>
+     *         </dependency>
+     */
 }
