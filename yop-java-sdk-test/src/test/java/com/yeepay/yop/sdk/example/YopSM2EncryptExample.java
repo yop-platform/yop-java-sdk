@@ -27,16 +27,32 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.bouncycastle.asn1.*;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.CryptoException;
+import org.bouncycastle.crypto.engines.SM2Engine;
+import org.bouncycastle.crypto.params.*;
+import org.bouncycastle.crypto.signers.SM2Signer;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.math.ec.custom.gm.SM2P256V1Curve;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.KeyGenerator;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Files;
@@ -49,7 +65,7 @@ import java.util.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * title: rsa 加密示例<br>
+ * title: SM2 加密示例<br>
  * description: 描述<br>
  * Copyright: Copyright (c)2014<br>
  * Company: 易宝支付(YeePay)<br>
@@ -58,7 +74,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @version 1.0.0
  * @since 2023/9/27
  */
-public class YopRsaEncryptExample {
+public class YopSM2EncryptExample {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopSM2EncryptExample.class);
+    static {
+        try {
+            if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                Security.addProvider(new BouncyCastleProvider());
+            }
+            LOGGER.debug("BouncyCastleProvider added");
+        } catch (Exception e) {
+            LOGGER.warn("error when add BouncyCastleProvider", e);
+        }
+    }
 
     private static final CloseableHttpClient httpClient;
     static {
@@ -68,33 +96,56 @@ public class YopRsaEncryptExample {
                 .setMaxConnTotal(200)
                 .setDefaultRequestConfig(
                         RequestConfig.custom()
-                        .setConnectionRequestTimeout(3000)
-                        .setConnectTimeout(3000)
-                        .setSocketTimeout(30000)
-                        .build())
+                                .setConnectionRequestTimeout(3000)
+                                .setConnectTimeout(3000)
+                                .setSocketTimeout(30000)
+                                .build())
                 .build();
     }
 
-    private static final String APP_KEY = "sandbox_rsa_10080041523";
-    private static final String ISV_PRIVATE_KEY = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDChomOdGrRa/D889B9ARtsLb/9zVJxq7VPV9yTu6ZjbhtpwS8Qep/95W7pWcK9yvNH5pWPpYZYwRB55z2Z/9SVqn+2sVU18JCxsgw7o35FUg9Qu9eiZeRpCiV8fbjhI9ZJpDh4v48MKcYBRM0LBZSQjA67xh4K90PYxI7UAgnMWW25Ny37oYxmH8ZoihemWvaRPFx4k4c9knBL5aPEspwIQjfDztOcOoRMkhZo5hUuI/GsKlw0REZ5lUdGKzgQ5ec4ZBe4ijFTsEjSvHcLaJbVnw9PdQ7a80Gw0Cf3qwS6dOR9LgsPLoUsKf9XRu0X6csS5uqu4e4I8lJm+WNZb+l3AgMBAAECggEAFeSOCwjXfsiptND8mB0C85VgjsAddRVF+281hYZF2dnqCZMdk2Vhp/G686tPq2Gcfhfu9t2Xta8g22oRjklIfoGpDFbVSBP84kAvd+9/cMN6ssjj928v75HIme63sIBX3S43fCt+/iJIxRrJAuJhZTVGG+RWZus2Pmlnc704/L+qP93XOVwFk/hKXhy7/Aa2S7KjVr5SpEDNUJ94W8WEpFgfccCrlkbuLAWG9nJF1gAoi0w6AJfEsTWpnNjpdHfFDtcT9UdULgJuz9yhzZya+mYbcjmLATqFihXJWsw4AKPnjOyMRPZP3EdtmOdiRddRnj82dsN5pjz651xFk5EuvQKBgQDWScg70XXwXgm527Kytra81VHW/WKcOw1w37GUiLJG4324fJeupXJ2zt4bmILrLhPTJkDNxE/1roX7GR1tn523H9s29b9Dqwfr38MSjfvJ5yPlaXrOLzDD7myDhZHTqvqgV1/id0IJZ3BeXTVEwd8yjfwEuZHW5s8TilOLoIcXswKBgQDoY/WTLfNleJLHFG4iIDbYBdK7zx105WVOmZF893sEP/4XPVq4RakSZG3CpVpYH5bsXyPTjwUoCoLLXmJzSJFLISemkn4Ot8xJRWPgZoDqm1Fi72O6VgNJlu9lX2ZcMKH4pAXqe7WMBSrxZqXL52gZsyv5YM+uBkY29DtHp7zFLQKBgDn1juEPEHVJGhxZHgZUgSymDhK2SjuzhTkoZ+Gi74VY9qI1oNkuCr2zykNwhsiRl+8eg5ykInRzFe4KpvkFmST0ytgcs/Tbh7L2vM6B9L5xdDYSx5KJFQmJrXQNZpn3vv4rY9XfJ89fWPdNAqFsRrBn0uh8QMP9fbjtSxeS/bcdAoGBAJTJqymYegW1tQQRaJIg3fxhfhMRAGMfnEU+vY+tQ+3sqtpmRfdFYoKMGlpNVBKn5xFfuKhzIXIJiMR8obv98kiP6bsUf/EcbIddDh1Wg6Ox3eHiM4/SEjjDknLtKbRMzudK3R7MJeiIRn5Yoj5y4ovR043PFijti3cT2ACAvLPhAoGAX5zTGz4M/JuqF5TWLKARGAZ9HiYoTLtJs5l/yTkKR4NO/E79TsBlUfDBhVYb+A3ChN6P8JX3cSwUplSiUo12eqG9/DPUSmeRrhTXlbul7metzaEVl1fQhaOIHflxkvg+FZIIt+NHyi6oGmDPXYfwUU3QqifMP5mF+v7IjTcPyD4=";
-    private static final String YOP_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4g7dPL+CBeuzFmARI2GFjZpKODUROaMG+E6wdNfv5lhPqC3jjTIeljWU8AiruZLGRhl92QWcTjb3XonjaV6k9rf9adQtyv2FLS7bl2Vz2WgjJ0FJ5/qMaoXaT+oAgWFk2GypyvoIZsscsGpUStm6BxpWZpbPrGJR0N95un/130cQI9VCmfvgkkCaXt7TU1BbiYzkc8MDpLScGm/GUCB2wB5PclvOxvf5BR/zNVYywTEFmw2Jo0hIPPSWB5Yyf2mx950Fx8da56co/FxLdMwkDOO51Qg3fbaExQDVzTm8Odi++wVJEP1y34tlmpwFUVbAKIEbyyELmi/2S6GG0j9vNwIDAQAB";
-
+    private static final String APP_KEY = "sandbox_sm_10080041523";
+    private static final BCECPrivateKey ISV_PRIVATE_KEY = string2PrivateKey("MIGTAgEAMBMGByqGSM49AgEGCCqBHM9VAYItBHkwdwIBAQQgr0mQ3/jjQOczWI6bnJFdqF4D/DFYHaqXftqXU/jGKpCgCgYIKoEcz1UBgi2hRANCAAQPpkZNnOnXTCXOIHJbfR+i6ea1QkM8HxkdO8KSWK8IgltHZxr5xlxiqR8inOREmmrxUQQagOH5i3oELWgXZz8G");
+    private static final String YOP_PUBLIC_KEY_SERIAL_NO = "4059376239";
+    // 注意：此处为测试环境国密证书，生产环境请联系技术支持获取
+    private static final BCECPublicKey YOP_PUBLIC_KEY = string2PublicKey("MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEStsxeNDxhJzM61Uy0rCmnW9Zs4Ze7oIKX27dgFTB7FsTsiCEzvxD7OTCKd7F17Xa1vpJ07C+2+H2OOFBSyadZA==");
+    private static final Map<String, BCECPublicKey> YOP_PUBLIC_KEY_MAP = Collections.singletonMap(YOP_PUBLIC_KEY_SERIAL_NO, YOP_PUBLIC_KEY);
     private static final String SERVER_ROOT = "https://sandbox.yeepay.com/yop-center";
     private static final String SLASH = "/";
     private static final String UNDER_LINE = "_";
     private static final String SEMICOLON = ";";
     private static final String EMPTY = "";
 
-    private static final String AES_ENCRYPT_ALG = "AES/ECB/PKCS5Padding";
-    private static final String RSA_ENCRYPT_ALG = "RSA/ECB/PKCS1Padding";
+
+
+    private static final String SM4_CBC_PKCS5PADDING = "SM4/CBC/PKCS5Padding";
+    private static final byte[] SM4_IV = new SecureRandom().generateSeed(16);
+
     private static final String STREAM = "stream";
     private static final String DEFAULT_ENCODING = "UTF-8";
     private static final String DEFAULT_YOP_PROTOCOL_VERSION = "yop-auth-v3";
-    public static final String DEFAULT_AUTH_PREFIX_RSA2048 = "YOP-RSA2048-SHA256";
-    private static final String RSA = "RSA";
-    private static final String DEFAULT_DIGEST_ALG = "SHA-256";
-    private static final String DEFAULT_SIGN_ALG = "SHA256withRSA";
+    public static final String DEFAULT_AUTH_PREFIX_SM2 = "YOP-SM2-SM3";
+    private static final String DEFAULT_DIGEST_ALG = "SM3";
     private static final Joiner QUERY_STRING_JOINER = Joiner.on('&');
+
+    // mode 指定密文结构，旧标准的为C1C2C3，新的[《SM2密码算法使用规范》 GM/T 0009-2012]标准为C1C3C2
+    // 注意：我们采用C1C3C2，如果bcprov-jdk15on包版本太低(小于1.62)，则【不支持报文参数加密】
+    private static final boolean BIZ_PARAM_ENCRYPT_SUPPORTED = false;// 当前环境是否支持参数加密
+    // 根据mode不同，输出的密文C1C2C3排列顺序不同。C1为65字节第1字节为压缩标识，这里固定为0x04，后面64字节为xy分量各32字节。C3为32字节。C2长度与原文一致。
+    private static final ThreadLocal<SM2Engine> engineThreadLocal = new ThreadLocal<SM2Engine>() {
+        @Override
+        protected SM2Engine initialValue() {
+            // bcprov-jdk15on包版本太低(小于1.62时)，不支持报文参数加密
+            if (!BIZ_PARAM_ENCRYPT_SUPPORTED) {
+                return new SM2Engine();
+            } else {
+                //return new SM2Engine(SM2Engine.Mode.C1C3C2);
+            }
+            return null;
+        }
+    };
+
+
+
 
     public static void main(String[] args) throws Exception {
         // 加密会话密钥，可每笔调用都生成，也可以多笔公用一个，建议定时更换
@@ -106,7 +157,7 @@ public class YopRsaEncryptExample {
         getFormExample(YopRequestMethod.GET, "/rest/v1.0/test/errorcode2",
                 YopRequestContentType.FORM_URL_ENCODE, encryptKey);
 
-        // post请求，form参数
+        //post请求，form参数
         postFormExample(YopRequestMethod.POST, "/rest/v1.0/frontcashier/agreement/sign/confirm",
                 YopRequestContentType.FORM_URL_ENCODE, encryptKey);
 
@@ -160,6 +211,7 @@ public class YopRsaEncryptExample {
         }
     }
 
+
     private static Map<String, String> buildHeaders(YopRequestMethod httpMethod, String apiUri,
                                                     Multimap<String, String> params,
                                                     YopRequestContentType contentType, String content,
@@ -171,10 +223,12 @@ public class YopRsaEncryptExample {
         headers.put(YOP_REQUEST_ID, UUID.randomUUID().toString());
 
         // 加密头：请求参数不加密的情况, 也需设置加密头，用于响应结果加密
-        headers.put(YOP_ENCRYPT, buildEncryptHeader(encryptHeaders, encryptParams, encryptKey));
+        if (BIZ_PARAM_ENCRYPT_SUPPORTED) {
+            headers.put(YOP_ENCRYPT, buildEncryptHeader(encryptHeaders, encryptParams, encryptKey));
+        }
 
         // 摘要头
-        headers.put(YOP_CONTENT_SHA256, calculateContentHash(httpMethod, contentType, params, content));
+        headers.put(YOP_CONTENT_SM3, calculateContentHash(httpMethod, contentType, params, content));
 
         // 签名头
         headers.put(AUTHORIZATION, signRequest(httpMethod, apiUri, headers, params));
@@ -193,22 +247,22 @@ public class YopRsaEncryptExample {
         // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
 
         // 参数不加密-------------->开始
-//        params.put("parentMerchant", "10080041523");
-//        params.put("merchantNo", "10080041523");
-//        params.put("smsCode", "11111131");
-//        params.put("merchantFlowId", "11111131");
+        params.put("parentMerchant", "10080041523");
+        params.put("merchantNo", "10080041523");
+        params.put("smsCode", "11111131");
+        params.put("merchantFlowId", "11111131");
         // 参数不加密-------------->结束
 
 
         // 参数加密-------------->开始
-        params.put("parentMerchant", encryptParam(encryptKey , "10080041523" ));
-        params.put("merchantNo", encryptParam(encryptKey , "10080041523" ));
-        params.put("smsCode", encryptParam(encryptKey , "11111131" ));
-        params.put("merchantFlowId", encryptParam(encryptKey , "111111" ));
-        encryptParams.add("parentMerchant");
-        encryptParams.add("merchantNo");
-        encryptParams.add("smsCode");
-        encryptParams.add("merchantFlowId");
+//        params.put("parentMerchant", encryptParam(encryptKey , "10080041523" ));
+//        params.put("merchantNo", encryptParam(encryptKey , "10080041523" ));
+//        params.put("smsCode", encryptParam(encryptKey , "11111131" ));
+//        params.put("merchantFlowId", encryptParam(encryptKey , "111111" ));
+//        encryptParams.add("parentMerchant");
+//        encryptParams.add("merchantNo");
+//        encryptParams.add("smsCode");
+//        encryptParams.add("merchantFlowId");
         // 参数加密-------------->结束
 
         // 请求头
@@ -241,12 +295,12 @@ public class YopRsaEncryptExample {
         // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
 
         // 参数不加密--------------->开始
-//        params.put("clientId", APP_KEY);
+        params.put("clientId", APP_KEY);
         // 参数不加密--------------->结束
 
         // 参数加密--------------->开始
-        params.put("clientId", encryptParam(encryptKey, APP_KEY));
-        encryptParams.add("clientId");
+//        params.put("clientId", encryptParam(encryptKey, APP_KEY));
+//        encryptParams.add("clientId");
         // 参数加密--------------->结束
 
         // 请求头
@@ -314,13 +368,13 @@ public class YopRsaEncryptExample {
         // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
         String finalJsonContent
                 // 不加密------------------->开始
-//            = plainJsonContent;
-                // 不加密------------------->结束
+                = plainJsonContent;
+        // 不加密------------------->结束
 
 
-                // 加密-------------------->开始
-                = encryptJsonContent;
-        encryptParams.add("$"); // 目前json推荐整体加密，$代表整体加密
+        // 加密-------------------->开始
+//              = encryptJsonContent;
+//        encryptParams.add("$"); // 目前json推荐整体加密，$代表整体加密
         // 加密-------------------->结束
 
         // 请求头
@@ -346,6 +400,7 @@ public class YopRsaEncryptExample {
     private static void downloadExample(YopRequestMethod requestMethod, String requestUri,
                                         YopRequestContentType requestContentType,
                                         String encryptKey) throws Exception {
+
         // 根据实际情况来，【文件下载接口】可能是post方法，请求报文可能是form，也可能是json，可参考其他方式的入参处理
         // 此处仅演示文件响应流的处理
 
@@ -356,12 +411,12 @@ public class YopRsaEncryptExample {
 
         // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
         // 不加密------------------->开始
-//        params.put("fileName", "wym-test.txt");
+        params.put("fileName", "wym-test.txt");
         // 不加密------------------->结束
 
         // 加密--------------------->开始
-        params.put("fileName", encryptParam(encryptKey, "wym-test.txt"));
-        encryptParams.add("fileName");
+//        params.put("fileName", encryptParam(encryptKey, "wym-test.txt"));
+//        encryptParams.add("fileName");
         // 加密--------------------->结束
 
         // 请求头
@@ -390,7 +445,7 @@ public class YopRsaEncryptExample {
     private static final String YOP_SDK_LANGS = "x-yop-sdk-langs";
     private static final String YOP_REQUEST_ID = "x-yop-request-id";
     private static final String YOP_APPKEY = "x-yop-appkey";
-    private static final String YOP_CONTENT_SHA256 = "x-yop-content-sha256";
+    private static final String YOP_CONTENT_SM3 = "x-yop-content-sm3";
     private static final String YOP_ENCRYPT = "x-yop-encrypt";
     private static final String AUTHORIZATION = "Authorization";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
@@ -399,7 +454,7 @@ public class YopRsaEncryptExample {
     static {
         DEFAULT_HEADERS_TO_SIGN.add(YOP_REQUEST_ID);
         DEFAULT_HEADERS_TO_SIGN.add(YOP_APPKEY);
-        DEFAULT_HEADERS_TO_SIGN.add(YOP_CONTENT_SHA256);
+        DEFAULT_HEADERS_TO_SIGN.add(YOP_CONTENT_SM3);
         DEFAULT_HEADERS_TO_SIGN.add(YOP_ENCRYPT);
     }
 
@@ -413,7 +468,7 @@ public class YopRsaEncryptExample {
         String canonicalRequest = buildCanonicalRequest(requestMethod, requestUri, params, authString, headersToSign);
 
         // C.计算签名
-        String signature = encodeUrlSafeBase64(sign(canonicalRequest.getBytes(DEFAULT_ENCODING))) + "$" + "SHA256";
+        String signature = encodeUrlSafeBase64(sign(canonicalRequest.getBytes(DEFAULT_ENCODING))) + "$" + DEFAULT_DIGEST_ALG;
 
         // D.添加认证头
         return buildAuthHeader(authString, headersToSign, signature);
@@ -424,57 +479,151 @@ public class YopRsaEncryptExample {
                                           String signature) {
         String signedHeaders = SIGNED_HEADER_STRING_JOINER.join(headersToSign.keySet());
         signedHeaders = signedHeaders.trim().toLowerCase();
-        return DEFAULT_AUTH_PREFIX_RSA2048 + " " + authString + "/" + signedHeaders + "/" + signature;
+        return DEFAULT_AUTH_PREFIX_SM2 + " " + authString + "/" + signedHeaders + "/" + signature;
+    }
+
+    // SM2
+    public static final SM2P256V1Curve CURVE = new SM2P256V1Curve();
+    public final static BigInteger SM2_ECC_N = CURVE.getOrder();
+    public final static BigInteger SM2_ECC_H = CURVE.getCofactor();
+    public final static BigInteger SM2_ECC_GX = new BigInteger(
+            "32C4AE2C1F1981195F9904466A39C9948FE30BBFF2660BE1715A4589334C74C7", 16);
+    public final static BigInteger SM2_ECC_GY = new BigInteger(
+            "BC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0", 16);
+    public static final ECPoint G_POINT = CURVE.createPoint(SM2_ECC_GX, SM2_ECC_GY);
+    public static final ECDomainParameters DOMAIN_PARAMS = new ECDomainParameters(CURVE, G_POINT,
+            SM2_ECC_N, SM2_ECC_H);
+    public static final int CURVE_LEN = getCurveLength(DOMAIN_PARAMS);
+    public static int getCurveLength(ECDomainParameters domainParams) {
+        return (domainParams.getCurve().getFieldSize() + 7) / 8;
     }
 
     private static byte[] sign(byte[] data) {
         try {
-            Signature signature = Signature.getInstance(DEFAULT_SIGN_ALG);
-            signature.initSign(string2PrivateKey(ISV_PRIVATE_KEY));
-            signature.update(data);
-            return signature.sign();
+            ECParameterSpec parameterSpec = ISV_PRIVATE_KEY.getParameters();
+            ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                    parameterSpec.getN(), parameterSpec.getH());
+            ECPrivateKeyParameters priKeyParameters = new ECPrivateKeyParameters(ISV_PRIVATE_KEY.getD(), domainParameters);
+            //der编码后的签名值
+            byte[] derSign = sign(priKeyParameters, null, data);
+
+            //der解码过程
+            ASN1Sequence as = DERSequence.getInstance(derSign);
+            byte[] rBytes = ((ASN1Integer) as.getObjectAt(0)).getValue().toByteArray();
+            byte[] sBytes = ((ASN1Integer) as.getObjectAt(1)).getValue().toByteArray();
+            //由于大数的补0规则，所以可能会出现33个字节的情况，要修正回32个字节
+            rBytes = fixToCurveLengthBytes(rBytes);
+            sBytes = fixToCurveLengthBytes(sBytes);
+            byte[] rawSign = new byte[rBytes.length + sBytes.length];
+            System.arraycopy(rBytes, 0, rawSign, 0, rBytes.length);
+            System.arraycopy(sBytes, 0, rawSign, rBytes.length, sBytes.length);
+            return rawSign;
         } catch (Exception e) {
             throw new RuntimeException("SystemError, Sign Fail, key:" + ISV_PRIVATE_KEY + ", ex:", e);
         }
     }
 
-    private static void verifyResponseSign(String signHeader, String content) throws UnsupportedEncodingException {
-        if (StringUtils.isBlank(signHeader) || StringUtils.isBlank(content)) {
-            System.out.println("Response Sign Skip, signature:" + signHeader + ", content:" + content);
-            return;
-        }
-        String signContent = content.replaceAll("[ \t\n]", "");
-        System.out.println("Response Sign Begin, signature:" + signHeader + ", content:" + signContent);
-        if (!verifySign(signContent.getBytes(DEFAULT_ENCODING), decodeBase64(signHeader), string2PublicKey(YOP_PUBLIC_KEY))) {
-            System.out.println("Response Sign Verify Fail");
-        } else {
-            System.out.println("Response Sign Verify Success");
+    private static boolean verifySign(String content, String signature, BCECPublicKey publicKey) {
+        try {
+            byte[] srcData = content.getBytes(DEFAULT_ENCODING);
+            byte[] signData = decodeBase64(signature);
+            ECParameterSpec parameterSpec = publicKey.getParameters();
+            ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                    parameterSpec.getN(), parameterSpec.getH());
+            ECPublicKeyParameters pubKeyParameters = new ECPublicKeyParameters(publicKey.getQ(), domainParameters);
+            return verify(pubKeyParameters, null, srcData, encodeSM2SignToDER(signData));
+        } catch (IOException e) {
+            throw new RuntimeException("UnexpectedError, VerifySign Fail, data:" +
+                    content + ", sign:" + signature + ", key:" + publicKey + ", ex:", e);
         }
     }
 
     /**
-     * 验证签名
+     * 把64字节的纯R+S字节数组编码成DER编码
      *
-     * @param data      数据
-     * @param sign      签名
-     * @param publicKey 公钥
-     * @return boolean
+     * @param rawSign 64字节数组形式的SM2签名值，前32字节为R，后32字节为S
+     * @return DER编码后的SM2签名值
+     * @throws IOException
      */
-    public static boolean verifySign(byte[] data, byte[] sign, PublicKey publicKey) {
-        try {
-            Signature signature = Signature.getInstance(DEFAULT_SIGN_ALG);
-            signature.initVerify(publicKey);
-            signature.update(data);
-            return signature.verify(sign);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+    private static byte[] encodeSM2SignToDER(byte[] rawSign) throws IOException {
+        //要保证大数是正数
+        BigInteger r = new BigInteger(1, extractBytes(rawSign, 0, 32));
+        BigInteger s = new BigInteger(1, extractBytes(rawSign, 32, 32));
+        ASN1EncodableVector v = new ASN1EncodableVector();
+        v.add(new ASN1Integer(r));
+        v.add(new ASN1Integer(s));
+        return new DERSequence(v).getEncoded(ASN1Encoding.DER);
     }
 
-    private static PrivateKey string2PrivateKey(String priKey) {
+    private static byte[] extractBytes(byte[] src, int offset, int length) {
+        byte[] result = new byte[length];
+        System.arraycopy(src, offset, result, 0, result.length);
+        return result;
+    }
+
+    /**
+     * 验签
+     *
+     * @param pubKeyParameters 公钥
+     * @param withId           可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
+     * @param srcData          原文
+     * @param sign             DER编码的签名值
+     * @return 验签成功返回true，失败返回false
+     */
+    public static boolean verify(ECPublicKeyParameters pubKeyParameters, byte[] withId, byte[] srcData, byte[] sign) {
+        SM2Signer signer = new SM2Signer();
+        CipherParameters param;
+        if (withId != null) {
+            param = new ParametersWithID(pubKeyParameters, withId);
+        } else {
+            param = pubKeyParameters;
+        }
+        signer.init(false, param);
+        signer.update(srcData, 0, srcData.length);
+        return signer.verifySignature(sign);
+    }
+
+    private static byte[] fixToCurveLengthBytes(byte[] src) {
+        if (src.length == CURVE_LEN) {
+            return src;
+        }
+
+        byte[] result = new byte[CURVE_LEN];
+        if (src.length > CURVE_LEN) {
+            System.arraycopy(src, src.length - result.length, result, 0, result.length);
+        } else {
+            System.arraycopy(src, 0, result, result.length - src.length, src.length);
+        }
+        return result;
+    }
+
+    /**
+     * 签名
+     *
+     * @param priKeyParameters 私钥
+     * @param withId           可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
+     * @param srcData          源数据
+     * @return DER编码后的签名值
+     * @throws CryptoException
+     */
+    public static byte[] sign(ECPrivateKeyParameters priKeyParameters, byte[] withId, byte[] srcData)
+            throws CryptoException {
+        SM2Signer signer = new SM2Signer();
+        CipherParameters param;
+        ParametersWithRandom pwr = new ParametersWithRandom(priKeyParameters, new SecureRandom());
+        if (withId != null) {
+            param = new ParametersWithID(pwr, withId);
+        } else {
+            param = pwr;
+        }
+        signer.init(true, param);
+        signer.update(srcData, 0, srcData.length);
+        return signer.generateSignature();
+    }
+
+    private static BCECPrivateKey string2PrivateKey(String priKey) {
         try {
-            return KeyFactory.getInstance(RSA).generatePrivate(
+            return (BCECPrivateKey)KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME).generatePrivate(
                     new PKCS8EncodedKeySpec(decodeBase64(priKey)));
         } catch (Exception e) {
             throw new RuntimeException("ConfigProblem, IsvPrivateKey ParseFail, value:" + priKey + ", ex:", e);
@@ -687,7 +836,7 @@ public class YopRsaEncryptExample {
 
     private static byte[] digest(InputStream input) {
         try {
-            MessageDigest md = MessageDigest.getInstance(DEFAULT_DIGEST_ALG);
+            MessageDigest md = MessageDigest.getInstance(DEFAULT_DIGEST_ALG, BouncyCastleProvider.PROVIDER_NAME);
             DigestInputStream digestInputStream = new DigestInputStream(input, md);
             byte[] buffer = new byte[1024];
             while (digestInputStream.read(buffer) > -1) {}
@@ -703,59 +852,72 @@ public class YopRsaEncryptExample {
      * yop-encrypt-v1/{服务端证书序列号}/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必填)}/{encryptHeaders}/{encryptParams}
      */
     public static String buildEncryptHeader(Set<String> encryptHeaders, Set<String> encryptParams,
-                                            String aesKey) throws Exception {
+                                            String sm4Key) throws Exception {
 
         return  "yop-encrypt-v1" + SLASH +
-                EMPTY + SLASH + //rsa 为空
-                StringUtils.replace(AES_ENCRYPT_ALG, SLASH, UNDER_LINE) + SLASH +
-                encodeUrlSafeBase64(encryptKey(decodeBase64(aesKey), string2PublicKey(YOP_PUBLIC_KEY))) + SLASH +
-                EMPTY + SLASH +
+                YOP_PUBLIC_KEY_SERIAL_NO + SLASH + //平台SM2证书序列号
+                StringUtils.replace(SM4_CBC_PKCS5PADDING, SLASH, UNDER_LINE) + SLASH +
+                encodeUrlSafeBase64(encryptKey(decodeBase64(sm4Key))) + SLASH +
+                encodeUrlSafeBase64(SM4_IV) + SEMICOLON + EMPTY + SLASH +
                 STREAM + SLASH +
                 StringUtils.join(encryptHeaders, SEMICOLON) + SLASH +
                 encodeUrlSafeBase64(StringUtils.join(encryptParams, SEMICOLON).getBytes(DEFAULT_ENCODING));
     }
 
-    public static PublicKey string2PublicKey(String pubKey) {
+    public static BCECPublicKey string2PublicKey(String pubKey) {
         try {
-            return KeyFactory.getInstance(RSA).generatePublic(
+            return (BCECPublicKey) KeyFactory.getInstance("EC").generatePublic(
                     new X509EncodedKeySpec(decodeBase64(pubKey)));
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             throw new RuntimeException("ConfigProblem, YopPublicKey ParseFail, value:" + pubKey + ", ex:", e);
         }
     }
 
-    private static byte[] encryptKey(byte[] data, Key key) {
-        Cipher cipher;
+    private static byte[] encryptKey(byte[] sm4Key) {
         try {
-            cipher = Cipher.getInstance(RSA_ENCRYPT_ALG);
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            return cipher.doFinal(data);
-        } catch (Exception e) {
-            throw new RuntimeException("SystemError, Encrypt Fail, key:" + key + "ex:", e);
+            SM2Engine engine = engineThreadLocal.get();
+            ECPublicKeyParameters pubKeyParameters = convertPublicKeyToParameters();
+            ParametersWithRandom pwr = new ParametersWithRandom(pubKeyParameters, new SecureRandom());
+            engine.init(true, pwr);
+            return engine.processBlock(sm4Key, 0, sm4Key.length);
+        } catch (Throwable e) {
+            throw new RuntimeException("SystemError, Encrypt Fail, publicKey:" + YOP_PUBLIC_KEY, e);
         }
     }
 
-    private static String encryptParam(String aesKey, String plain) throws Exception {
-        final Cipher cipher = getInitializedCipher(Cipher.ENCRYPT_MODE, aesKey);
-        return encodeUrlSafeBase64(cipher.doFinal(plain.getBytes("UTF-8")));
+    private static ECPublicKeyParameters convertPublicKeyToParameters() {
+        ECParameterSpec parameterSpec = YOP_PUBLIC_KEY.getParameters();
+        ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                parameterSpec.getN(), parameterSpec.getH());
+        return new ECPublicKeyParameters(YOP_PUBLIC_KEY.getQ(), domainParameters);
     }
 
-    private static String decryptParam(String aesKey, String encryptContent) throws Exception {
-        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
+    private static String encryptParam(String sm4Key, String plain) throws Exception {
+        if (BIZ_PARAM_ENCRYPT_SUPPORTED) {
+            final Cipher cipher = getInitializedCipher(Cipher.ENCRYPT_MODE, sm4Key);
+            return encodeUrlSafeBase64(cipher.doFinal(plain.getBytes("UTF-8")));
+        } else {
+            return plain;
+        }
+    }
+
+    private static String decryptParam(String sm4Key, String encryptContent) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, sm4Key);
         return new String(cipher.doFinal(decodeBase64(encryptContent)), "UTF-8");
     }
 
-    private static InputStream decryptStream(String aesKey, InputStream encryptStream) throws Exception {
-        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
+    private static InputStream decryptStream(String sm4Key, InputStream encryptStream) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, sm4Key);
         return new CipherInputStream(encryptStream, cipher);
     }
 
-    private static Cipher getInitializedCipher(int mode, String aesKey) {
+    private static Cipher getInitializedCipher(int mode, String sm4Key) {
         try {
-            byte[] key = decodeBase64(aesKey);
-            Cipher cipher = Cipher.getInstance(AES_ENCRYPT_ALG);
-            Key secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(mode, secretKey);
+            byte[] key = decodeBase64(sm4Key);
+            Cipher cipher = Cipher.getInstance(SM4_CBC_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME);
+            IvParameterSpec spec = new IvParameterSpec(SM4_IV);
+            Key secretKey = new SecretKeySpec(key, "SM4");
+            cipher.init(mode, secretKey, spec);
             return cipher;
         } catch (Throwable throwable) {
             throw new RuntimeException("error happened when initialize cipher", throwable);
@@ -766,10 +928,10 @@ public class YopRsaEncryptExample {
         return Base64.encodeBase64URLSafeString(input);
     }
 
-    private static byte[] generateRandomKey() throws NoSuchAlgorithmException {
+    private static byte[] generateRandomKey() throws NoSuchAlgorithmException, NoSuchProviderException {
         //实例化
-        KeyGenerator generator = KeyGenerator.getInstance("AES");
-        //设置密钥长度
+        KeyGenerator generator = KeyGenerator.getInstance("SM4", BouncyCastleProvider.PROVIDER_NAME);
+        //设置密钥长度，SM4算法目前只支持128位（即密钥16字节）
         generator.init(128);
         //生成密钥
         return generator.generateKey().getEncoded();
@@ -830,7 +992,8 @@ public class YopRsaEncryptExample {
             headers.put(header.getName(), header.getValue());
         }
         String encryptHeader = headers.get("x-yop-encrypt"),// 加密头
-                signHeader = headers.get("x-yop-sign"); //签名头
+                signHeader = headers.get("x-yop-sign"), //签名头
+                signSerialNo = headers.get("x-yop-sign-serial-no"); //签名序列号，可能会变
 
         boolean isEncryptResponse = StringUtils.isNotBlank(encryptHeader);
 
@@ -843,7 +1006,7 @@ public class YopRsaEncryptExample {
                 if (isJsonResponse(httpResponse)) {
                     String content = IOUtils.toString(entity.getContent(), DEFAULT_ENCODING);
                     System.out.println("Request success, response:" + content);
-                    verifyResponseSign(signHeader, content);
+                    verifyResponseSign(signHeader, content, signSerialNo);
                     final JsonNode bizData = OBJECT_MAPPER.readTree(content).get("result");
                     if (isEncryptResponse) {
                         System.out.println("Response decrypt success, bizData:" + decryptParam(encryptKey, bizData.asText()));
@@ -868,7 +1031,7 @@ public class YopRsaEncryptExample {
             if (entity.getContent() != null) {
                 String content = IOUtils.toString(entity.getContent(), DEFAULT_ENCODING);
                 System.out.println("Request Fail, response:" + content);
-                verifyResponseSign(signHeader, content);
+                verifyResponseSign(signHeader, content, signSerialNo);
                 return;
             } else {
                 throw new RuntimeException("ResponseError, Empty Content, httpStatusCode:" + httpResponse.getStatusLine().getStatusCode());
@@ -877,6 +1040,23 @@ public class YopRsaEncryptExample {
             throw new RuntimeException("Response Error, statusCode:" + statusCode);
         }
         throw new RuntimeException("ReqParam Illegal, Bad Request, statusCode:" + statusCode);
+    }
+
+    private static void verifyResponseSign(String signHeader, String content, String signSerialNo) {
+        if (StringUtils.isBlank(signHeader) || StringUtils.isBlank(content)|| StringUtils.isBlank(signSerialNo)) {
+            System.out.println("Response Sign Skip, signature:" + signHeader + ", content:" + content + ", signSerialNo:" + signSerialNo);
+            return;
+        }
+        String signContent = content.replaceAll("[ \t\n]", "");
+        System.out.println("Response Sign Begin, signature:" + signHeader + ", content:" + signContent + ", signSerialNo:" + signSerialNo);
+        if (!YOP_PUBLIC_KEY_MAP.containsKey(signSerialNo)) {
+            System.out.println("Response Sign Skip verify, No YopPublicKey Found");
+        }
+        if (!verifySign(signContent, signHeader, YOP_PUBLIC_KEY_MAP.get(signSerialNo))) {
+            System.out.println("Response Sign Verify Fail");
+        } else {
+            System.out.println("Response Sign Verify Success");
+        }
     }
 
     /**
@@ -911,7 +1091,7 @@ public class YopRsaEncryptExample {
             IOUtils.copy(fileContent, Files.newOutputStream(tmpFile.toPath()));
             return tmpFile;
         } catch (Throwable ex) {
-            throw new RuntimeException("fail to save file", ex);
+            throw new RuntimeException("fail to save file");
         } finally {
             closeQuietly(fileContent);
         }
@@ -989,6 +1169,7 @@ public class YopRsaEncryptExample {
         }
     }
 
+
     // 附录：jar包依赖情况
     /**
      * <dependency>
@@ -1036,6 +1217,16 @@ public class YopRsaEncryptExample {
      *             <groupId>com.fasterxml.jackson.core</groupId>
      *             <artifactId>jackson-databind</artifactId>
      *             <version>2.13.2</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.bouncycastle</groupId>
+     *             <artifactId>bcprov-jdk15on</artifactId>
+     *             <version>1.67</version>
+     *         </dependency>
+     *         <dependency>
+     *             <groupId>org.bouncycastle</groupId>
+     *             <artifactId>bcpkix-jdk15on</artifactId>
+     *             <version>1.67</version>
      *         </dependency>
      */
 }

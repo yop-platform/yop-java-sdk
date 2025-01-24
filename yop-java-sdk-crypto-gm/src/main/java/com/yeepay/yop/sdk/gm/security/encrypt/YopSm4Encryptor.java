@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.yeepay.yop.sdk.YopConstants.SM4_CBC_PKCS5PADDING;
+import static com.yeepay.yop.sdk.YopConstants.SM4_ECB_PKCS5PADDING;
 
 /**
  * title: 对称加密器<br>
@@ -61,6 +62,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Map<String, Cipher> map = Maps.newHashMap();
             try {
                 map.put(SM4_CBC_PKCS5PADDING, Cipher.getInstance(SM4_CBC_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME));
+                map.put(SM4_ECB_PKCS5PADDING, Cipher.getInstance(SM4_ECB_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME));
                 map.put(ALGORITHM_NAME_GCM_NOPADDING, Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME));
             } catch (Exception e) {
                 throw new YopClientException("SystemError, YopSm4Encryptor InitFail, ex:", e);
@@ -71,7 +73,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
 
     @Override
     public List<String> supportedAlgs() {
-        return Arrays.asList(SM4_CBC_PKCS5PADDING, ALGORITHM_NAME_GCM_NOPADDING);
+        return Arrays.asList(SM4_CBC_PKCS5PADDING, SM4_ECB_PKCS5PADDING, ALGORITHM_NAME_GCM_NOPADDING);
     }
 
     @Override
