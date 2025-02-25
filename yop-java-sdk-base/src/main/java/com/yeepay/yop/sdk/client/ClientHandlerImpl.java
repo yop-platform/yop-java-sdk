@@ -23,6 +23,8 @@ import com.yeepay.yop.sdk.client.router.YopRouter;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
 import com.yeepay.yop.sdk.exception.*;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.ExecutionContext;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopHttpClient;
@@ -40,6 +42,7 @@ import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 import com.yeepay.yop.sdk.sentinel.YopSph;
 import com.yeepay.yop.sdk.utils.ClientUtils;
+import com.yeepay.yop.sdk.utils.YopTraceUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -194,7 +197,8 @@ public class ClientHandlerImpl implements ClientHandler {
                     invoker.addException(invoker.getExceptionAnalyzer().analyze(hostBlockException));
                     throw hostBlockException;
                 }
-                throw new YopUnknownException("UnExpected Error, ", ex);
+                // ClientHandlerImpl.doExecute封装后，理论上不会到这里
+                throw new YopUnknownException("UnExpectedError, cause:" + ex.getMessage(), ex, request.getRequestId());
             } finally {
                 if (null != uriResource && null != uriResource.getCallback()) {
                     uriResource.getCallback().notify(successInvoked);
@@ -230,9 +234,9 @@ public class ClientHandlerImpl implements ClientHandler {
         } catch (YopHttpException httpException) {//HTTP调用异常
             throwable = httpException;
             throw httpException;
-        } catch (Throwable ex) {// 非预期异常
+        } catch (Throwable ex) {// 非预期异常，com.yeepay.yop.sdk.http.YopHttpClient.execute包装后，理论上不会到这里
             throwable = ex;
-            throw new YopUnknownException("UnExpected Error, ", ex);
+            throw new YopUnknownException("UnExpectedError, cause:" + ex.getMessage(), ex, request.getRequestId());
         } finally {
             String result = "success";
             if (null != throwable) {
@@ -267,17 +271,22 @@ public class ClientHandlerImpl implements ClientHandler {
 
         @Override
         public Output invoke() {
-            // 准备http参数
-            Request<Input> request = getInput().getRequestMarshaller().marshall(getInput().getInput());
-            request.setEndpoint(getUriResource().getResource());
-            request.addHeader(Headers.YOP_SDK_SOURCE, sdkSource);
+            try {
+                // 准备http参数
+                Request<Input> request = getInput().getRequestMarshaller().marshall(getInput().getInput());
+                YopTraceUtils.setCurrentRequestId(request.getRequestId());
+                request.setEndpoint(getUriResource().getResource());
+                request.addHeader(Headers.YOP_SDK_SOURCE, sdkSource);
 
-            // 发起http调用
-            if (isCircuitBreakerEnable() && null != circuitBreaker && !BooleanUtils.isFalse(request.getOriginalRequestObject()
-                    .getRequestConfig().getEnableCircuitBreaker())) {
-                return circuitBreaker.execute(request, this);
-            } else {
-                return doExecute(request, this);
+                // 发起http调用
+                if (isCircuitBreakerEnable() && null != circuitBreaker && !BooleanUtils.isFalse(request.getOriginalRequestObject()
+                        .getRequestConfig().getEnableCircuitBreaker())) {
+                    return circuitBreaker.execute(request, this);
+                } else {
+                    return doExecute(request, this);
+                }
+            } finally {
+                YopTraceUtils.removeCurrentRequestId();
             }
         }
     }
@@ -286,7 +295,7 @@ public class ClientHandlerImpl implements ClientHandler {
             ClientExecutionParams<Input, Output> executionParams) {
         AuthorizationReq authorizationReq = getAuthorizationReq(executionParams.getInput());
         if (authorizationReq == null) {
-            throw new YopClientException("no authenticate req defined");
+            throw new IllegalParamFormatException("AuthorizationReq", "no authenticate req defined");
         } else {
             YopRequestConfig requestConfig = executionParams.getInput().getRequestConfig();
             YopCredentials<?> credential = getCredentials(provider, env, requestConfig, authorizationReq);
@@ -345,7 +354,7 @@ public class ClientHandlerImpl implements ClientHandler {
                 return authorizationReq;
             }
         }
-        throw new YopClientException("can not computeSecurityReq, please check your cert config");
+        throw new IllegalParamFormatException("AuthorizationReq", "can not computeSecurityReq, please check your cert config");
     }
 
     private List<AuthorizationReq> checkAuthReqsByApi(String operationId) {
@@ -360,7 +369,7 @@ public class ClientHandlerImpl implements ClientHandler {
     private AuthorizationReq checkCustomSecurityReq(String customSecurityReq) {
         AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(customSecurityReq);
         if (authorizationReq == null) {
-            throw new YopClientException("unsupported customSecurityReq:" + customSecurityReq);
+            throw new IllegalParamFormatException("CustomAuthorizationReq", "unsupported customSecurityReq:" + customSecurityReq);
         }
         return authorizationReq;
     }
@@ -368,7 +377,7 @@ public class ClientHandlerImpl implements ClientHandler {
     private List<CertTypeEnum> checkAvailableCerts(String appKey, String provider, String env) {
         List<CertTypeEnum> configPrivateCerts = yopCredentialsProvider.getSupportCertTypes(provider, env, appKey);
         if (CollectionUtils.isEmpty(configPrivateCerts)) {
-            throw new YopClientException("can not find private key for provider:"
+            throw new IllegalConfigFormatException("isv_private_key", "can not find private key for provider:"
                     + provider + ",env:" + env + ",appKey:" + appKey);
         }
         return configPrivateCerts;

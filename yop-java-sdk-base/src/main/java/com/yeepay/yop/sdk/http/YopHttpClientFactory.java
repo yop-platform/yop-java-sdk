@@ -5,7 +5,7 @@ import com.yeepay.yop.sdk.base.config.provider.YopSdkConfigProviderRegistry;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.client.support.ClientConfigurationSupport;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
@@ -14,6 +14,7 @@ import java.util.ServiceLoader;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_PROVIDER;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COLON;
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: YopHttpClient工厂<br>
@@ -37,7 +38,7 @@ public class YopHttpClientFactory {
             httpClientProviderMap.put(yopHttpClientProvider.name(), yopHttpClientProvider);
         }
         if (httpClientProviderMap.isEmpty()) {
-            throw new YopClientException("SetUpProblem，YopHttpClientProvider NotFound!");
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "SetUpProblem，YopHttpClientProvider NotFound!");
         }
     }
 
@@ -61,7 +62,7 @@ public class YopHttpClientFactory {
     public static YopHttpClient getClient(ClientConfiguration clientConfig) {
         final YopHttpClientProvider yopHttpClientProvider = httpClientProviderMap.get(clientConfig.getClientImpl());
         if (null == yopHttpClientProvider) {
-            throw new YopClientException("SetUpProblem, YopHttpClientProvider NotFound, name:" + clientConfig.getClientImpl());
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "SetUpProblem, YopHttpClientProvider NotFound, name:" + clientConfig.getClientImpl());
         }
         return yopHttpClientProvider.get(clientConfig);
     }

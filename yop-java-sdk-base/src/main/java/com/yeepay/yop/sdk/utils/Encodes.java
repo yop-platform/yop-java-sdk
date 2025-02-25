@@ -1,6 +1,6 @@
 package com.yeepay.yop.sdk.utils;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -11,6 +11,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.Key;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 封装各种格式的编码解码工具类<br>
@@ -57,7 +59,7 @@ public class Encodes {
         try {
             return Hex.decodeHex(input.toCharArray());
         } catch (DecoderException e) {
-            throw new YopClientException("Decode Hex fails.", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "Decode Hex fails, cause:" + e.getMessage(), e);
         }
     }
 
@@ -128,7 +130,7 @@ public class Encodes {
         try {
             return URLEncoder.encode(part, DEFAULT_URL_ENCODING);
         } catch (UnsupportedEncodingException e) {
-            throw new YopClientException("Url encode fails.", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "Url encode fails, cause:" + e.getMessage(), e);
         }
     }
 
@@ -140,7 +142,7 @@ public class Encodes {
         try {
             return URLDecoder.decode(part, DEFAULT_URL_ENCODING);
         } catch (UnsupportedEncodingException e) {
-            throw new YopClientException("Url Decode fails.", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "Url Decode fails, cause:" + e.getMessage(), e);
         }
     }
 

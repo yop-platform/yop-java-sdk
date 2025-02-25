@@ -9,7 +9,11 @@ import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
@@ -121,7 +125,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
 
     private boolean recordMainServer(URI serverRoot, ServerRootType serverRootType, Map<ServerRootType, URI> mainServers, boolean force) {
         if (null == serverRoot) {
-            throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
+            throw new IllegalConfigFormatException("server_root", "Config Error, No ServerRoot Found, type:" + serverRootType);
         }
         final URI oldMain = mainServers.putIfAbsent(serverRootType, serverRoot);
         if (LOGGER.isDebugEnabled()) {
@@ -210,7 +214,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
         if (StringUtils.isNotBlank(requestConfig.getServerRoot())) {
             URI serverRoot = CheckUtils.checkServerRoot(requestConfig.getServerRoot());
             if (isExcludeServerRoots(serverRoot, excludeServerRoots)) {
-                throw new YopClientException("RequestConfig Error, serverRoot excluded:" + serverRoot);
+                throw new IllegalParamFormatException("serverRoot", "RequestConfig Error, serverRoot excluded:" + serverRoot);
             }
             collectServerRootType(space.getProvider(), space.getEnv(), serverRoot, serverRootType);
             return new UriResource(serverRoot);
@@ -220,7 +224,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             if (independentApiGroups.contains(apiGroup)) {
                 final URI independentServerRoot = independentServerRoot(apiGroup, request);
                 if (isExcludeServerRoots(independentServerRoot, excludeServerRoots)) {
-                    throw new YopClientException("Config Error, ServerRoot excluded:" + independentServerRoot);
+                    throw new IllegalConfigFormatException("serverRoot", "Config Error, ServerRoot excluded:" + independentServerRoot);
                 }
                 return new UriResource(independentServerRoot);
             }
@@ -228,7 +232,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
             // 主域名准备
             URI mainServer = this.serverRootRouting.getMainServers().get(serverRootType);
             if (null == mainServer) {
-                throw new YopClientException("Config Error, Main ServerRoot NotFound" + serverRootType);
+                throw new IllegalConfigFormatException("server_root", "Config Error, Main ServerRoot NotFound" + serverRootType);
             }
 
             // 主域名正常
@@ -263,7 +267,7 @@ public class SimpleGateWayRouter implements GateWayRouter {
                     getIndependentApiGroupHost(apiGroup, serverRoot.getHost(), request.isYosRequest()),
                     serverRoot.getPort(), serverRoot.getPath(), serverRoot.getQuery(), serverRoot.getFragment());
         } catch (Exception ex) {
-            throw new YopClientException("Route Request Failure, ex:", ex);
+            throw new IllegalParamFormatException("serverRoot", "Route Request Failure, ex:", ex);
         }
     }
 

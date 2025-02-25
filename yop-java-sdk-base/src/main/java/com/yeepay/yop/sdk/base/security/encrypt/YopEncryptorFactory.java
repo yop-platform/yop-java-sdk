@@ -5,12 +5,14 @@
 package com.yeepay.yop.sdk.base.security.encrypt;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
 
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 加解密器工厂类<br>
@@ -80,7 +82,7 @@ public class YopEncryptorFactory {
     public static YopEncryptor getEncryptor(String encryptAlg) {
         final YopEncryptor yopEncryptor = YOP_ENCRYPTOR_MAP.get(encryptAlg);
         if (null == yopEncryptor) {
-            throw new YopClientException("ConfigProblem, YopEncryptor NotFound, encryptAlg:" + encryptAlg);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, YopEncryptor NotFound, encryptAlg:" + encryptAlg);
         }
         return yopEncryptor;
     }

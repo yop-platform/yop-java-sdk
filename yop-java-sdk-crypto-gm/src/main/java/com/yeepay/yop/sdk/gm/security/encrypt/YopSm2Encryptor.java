@@ -8,7 +8,8 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import org.bouncycastle.crypto.engines.SM2Engine;
@@ -75,7 +76,8 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
             engine.init(true, pwr);
             return engine.processBlock(plain, 0, plain.length);
         } catch (Throwable e) {
-            throw new YopClientException("SystemError, Encrypt Fail, options:" + options, e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Encrypt Fail, options:" + options + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -94,7 +96,8 @@ public class YopSm2Encryptor extends YopEncryptorAdaptor {
             engine.init(false, priKeyParameters);
             return engine.processBlock(cipher, 0, cipher.length);
         } catch (Throwable e) {
-            throw new YopClientException("SystemError, Decrypt Fail, options:" + options, e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Decrypt Fail, options:" + options + ", cause:" + e.getMessage(), e);
         }
     }
 

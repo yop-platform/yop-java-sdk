@@ -2,7 +2,7 @@ package com.yeepay.yop.sdk.utils;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.model.yos.YosDownloadInputStream;
 import com.yeepay.yop.sdk.model.yos.YosDownloadResponse;
 import org.apache.commons.io.IOUtils;
@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 
 import static com.yeepay.yop.sdk.YopConstants.FILE_PROTOCOL_PREFIX;
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: <br>
@@ -174,7 +175,7 @@ public final class FileUtils {
             return tmpFile;
         } catch (Throwable ex) {
             LOGGER.error("fail to save file, response:" + yosDownloadResponse, ex);
-            throw new YopClientException("fail to save file, response:" + yosDownloadResponse);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "fail to save file, response:" + yosDownloadResponse);
         } finally {
             StreamUtils.closeQuietly(yosDownloadInputStream);
         }

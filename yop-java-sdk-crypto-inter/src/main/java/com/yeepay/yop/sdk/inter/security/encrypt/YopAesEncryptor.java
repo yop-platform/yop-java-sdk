@@ -5,7 +5,9 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.Encodes;
@@ -43,7 +45,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
                 map.put(AES_ECB_PKCS5PADDING, Cipher.getInstance(AES_ECB_PKCS5PADDING));
                 map.put(AES, Cipher.getInstance(AES));
             } catch (Exception e) {
-                throw new YopClientException("SystemError, InitCipher Fail, ex:", e);
+                throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                        "SystemError, InitCipher Fail, cause:" + e.getMessage(), e);
             }
             return map;
         }
@@ -79,7 +82,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(Cipher.ENCRYPT_MODE, options);
             return initializedCipher.doFinal(plain);
         } catch (Throwable t) {
-            throw new YopClientException("SystemError, Encrypt Fail, options:" + options + ", ex:", t);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Encrypt Fail, options:" + options + ", cause:" + t.getMessage(), t);
         }
     }
 
@@ -87,7 +91,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
     public InputStream encrypt(InputStream plain, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("SystemError, Encrypt Chunked NotSupport, options:" + options);
+            throw new IllegalParamFormatException("BigParamEncryptMode",
+                    "SystemError, Encrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(plain, getInitializedCipher(Cipher.ENCRYPT_MODE, options, false));
     }
@@ -98,7 +103,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(Cipher.DECRYPT_MODE, options);
             return initializedCipher.doFinal(cipher);
         } catch (Throwable t) {
-            throw new YopClientException("SystemError, Decrypt Fail, options:" + options + ", ex:", t);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Decrypt Fail, options:" + options + ", cause:" + t.getMessage(), t);
         }
     }
 
@@ -106,7 +112,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
     public InputStream decrypt(InputStream cipher, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("SystemError, Decrypt Chunked NotSupport, options:" + options);
+            throw new IllegalParamFormatException("BigParamEncryptMode",
+                    "SystemError, Decrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(cipher, getInitializedCipher(Cipher.DECRYPT_MODE, options, false));
     }
@@ -124,7 +131,8 @@ public class YopAesEncryptor extends YopEncryptorAdaptor {
             cipher.init(mode, secretKey);
             return cipher;
         } catch (Throwable throwable) {
-            throw new YopClientException("error happened when initialize cipher", throwable);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "error happened when initialize cipher, cause:" + throwable.getMessage(), throwable);
         }
     }
 }

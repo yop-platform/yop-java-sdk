@@ -3,7 +3,7 @@ package com.yeepay.yop.sdk.internal;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
@@ -267,7 +267,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         try {
             files.add(new MultiPartFile(file));
         } catch (Exception ex) {
-            throw new YopClientException("ReqParam Illegal, FileParam, name:" + name + ", value:" + file, ex);
+            throw new IllegalParamFormatException(name, "ReqParam Illegal, FileParam, value:" + file, ex);
         }
     }
 
@@ -281,7 +281,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         try {
             files.add(new MultiPartFile(in));
         } catch (Exception ex) {
-            throw new YopClientException("ReqParam Illegal, InputStreamParam, name:" + name + ", ex:", ex);
+            throw new IllegalParamFormatException(name, "ReqParam Illegal, InputStreamParam, ex:", ex);
         }
     }
 
@@ -295,7 +295,7 @@ public class DefaultRequest<T extends BaseRequest> implements Request<T> {
         try {
             files.add(new MultiPartFile(fileParam.getFileExtName(), fileParam.getFileStream()));
         } catch (Exception ex) {
-            throw new YopClientException("ReqParam Illegal, InputStreamParam, name:" + name + ", ex:", ex);
+            throw new IllegalParamFormatException(name, "ReqParam Illegal, InputStreamParam, ex:", ex);
         }
     }
 

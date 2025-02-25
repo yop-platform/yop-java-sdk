@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.http.analyzer;
 
-import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
+import com.yeepay.yop.sdk.exception.io.YopIOException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.http.HttpStatus;
@@ -11,8 +11,6 @@ import com.yeepay.yop.sdk.model.YopErrorResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.yeepay.yop.sdk.constants.CharacterConstants.SLASH;
 
 /**
  * title:YopErrorResponseAnalyzer <br>
@@ -75,9 +73,11 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
             yse.setErrorType(YopServiceException.ErrorType.Service);
             throw yse;
         } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
-            throw new YopHttpException("ResponseError, Unexpected Response, statusCode:" + statusCode + ", resource:" + resource);
+            throw new YopIOException("ResponseError, Unexpected Response, statusCode:" + statusCode
+                    + ", resource:" + resource, YopIOException.IOExceptionEnum.UNKNOWN);
         } else {// 4xx
             final YopServiceException invokeEx = new YopServiceException("ReqParam Illegal, Bad Request, statusCode:" + statusCode + ", resource:" + resource);
+            invokeEx.setStatusCode(statusCode);
             invokeEx.setErrorType(YopServiceException.ErrorType.Client);
             throw invokeEx;
         }

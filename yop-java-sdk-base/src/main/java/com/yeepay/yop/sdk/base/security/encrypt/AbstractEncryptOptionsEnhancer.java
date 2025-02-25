@@ -5,7 +5,7 @@
 package com.yeepay.yop.sdk.base.security.encrypt;
 
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
 
@@ -23,7 +23,7 @@ public abstract class AbstractEncryptOptionsEnhancer implements EncryptOptionsEn
 
     protected boolean checkForEnhance(EncryptOptions source) {
         if (null == source.getCredentials()) {
-            throw new YopClientException("ParamProblem, EncryptOptionsCredentials IsNull, value:" + source);
+            throw new IllegalConfigFormatException("yop_public_key", "ParamProblem, EncryptOptionsCredentials IsNull, value:" + source);
         }
         if (source.getCredentials() instanceof YopSymmetricCredentials) {
             return true;

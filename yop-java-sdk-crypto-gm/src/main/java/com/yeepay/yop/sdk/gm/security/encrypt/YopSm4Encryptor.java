@@ -8,7 +8,9 @@ import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.gm.utils.Sm4Utils;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
@@ -65,7 +67,7 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
                 map.put(SM4_ECB_PKCS5PADDING, Cipher.getInstance(SM4_ECB_PKCS5PADDING, BouncyCastleProvider.PROVIDER_NAME));
                 map.put(ALGORITHM_NAME_GCM_NOPADDING, Cipher.getInstance(ALGORITHM_NAME_GCM_NOPADDING, BouncyCastleProvider.PROVIDER_NAME));
             } catch (Exception e) {
-                throw new YopClientException("SystemError, YopSm4Encryptor InitFail, ex:", e);
+                throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "SystemError, YopSm4Encryptor InitFail, ex:", e);
             }
             return map;
         }
@@ -92,7 +94,8 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(ENCRYPT_MODE, options);
             return initializedCipher.doFinal(plain);
         } catch (Throwable t) {
-            throw new YopClientException("SystemError, Encrypt Fail, options:" + options + ", ex:", t);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Encrypt Fail, options:" + options + ", cause:" + t.getMessage(), t);
         }
     }
 
@@ -100,7 +103,8 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
     public InputStream encrypt(InputStream plain, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("SystemError, Encrypt Chunked NotSupport, options:" + options);
+            throw new IllegalParamFormatException("BigParamEncryptMode",
+                    "SystemError, Encrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(plain, getInitializedCipher(ENCRYPT_MODE, options, false));
     }
@@ -111,7 +115,8 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             Cipher initializedCipher = getInitializedCipher(DECRYPT_MODE, options);
             return initializedCipher.doFinal(cipher);
         } catch (Throwable t) {
-            throw new YopClientException("SystemError, Decrypt Fail, options:" + options, t);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Decrypt Fail, options:" + options + ", cause:" + t.getMessage(), t);
         }
     }
 
@@ -119,7 +124,8 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
     public InputStream decrypt(InputStream cipher, EncryptOptions options) {
         // TODO 支持chunked加密
         if (BigParamEncryptMode.chunked.equals(options.getBigParamEncryptMode())) {
-            throw new YopClientException("SystemError, Encrypt Chunked NotSupport, options:" + options);
+            throw new IllegalParamFormatException("BigParamEncryptMode",
+                    "SystemError, Encrypt Chunked NotSupport, options:" + options);
         }
         return new CipherInputStream(cipher, getInitializedCipher(DECRYPT_MODE, options, false));
     }
@@ -153,7 +159,8 @@ public class YopSm4Encryptor extends YopEncryptorAdaptor {
             cipher.init(mode, sm4Key);
             return cipher;
         } catch (Throwable throwable) {
-            throw new YopClientException("SystemError, InitCipher Fail, mode:" + mode +
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, InitCipher Fail, mode:" + mode +
                     ", options:" + encryptOptions + ", ex:", throwable);
         }
     }

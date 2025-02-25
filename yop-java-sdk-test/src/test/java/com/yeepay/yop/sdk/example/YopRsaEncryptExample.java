@@ -731,7 +731,8 @@ public class YopRsaEncryptExample {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
-            throw new RuntimeException("SystemError, Encrypt Fail, key:" + key + "ex:", e);
+            throw new RuntimeException("SystemError, Encrypt Fail, key:"
+                    + key + ", cause:" + e.getMessage(), e);
         }
     }
 

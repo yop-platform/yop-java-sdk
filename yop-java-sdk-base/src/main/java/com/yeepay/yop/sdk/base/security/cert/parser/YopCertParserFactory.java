@@ -5,14 +5,16 @@
 package com.yeepay.yop.sdk.base.security.cert.parser;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.security.cert.YopCertCategory;
-import com.yeepay.yop.sdk.exception.YopClientException;
-import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.security.CertTypeEnum;
+import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.ServiceLoader;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 密钥解析器工厂类<br>
@@ -60,7 +62,7 @@ public class YopCertParserFactory {
     public static YopCertParser getCertParser(String parserId) {
         final YopCertParser yopCertParser = YOP_CERT_PARSER_MAP.get(parserId);
         if (null == yopCertParser) {
-            throw new YopClientException("ConfigProblem, YopCertParser NotFound, parserId:" + parserId);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, YopCertParser NotFound, parserId:" + parserId);
         }
         return yopCertParser;
     }

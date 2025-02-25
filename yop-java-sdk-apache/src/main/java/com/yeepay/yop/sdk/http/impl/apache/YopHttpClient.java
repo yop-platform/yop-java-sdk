@@ -1,7 +1,9 @@
 package com.yeepay.yop.sdk.http.impl.apache;
 
 import com.yeepay.yop.sdk.client.ClientConfiguration;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.*;
 import com.yeepay.yop.sdk.internal.MultiPartFile;
 import com.yeepay.yop.sdk.internal.Request;
@@ -53,6 +55,7 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.yeepay.yop.sdk.YopConstants.*;
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: Yop http客户端<br>
@@ -170,7 +173,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
             SSLContext sslContext = getSSLContext();
             sslSocketFactory = new SSLConnectionSocketFactory(sslContext, HOSTNAME_VERIFIER_INSTANCE);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw new YopClientException("EnvProblem, Fail to Create SSLConnectionSocketFactory, ex:", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "EnvProblem, Fail to Create SSLConnectionSocketFactory, ex:", e);
         }
         RegistryBuilder registryBuilder = RegistryBuilder.<ConnectionSocketFactory>create().register(Protocol.HTTPS.toString(), sslSocketFactory)
                 .register(Protocol.HTTP.toString(), PlainConnectionSocketFactory.getSocketFactory());
@@ -302,7 +305,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
             } else if (request.getHttpMethod() == HttpMethodName.HEAD) {
                 httpRequest = new HttpHead(uri);
             } else {
-                throw new YopClientException("ReqParam Illegal, HttpMethod, name:" + request.getHttpMethod());
+                throw new IllegalParamFormatException("httpMethod", "ReqParam Illegal, HttpMethod, name:" + request.getHttpMethod());
             }
         }
 

@@ -2,7 +2,9 @@ package com.yeepay.yop.sdk.base.config.provider;
 
 import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: SDK 配置中心<br>
@@ -27,7 +29,7 @@ public class YopSdkConfigProviderRegistry {
      */
     public static void registerProvider(YopSdkConfigProvider provider) {
         if (provider == null) {
-            throw new YopClientException("SetUpProblem, Custom YopSdkConfigProvider IsNull.");
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "SetUpProblem, Custom YopSdkConfigProvider IsNull.");
         }
         customProvider = provider;
     }

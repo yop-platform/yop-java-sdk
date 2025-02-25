@@ -5,11 +5,13 @@
 package com.yeepay.yop.sdk.base.security.digest;
 
 import com.google.common.collect.Maps;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.security.digest.YopDigester;
-import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.util.Map;
 import java.util.ServiceLoader;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 摘要器工厂类<br>
@@ -58,7 +60,7 @@ public class YopDigesterFactory {
     public static YopDigester getDigester(String alg) {
         final YopDigester yopDigester = YOP_DIGESTER_MAP.get(alg);
         if (null == yopDigester) {
-            throw new YopClientException("ConfigProblem, YopDigester NotFound, alg:" + alg);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, YopDigester NotFound, alg:" + alg);
         }
         return yopDigester;
     }

@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.auth.signer.process;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 
 /**
  * title: YopSignProcessor<br/>
@@ -29,7 +30,7 @@ public interface YopSignProcessor {
      */
     default String sign(String content, CredentialsItem credentialsItem) {
         if (!isSupport(credentialsItem)) {
-            throw new YopClientException("ConfigProblem, CredentialsItem Type NotSupport, type:" + credentialsItem.getClass().getSimpleName());
+            throw new IllegalParamFormatException("CredentialsItem", "ConfigProblem, CredentialsItem Type NotSupport, type:" + credentialsItem.getClass().getSimpleName());
         }
         return doSign(content, credentialsItem);
     }
@@ -60,7 +61,7 @@ public interface YopSignProcessor {
         if (isSupport(credentialsItem)) {
             return doVerify(content, signature, credentialsItem);
         }
-        throw new YopClientException("ConfigProblem, CredentialsItem Type NotSupport, type:" + credentialsItem.getClass().getSimpleName());
+        throw new IllegalParamFormatException("CredentialsItem", "ConfigProblem, CredentialsItem Type NotSupport, type:" + credentialsItem.getClass().getSimpleName());
     }
 
     default boolean doVerify(String content, String signature, CredentialsItem credentialsItem) {

@@ -8,6 +8,7 @@ import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Base64;
 
 /**
  * title: <br/>
@@ -56,4 +57,8 @@ public class PKICredentialsItem implements CredentialsItem {
         return certType;
     }
 
+    @Override
+    public String toString() {
+        return null != publicKey ? "pubKey:" + Base64.getEncoder().encodeToString(publicKey.getEncoded()) : super.toString();
+    }
 }

@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.service;
 
 import com.yeepay.yop.sdk.base.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
+import com.yeepay.yop.sdk.config.provider.file.YopCertStore;
 import com.yeepay.yop.sdk.config.provider.file.YopProxyConfig;
 
 import java.util.Arrays;
@@ -38,6 +39,12 @@ public class CustomFixedSdkConfigProvider extends YopFixedSdkConfigProvider {
         proxyConfig.setHost("xxx");
         proxyConfig.setPort(1234);
         yopSdkConfig.setProxy(proxyConfig);
+
+        // 示例：国密证书分发配置
+        YopCertStore yopCertStore = new YopCertStore();
+        yopCertStore.setEnable(true);// 默认会开启本地存储，将远程拉取的证书存放本地文件
+        yopCertStore.setPath("/tmp/yop/certs");//默认存放位置
+        yopSdkConfig.setYopCertStore(yopCertStore);
 
         // 连接超时时间、读取超时时间等其他配置，可根据需要setXXX即可
         return yopSdkConfig;

@@ -5,11 +5,13 @@
 package com.yeepay.yop.sdk.base.auth.signer;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.security.SignerTypeEnum;
 
 import java.util.Map;
 import java.util.ServiceLoader;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: YopSignerFactory<br/>
@@ -46,7 +48,7 @@ public class YopSignerFactory {
     public static YopSigner getSigner(String signerType) {
         final YopSigner yopSigner = YOP_SIGNER_MAP.get(signerType);
         if (null == yopSigner) {
-            throw new YopClientException("ConfigProblem, YopSigner NotFound, signerType:" + signerType);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, YopSigner NotFound, signerType:" + signerType);
         }
         return yopSigner;
     }

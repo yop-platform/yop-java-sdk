@@ -6,7 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.Protocol;
@@ -123,7 +123,7 @@ public class HttpUtils {
             }
             return builder.toString();
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new IllegalParamFormatException("field", value + "encode fail", e);
         }
     }
 
@@ -253,7 +253,7 @@ public class HttpUtils {
         try {
             return new URI(builder.toString());
         } catch (URISyntaxException e) {
-            throw new RuntimeException("Unexpected error", e);
+            throw new IllegalParamFormatException("serverRoot|apiUri", "Unexpected error", e);
         }
     }
 
@@ -293,7 +293,7 @@ public class HttpUtils {
                 try {
                     encodedNameValuePair.add(toNameValuePair(forSignature, paramName, paramValue));
                 } catch (UnsupportedEncodingException e) {
-                    throw new YopClientException("ReqParam Illegal, Charset NotSuppport, name:" + paramName + ",value:" + paramValue, e);
+                    throw new IllegalParamFormatException(paramName, "ReqParam Illegal, Charset NotSuppport, name:" + paramName + ",value:" + paramValue, e);
                 }
             }
         }
