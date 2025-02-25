@@ -14,7 +14,10 @@ import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegist
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 
@@ -78,7 +81,7 @@ public class YopSignUtils {
         if (null != yopPlatformCredentials) {
             verify(data, signature, yopPlatformCredentials.getCredential());
         } else {
-            throw new YopClientException("can not load platform cert");
+            throw new IllegalConfigFormatException("yop_public_key", "can not load platform cert");
         }
     }
 
@@ -107,11 +110,12 @@ public class YopSignUtils {
         validSignature(signature);
         YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(credentialsItem.getCertType().name());
         if (null == yopSignProcessor) {
-            throw new YopClientException("unsupported certType");
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "unsupported certType");
         }
         String args[] = signature.split("\\$");
         if (!yopSignProcessor.verify(data, args[0], credentialsItem)) {
-            throw new YopClientException("verify fail!");
+            throw new IllegalParamFormatException("data", "verify fail!, data:" + data
+                    + ", signature:" + signature + ", publicKey:" + credentialsItem);
         }
     }
 
@@ -145,7 +149,7 @@ public class YopSignUtils {
     public static String sign(String data, String certType, PrivateKey privateKey) {
         YopSignProcessor yopSignProcessor = YopSignProcessorFactory.getSignProcessor(certType);
         if (null == yopSignProcessor) {
-            throw new YopClientException("unsupported certType");
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "unsupported certType:" + certType);
         }
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, CertTypeEnum.parse(certType));
         return yopSignProcessor.sign(data, pkiCredentialsItem) + SPLIT_CHAR + yopSignProcessor.getDigestAlg();
@@ -154,11 +158,11 @@ public class YopSignUtils {
     private static void validSignature(String signature) {
         String args[] = signature.split("\\$");
         if ((args.length != 2 && args.length != 4)) {
-            throw new YopClientException("illegal signature");
+            throw new IllegalParamFormatException("signature", "illegal signature");
         }
         CertTypeEnum certType = digestAlgANdCertTypeMap.get(args[1]);
         if (certType == null) {
-            throw new YopClientException("illegal signature");
+            throw new IllegalParamFormatException("digestAlg", "illegal certType:" + args[1]);
         }
     }
 }

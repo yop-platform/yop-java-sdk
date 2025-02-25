@@ -10,7 +10,9 @@ import com.google.common.cache.LoadingCache;
 import com.yeepay.yop.sdk.base.security.encrypt.RsaEnhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.Sm2Enhancer;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import static com.yeepay.yop.sdk.YopConstants.*;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
 import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 加密选项缓存<br>
@@ -48,7 +51,7 @@ public class EncryptOptionsCache {
     /**
      * 初始化加密选项，并缓存
      *
-     * @param appKey 应用
+     * @param appKey     应用
      * @param encryptAlg 加解密算法
      * @return Future<EncryptOptions>
      */
@@ -72,14 +75,14 @@ public class EncryptOptionsCache {
         try {
             return ENCRYPT_OPTIONS_CACHE.get(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (ExecutionException e) {
-            throw new YopClientException("ConfigProblem, LoadEncryptOptions Fail, appKey:"
+            throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, LoadEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
     }
 
     /**
      * 刷新加密选项，并缓存（异步操作，不立即生效）
-     *
+     * <p>
      * Loads a new value for key, possibly asynchronously.
      * While the new value is loading the previous value (if any) will continue to be returned by get(key) unless it is evicted.
      * If the new value is loaded successfully it will replace the previous value in the cache;
@@ -94,7 +97,7 @@ public class EncryptOptionsCache {
 
     /**
      * 刷新加密选项，并缓存（异步操作，不立即生效）
-     *
+     * <p>
      * Loads a new value for key, possibly asynchronously.
      * While the new value is loading the previous value (if any) will continue to be returned by get(key) unless it is evicted.
      * If the new value is loaded successfully it will replace the previous value in the cache;
@@ -112,7 +115,7 @@ public class EncryptOptionsCache {
         try {
             ENCRYPT_OPTIONS_CACHE.refresh(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, RefreshEncryptOptions Fail, appKey:"
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, RefreshEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
     }
@@ -142,7 +145,7 @@ public class EncryptOptionsCache {
         try {
             ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
     }
@@ -150,7 +153,7 @@ public class EncryptOptionsCache {
     /**
      * 失效并同步加载新的加密选项，并缓存
      *
-     * @param appKey 应用
+     * @param appKey     应用
      * @param encryptAlg 加解密算法
      * @return Future<EncryptOptions>
      */
@@ -174,7 +177,7 @@ public class EncryptOptionsCache {
         try {
             ENCRYPT_OPTIONS_CACHE.invalidate(getCacheKey(provider, env, appKey, encryptAlg, serverRoot));
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, InvalidateEncryptOptions Fail, appKey:"
                     + appKey + ", encryptAlg:" + encryptAlg + ", ex:", e);
         }
         return loadEncryptOptions(provider, env, appKey, encryptAlg, serverRoot);
@@ -201,9 +204,7 @@ public class EncryptOptionsCache {
                 Future<EncryptOptions> encryptOptions = null;
                 try {
                     String[] split = StringUtils.splitPreserveAllTokens(cacheKey, COMMA);
-                    String provider = split[0], env = split[1]
-                            ,appKey = split[2], encryptAlg = split[3]
-                            , serverRoot = split.length > 4 ? split[4]: null;
+                    String provider = split[0], env = split[1], appKey = split[2], encryptAlg = split[3], serverRoot = split.length > 4 ? split[4] : null;
                     YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(encryptAlg);
                     List<EncryptOptionsEnhancer> enhancers = Collections.singletonList(getEnhancer(provider, env, appKey, encryptAlg, serverRoot));
                     encryptOptions = encryptor.initOptions(encryptAlg, enhancers);
@@ -226,7 +227,7 @@ public class EncryptOptionsCache {
             case AES_ECB_PKCS5PADDING:
                 return new RsaEnhancer(provider, env, appKey);
             default:
-                throw new YopClientException("not supported encryptAlg:" + encryptAlg);
+                throw new IllegalParamFormatException("encryptAlg", "not supported encryptAlg:" + encryptAlg);
         }
     }
 

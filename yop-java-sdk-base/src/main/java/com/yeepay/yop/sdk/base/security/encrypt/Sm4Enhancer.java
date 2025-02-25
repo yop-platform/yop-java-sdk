@@ -7,7 +7,7 @@ package com.yeepay.yop.sdk.base.security.encrypt;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.ClientUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
@@ -53,7 +53,7 @@ public class Sm4Enhancer extends AbstractEncryptOptionsEnhancer {
         List<YopCertConfig> mainKeys = ClientUtils.getCurrentCredentialsProvider()
                 .getIsvEncryptKey(provider, env, appKey);
         if (CollectionUtils.isEmpty(mainKeys)) {
-            throw new YopClientException("ConfigProblem, IsvEncryptKey NotFound, appKey:" + appKey);
+            throw new IllegalConfigFormatException("isv_encrypt_key", "ConfigProblem, IsvEncryptKey NotFound, appKey:" + appKey);
         }
         EncryptOptions mainKeyOptions = source.copy();
         String mainCredential = mainKeys.get(0).getValue();

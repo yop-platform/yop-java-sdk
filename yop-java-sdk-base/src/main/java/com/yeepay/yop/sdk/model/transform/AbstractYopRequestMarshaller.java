@@ -2,7 +2,7 @@ package com.yeepay.yop.sdk.model.transform;
 
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.HttpMethodName;
 import com.yeepay.yop.sdk.http.YopContentType;
@@ -59,7 +59,7 @@ public abstract class AbstractYopRequestMarshaller implements RequestMarshaller<
                         resetStreamIfNecessary(((FileParam) value).getFileStream());
                         internalRequest.addMultiPartFile(name, (FileParam) value);
                     } else {
-                        throw new YopClientException("ReqParam Illegal, FileParamType NotSupport, name:" + name + ", type:" + value.getClass() + ".");
+                        throw new IllegalParamFormatException(name, "ReqParam Illegal, FileParamType NotSupport, type:" + value.getClass() + ".");
                     }
                 }
             }

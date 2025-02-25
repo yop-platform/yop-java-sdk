@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,7 @@ public class KeepAsRawStringDeserializer extends JsonDeserializer<String> {
         if (sourceRef instanceof StringReader) {
             return getStringViaReflection((StringReader) sourceRef);
         }
-        throw new IllegalArgumentException("source ref of json is not an instance of String/StringReader,can't use KeepAsRawStringDeserializer here!");
+        throw new IllegalParamFormatException("json", "source ref of json is not an instance of String/StringReader,can't use KeepAsRawStringDeserializer here!");
     }
 
     /**

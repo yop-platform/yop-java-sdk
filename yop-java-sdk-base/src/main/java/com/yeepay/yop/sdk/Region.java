@@ -1,5 +1,7 @@
 package com.yeepay.yop.sdk;
 
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -55,6 +57,6 @@ public enum Region {
                 return region;
             }
         }
-        throw new IllegalArgumentException("Cannot create region from " + regionId);
+        throw new IllegalConfigFormatException("region", "Cannot create region from " + regionId);
     }
 }

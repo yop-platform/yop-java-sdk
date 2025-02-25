@@ -6,7 +6,10 @@ package com.yeepay.yop.sdk.gm.utils;
 
 import com.google.common.base.Charsets;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.bouncycastle.asn1.*;
@@ -73,7 +76,7 @@ public class Sm2Utils {
             KeyPair kp = kpGen.generateKeyPair();
             return kp;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "maybe missing bouncycastle jars", e);
         }
     }
 
@@ -93,7 +96,7 @@ public class Sm2Utils {
             KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return kf.generatePublic(eks);
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, YopPublicKey Illegal, value:" + pubKey + ", ex:", e);
+            throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, YopPublicKey Illegal, value:" + pubKey + ", ex:", e);
         }
     }
 
@@ -113,7 +116,7 @@ public class Sm2Utils {
             KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return kf.generatePrivate(peks);
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, IsvPrivateKey Illegal, value:" + priKey + ", ex:" + e);
+            throw new IllegalConfigFormatException("isv_private_key", "ConfigProblem, IsvPrivateKey Illegal, value:" + priKey + ", ex:" + e);
         }
 
     }
@@ -155,7 +158,8 @@ public class Sm2Utils {
             }
             return Encodes.encodeUrlSafeBase64(sign(priKey, dataByte));
         } catch (CryptoException e) {
-            throw new YopClientException("UnexpectedError, Sign Fail, data:" + data + ", key:"
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "UnexpectedError, Sign Fail, data:" + data + ", key:"
                     + priKey + ", options:" + options + ", ex:", e);
         }
 
@@ -175,7 +179,7 @@ public class Sm2Utils {
             byte[] dataByte = data.getBytes(Charsets.UTF_8);
             return verify(publicKey, dataByte, encodeSM2SignToDER(signByte));
         } catch (IOException e) {
-            throw new YopClientException("UnexpectedError, VerifySign Fail, data:" +
+            throw new IllegalParamFormatException("data|signature", "UnexpectedError, VerifySign Fail, data:" +
                     data + ", sign:" + signature + ", key:" + publicKey + ", ex:", e);
         }
     }
@@ -194,7 +198,7 @@ public class Sm2Utils {
             byte[] dataByte = data.getBytes(Charsets.UTF_8);
             return verifyWithId(publicKey, dataByte, encodeSM2SignToDER(signByte), withId);
         } catch (IOException e) {
-            throw new YopClientException("UnexpectedError, VerifySign Fail, data:" +
+            throw new IllegalParamFormatException("data|signature", "UnexpectedError, VerifySign Fail, data:" +
                     data + ", sign:" + signature + ", key:" + publicKey + ", ex:", e);
         }
     }

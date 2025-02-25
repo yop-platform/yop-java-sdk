@@ -881,7 +881,8 @@ public class YopSM2EncryptExample {
             engine.init(true, pwr);
             return engine.processBlock(sm4Key, 0, sm4Key.length);
         } catch (Throwable e) {
-            throw new RuntimeException("SystemError, Encrypt Fail, publicKey:" + YOP_PUBLIC_KEY, e);
+            throw new RuntimeException("SystemError, Encrypt Fail, publicKey:"
+                    + YOP_PUBLIC_KEY + ", cause:" + e.getMessage(), e);
         }
     }
 

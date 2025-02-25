@@ -7,7 +7,9 @@ package com.yeepay.yop.sdk.base.security.encrypt;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.YopUnknownException;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptionsEnhancer;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
@@ -24,6 +26,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 加解密适配器<br>
@@ -69,8 +73,8 @@ public abstract class YopEncryptorAdaptor implements YopEncryptor {
         try {
             return Encodes.encodeUrlSafeBase64(encrypt(plain.getBytes(YopConstants.DEFAULT_ENCODING), options));
         } catch (UnsupportedEncodingException e) {
-            throw new YopClientException("UnexpectedError, EncryptFail, value:"
-                    + plain + ",options:" + options + ",ex:", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "UnexpectedError, EncryptFail, value:"
+                    + plain + ",options:" + options + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -89,7 +93,7 @@ public abstract class YopEncryptorAdaptor implements YopEncryptor {
         try {
             return new String(decrypt(cipher, options), YopConstants.DEFAULT_ENCODING);
         } catch (UnsupportedEncodingException e) {
-            throw new YopClientException("UnexpectedError, DecryptFail, options:" + options + ",ex:", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "UnexpectedError, DecryptFail, options:" + options + ", cause:" + e.getMessage(), e);
         }
     }
 

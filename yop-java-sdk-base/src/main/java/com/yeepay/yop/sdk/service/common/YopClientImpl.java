@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.service.common;
 
 import com.yeepay.yop.sdk.client.*;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzerSupport;
 import com.yeepay.yop.sdk.http.HttpResponseHandler;
 import com.yeepay.yop.sdk.http.handler.DefaultHttpResponseHandler;
@@ -33,7 +33,7 @@ public class YopClientImpl implements YopClient {
     @Override
     public YopResponse request(YopRequest request) {
         if (request == null) {
-            throw new YopClientException("request is required.");
+            throw new IllegalParamFormatException("request", "request is required");
         }
         RequestMarshaller<YopRequest> requestMarshaller = YopRequestMarshaller.getInstance();
         HttpResponseHandler<YopResponse> responseHandler = new DefaultHttpResponseHandler<YopResponse>(YopResponse.class,
@@ -47,7 +47,7 @@ public class YopClientImpl implements YopClient {
     @Override
     public YosDownloadResponse download(YopRequest request) {
         if (request == null) {
-            throw new YopClientException("request is required.");
+            throw new IllegalParamFormatException("request", "request is required");
         }
         RequestMarshaller<YopRequest> requestMarshaller = YopRequestMarshaller.getInstance();
         HttpResponseHandler<YosDownloadResponse> responseHandler = new DefaultHttpResponseHandler<YosDownloadResponse>(YosDownloadResponse.class,
@@ -61,10 +61,10 @@ public class YopClientImpl implements YopClient {
     @Override
     public YosUploadResponse upload(YopRequest request) {
         if (request == null) {
-            throw new YopClientException("request is required.");
+            throw new IllegalParamFormatException("request", "request is required");
         }
         if (request.getMultipartFiles().isEmpty() && request.getContent() == null) {
-            throw new YopClientException("request.multiPartFiles and request.content both are empty.");
+            throw new IllegalParamFormatException("multiPartFiles|content", "request multiPartFiles or content is required");
         }
         RequestMarshaller<YopRequest> requestMarshaller = YopRequestMarshaller.getInstance();
         HttpResponseHandler<YosUploadResponse> responseHandler = new DefaultHttpResponseHandler<YosUploadResponse>(YosUploadResponse.class,

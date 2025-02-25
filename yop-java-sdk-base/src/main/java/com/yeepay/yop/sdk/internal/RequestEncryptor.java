@@ -12,7 +12,10 @@ import com.jayway.jsonpath.PathNotFoundException;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.model.BaseRequest;
@@ -202,7 +205,7 @@ public class RequestEncryptor {
             request.setContent(encryptor.encrypt(request.getContent(), encryptOptions));
             finalEncryptParams.add(DOLLAR);
         } else {
-            throw new YopClientException("body content is not supported, contentType:" + request.getContentType());
+            throw new IllegalParamFormatException("contentType", "body content is not supported, contentType:" + request.getContentType());
         }
     }
 
@@ -246,7 +249,7 @@ public class RequestEncryptor {
             LOGGER.debug("json request encrypted, source:{}, target:{}, options:{}", originJson, encryptedJson, encryptOptions);
             return encryptedJson.getBytes(YopConstants.DEFAULT_ENCODING);
         } catch (IOException e) {
-            throw new YopClientException("error happened when encrypt json", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "error happened when encrypt json", e);
         }
     }
 
@@ -260,7 +263,7 @@ public class RequestEncryptor {
                         encryptedValues.add(new MultiPartFile(
                                 encryptor.encrypt(value.getInputStream(), encryptOptions), value.getFileName()));
                     } catch (IOException e) {
-                        throw new YopClientException("error happened when encrypt MultiPartFile", e);
+                        throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "error happened when encrypt MultiPartFile", e);
                     }
                 }
                 multiPartFiles.put(name, encryptedValues);

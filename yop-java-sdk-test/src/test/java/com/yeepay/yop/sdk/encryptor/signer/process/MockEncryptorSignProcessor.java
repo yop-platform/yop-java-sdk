@@ -4,15 +4,15 @@
  */
 package com.yeepay.yop.sdk.encryptor.signer.process;
 
-import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
 import com.google.common.collect.ImmutableMap;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
-import com.yeepay.yop.sdk.inter.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.auth.signer.process.YopSignProcessor;
+import com.yeepay.yop.sdk.encryptor.auth.credentials.MockEncryptorCredentialsItem;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.gm.auth.signer.process.YopSm2SignProcessor;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.inter.auth.signer.process.YopRsaSignProcessor;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 
@@ -45,7 +45,7 @@ public class MockEncryptorSignProcessor implements YopSignProcessor {
         if (certType == CertTypeEnum.RSA2048) {
             return "mock sign, to be impl by yourself";
         }
-        throw new YopClientException("UnSupported cert type:" + certType);
+        throw new IllegalParamFormatException("CredentialsItem", "UnSupported cert type:" + certType + ",credentialsItem:" + credentialsItem);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class MockEncryptorSignProcessor implements YopSignProcessor {
         if (credentialsItem instanceof PKICredentialsItem) {
             return doVerify(content, signature, credentialsItem);
         }
-        throw new YopClientException("UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
+        throw new IllegalParamFormatException("CredentialsItem", "UnSupported credentialsItem type:" + credentialsItem.getClass().getSimpleName());
     }
 
     @Override

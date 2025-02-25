@@ -4,7 +4,9 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.SignOptions;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.utils.Encodes;
 
@@ -13,6 +15,7 @@ import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.util.Base64;
 import java.util.Map;
 
 /**
@@ -49,7 +52,9 @@ public class RSA {
             signature.update(data);
             return signature.verify(sign);
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Sign Fail, key:" + publicKey + ", digestAlg" + digestAlg + "ex:", e);
+            throw new IllegalParamFormatException("YopPublicKey", "SystemError, Sign Fail, pubKey:"
+                    + (null != publicKey ? Base64.getEncoder().encodeToString(publicKey.getEncoded()) : null)
+                    + ", digestAlg" + digestAlg + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -83,7 +88,8 @@ public class RSA {
             signature.update(data);
             return signature.sign();
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Sign Fail, key:" + key + ", digestAlg" + digestAlg + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Sign Fail, key:" + key + ", digestAlg" + digestAlg + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -130,7 +136,8 @@ public class RSA {
             cipher.init(Cipher.ENCRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Encrypt Fail, key:" + key + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Encrypt Fail, key:" + key + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -145,7 +152,8 @@ public class RSA {
         try {
             return Encodes.encodeUrlSafeBase64(encrypt(data.getBytes(Charsets.UTF_8), key));
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Encrypt Fail, data:" + data + ", key:" + key + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Encrypt Fail, data:" + data + ", key:" + key + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -162,7 +170,8 @@ public class RSA {
             cipher.init(Cipher.DECRYPT_MODE, key);
             return cipher.doFinal(data);
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Decrypt Fail, key:" + key + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Decrypt Fail, key:" + key + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -177,7 +186,8 @@ public class RSA {
         try {
             return new String(decrypt(Encodes.decodeBase64(data), key), Charsets.UTF_8);
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Decrypt Fail, data:" + data + ", key:" + key + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Decrypt Fail, data:" + data + ", key:" + key + ", cause:" + e.getMessage(), e);
         }
     }
 }

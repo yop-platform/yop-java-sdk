@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.gm.base.security.cert.parser;
 
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.base.security.cert.parser.AbstractYopPublicKeyParser;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.security.cert.YopCertCategory;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser;
 import com.yeepay.yop.sdk.security.cert.YopPublicKey;
@@ -34,23 +35,25 @@ public class YopSm2PublicKeyParser extends AbstractYopPublicKeyParser implements
     @Override
     public YopPublicKey parse(YopCertConfig certConfig) {
         if (null == certConfig.getStoreType()) {
-            throw new YopClientException("ConfigProblem, YopPublicKey StoreType IsNull, certConfig:" + certConfig);
+            throw new IllegalConfigFormatException("store_type", "ConfigProblem, YopPublicKey StoreType IsNull, certConfig:" + certConfig);
         }
         switch (certConfig.getStoreType()) {
             case STRING:
                 try {
                     return new YopPublicKey(SmUtils.string2PublicKey(certConfig.getValue()));
                 } catch (Exception ex) {
-                    throw new YopClientException("ConfigProblem, YopPublicKey Value Illegal, certConfig:" + certConfig, ex);
+                    throw new IllegalConfigFormatException("value", "ConfigProblem, YopPublicKey Value Illegal, certConfig:"
+                            + certConfig + ", cause:" + ex.getMessage(), ex);
                 }
             case FILE_CER:
                 try {
                     return new YopPublicKey(getX509Cert(certConfig.getValue(), CertTypeEnum.SM2));
                 } catch (Exception e) {
-                    throw new YopClientException("ConfigProblem, YopPublicKey Value Illegal, certConfig:" + certConfig, e);
+                    throw new IllegalConfigFormatException("value", "ConfigProblem, YopPublicKey Value Illegal, certConfig:"
+                            + certConfig + ", cause" + e.getMessage(), e);
                 }
             default:
-                throw new YopClientException("ConfigProblem, YopPublicKey StoreType Illegal, certConfig:" + certConfig);
+                throw new IllegalConfigFormatException("store_type", "ConfigProblem, YopPublicKey StoreType Illegal, certConfig:" + certConfig);
         }
     }
 

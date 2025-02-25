@@ -4,6 +4,7 @@ import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.exception.config.MissingConfigException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.net.MalformedURLException;
@@ -65,7 +66,7 @@ public class CheckUtils {
         if (StringUtils.isNotBlank(apiUri) && API_URI_PATTERN.matcher(apiUri).matches()) {
             return;
         }
-        throw new YopClientException("ReqParam Illegal, ApiUri, value:" + apiUri);
+        throw new IllegalParamFormatException("apiUri", "ReqParam Illegal, ApiUri, value:" + apiUri);
     }
 
     /**
@@ -77,7 +78,7 @@ public class CheckUtils {
         if (StringUtils.isNotBlank(callbackUri)) {
             return;
         }
-        throw new YopClientException("callbackUri is illegal, param:" + callbackUri);
+        throw new IllegalParamFormatException("callbackUri", "callbackUri is illegal, param:" + callbackUri);
     }
 
     /**
@@ -93,10 +94,10 @@ public class CheckUtils {
         try {
             uri = new URI(serverRoot);
         } catch (Exception e) {
-            throw new YopClientException("request serverRoot is illegal, value:" + serverRoot);
+            throw new IllegalParamFormatException("serverRoot", "request serverRoot is illegal, value:" + serverRoot);
         }
         if (!StringUtils.equalsAny(uri.getScheme(), "http", "https")) {
-            throw new YopClientException("unsupported request scheme, value:" + uri.getScheme());
+            throw new IllegalParamFormatException("httpScheme", "unsupported request scheme, value:" + uri.getScheme());
         }
         return uri;
     }

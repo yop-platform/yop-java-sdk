@@ -13,7 +13,7 @@
 package com.yeepay.yop.sdk.internal;
 
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +38,7 @@ public class RestartableResettableInputStream extends RestartableInputStream {
         try {
             this.input.reset();
         } catch (IOException e) {
-            throw new YopClientException("Fail to reset the underlying input stream.", e);
+            throw new IllegalParamFormatException("InputStream", "Fail to reset the underlying input stream.", e);
         }
     }
 

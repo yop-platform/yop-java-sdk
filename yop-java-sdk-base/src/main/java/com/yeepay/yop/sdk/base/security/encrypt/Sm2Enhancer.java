@@ -9,6 +9,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.utils.Encodes;
@@ -84,7 +85,7 @@ public class Sm2Enhancer extends AbstractEncryptOptionsEnhancer {
                     .getLatestCredentials(provider, env, appKey, CertTypeEnum.SM2.getValue(), serverRoot);
         }
         if (null == platformCredentials) {
-            throw new YopClientException("ConfigProblem, YopPlatformCredentials NotFound to Enhance EncryptOptions, appKey:"
+            throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, YopPlatformCredentials NotFound to Enhance EncryptOptions, appKey:"
                     + appKey + ", serialNo:" + serialNo);
         }
         source.setEncryptedCredentials(YopEncryptorFactory.getEncryptor(YOP_CREDENTIALS_ENCRYPT_ALG_SM2).encryptToBase64(credentialBytes,

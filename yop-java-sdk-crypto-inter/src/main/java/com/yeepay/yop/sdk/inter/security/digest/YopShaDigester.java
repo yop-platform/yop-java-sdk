@@ -6,9 +6,10 @@ package com.yeepay.yop.sdk.inter.security.digest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.security.digest.YopDigester;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
+import com.yeepay.yop.sdk.security.digest.YopDigester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,8 @@ public class YopShaDigester implements YopDigester {
             while (digestInputStream.read(buffer) > -1) {}
             return digestInputStream.getMessageDigest().digest();
         } catch (Exception e) {
-            throw new YopClientException("SystemError, Digest Fail, alg:" + alg + ", ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Digest Fail, alg:" + alg + ", cause:" + e.getMessage(), e);
         }
     }
 

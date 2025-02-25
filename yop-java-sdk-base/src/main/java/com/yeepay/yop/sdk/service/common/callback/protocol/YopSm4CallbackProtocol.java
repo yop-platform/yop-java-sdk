@@ -8,7 +8,8 @@ import com.yeepay.yop.sdk.auth.credentials.YopSymmetricCredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProviderRegistry;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.BigParamEncryptMode;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
@@ -73,7 +74,7 @@ public class YopSm4CallbackProtocol extends AbstractYopCallbackProtocol {
         final List<YopCertConfig> isvEncryptKeys = YopCredentialsProviderRegistry.getProvider()
                 .getIsvEncryptKey(originRequest.getProvider(), originRequest.getEnv(), customerIdentification);
         if (CollectionUtils.isEmpty(isvEncryptKeys)) {
-            throw new YopClientException("no isvEncryptKeys found for appKey:" + customerIdentification);
+            throw new IllegalConfigFormatException("isv_encrypt_key", "no isvEncryptKeys found for appKey:" + customerIdentification);
         }
 
         for (YopCertConfig isvEncryptKey : isvEncryptKeys) {
@@ -91,7 +92,7 @@ public class YopSm4CallbackProtocol extends AbstractYopCallbackProtocol {
                 LOGGER.warn("fail to parse YopSm4CallbackProtocol with key:" +  isvEncryptKey.getValue() + ", ex:", e);
             }
         }
-        throw new YopClientException("fail to parse YopSm4CallbackProtocol, appKey:" + customerIdentification);
+        throw new IllegalParamFormatException("YopCallback", "fail to parse YopSm4CallbackProtocol, appKey:" + customerIdentification + ", cipherText:" + cipherText);
     }
 
     public String getAlgorithm() {

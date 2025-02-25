@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.invoke;
 
 import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopUnknownException;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.List;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_INVOKE_UNEXPECTED_EXCEPTION;
 
 /**
  * title: 基于uri路由的调用器实现<br>
@@ -70,6 +73,9 @@ public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext,
 
                 // 其他异常，须具体分析
                 final Exception analyzedEx = invoker.getLastException();
+                if (null == analyzedEx) {
+                    handleUnExpectedError(throwable);
+                }
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Fail ServerRoot, {}, exDetail:{}, elapsed:{}", invoker.getUri(),
                             analyzedEx.getExDetail(), System.currentTimeMillis() - start);
@@ -93,7 +99,7 @@ public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext,
                 }
 
                 // 非预期的客户端异常
-                throw new YopClientException("Client Error, ex:", throwable);
+                throw new YopClientBizException(SDK_INVOKE_UNEXPECTED_EXCEPTION, "Client Error", throwable);
             }
         }
 
@@ -111,7 +117,7 @@ public class UriRouteInvokerWrapper<Input, Output, Context extends RetryContext,
         if (ex instanceof YopUnknownException) {
             throw (YopUnknownException) ex;
         }
-        throw new YopUnknownException("UnExpected Error, ", ex);
+        throw new YopUnknownException("UnExpectedError, cause:" + ex.getMessage(), ex, "");
     }
 
     @Override

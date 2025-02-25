@@ -1,6 +1,7 @@
 package com.yeepay.yop.sdk.service.common.callback.handler.impl;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.service.common.callback.YopCallback;
 import com.yeepay.yop.sdk.service.common.callback.handler.YopCallbackHandler;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class YopWildCardCallbackHandler implements YopCallbackHandler {
     @Override
     public void handle(YopCallback callback) {
         LOGGER.warn("you need to handle the new yop callback, received: {}.", callback);
-        throw new YopClientException("no YopCallbackHandler found");
+        throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "no YopCallbackHandler found");
     }
 
 }

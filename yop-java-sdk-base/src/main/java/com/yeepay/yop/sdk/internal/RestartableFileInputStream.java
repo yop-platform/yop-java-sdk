@@ -12,7 +12,7 @@
  */
 package com.yeepay.yop.sdk.internal;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,7 +42,7 @@ public class RestartableFileInputStream extends RestartableInputStream {
             this.input.close();
             this.input = new FileInputStream(this.file);
         } catch (IOException e) {
-            throw new YopClientException("Fail to restart.", e);
+            throw new IllegalParamFormatException(file.getName(), "Fail to restart.", e);
         }
     }
 

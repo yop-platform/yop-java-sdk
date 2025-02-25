@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * <pre>
@@ -43,7 +45,7 @@ public class JacksonJsonMarshaller {
         try {
             return objectMapper.readValue(content, objectType);
         } catch (IOException e) {
-            throw new YopClientException(e.getMessage(), e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, e.getMessage(), e);
         }
     }
 
@@ -51,7 +53,7 @@ public class JacksonJsonMarshaller {
         try {
             return objectMapper.readValue(content, objectType);
         } catch (IOException e) {
-            throw new YopClientException(e.getMessage(), e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, e.getMessage(), e);
         }
     }
 
@@ -59,7 +61,7 @@ public class JacksonJsonMarshaller {
         try {
             objectMapper.readerForUpdating(obj).readValue(content);
         } catch (IOException ex) {
-            throw new YopClientException(ex.getMessage(), ex);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, ex.getMessage(), ex);
         }
     }
 
@@ -67,7 +69,7 @@ public class JacksonJsonMarshaller {
         try {
             return objectMapper.writeValueAsString(content);
         } catch (JsonProcessingException e) {
-            throw new YopClientException(e.getMessage(), e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, e.getMessage(), e);
         }
     }
 

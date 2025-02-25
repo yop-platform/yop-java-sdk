@@ -5,7 +5,8 @@
 package com.yeepay.yop.sdk.gm.base.security.digest;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.digest.YopDigester;
@@ -54,7 +55,8 @@ public class YopSm3Digester implements YopDigester {
             while (digestInputStream.read(buffer) > -1) {}
             return digestInputStream.getMessageDigest().digest();
         } catch (Exception e) {
-            throw new YopClientException("UnexpectedError, MessageDigest Fail, alg:" + alg + ", ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "UnexpectedError, MessageDigest Fail, alg:" + alg + ", ex:", e);
         }
     }
 

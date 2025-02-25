@@ -16,6 +16,7 @@ import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopContentType;
 import com.yeepay.yop.sdk.internal.Request;
@@ -71,7 +72,7 @@ public class YopCallbackEngine {
         Request<YopRequest> marshalled = YopCallbackRequestMarshaller.getInstance().marshall(request);
         AuthorizationReq authorizationReq = AuthorizationReqSupport.getAuthorizationReq(request.getRequestConfig().getSecurityReq());
         if (null == authorizationReq) {
-            throw new YopClientException("no authenticate req defined");
+            throw new IllegalParamFormatException("YopRequestConfig.AuthorizationReq", "no authenticate req defined");
         } else {
             YopRequestConfig requestConfig = request.getRequestConfig();
             YopCredentials<?> credential = getCredentials(provider, env, requestConfig, authorizationReq);

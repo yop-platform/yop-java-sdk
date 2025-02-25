@@ -9,7 +9,7 @@ import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopCredentialsWithoutSign;
 import com.yeepay.yop.sdk.auth.credentials.YopOauth2Credentials;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
@@ -18,8 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * title: YopOauth2Signer<br>
@@ -45,13 +43,13 @@ public class YopOauth2Signer implements YopSigner {
     @Override
     public void sign(Request<? extends BaseRequest> request, YopCredentials<?> credentials, SignOptions options) {
         if (null == request) {
-            throw new YopClientException("ReqParam Illegal, Request IsNull");
+            throw new IllegalParamFormatException("request", "request is required");
         }
         if (credentials == null || credentials instanceof YopCredentialsWithoutSign) {
             return;
         }
         if (!(credentials instanceof YopOauth2Credentials)) {
-            throw new YopClientException("ReqParam Illegal, YopCredentials IsNotYopOauth2Credentials, type:" + credentials.getClass().getSimpleName());
+            throw new IllegalParamFormatException("YopCredentials", "ReqParam Illegal, YopCredentials IsNotYopOauth2Credentials, type:" + credentials.getClass().getSimpleName());
         }
         String secretKey = (String) credentials.getCredential();
         String authorizationHeader = AUTHORIZATION_PREFIX + secretKey;

@@ -9,6 +9,8 @@ import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorAdaptor;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.inter.utils.RSA;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
@@ -64,7 +66,8 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
             return RSA.encrypt(plain, ((PKICredentialsItem) ((YopPlatformCredentials)
                     options.getCredentials()).getCredential()).getPublicKey());
         } catch (Throwable e) {
-            throw new YopClientException("SystemError, Encrypt Fail, options:" + options + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Encrypt Fail, options:" + options + ", cause:" + e.getMessage(), e);
         }
     }
 
@@ -79,7 +82,8 @@ public class YopRsaEncryptor extends YopEncryptorAdaptor {
         try {
             return RSA.decrypt(cipher, ((YopPKICredentials) options.getCredentials()).getCredential().getPrivateKey());
         } catch (Throwable e) {
-            throw new YopClientException("SystemError, Decrypt Fail, options:" + options + "ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "SystemError, Decrypt Fail, options:" + options + ", cause:" + e.getMessage(), e);
         }
     }
 

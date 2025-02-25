@@ -5,6 +5,7 @@
 package com.yeepay.yop.sdk.invoke;
 
 import com.google.common.collect.Lists;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopUnknownException;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
@@ -17,6 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.List;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_PARAM_FORMAT;
 
 /**
  * title: 基于UriResource路由的调用器实现<br>
@@ -69,7 +72,7 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
                 currentEx = throwable;
                 // 路由异常，客户端配置问题
                 if (null == lastServerRoot || null == lastServerRoot.getResource()) {
-                    throw new YopClientException("Config Error, No ServerRoot Found", throwable);
+                    throw new YopClientBizException(SDK_CONFIG_PARAM_FORMAT, "No ServerRoot Found", throwable);
                 }
 
                 // 客户端异常、业务异常，直接抛给上层
@@ -110,7 +113,7 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
         if (ex instanceof YopUnknownException) {
             return (YopUnknownException) ex;
         }
-        return new YopUnknownException("UnExpected Error, ", ex);
+        return new YopUnknownException("UnExpectedError, cause:" + ex.getMessage(), ex, "");
     }
 
     @Override

@@ -17,6 +17,8 @@ import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
 import com.yeepay.yop.sdk.base.config.provider.file.YopFileSdkConfigProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.collections4.CollectionUtils;
@@ -50,7 +52,8 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
         CertTypeEnum certType;
         if (null == appConfig || StringUtils.isEmpty(credentialType) ||
                 (null == (certType = CertTypeEnum.parse(credentialType)))) {
-            throw new YopClientException("ConfigProblem, IsvPrivateCert NotFound, certType:" + credentialType + ", config:" + appConfig);
+            throw new IllegalConfigFormatException("isv_private_key",
+                    "ConfigProblem, IsvPrivateCert NotFound, certType:" + credentialType + ", config:" + appConfig);
         }
         switch (certType) {
             case RSA2048:
@@ -58,7 +61,8 @@ public class MockEncryptorCredentialsProvider implements YopCredentialsProvider 
                 MockEncryptorCredentialsItem credentialsItem = new MockEncryptorCredentialsItem(Encodes.encodeKey(appConfig.loadPrivateKey(certType)), certType);
                 return new MockEncryptorCredentials(appConfig.getAppKey(), credentialsItem);
             default:
-                throw new YopClientException("ConfigProblem, IsvPrivateCert Type NotSupport, certType:" + certType + ", config:" + appConfig);
+                throw new IllegalParamFormatException("credentialType",
+                        "ConfigProblem, IsvPrivateCert Type NotSupport, certType:" + certType + ", config:" + appConfig);
         }
     }
 

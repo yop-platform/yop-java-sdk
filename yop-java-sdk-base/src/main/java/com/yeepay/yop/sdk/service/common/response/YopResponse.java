@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.json.KeepAsRawStringDeserializer;
@@ -50,7 +51,7 @@ public class YopResponse extends BaseResponse {
             try {
                 this.result = JsonUtils.getObjectMapper().readValue(stringResult, Object.class);
             } catch (IOException e) {
-                throw new YopClientException("unable to deserialize stringResult:" + stringResult);
+                throw new IllegalParamFormatException("result", "unable to deserialize stringResult:" + stringResult);
             }
         }
     }

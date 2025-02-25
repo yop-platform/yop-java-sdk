@@ -2,7 +2,7 @@ package com.yeepay.yop.sdk.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import org.apache.commons.lang3.StringUtils;
 
@@ -71,13 +71,13 @@ public abstract class BaseRequest implements Serializable, Cloneable {
 
     protected void validateParameter(String name, Object value) {
         if (StringUtils.isEmpty(name)) {
-            throw new YopClientException("ReqParam Illegal, ParamName IsEmpty, name:" + name + ",value:" + value);
+            throw new IllegalParamFormatException("EmptyField", "ReqParam Illegal, ParamName IsEmpty, name:" + name + ",value:" + value);
         }
         if (value == null) {
-            throw new YopClientException("ReqParam Illegal, ParamValue IsNull, name:" + name);
+            throw new IllegalParamFormatException(name, "ReqParam Illegal, ParamValue IsNull" );
         }
         if (value instanceof File && !((File) value).exists()) {
-            throw new YopClientException("ReqParam Illegal. FileParam NotExist, name:" + name + ", value:" + value);
+            throw new IllegalParamFormatException(name, "ReqParam Illegal. FileParam NotExist, value:" + value);
         }
     }
 

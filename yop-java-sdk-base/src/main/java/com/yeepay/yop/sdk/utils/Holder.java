@@ -1,12 +1,14 @@
 package com.yeepay.yop.sdk.utils;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: 单例holder<br>
@@ -33,10 +35,10 @@ public class Holder<V> {
         try {
             return futureTask.get();
         } catch (InterruptedException e) {
-            throw new YopClientException("SystemError, ThreadInterrupted, ex:", e);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "SystemError, ThreadInterrupted, ex:", e);
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
-            throw new YopClientException("UnexpectedError, ex:", cause);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "UnexpectedError, ex:", cause);
         }
     }
 

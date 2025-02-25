@@ -10,7 +10,8 @@ import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentialsHolder;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopPlatformCredentialsProvider;
 import com.yeepay.yop.sdk.base.cache.YopCertificateCache;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.X509CertUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -66,14 +67,14 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
     @Override
     public YopPlatformCredentials getCredentials(String provider, String env, String appKey, String serialNo, String serverRoot) {
         if (StringUtils.isBlank(serialNo)) {
-            throw new YopClientException("ReqParam Illegal, PlatformCert SerialNo NotSpecified");
+            throw new IllegalParamFormatException("serialNo", "ReqParam Illegal, PlatformCert SerialNo NotSpecified");
         }
         String key = cacheKey(provider, env, appKey, serialNo);
         YopPlatformCredentials foundCredentials = credentialsMap.computeIfAbsent(key, p -> {
             if (serialNo.equals(YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO)) {
                 PublicKey rsaPublicKey = loadLocalRsaKey(provider, env, appKey, serialNo);
                 if (null == rsaPublicKey) {
-                    throw new YopClientException("ConfigProblem, LocalRsaCert NotFound, " +
+                    throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, LocalRsaCert NotFound, " +
                             "provider:" + provider + ",env:" + env + ",serialNo:" + serialNo);
                 }
                 return convertCredentials(appKey, CertTypeEnum.RSA2048.getValue(), rsaPublicKey, YOP_RSA_PLATFORM_CERT_DEFAULT_SERIAL_NO);
@@ -82,7 +83,7 @@ public abstract class YopBasePlatformCredentialsProvider implements YopPlatformC
                 if (null == localCredentials) {
                     X509Certificate remoteCert = loadRemoteSm2Cert(provider, env, appKey, serialNo, serverRoot);
                     if (null == remoteCert) {
-                        throw new YopClientException("ConfigProblem, LocalRsaCert NotFound, " +
+                        throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, LocalRsaCert NotFound, " +
                                 "provider:" + provider + ",env:" + env + ",serialNo:" + serialNo);
                     }
                     return storeCredentials(provider, env, appKey, CertTypeEnum.SM2.name(), remoteCert);

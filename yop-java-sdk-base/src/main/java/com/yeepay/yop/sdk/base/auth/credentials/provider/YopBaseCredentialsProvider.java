@@ -10,7 +10,7 @@ import com.yeepay.yop.sdk.auth.credentials.YopCredentials;
 import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.credentials.provider.YopCredentialsProvider;
 import com.yeepay.yop.sdk.base.config.YopAppConfig;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -36,14 +36,17 @@ public abstract class YopBaseCredentialsProvider implements YopCredentialsProvid
 
     protected YopCredentials<?> buildCredentials(YopAppConfig appConfig, String credentialType) {
         CertTypeEnum certType;
-        if (null == appConfig || StringUtils.isEmpty(credentialType) ||
+        if (null == appConfig) {
+            throw new IllegalConfigFormatException("YopAppConfig", "YopAppConfig is required");
+        }
+        if (StringUtils.isEmpty(credentialType) ||
                 (null == (certType = CertTypeEnum.parse(credentialType)))) {
-            throw new YopClientException("ConfigProblem, credentialType:" + credentialType + ", appConfig:" + appConfig);
+            throw new IllegalConfigFormatException("credentialType", "illegal value: " + credentialType);
         }
 
         PrivateKey privateKey = appConfig.loadPrivateKey(certType);
         if (null == privateKey) {
-            throw new YopClientException("ConfigProblem, IsvPrivateCert NotFound, appKey:" + appConfig.getAppKey() + ", certType:" + certType);
+            throw new IllegalConfigFormatException("isv_private_key", "appKey:" + appConfig.getAppKey() + ", certType:" + certType + "not found");
         }
 
         PKICredentialsItem pkiCredentialsItem = new PKICredentialsItem(privateKey, certType);
