@@ -12,8 +12,7 @@ import com.yeepay.yop.sdk.utils.YopTraceUtils;
 import java.net.NoRouteToHostException;
 import java.net.UnknownHostException;
 
-import static com.yeepay.yop.sdk.constants.CharacterConstants.COMMA;
-import static com.yeepay.yop.sdk.constants.CharacterConstants.EMPTY;
+import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
 import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_INVOKE_IO_EXCEPTION_PREFIX;
 
 /**
@@ -31,7 +30,7 @@ public class YopIOException extends YopHttpException implements YopTracedExcepti
     private static final String CONNECTION_REFUSED = "Connection refused";
     private static final String CONNECTION_TIMEOUT = "Connection timed out";
     private static final String CONNECTION_TIMEOUT2 = "connect timed out";
-    private static final String CONNECTION_TIMEOUT3 = "Timeout waiting for connection";
+    private static final String CONNECTION_TIMEOUT3 = "Timeout waiting for connection from pool";
     private static final String READ_TIMEOUT = "Read timed out";
     private static final String CONNECTION_RESET = "Connection reset";
     private static final String NO_ROUTE_TO_HOST = "No route to host";
@@ -46,7 +45,7 @@ public class YopIOException extends YopHttpException implements YopTracedExcepti
         super(message);
         this.requestId = YopTraceUtils.getCurrentRequestId();
         this.ioException = parse(message, null);
-        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + ioException.getCode();
+        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + DOT + ioException.getCode();
         this.errorMsg = EMPTY;
         this.isRetryable = ioException.isRetryable();
     }
@@ -55,7 +54,7 @@ public class YopIOException extends YopHttpException implements YopTracedExcepti
         super(message);
         this.requestId = YopTraceUtils.getCurrentRequestId();
         this.ioException = ioException;
-        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + ioException.getCode();
+        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + DOT + ioException.getCode();
         this.errorMsg = EMPTY;
         this.isRetryable = ioException.isRetryable();
     }
@@ -64,7 +63,7 @@ public class YopIOException extends YopHttpException implements YopTracedExcepti
         super(message, cause);
         this.requestId = YopTraceUtils.getCurrentRequestId();
         this.ioException = parse(message, cause);
-        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + ioException.getCode();
+        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + DOT + ioException.getCode();
         this.errorMsg = EMPTY;
         this.isRetryable = ioException.isRetryable();
     }
@@ -73,7 +72,7 @@ public class YopIOException extends YopHttpException implements YopTracedExcepti
         super(message, cause);
         this.requestId = YopTraceUtils.getCurrentRequestId();
         this.ioException = ioException;
-        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + ioException.getCode();
+        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + DOT + ioException.getCode();
         this.errorMsg = EMPTY;
         this.isRetryable = ioException.isRetryable();
     }
@@ -82,7 +81,7 @@ public class YopIOException extends YopHttpException implements YopTracedExcepti
         super(message, cause);
         this.requestId = YopTraceUtils.getCurrentRequestId();
         this.ioException = parse(message, cause);
-        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + ioException.getCode();
+        this.errorCode = SDK_INVOKE_IO_EXCEPTION_PREFIX + DOT + ioException.getCode();
         this.errorMsg = errorMsg;
         this.isRetryable = ioException.isRetryable();
     }
