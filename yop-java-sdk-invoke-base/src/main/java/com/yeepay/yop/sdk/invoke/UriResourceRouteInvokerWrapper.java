@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.invoke;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopTracedException;
 import com.yeepay.yop.sdk.exception.YopUnknownException;
 import com.yeepay.yop.sdk.invoke.model.AnalyzedException;
 import com.yeepay.yop.sdk.invoke.model.RetryContext;
@@ -112,6 +113,9 @@ public class UriResourceRouteInvokerWrapper<Input, Output, Context extends Retry
     private RuntimeException handleUnExpectedError(Throwable ex) {
         if (ex instanceof YopUnknownException) {
             return (YopUnknownException) ex;
+        }
+        if (ex instanceof YopTracedException) {
+            throw (RuntimeException) ex;
         }
         return new YopUnknownException("UnExpectedError, cause:" + ex.getMessage(), ex, "");
     }
