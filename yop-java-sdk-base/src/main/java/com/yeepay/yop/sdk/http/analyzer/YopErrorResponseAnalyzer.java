@@ -9,6 +9,7 @@ import com.yeepay.yop.sdk.http.YopHttpResponse;
 import com.yeepay.yop.sdk.model.BaseResponse;
 import com.yeepay.yop.sdk.model.YopErrorResponse;
 import com.yeepay.yop.sdk.utils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,39 +48,53 @@ public class YopErrorResponseAnalyzer implements HttpResponseAnalyzer {
         String resource = context.getOriginRequest().getEndpoint() + context.getOriginRequest().getResourcePath();
         // 5xx
         if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
-            YopServiceException yse = null;
-            String content = httpResponse.readContent();
-            if (null != content) {
-                YopErrorResponse yopErrorResponse = null;
-                try {
-                    yopErrorResponse = JsonUtils.loadFrom(content, YopErrorResponse.class);
-                } catch (Exception ex) {
-                    LOGGER.warn("Response Illegal, YopErrorResponse ParseFail, content:" + content, ex);
-                }
-                if (yopErrorResponse != null && yopErrorResponse.getMessage() != null) {
-                    yse = new YopServiceException(yopErrorResponse.getMessage());
-                    yse.setErrorCode(yopErrorResponse.getCode());
-                    yse.setSubErrorCode(yopErrorResponse.getSubCode());
-                    yse.setSubMessage(yopErrorResponse.getSubMessage());
-                    yse.setRequestId(yopErrorResponse.getRequestId());
-                    yse.setDocUrl(yopErrorResponse.getDocUrl());
-                }
-            }
-            if (yse == null) {
-                yse = new YopServiceException(httpResponse.getStatusText());
+            YopServiceException yse = buildServiceException(httpResponse.readContent(), httpResponse, resource);
+            if (StringUtils.isBlank(yse.getRequestId())) {
                 yse.setRequestId(response.getMetadata().getYopRequestId());
             }
-            yse.setStatusCode(httpResponse.getStatusCode());
             yse.setErrorType(YopServiceException.ErrorType.Service);
             throw yse;
         } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
             throw new YopIOException("ResponseError, Unexpected Response, statusCode:" + statusCode
                     + ", resource:" + resource, YopIOException.IOExceptionEnum.UNKNOWN);
+        } else if (statusCode == 429){// 429
+            final YopServiceException invokeEx = buildServiceException(httpResponse.readContent(), httpResponse, resource);
+            invokeEx.setErrorType(YopServiceException.ErrorType.Client);
+            throw invokeEx;
         } else {// 4xx
             final YopServiceException invokeEx = new YopServiceException("ReqParam Illegal, Bad Request, statusCode:" + statusCode + ", resource:" + resource);
             invokeEx.setStatusCode(statusCode);
             invokeEx.setErrorType(YopServiceException.ErrorType.Client);
             throw invokeEx;
         }
+    }
+
+    private YopServiceException buildServiceException(String content, YopHttpResponse httpResponse, String resource) {
+        YopServiceException yse = null;
+        if (null != content) {
+            YopErrorResponse yopErrorResponse = null;
+            try {
+                yopErrorResponse = JsonUtils.loadFrom(content, YopErrorResponse.class);
+            } catch (Exception ex) {
+                LOGGER.warn("Response Illegal, YopErrorResponse ParseFail, content:" + content, ex);
+            }
+            if (yopErrorResponse != null) {
+                if (StringUtils.isNotBlank(yopErrorResponse.getMessage())) {
+                    yse = new YopServiceException(yopErrorResponse.getMessage());
+                } else {
+                    yse = new YopServiceException(httpResponse.getStatusText() + "ResponseError, resource:" + resource);
+                }
+                yse.setErrorCode(yopErrorResponse.getCode());
+                yse.setSubErrorCode(yopErrorResponse.getSubCode());
+                yse.setSubMessage(yopErrorResponse.getSubMessage());
+                yse.setRequestId(yopErrorResponse.getRequestId());
+                yse.setDocUrl(yopErrorResponse.getDocUrl());
+            }
+        }
+        if (yse == null) {
+            yse = new YopServiceException(httpResponse.getStatusText() + "ResponseError, resource:" + resource);
+        }
+        yse.setStatusCode(httpResponse.getStatusCode());
+        return yse;
     }
 }
