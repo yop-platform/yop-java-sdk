@@ -4,33 +4,34 @@
  */
 package com.yeepay.yop.sdk.example;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
-import com.google.common.collect.*;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -44,9 +45,8 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.SimpleDateFormat;
 import java.util.*;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * title: rsa 加密示例<br>
@@ -60,7 +60,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class YopRsaEncryptExample {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(YopRsaEncryptExample.class);
+
+    //须引入第三方包 org.apache.httpcomponents:httpclient
     private static final CloseableHttpClient httpClient;
+    //须引入第三方包 com.fasterxml.jackson.core:jackson-databind
+    private static final ObjectMapper OBJECT_MAPPER;
+
     static {
         // 自定义连接池大小、默认超时时间
         httpClient = HttpClients.custom()
@@ -68,11 +74,23 @@ public class YopRsaEncryptExample {
                 .setMaxConnTotal(200)
                 .setDefaultRequestConfig(
                         RequestConfig.custom()
-                        .setConnectionRequestTimeout(3000)
-                        .setConnectTimeout(3000)
-                        .setSocketTimeout(30000)
-                        .build())
+                                .setConnectionRequestTimeout(3000)
+                                .setConnectTimeout(3000)
+                                .setSocketTimeout(30000)
+                                .build())
                 .build();
+        OBJECT_MAPPER = new ObjectMapper();
+        OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        OBJECT_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        OBJECT_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
+        OBJECT_MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        OBJECT_MAPPER.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
+        OBJECT_MAPPER.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
+        // 小数都用BigDecimal，默认的是Double
+        OBJECT_MAPPER.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+        OBJECT_MAPPER.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
     }
 
     private static final String APP_KEY = "sandbox_rsa_10080041523";
@@ -94,297 +112,6 @@ public class YopRsaEncryptExample {
     private static final String RSA = "RSA";
     private static final String DEFAULT_DIGEST_ALG = "SHA-256";
     private static final String DEFAULT_SIGN_ALG = "SHA256withRSA";
-    private static final Joiner QUERY_STRING_JOINER = Joiner.on('&');
-
-    public static void main(String[] args) throws Exception {
-        // 加密会话密钥，可每笔调用都生成，也可以多笔公用一个，建议定时更换
-        String encryptKey = encodeUrlSafeBase64(generateRandomKey());
-
-        // 注意：以下分别展示了不同请求方式的参数构造、加密、解密、验签的完整流程，请根据接口实际情况进行选择
-
-        // get请求，form参数
-        getFormExample(YopRequestMethod.GET, "/rest/v1.0/test/errorcode2",
-                YopRequestContentType.FORM_URL_ENCODE, encryptKey);
-
-        // post请求，form参数
-        postFormExample(YopRequestMethod.POST, "/rest/v1.0/frontcashier/agreement/sign/confirm",
-                YopRequestContentType.FORM_URL_ENCODE, encryptKey);
-
-        // post请求，文件参数
-        postMultipartFormExample(YopRequestMethod.POST, "/yos/v1.0/sys/merchant/qual/upload",
-                YopRequestContentType.MULTIPART_FORM, encryptKey);
-
-        // post请求，json参数
-        postJsonExample(YopRequestMethod.POST, "/rest/v1.0/test-wdc/test/http-json/test",
-                YopRequestContentType.JSON, encryptKey);
-
-        // get请求，form参数，下载文件
-        downloadExample(YopRequestMethod.GET, "/yos/v1.0/test/test/ceph-download",
-                YopRequestContentType.FORM_URL_ENCODE, encryptKey);
-    }
-
-    private static void getFormExample(YopRequestMethod requestMethod, String requestUri,
-                                       YopRequestContentType requestContentType,
-                                       String encryptKey) throws Exception {
-        // 请求参数
-        Multimap<String, String> formParams = ArrayListMultimap.create();
-        Set<String> encryptHeaders = Collections.emptySet();
-        Set<String> encryptParams = Sets.newHashSet();
-
-        // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
-
-        // 参数不加密-------------->开始
-//        formParams.put("errorCode", "000027");
-        // 参数不加密-------------->结束
-
-        // 参数加密-------------->开始
-        formParams.put("errorCode", encryptParam(encryptKey, "000027"));
-        encryptParams.add("errorCode");
-        // 参数加密-------------->结束
-
-        // 请求头
-        Map<String, String> headers = buildHeaders(requestMethod, requestUri, formParams,
-                requestContentType, "", encryptKey, encryptHeaders, encryptParams);
-
-        // 构造http请求
-        HttpUriRequest request = buildHttpRequest(SERVER_ROOT + requestUri,
-                requestMethod, headers, formParams, null);
-
-        // 发起http调用
-        CloseableHttpResponse response = null;
-        try {
-            response = httpClient.execute(request);
-            handleResponse(YopRequestType.WEB, response, encryptKey);
-        } finally {
-            HttpClientUtils.closeQuietly(response);
-        }
-    }
-
-    private static Map<String, String> buildHeaders(YopRequestMethod httpMethod, String apiUri,
-                                                    Multimap<String, String> params,
-                                                    YopRequestContentType contentType, String content,
-                                                    String encryptKey, Set<String> encryptHeaders, Set<String> encryptParams) throws Exception {
-        Map<String, String> headers = new HashMap<>();
-        headers.put(YOP_SDK_LANGS, "java");
-        headers.put(YOP_SDK_VERSION, "4.3.0");
-        headers.put(YOP_APPKEY, APP_KEY);
-        headers.put(YOP_REQUEST_ID, UUID.randomUUID().toString());
-
-        // 加密头：请求参数不加密的情况, 也需设置加密头，用于响应结果加密
-        headers.put(YOP_ENCRYPT, buildEncryptHeader(encryptHeaders, encryptParams, encryptKey));
-
-        // 摘要头
-        headers.put(YOP_CONTENT_SHA256, calculateContentHash(httpMethod, contentType, params, content));
-
-        // 签名头
-        headers.put(AUTHORIZATION, signRequest(httpMethod, apiUri, headers, params));
-        return headers;
-    }
-
-    private static void postFormExample(YopRequestMethod requestMethod, String requestUri,
-                                        YopRequestContentType requestContentType,
-                                        String encryptKey) throws Exception {
-
-        // 请求参数
-        Multimap<String, String> params = ArrayListMultimap.create();
-        Set<String> encryptHeaders = Collections.emptySet();
-        Set<String> encryptParams = Sets.newHashSet();
-
-        // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
-
-        // 参数不加密-------------->开始
-//        params.put("parentMerchant", "10080041523");
-//        params.put("merchantNo", "10080041523");
-//        params.put("smsCode", "11111131");
-//        params.put("merchantFlowId", "11111131");
-        // 参数不加密-------------->结束
-
-
-        // 参数加密-------------->开始
-        params.put("parentMerchant", encryptParam(encryptKey , "10080041523" ));
-        params.put("merchantNo", encryptParam(encryptKey , "10080041523" ));
-        params.put("smsCode", encryptParam(encryptKey , "11111131" ));
-        params.put("merchantFlowId", encryptParam(encryptKey , "111111" ));
-        encryptParams.add("parentMerchant");
-        encryptParams.add("merchantNo");
-        encryptParams.add("smsCode");
-        encryptParams.add("merchantFlowId");
-        // 参数加密-------------->结束
-
-        // 请求头
-        Map<String, String> headers = buildHeaders(requestMethod, requestUri, params,
-                requestContentType, "", encryptKey, encryptHeaders, encryptParams);
-
-        // 构造http请求
-        HttpUriRequest request = buildHttpRequest(SERVER_ROOT + requestUri,
-                requestMethod, headers, params, null);
-
-        // 发起http调用
-        CloseableHttpResponse response = null;
-        try {
-            response = httpClient.execute(request);
-            handleResponse(YopRequestType.WEB, response, encryptKey);
-        } finally {
-            HttpClientUtils.closeQuietly(response);
-        }
-    }
-
-    private static void postMultipartFormExample(YopRequestMethod requestMethod, String requestUri,
-                                                 YopRequestContentType requestContentType, String encryptKey) throws Exception {
-
-
-        // 普通参数参与签名,clientId
-        Multimap<String, String> params = ArrayListMultimap.create();
-        Set<String> encryptHeaders = Collections.emptySet();
-        Set<String> encryptParams = Sets.newHashSet();
-
-        // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
-
-        // 参数不加密--------------->开始
-//        params.put("clientId", APP_KEY);
-        // 参数不加密--------------->结束
-
-        // 参数加密--------------->开始
-        params.put("clientId", encryptParam(encryptKey, APP_KEY));
-        encryptParams.add("clientId");
-        // 参数加密--------------->结束
-
-        // 请求头
-        Map<String, String> headers = buildHeaders(requestMethod, requestUri, params,
-                requestContentType, "", encryptKey, encryptHeaders, encryptParams);
-
-        // 构造http请求
-        HttpPost postMethod = new HttpPost(SERVER_ROOT + requestUri);
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-
-        // 添加普通参数
-        for (Map.Entry<String, Collection<String>> entry : params.asMap().entrySet()) {
-            String paramKey = entry.getKey();
-            for (String value : entry.getValue()) {
-                builder.addTextBody(normalize(paramKey), normalize(value));
-            }
-        }
-
-        // 注意：以下两个代码块分别展示了本地文件、远程文件两种示例，请根据情况选择其一
-        // 添加文件参数，merQual
-        // 方式一：本地文件流
-//        builder.addBinaryBody("merQual", new FileInputStream("abc.txt"),
-//                ContentType.DEFAULT_BINARY, "abc.txt");
-        // 方式二：远程文件流
-        builder.addBinaryBody("merQual", new URL("https://open.yeepay.com/apis/docs/apis/common/ALL.json").openStream(),
-                ContentType.DEFAULT_BINARY, "abc.txt");
-
-        postMethod.setEntity(builder.build());
-
-        // 添加请求头
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            postMethod.addHeader(entry.getKey(), entry.getValue());
-        }
-
-        // 发起http调用
-        CloseableHttpResponse response = null;
-        try {
-            response = httpClient.execute(postMethod);
-            handleResponse(YopRequestType.WEB, response, encryptKey);
-        } finally {
-            HttpClientUtils.closeQuietly(response);
-        }
-
-    }
-
-    private static void postJsonExample(YopRequestMethod requestMethod, String requestUri,
-                                        YopRequestContentType requestContentType,
-                                        String encryptKey) throws Exception {
-        Set<String> encryptHeaders = Collections.emptySet();
-        Set<String> encryptParams = Sets.newHashSet();
-
-        String plainJsonContent = "{\n" +
-                "  \"arg1\" : {\n" +
-                "    \"appId\" : \"app_1111111111\",\n" +
-                "    \"customerNo\" : \"333333333\"\n" +
-                "  },\n" +
-                "  \"arg0\" : {\n" +
-                "    \"string\" : \"hello\",\n" +
-                "    \"array\" : [ \"test\" ]\n" +
-                "  }\n" +
-                "}",
-                encryptJsonContent = encryptParam(encryptKey, plainJsonContent);
-
-        // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
-        String finalJsonContent
-                // 不加密------------------->开始
-//            = plainJsonContent;
-                // 不加密------------------->结束
-
-
-                // 加密-------------------->开始
-                = encryptJsonContent;
-        encryptParams.add("$"); // 目前json推荐整体加密，$代表整体加密
-        // 加密-------------------->结束
-
-        // 请求头
-        // 目前不允许json接口带有form参数，置空即可
-        final ArrayListMultimap<String, String> params = ArrayListMultimap.create();
-        Map<String, String> headers = buildHeaders(requestMethod, requestUri, params,
-                requestContentType, finalJsonContent, encryptKey, encryptHeaders, encryptParams);
-
-        // 构造http请求
-        HttpUriRequest request = buildHttpRequest(SERVER_ROOT + requestUri,
-                requestMethod, headers, params, finalJsonContent);
-
-        // 发起http调用
-        CloseableHttpResponse response = null;
-        try {
-            response = httpClient.execute(request);
-            handleResponse(YopRequestType.WEB, response, encryptKey);
-        } finally {
-            HttpClientUtils.closeQuietly(response);
-        }
-    }
-
-    private static void downloadExample(YopRequestMethod requestMethod, String requestUri,
-                                        YopRequestContentType requestContentType,
-                                        String encryptKey) throws Exception {
-        // 根据实际情况来，【文件下载接口】可能是post方法，请求报文可能是form，也可能是json，可参考其他方式的入参处理
-        // 此处仅演示文件响应流的处理
-
-        // 请求参数
-        Multimap<String, String> params = ArrayListMultimap.create();
-        Set<String> encryptHeaders = Collections.emptySet();
-        Set<String> encryptParams = Sets.newHashSet();
-
-        // 注意：以下两个代码块分别展示了加密、不加密两种示例，请根据情况选择其一
-        // 不加密------------------->开始
-//        params.put("fileName", "wym-test.txt");
-        // 不加密------------------->结束
-
-        // 加密--------------------->开始
-        params.put("fileName", encryptParam(encryptKey, "wym-test.txt"));
-        encryptParams.add("fileName");
-        // 加密--------------------->结束
-
-        // 请求头
-        Map<String, String> headers = buildHeaders(requestMethod, requestUri, params,
-                requestContentType, "", encryptKey, encryptHeaders, encryptParams);
-
-        // 构造http请求
-        HttpUriRequest request = buildHttpRequest(SERVER_ROOT + requestUri,
-                requestMethod, headers, params, "");
-
-        // 发起请求
-        CloseableHttpResponse response = null;
-        try {
-            response = httpClient.execute(request);
-            handleResponse(YopRequestType.FILE_DOWNLOAD, response, encryptKey);
-        } finally {
-            HttpClientUtils.closeQuietly(response);
-        }
-    }
-
-    private static final Set<String> DEFAULT_HEADERS_TO_SIGN = Sets.newHashSet();
-    private static final Joiner HEADER_JOINER = Joiner.on('\n');
-    private static final Joiner SIGNED_HEADER_STRING_JOINER = Joiner.on(';');
 
     private static final String YOP_SDK_VERSION = "x-yop-sdk-version";
     private static final String YOP_SDK_LANGS = "x-yop-sdk-langs";
@@ -392,492 +119,510 @@ public class YopRsaEncryptExample {
     private static final String YOP_APPKEY = "x-yop-appkey";
     private static final String YOP_CONTENT_SHA256 = "x-yop-content-sha256";
     private static final String YOP_ENCRYPT = "x-yop-encrypt";
+    private static final String YOP_SIGN = "x-yop-sign";
     private static final String AUTHORIZATION = "Authorization";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
     private static final String CONTENT_TYPE = "Content-Type";
 
-    static {
-        DEFAULT_HEADERS_TO_SIGN.add(YOP_REQUEST_ID);
-        DEFAULT_HEADERS_TO_SIGN.add(YOP_APPKEY);
-        DEFAULT_HEADERS_TO_SIGN.add(YOP_CONTENT_SHA256);
-        DEFAULT_HEADERS_TO_SIGN.add(YOP_ENCRYPT);
-    }
+    public static void main(String[] args) throws Exception {
+        // get请求，form参数，返回json
+        getFormExample();
 
-    private static String signRequest(YopRequestMethod requestMethod, String requestUri,
-                                      Map<String, String> headers, Multimap<String, String> params) throws Exception {
-        // A.构造认证字符串
-        String authString = buildAuthString();
+        // 文件下载接口，返回文件流
+        downloadExample();
 
-        // B.获取规范请求串
-        SortedMap<String, String> headersToSign = getHeadersToSign(headers, DEFAULT_HEADERS_TO_SIGN);
-        String canonicalRequest = buildCanonicalRequest(requestMethod, requestUri, params, authString, headersToSign);
+        // post请求，form参数，返回json
+        postFormExample();
 
-        // C.计算签名
-        String signature = encodeUrlSafeBase64(sign(canonicalRequest.getBytes(DEFAULT_ENCODING))) + "$" + "SHA256";
+        // post请求，json参数，返回json
+        postJsonExample();
 
-        // D.添加认证头
-        return buildAuthHeader(authString, headersToSign, signature);
-    }
-
-    private static String buildAuthHeader(String authString,
-                                          SortedMap<String, String> headersToSign,
-                                          String signature) {
-        String signedHeaders = SIGNED_HEADER_STRING_JOINER.join(headersToSign.keySet());
-        signedHeaders = signedHeaders.trim().toLowerCase();
-        return DEFAULT_AUTH_PREFIX_RSA2048 + " " + authString + "/" + signedHeaders + "/" + signature;
-    }
-
-    private static byte[] sign(byte[] data) {
-        try {
-            Signature signature = Signature.getInstance(DEFAULT_SIGN_ALG);
-            signature.initSign(string2PrivateKey(ISV_PRIVATE_KEY));
-            signature.update(data);
-            return signature.sign();
-        } catch (Exception e) {
-            throw new RuntimeException("SystemError, Sign Fail, key:" + ISV_PRIVATE_KEY + ", ex:", e);
-        }
-    }
-
-    private static void verifyResponseSign(String signHeader, String content) throws UnsupportedEncodingException {
-        if (StringUtils.isBlank(signHeader) || StringUtils.isBlank(content)) {
-            System.out.println("Response Sign Skip, signature:" + signHeader + ", content:" + content);
-            return;
-        }
-        String signContent = content.replaceAll("[ \t\n]", "");
-        System.out.println("Response Sign Begin, signature:" + signHeader + ", content:" + signContent);
-        if (!verifySign(signContent.getBytes(DEFAULT_ENCODING), decodeBase64(signHeader), string2PublicKey(YOP_PUBLIC_KEY))) {
-            System.out.println("Response Sign Verify Fail");
-        } else {
-            System.out.println("Response Sign Verify Success");
-        }
+        // post请求，文件上传，返回json
+        uploadExample();
     }
 
     /**
-     * 验证签名
+     * HTTP GET 请求
      *
-     * @param data      数据
-     * @param sign      签名
-     * @param publicKey 公钥
-     * @return boolean
+     * @param serverRoot 请求端点地址
+     * @param apiUri 请求接口地址
+     * @param params 查询参数Map
+     * @param encryptParams 指定待加密参数名
+     * @param yopPublicKey 平台公钥
+     * @param isvPrivateKey 商户私钥
+     * @return ApiResponse
+     * @throws Exception
      */
-    public static boolean verifySign(byte[] data, byte[] sign, PublicKey publicKey) {
-        try {
-            Signature signature = Signature.getInstance(DEFAULT_SIGN_ALG);
-            signature.initVerify(publicKey);
-            signature.update(data);
-            return signature.verify(sign);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
+    public static ApiResponse get(String serverRoot,
+                                  String apiUri,
+                                  Map<String, Object> params,
+                                  Set<String> encryptParams,
+                                  String yopPublicKey,
+                                  String isvPrivateKey) throws Exception {
+        // 请求类型，具体查看枚举注释
+        YopRequestType requestType = YopRequestType.WEB;
 
-    private static PrivateKey string2PrivateKey(String priKey) {
-        try {
-            return KeyFactory.getInstance(RSA).generatePrivate(
-                    new PKCS8EncodedKeySpec(decodeBase64(priKey)));
-        } catch (Exception e) {
-            throw new RuntimeException("ConfigProblem, IsvPrivateKey ParseFail, value:" + priKey + ", ex:", e);
-        }
-    }
+        // 请求方法
+        YopRequestMethod httpMethod = YopRequestMethod.GET;
 
-    private static byte[] decodeBase64(String input) {
-        return Base64.decodeBase64(input);
-    }
+        // 请求内容类型
+        YopRequestContentType contentType = YopRequestContentType.FORM_URL_ENCODE;
 
-    private static String buildCanonicalRequest(YopRequestMethod httpMethod, String apiUri, Multimap<String, String> params,
-                                                String authString,
-                                                SortedMap<String, String> headersToSign) {
-        String canonicalQueryString;
-        if (YopRequestMethod.GET.equals(httpMethod) && null != params) {
-            canonicalQueryString = getCanonicalQueryString(params, true);
-        } else {
-            canonicalQueryString = "";// post from 与json时，均为空，此处先简单处理
-        }
-        String canonicalHeaders = getCanonicalHeaders(headersToSign);
+        // GET 请求不支持http-body参数，留空即可
+        Map<String, Object> bodyParams = null;
 
-        String canonicalURI = getCanonicalURIPath(apiUri);
-        return authString + "\n"
-                + httpMethod.name() + "\n"
-                + canonicalURI + "\n"
-                + canonicalQueryString + "\n"
-                + canonicalHeaders;
-    }
-
-    private static String getCanonicalURIPath(String path) {
-        if (path == null) {
-            return "/";
-        } else if (path.startsWith("/")) {
-            return normalizePath(path);
-        } else {
-            return "/" + normalizePath(path);
-        }
-    }
-
-    private static String normalizePath(String path) {
-        return normalize(path).replace("%2F", "/");
-    }
-
-    private static SortedMap<String, String> getHeadersToSign(Map<String, String> headers, Set<String> headersToSign) {
-        SortedMap<String, String> ret = Maps.newTreeMap();
-        if (headersToSign != null) {
-            Set<String> tempSet = Sets.newHashSet();
-            for (String header : headersToSign) {
-                tempSet.add(header.trim().toLowerCase());
-            }
-            headersToSign = tempSet;
-        }
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            String key = entry.getKey();
-            if (entry.getValue() != null && !entry.getValue().isEmpty()) {
-                if ((headersToSign != null && headersToSign.contains(key.toLowerCase())
-                        && !AUTHORIZATION.equalsIgnoreCase(key))) {
-                    ret.put(key, entry.getValue());
-                }
-            }
-        }
-        return ret;
-    }
-
-    private static String getCanonicalHeaders(SortedMap<String, String> headers) {
-        if (headers.isEmpty()) {
-            return "";
-        }
-
-        List<String> headerStrings = Lists.newArrayList();
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            String key = entry.getKey();
-            if (key == null) {
-                continue;
-            }
-            String value = entry.getValue();
-            if (value == null) {
-                value = "";
-            }
-            headerStrings.add(normalize(key.trim().toLowerCase()) + ':' + normalize(value.trim()));
-        }
-        Collections.sort(headerStrings);
-
-        return HEADER_JOINER.join(headerStrings);
-    }
-
-    private static final DateTimeFormatter alternateIso8601DateFormat =
-            ISODateTimeFormat.dateTimeNoMillis().withZone(DateTimeZone.UTC);
-
-    private static String buildAuthString() {
-        Date timestamp = new Date();
-        return DEFAULT_YOP_PROTOCOL_VERSION + "/"
-                + APP_KEY + "/"
-                + alternateIso8601DateFormat.print(new DateTime(timestamp)) + "/"
-                + "1800";
-    }
-
-    private static String calculateContentHash(String jsonContent) throws Exception {
-        InputStream contentStream = getContentStream(jsonContent);
-        return Hex.encodeHexString((digest(contentStream)));
-    }
-
-    private static String calculateContentHash(YopRequestMethod requestMethod, YopRequestContentType requestContentType,
-                                               Multimap<String, String> params, String content) throws Exception {
-        String digestSource;
-
-        if (requestMethod.equals(YopRequestMethod.GET)) {
-            digestSource = "";
-        } else if (requestMethod.equals(YopRequestMethod.POST)
-                && requestContentType.equals(YopRequestContentType.JSON)) {
-            digestSource = content;
-        } else {
-            digestSource = getCanonicalQueryString(params, true);
-        }
-        InputStream contentStream = getContentStream(digestSource);
-        return Hex.encodeHexString((digest(contentStream)));
-    }
-
-    private static ByteArrayInputStream getContentStream(Multimap<String, String> params) throws Exception {
-        return getContentStream(getCanonicalQueryString(params, true));
-    }
-
-    private static ByteArrayInputStream getContentStream(String paramStr) throws Exception {
-        byte[] bytes;
-        if (StringUtils.isEmpty(paramStr)) {
-            bytes = new byte[0];
-        } else {
-            bytes = paramStr.getBytes(DEFAULT_ENCODING);
-        }
-        return new ByteArrayInputStream(bytes);
-    }
-
-    public static String getCanonicalQueryString(Multimap<String, String> params, boolean forSignature) {
-        Map<String, Collection<String>> parameters;
-        if (null == params || (parameters = params.asMap()).isEmpty()) {
-            return "";
-        }
-
-        List<String> parameterStrings = Lists.newArrayList();
-        for (Map.Entry<String, Collection<String>> entry : parameters.entrySet()) {
-            if (forSignature && AUTHORIZATION.equalsIgnoreCase(entry.getKey())) {
-                continue;
-            }
-            String key = entry.getKey();
-            checkNotNull(key, "parameter key should not be null");
-            Collection<String> value = entry.getValue();
-            if (value == null) {
-                if (forSignature) {
-                    parameterStrings.add(normalize(key) + '=');
-                } else {
-                    parameterStrings.add(normalize(key));
-                }
-            } else {
-                for (String item : value) {
-                    parameterStrings.add(normalize(key) + '=' + normalize(item));
-                }
-            }
-        }
-        Collections.sort(parameterStrings);
-
-        return QUERY_STRING_JOINER.join(parameterStrings);
-    }
-
-    private static final BitSet URI_UNRESERVED_CHARACTERS = new BitSet();
-    private static final String[] PERCENT_ENCODED_STRINGS = new String[256];
-
-    static {
-        /*
-         * StringBuilder pattern = new StringBuilder();
-         *
-         * pattern .append(Pattern.quote("+")) .append("|") .append(Pattern.quote("*")) .append("|")
-         * .append(Pattern.quote("%7E")) .append("|") .append(Pattern.quote("%2F"));
-         *
-         * ENCODED_CHARACTERS_PATTERN = Pattern.compile(pattern.toString());
-         */
-        for (int i = 'a'; i <= 'z'; i++) {
-            URI_UNRESERVED_CHARACTERS.set(i);
-        }
-        for (int i = 'A'; i <= 'Z'; i++) {
-            URI_UNRESERVED_CHARACTERS.set(i);
-        }
-        for (int i = '0'; i <= '9'; i++) {
-            URI_UNRESERVED_CHARACTERS.set(i);
-        }
-        URI_UNRESERVED_CHARACTERS.set('-');
-        URI_UNRESERVED_CHARACTERS.set('.');
-        URI_UNRESERVED_CHARACTERS.set('_');
-        URI_UNRESERVED_CHARACTERS.set('~');
-
-        for (int i = 0; i < PERCENT_ENCODED_STRINGS.length; ++i) {
-            PERCENT_ENCODED_STRINGS[i] = String.format("%%%02X", i);
-        }
-    }
-
-    public static String normalize(String value) {
-        try {
-            StringBuilder builder = new StringBuilder();
-            for (byte b : value.getBytes(DEFAULT_ENCODING)) {
-                if (URI_UNRESERVED_CHARACTERS.get(b & 0xFF)) {
-                    builder.append((char) b);
-                } else {
-                    builder.append(PERCENT_ENCODED_STRINGS[b & 0xFF]);
-                }
-            }
-            return builder.toString();
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static byte[] digest(InputStream input) {
-        try {
-            MessageDigest md = MessageDigest.getInstance(DEFAULT_DIGEST_ALG);
-            DigestInputStream digestInputStream = new DigestInputStream(input, md);
-            byte[] buffer = new byte[1024];
-            while (digestInputStream.read(buffer) > -1) {}
-            return digestInputStream.getMessageDigest().digest();
-        } catch (Exception e) {
-            throw new RuntimeException("SystemError, Digest Fail, alg:" + DEFAULT_DIGEST_ALG + ", ex:", e);
-        }
+        return request(serverRoot, requestType, httpMethod, apiUri, contentType, params, bodyParams,
+                encryptParams, yopPublicKey, isvPrivateKey);
     }
 
     /**
-     * 加密协议头(请求)：
+     * HTTP POST 请求
      *
-     * yop-encrypt-v1/{服务端证书序列号}/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必填)}/{encryptHeaders}/{encryptParams}
+     * @param serverRoot 请求端点地址
+     * @param apiUri 请求接口地址
+     * @param params 业务参数Map
+     * @param contentType 内容类型(form/json)
+     * @param encryptParams 指定待加密参数名
+     * @param yopPublicKey 平台公钥
+     * @param isvPrivateKey 商户私钥
+     * @return ApiResponse
+     * @throws Exception
      */
-    public static String buildEncryptHeader(Set<String> encryptHeaders, Set<String> encryptParams,
-                                            String aesKey) throws Exception {
-
-        return  "yop-encrypt-v1" + SLASH +
-                EMPTY + SLASH + //rsa 为空
-                StringUtils.replace(AES_ENCRYPT_ALG, SLASH, UNDER_LINE) + SLASH +
-                encodeUrlSafeBase64(encryptKey(decodeBase64(aesKey), string2PublicKey(YOP_PUBLIC_KEY))) + SLASH +
-                EMPTY + SLASH +
-                STREAM + SLASH +
-                StringUtils.join(encryptHeaders, SEMICOLON) + SLASH +
-                encodeUrlSafeBase64(StringUtils.join(encryptParams, SEMICOLON).getBytes(DEFAULT_ENCODING));
-    }
-
-    public static PublicKey string2PublicKey(String pubKey) {
-        try {
-            return KeyFactory.getInstance(RSA).generatePublic(
-                    new X509EncodedKeySpec(decodeBase64(pubKey)));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new RuntimeException("ConfigProblem, YopPublicKey ParseFail, value:" + pubKey + ", ex:", e);
+    public static ApiResponse post(String serverRoot,
+                                  String apiUri, YopRequestContentType contentType,
+                                  Map<String, Object> params,
+                                  Set<String> encryptParams,
+                                  String yopPublicKey,
+                                  String isvPrivateKey) throws Exception {
+        if (null == params || params.isEmpty()) {
+            throw new IllegalArgumentException("biz params must not be null or empty");
         }
-    }
 
-    private static byte[] encryptKey(byte[] data, Key key) {
-        Cipher cipher;
-        try {
-            cipher = Cipher.getInstance(RSA_ENCRYPT_ALG);
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            return cipher.doFinal(data);
-        } catch (Exception e) {
-            throw new RuntimeException("SystemError, Encrypt Fail, key:"
-                    + key + ", cause:" + e.getMessage(), e);
+        // 纠正内容类型，具体查看枚举注释
+        for (Object value : params.values()) {
+            if (isFileParam(value)) {
+                return upload(serverRoot, apiUri, params, encryptParams, yopPublicKey, isvPrivateKey);
+            }
         }
+
+        // 请求类型
+        YopRequestType requestType = YopRequestType.WEB;
+
+        // 请求方法
+        YopRequestMethod httpMethod = YopRequestMethod.POST;
+
+        // http-body参数，留空即可
+        Map<String, Object> bodyParams = params;
+
+        return request(serverRoot, requestType, httpMethod, apiUri, contentType, null, bodyParams,
+                encryptParams, yopPublicKey, isvPrivateKey);
     }
 
-    private static String encryptParam(String aesKey, String plain) throws Exception {
-        final Cipher cipher = getInitializedCipher(Cipher.ENCRYPT_MODE, aesKey);
-        return encodeUrlSafeBase64(cipher.doFinal(plain.getBytes("UTF-8")));
-    }
-
-    private static String decryptParam(String aesKey, String encryptContent) throws Exception {
-        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
-        return new String(cipher.doFinal(decodeBase64(encryptContent)), "UTF-8");
-    }
-
-    private static InputStream decryptStream(String aesKey, InputStream encryptStream) throws Exception {
-        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
-        return new CipherInputStream(encryptStream, cipher);
-    }
-
-    private static Cipher getInitializedCipher(int mode, String aesKey) {
-        try {
-            byte[] key = decodeBase64(aesKey);
-            Cipher cipher = Cipher.getInstance(AES_ENCRYPT_ALG);
-            Key secretKey = new SecretKeySpec(key, "AES");
-            cipher.init(mode, secretKey);
-            return cipher;
-        } catch (Throwable throwable) {
-            throw new RuntimeException("error happened when initialize cipher", throwable);
+    /**
+     * HTTP POST 请求
+     *
+     * @param serverRoot 请求端点地址
+     * @param apiUri 请求接口地址
+     * @param params 业务参数Map
+     * @param encryptParams 指定待加密参数名
+     * @param yopPublicKey 平台公钥
+     * @param isvPrivateKey 商户私钥
+     * @return ApiResponse
+     * @throws Exception
+     */
+    public static ApiResponse upload(String serverRoot,
+                                  String apiUri,
+                                  Map<String, Object> params,
+                                  Set<String> encryptParams,
+                                  String yopPublicKey,
+                                  String isvPrivateKey) throws Exception {
+        if (null == params || params.isEmpty()) {
+            throw new IllegalArgumentException("biz params must not be null or empty");
         }
+
+        YopRequestContentType contentType = YopRequestContentType.MULTIPART_FORM;
+
+        // 请求类型
+        YopRequestType requestType = YopRequestType.WEB;
+
+        // 请求方法
+        YopRequestMethod httpMethod = YopRequestMethod.POST;
+
+        // http-body参数，留空即可
+        Map<String, Object> bodyParams = params;
+
+        return request(serverRoot, requestType, httpMethod, apiUri, contentType, null, bodyParams,
+                encryptParams, yopPublicKey, isvPrivateKey);
     }
 
-    private static String encodeUrlSafeBase64(byte[] input) {
-        return Base64.encodeBase64URLSafeString(input);
-    }
+    /**
+     * HTTP 文件下载 请求
+     *
+     * @param serverRoot 请求端点地址
+     * @param apiUri 请求接口地址
+     * @param httpMethod 请求方法
+     * @param contentType 内容类型
+     * @param params 参数Map
+     * @param encryptParams 指定待加密参数名
+     * @param yopPublicKey 平台公钥
+     * @param isvPrivateKey 商户私钥
+     * @return
+     * @throws Exception
+     */
+    public static ApiResponse download(String serverRoot,
+                                  String apiUri,
+                                  YopRequestMethod httpMethod,
+                                  YopRequestContentType contentType,
+                                  Map<String, Object> params,
+                                  Set<String> encryptParams,
+                                  String yopPublicKey,
+                                  String isvPrivateKey) throws Exception {
+        // 请求类型，具体查看枚举注释
+        YopRequestType requestType = YopRequestType.FILE_DOWNLOAD;
 
-    private static byte[] generateRandomKey() throws NoSuchAlgorithmException {
-        //实例化
-        KeyGenerator generator = KeyGenerator.getInstance("AES");
-        //设置密钥长度
-        generator.init(128);
-        //生成密钥
-        return generator.generateKey().getEncoded();
-    }
+        // 请求不支持http-body参数，留空即可
+        Map<String, Object> queryParams = null, bodyParams = null;
 
-    protected static HttpUriRequest buildHttpRequest(String requestUrl, YopRequestMethod requestMethod,
-                                                     Map<String, String> headers, Multimap<String, String> params,
-                                                     String content) throws UnsupportedEncodingException {
-        RequestBuilder requestBuilder;
-        if (YopRequestMethod.POST == requestMethod) {
-            requestBuilder = RequestBuilder.post();
-        } else if (YopRequestMethod.GET == requestMethod) {
-            requestBuilder = RequestBuilder.get();
+        if (YopRequestMethod.GET == httpMethod) {
+            queryParams = params;
         } else {
-            throw new RuntimeException("unsupported http method");
-        }
-        requestBuilder.setUri(requestUrl);
-
-        // header
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            requestBuilder.addHeader(entry.getKey(), entry.getValue());
+            bodyParams = params;
         }
 
-        // body
-        try {
-            if (null != params) {
-                for (Map.Entry<String, Collection<String>> entry : params.asMap().entrySet()) {
-                    String paramKey = entry.getKey();
-                    for (String value : entry.getValue()) {
-                        requestBuilder.addParameter(paramKey, URLEncoder.encode(value, DEFAULT_ENCODING));
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            throw new RuntimeException("unable to create http request.", ex);
-        }
-        if (YopRequestMethod.GET.equals(requestMethod)) {
-            requestBuilder.addHeader(CONTENT_TYPE, "application/x-www-form-urlencoded;charset=UTF-8");
-            return requestBuilder.build();
-        }
-        // json 请求
-        if (StringUtils.isNotBlank(content)) {
-            final byte[] contentBytes = content.getBytes(DEFAULT_ENCODING);
-            requestBuilder.setEntity(new InputStreamEntity(new ByteArrayInputStream(contentBytes), contentBytes.length));
-            requestBuilder.addHeader(CONTENT_TYPE, "application/json;charset=UTF-8");
-        }
-        return requestBuilder.build();
+        return request(serverRoot, requestType, httpMethod, apiUri, contentType, queryParams, bodyParams,
+                encryptParams, yopPublicKey, isvPrivateKey);
     }
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static void downloadExample() throws Exception {
+        // 接口地址
+        String apiUri = "/rest/v1.0/test-wdc/test-param-parse/input-stream-result";
 
-    private static void handleResponse(YopRequestType requestType,
-                                       CloseableHttpResponse httpResponse,
-                                       String encryptKey) throws Exception {
-        // header
-        Map<String, String> headers = Maps.newHashMap();
-        for (Header header : httpResponse.getAllHeaders()) {
-            headers.put(header.getName(), header.getValue());
-        }
-        String encryptHeader = headers.get("x-yop-encrypt"),// 加密头
-                signHeader = headers.get("x-yop-sign"); //签名头
+        // TODO 请求方法，根据接口文档，实际情况来选择GET/POST
+        YopRequestMethod httpMethod = YopRequestMethod.GET;
 
-        boolean isEncryptResponse = StringUtils.isNotBlank(encryptHeader);
+        // TODO 请求内容类型，根据接口文档，实际情况来选择form/json
+        YopRequestContentType contentType = YopRequestContentType.FORM_URL_ENCODE;
 
-        // body
-        HttpEntity entity = httpResponse.getEntity();
-        int statusCode = httpResponse.getStatusLine().getStatusCode();
-        if (statusCode / 100 == HttpStatus.SC_OK / 100 && statusCode != HttpStatus.SC_NO_CONTENT) {
-            //not a error
-            if (null != entity && entity.getContent() != null) {
-                if (isJsonResponse(httpResponse)) {
-                    String content = IOUtils.toString(entity.getContent(), DEFAULT_ENCODING);
-                    System.out.println("Request success, response:" + content);
-                    verifyResponseSign(signHeader, content);
-                    final JsonNode bizData = OBJECT_MAPPER.readTree(content).get("result");
-                    if (isEncryptResponse) {
-                        System.out.println("Response decrypt success, bizData:" + decryptParam(encryptKey, bizData.asText()));
-                    }
-                    return;
-                } else if (YopRequestType.FILE_DOWNLOAD.equals(requestType) || isDownloadResponse(httpResponse)) {
-                    InputStream fileContent = entity.getContent();
-                    if (isEncryptResponse) {
-                        fileContent = decryptStream(encryptKey, fileContent);
-                        System.out.println("Response file decrypt success");
-                    }
-                    final File file = saveFile(fileContent, headers);
-                    System.out.println("Request success, file downloaded:" + file);
-                    return;
+        //  TODO 构建业务参数，根据接口文档填充接口参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("strParam", "xxx");
+
+        // TODO 根据接口需要选择示例1或示例2，如果不涉及敏数据，建议走示例1
+        // 示例1、参数不加密
+        ApiResponse apiResponse1 = download(SERVER_ROOT, apiUri, httpMethod, contentType,
+                params, null, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse1);
+
+        // 示例2、参数加密，填充敏感字段名
+        Set<String> encryptParams = new HashSet<>();
+        encryptParams.add("strParam");
+        ApiResponse apiResponse2 = download(SERVER_ROOT, apiUri, httpMethod, contentType,
+                params, encryptParams, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse2);
+    }
+
+    private static void getFormExample() throws Exception {
+        // 接口地址
+        String apiUri = "/rest/v1.0/test/errorcode2";
+
+        //  TODO 构建业务参数，根据接口文档填充接口参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("errorCode", "000027");
+
+        // TODO 根据接口需要选择示例1或示例2，如果不涉及敏数据，建议走示例1
+        // 示例1、参数不加密
+        ApiResponse apiResponse1 = get(SERVER_ROOT, apiUri, params, null, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse1);
+
+        // 示例2、参数加密，填充敏感字段名
+        Set<String> encryptParams = new HashSet<>();
+        encryptParams.add("errorCode");
+        ApiResponse apiResponse2 = get(SERVER_ROOT, apiUri, params, encryptParams, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse2);
+    }
+
+    private static void postFormExample() throws Exception {
+        // 接口地址
+        String apiUri = "/rest/v1.0/frontcashier/agreement/sign/confirm";
+
+        // 请求内容类型
+        YopRequestContentType contentType = YopRequestContentType.FORM_URL_ENCODE;
+
+        // POST 请求http-body参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("parentMerchant", "10080041523");
+        params.put("merchantNo", "10080041523");
+        params.put("smsCode", "11111131");
+        params.put("merchantFlowId", "111111");
+
+        // TODO 根据接口需要选择示例1或示例2，如果不涉及敏数据，建议走示例1
+        // 示例1、参数不加密
+        ApiResponse apiResponse1 = post(SERVER_ROOT, apiUri, contentType,
+                params, null, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse1);
+
+        // 示例2、参数加密，填充敏感字段名
+        Set<String> encryptParams = new HashSet<>();
+        encryptParams.add("smsCode");
+        ApiResponse apiResponse2 = post(SERVER_ROOT, apiUri, contentType,
+                params, encryptParams, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse2);
+    }
+
+    private static void uploadExample() throws Exception {
+        // 接口地址
+        String apiUri = "/yos/v1.0/sys/merchant/qual/upload";
+
+        // POST 请求http-body参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("clientId", APP_KEY);
+        params.put("merQual", new FileParam(new URL("https://open.yeepay.com/apis/docs/apis/common/ALL.json").openStream(), "abc.json"));
+
+        // TODO 根据接口需要选择示例1或示例2，如果不涉及敏数据，建议走示例1
+        // 示例1、参数不加密
+        ApiResponse apiResponse1 = upload(SERVER_ROOT, apiUri,
+                params, null, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse1);
+
+        // 示例2、参数加密，填充敏感字段名
+//        Set<String> encryptParams = new HashSet<>();
+//        encryptParams.add("clientId");
+//        ApiResponse apiResponse2 = upload(SERVER_ROOT, apiUri,
+//                params, encryptParams, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+//        LOGGER.info("apiResponse:{}", apiResponse2);
+    }
+
+    private static void postJsonExample() throws Exception {
+        // 接口地址
+        String apiUri = "/rest/v1.0/test-wdc/test/http-json/test";
+
+        // 请求内容类型
+        YopRequestContentType contentType = YopRequestContentType.JSON;
+
+        // POST-json请求支持http-body参数，此处为嵌套复杂对象示例
+        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> arg0 = new HashMap<>();
+        arg0.put("string","hello world");
+        arg0.put("array", Arrays.asList("test"));
+        params.put("arg0", arg0);
+        Map<String, Object> arg1 = new HashMap<>();
+        arg1.put("appId","app_1111111111");
+        arg1.put("customerNo","333333333");
+        params.put("arg1", arg1);
+
+        // TODO 根据接口需要选择示例1或示例2，如果不涉及敏数据，建议走示例1
+        // 示例1、参数不加密
+        ApiResponse apiResponse1 = post(SERVER_ROOT, apiUri, contentType,
+                params, null, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse1);
+
+        // 示例2、参数加密，填充敏感字段名，json方式时，直接加密整个请求体即可
+        Set<String> encryptParams = new HashSet<>();
+        encryptParams.add("$");// $代表整体加密(所有参数均加密)
+        ApiResponse apiResponse2 = post(SERVER_ROOT, apiUri, contentType,
+                params, encryptParams, YOP_PUBLIC_KEY, ISV_PRIVATE_KEY);
+        LOGGER.info("apiResponse:{}", apiResponse2);
+    }
+
+    /**
+     * 请求响应处理
+     *
+     * @param serverRoot 请求端点地址
+     * @param requestType 请求类型
+     * @param httpMethod 请求方法
+     * @param apiUri 请求接口地址
+     * @param contentType 请求内容类型
+     * @param queryParams http-query参数
+     * @param bodyParams http-body参数
+     * @param encryptParams 待加密参数名
+     * @param yopPublicKey 平台公钥
+     * @param isvPrivateKey 商户私钥
+     * @return
+     * @throws Exception
+     */
+    public static ApiResponse request(String serverRoot,
+                                      YopRequestType requestType, YopRequestMethod httpMethod, String apiUri,
+                                      YopRequestContentType contentType, Map<String, Object> queryParams,
+                                      Map<String, Object> bodyParams, Set<String> encryptParams,
+                                      String yopPublicKey, String isvPrivateKey) throws Exception {
+        // header 不加密
+        Set<String> encryptHeaders = Collections.EMPTY_SET;
+
+        // 非法参数过滤
+        queryParams = autoFixParams(queryParams);
+        bodyParams = autoFixParams(bodyParams);
+
+
+        // 敏感业务参数加密
+        String encryptKey = null;
+        Map<String, Object> handledQueryParams = queryParams;
+        Object handledBodyParams = contentType == YopRequestContentType.JSON ? toJsonString(bodyParams) : bodyParams;
+        Set<String> handledEncryptParams = new HashSet<>();
+        if (encryptParams != null) {
+            encryptKey = encodeBase64(generateRandomKey());
+            handledQueryParams = new HashMap<>();
+            for (String key : queryParams.keySet()) {
+                if (encryptParams.contains(key)) {
+                    handledQueryParams.put(key, encryptParam(encryptKey, queryParams.get(key).toString()));
+                    handledEncryptParams.add(key);
                 } else {
-                    throw new RuntimeException("Response Error, contentType:" + httpResponse.getEntity().getContentType());
+                    handledQueryParams.put(key, queryParams.get(key));
                 }
-            } else {
-                throw new RuntimeException("Response Error, contentType:" + httpResponse.getEntity().getContentType());
             }
-        } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && statusCode != HttpStatus.SC_BAD_GATEWAY) {
-            if (entity.getContent() != null) {
-                String content = IOUtils.toString(entity.getContent(), DEFAULT_ENCODING);
-                System.out.println("Request Fail, response:" + content);
-                verifyResponseSign(signHeader, content);
-                return;
+            // json请求，整体加密
+            if (contentType == YopRequestContentType.JSON) {
+                handledBodyParams = toJsonString(encryptParam(encryptKey, (String) handledBodyParams));
+                handledEncryptParams.clear();
+                handledEncryptParams.add("$");
             } else {
-                throw new RuntimeException("ResponseError, Empty Content, httpStatusCode:" + httpResponse.getStatusLine().getStatusCode());
+                Map<String, Object> tmpBodyParams = new HashMap<>();
+                for (String key : bodyParams.keySet()) {
+                    Object value = bodyParams.get(key);
+                    if (encryptParams.contains(key)) {
+                        // 仅加密非文件参数
+                        if (!isFileParam(value)) {
+                            tmpBodyParams.put(key, encryptParam(encryptKey, value.toString()));
+                            handledEncryptParams.add(key);
+                        } else {
+                            tmpBodyParams.put(key, value);
+                        }
+                    } else {
+                        tmpBodyParams.put(key, value);
+                    }
+                }
+                handledBodyParams = tmpBodyParams;
             }
-        } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_NOT_FOUND) {
-            throw new RuntimeException("Response Error, statusCode:" + statusCode);
         }
-        throw new RuntimeException("ReqParam Illegal, Bad Request, statusCode:" + statusCode);
+
+        // 构建认证信息
+        Map<String, String> headers = buildAuthHeaders(httpMethod, apiUri, contentType, handledQueryParams, handledBodyParams,
+                encryptKey, encryptHeaders, handledEncryptParams, yopPublicKey, isvPrivateKey);
+
+        // 构建http请求
+        HttpUriRequest httpUriRequest = buildHttpRequest(serverRoot + apiUri, httpMethod, contentType,
+                headers, handledQueryParams, handledBodyParams);
+
+        // 发送http请求
+        HttpResponse response = httpClient.execute(httpUriRequest);
+
+        // 处理API响应
+        ApiResponse apiResponse = handleResponse(requestType, response, yopPublicKey, encryptKey);
+        return apiResponse;
+    }
+
+    private static Map<String, Object> autoFixParams(Map<String, Object> params) {
+        if (null == params || params.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> result = new HashMap<>();
+        params.forEach((key, value) -> {
+            if (null != key && null!= value) {
+                result.put(key, value);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * 处理API响应
+     *
+     * @param requestType  请求类型
+     * @param response    HTTP响应
+     * @param publicKey   平台公钥
+     * @param encryptKey  加密会话密钥
+     * @return API响应对象
+     */
+    public static ApiResponse handleResponse(YopRequestType requestType, HttpResponse response, String publicKey, String encryptKey) {
+        try {
+            // 1. 获取状态码
+            int statusCode = response.getStatusLine().getStatusCode();
+
+            // 2. 获取响应头
+            Map<String, String> headers = new HashMap<>();
+            for (Header header : response.getAllHeaders()) {
+                headers.put(header.getName(), header.getValue());
+            }
+            String signature = headers.get(YOP_SIGN);
+            String requestId = headers.get(YOP_REQUEST_ID);
+            String encrypt = headers.get(YOP_ENCRYPT);
+
+            // 3. 获取响应内容
+            HttpEntity entity = response.getEntity();
+            if (requestType == YopRequestType.FILE_DOWNLOAD) {
+                // 文件下载响应
+                return handleFileDownloadResponse(headers, response, requestId, encrypt, encryptKey);
+            }
+            String responseContent = EntityUtils.toString(entity, DEFAULT_ENCODING);
+
+            // 4. 验证响应签名（如果有）
+            if (signature != null && !signature.isEmpty()) {
+                boolean validSignature = verifyResponseSignature(responseContent, signature, publicKey);
+                if (!validSignature) {
+                    throw new SecurityException("响应签名验证失败");
+                }
+            }
+
+            // 5. 解析响应内容
+            ApiResponse apiResponse = new ApiResponse();
+            apiResponse.setStatusCode(statusCode);
+            apiResponse.setRequestId(requestId);
+            apiResponse.setRawContent(responseContent);
+
+            // 6. 根据状态码处理
+            if (statusCode == 200) {
+                // 成功响应
+                apiResponse.setSuccess(true);
+                apiResponse.setResult(parseSuccessResponse(responseContent, encrypt, encryptKey));
+            } else if (statusCode == 500) {
+                // 业务错误
+                apiResponse.setSuccess(false);
+                apiResponse.setError(parseErrorResponse(responseContent));
+            } else {
+                // 其他错误
+                apiResponse.setSuccess(false);
+                ApiError error = new ApiError();
+                error.setCode("SYSTEM_ERROR");
+                error.setMessage("Unexpected status code: " + statusCode);
+                apiResponse.setError(error);
+            }
+
+            return apiResponse;
+        } catch (Exception e) {
+            throw new RuntimeException("处理响应失败", e);
+        }
+    }
+
+    private static ApiResponse handleFileDownloadResponse(Map<String, String> rspHeaders, HttpResponse response, String requestId, String encrypt, String encryptKey) throws Exception {
+        int statusCode = response.getStatusLine().getStatusCode();
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setStatusCode(statusCode);
+        apiResponse.setRequestId(requestId);
+
+        if (statusCode == 200 && isDownloadResponse(response)) {
+            // 成功响应
+            apiResponse.setSuccess(true);
+            InputStream rawContent;
+            if (null != encrypt && null != encryptKey) {
+                rawContent = decryptStream(encryptKey, response.getEntity().getContent());
+            } else {
+                rawContent = response.getEntity().getContent();
+            }
+            apiResponse.setRawContent(rawContent);
+            File tmpFile = saveFile(rawContent, rspHeaders);
+            apiResponse.setResult(tmpFile);
+        } else if (statusCode == 500) {
+            // 业务错误
+            apiResponse.setSuccess(false);
+            apiResponse.setError(parseErrorResponse(EntityUtils.toString(response.getEntity(), DEFAULT_ENCODING)));
+        } else {
+            apiResponse.setSuccess(false);
+            apiResponse.setRawContent(EntityUtils.toString(response.getEntity(), DEFAULT_ENCODING));
+            ApiError error = new ApiError();
+            error.setCode("SYSTEM_ERROR");
+            error.setMessage("Unexpected status code: " + statusCode);
+            apiResponse.setError(error);
+        }
+        return apiResponse;
     }
 
     /**
@@ -894,28 +639,55 @@ public class YopRsaEncryptExample {
             final String contentDisposition = headers.get(CONTENT_DISPOSITION);
             try {
                 String fileName = getFileNameFromHeader(contentDisposition);
-                if (StringUtils.isNotBlank(fileName)) {
+                if (isNotBlank(fileName)) {
                     final String[] split = fileName.split("\\.");
                     if (split.length == 2) {
-                        if (StringUtils.length(split[0])  > 3) {
+                        if (strLength(split[0])  > 3) {
                             filePrefix = split[0];
                         }
-                        if (StringUtils.isNotBlank(split[1])) {
+                        if (isNotBlank(split[1])) {
                             fileSuffix = "." + split[1];
                         }
                     }
                 }
             } catch (Exception e) {
-                System.out.println(("parse Content-Disposition fail, value:" + contentDisposition + ", ex:" + e));
+                LOGGER.error("parse Content-Disposition fail, value:{}, ex:",  contentDisposition, e);
             }
             File tmpFile = File.createTempFile(filePrefix, fileSuffix);
-            IOUtils.copy(fileContent, Files.newOutputStream(tmpFile.toPath()));
+            long fileSize = copyStream(fileContent, Files.newOutputStream(tmpFile.toPath()));
+            LOGGER.info("downloaded file, name:{}, size:{}", tmpFile.getName(), fileSize);
             return tmpFile;
         } catch (Throwable ex) {
             throw new RuntimeException("fail to save file", ex);
         } finally {
             closeQuietly(fileContent);
         }
+    }
+
+    private static long copyStream(final InputStream input, final OutputStream output)
+            throws IOException {
+        long count = 0;
+        if (input != null) {
+            byte[] buffer = new byte[8192];
+            int n;
+            while (-1 != (n = input.read(buffer))) {
+                output.write(buffer, 0, n);
+                count += n;
+            }
+        }
+        return count;
+    }
+
+    private static boolean isNotBlank(String str) {
+        return null != str && !str.trim().isEmpty();
+    }
+
+    private static int strLength(final CharSequence cs) {
+        return cs == null ? 0 : cs.length();
+    }
+
+    private static String strTrim(final String str) {
+        return str == null ? null : str.trim();
     }
 
     public static void closeQuietly(Closeable closeable) {
@@ -929,26 +701,656 @@ public class YopRsaEncryptExample {
     }
 
     private static String getFileNameFromHeader(String contentDisposition) {
-        if (StringUtils.isBlank(contentDisposition)) {
+        if (!isNotBlank(contentDisposition)) {
             return null;
         }
 
         final String[] parts = contentDisposition.split( "filename=");
         if (parts.length == 2) {
-            return StringUtils.trim(parts[1]);
+            return strTrim(parts[1]);
         }
         return null;
     }
 
-    private static final String CONTENT_TYPE_JSON = "application/json";
-    private static final String CONTENT_TYPE_STREAM = "application/octet-stream";
-
-    private static boolean isJsonResponse(CloseableHttpResponse response) {
-        return null != response.getEntity() && StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_JSON);
+    private static boolean isDownloadResponse(HttpResponse response) {
+        return null != response.getEntity() && null != response.getEntity().getContentType() &&
+                response.getEntity().getContentType().getValue().startsWith(YOP_HTTP_CONTENT_TYPE_STREAM);
     }
 
-    private static boolean isDownloadResponse(CloseableHttpResponse response) {
-        return null != response.getEntity() && StringUtils.startsWith(response.getEntity().getContentType().getValue(), CONTENT_TYPE_STREAM);
+    private static String decryptIfNecessary(String responseContent, String encryptHeader) {
+        if (null == encryptHeader) {
+            return responseContent;
+        }
+
+        return null;
+    }
+
+    /**
+     * 解析错误响应
+     *
+     * 须引入第三方包 com.fasterxml.jackson.core:jackson-databind
+     * @param content 响应内容
+     * @return 错误对象
+     */
+    private static ApiError parseErrorResponse(String content) throws Exception {
+        JsonNode rootNode = OBJECT_MAPPER.readTree(content);
+
+        ApiError error = new ApiError();
+
+        // 提取错误信息
+        if (rootNode.has("code")) {
+            error.setCode(rootNode.get("code").asText());
+        }
+
+        if (rootNode.has("message")) {
+            error.setMessage(rootNode.get("message").asText());
+        }
+
+        if (rootNode.has("subCode")) {
+            error.setSubCode(rootNode.get("subCode").asText());
+        }
+
+        if (rootNode.has("subMessage")) {
+            error.setSubMessage(rootNode.get("subMessage").asText());
+        }
+
+        return error;
+    }
+
+    /**
+     * 解析成功响应
+     *
+     * 须引入第三方包 com.fasterxml.jackson.core:jackson-databind
+     * @param content 响应内容
+     * @param encryptHeader 响应加密头
+     * @param encryptKey 加密会话密钥
+     * @return 解析后的结果对象
+     */
+    private static Object parseSuccessResponse(String content, String encryptHeader, String encryptKey) throws Exception {
+        JsonNode rootNode = OBJECT_MAPPER.readTree(content);
+
+        // 获取result节点
+        JsonNode resultNode = rootNode.get("result");
+        if (resultNode != null) {
+            if (null != encryptHeader && null != encryptKey) {
+                String decryptBizData = decryptParam(encryptKey, resultNode.asText());
+                return OBJECT_MAPPER.readValue(decryptBizData, Object.class);
+            }
+            return OBJECT_MAPPER.convertValue(resultNode, Object.class);
+        }
+
+        // 没有result节点
+        throw new RuntimeException("Unexpected响应字符串：" + content);
+    }
+
+    private static String decryptParam(String aesKey, String encryptContent) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
+        // 返回的json有格式化，需要去掉后再解码
+        return new String(cipher.doFinal(decodeBase64(urlSafeDecode(encryptContent.replaceAll("[\r\n]", EMPTY)))), DEFAULT_ENCODING);
+    }
+
+    private static InputStream decryptStream(String aesKey, InputStream encryptStream) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.DECRYPT_MODE, aesKey);
+        return new CipherInputStream(encryptStream, cipher);
+    }
+
+    /**
+     * 验证响应签名
+     *
+     * @param content 响应内容
+     * @param signature 响应签名（来自x-yop-sign头）
+     * @param publicKeyBase64Str 平台公钥(base64格式)
+     * @return 验证结果
+     */
+    public static boolean verifyResponseSignature(
+            String content,
+            String signature,
+            String publicKeyBase64Str) {
+
+        try {
+            // 1. 准备验证数据（移除空白字符）
+            String normalizedContent = content.replaceAll("[ \t\n]", EMPTY);
+            byte[] contentBytes = normalizedContent.getBytes(DEFAULT_ENCODING);
+
+            // 2. 解析签名
+            String signatureValue = signature;
+            String algorithm = "SHA256";
+
+            // 如果签名包含算法标识，分离出来
+            if (signature.contains("$")) {
+                String[] parts = signature.split("\\$");
+                signatureValue = parts[0];
+                algorithm = parts[1];
+            }
+
+            // 3. 解码签名（URL安全Base64 -> 标准Base64 -> 二进制）
+            String standardBase64 = urlSafeDecode(signatureValue);
+            byte[] signatureBytes = decodeBase64(standardBase64);
+
+            // 4. 加载公钥
+            PublicKey publicKey = string2PublicKey(publicKeyBase64Str);
+
+            // 5. 验证签名
+            Signature verifier = Signature.getInstance(DEFAULT_SIGN_ALG);
+            verifier.initVerify(publicKey);
+            verifier.update(contentBytes);
+
+            return verifier.verify(signatureBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("验证响应签名失败", e);
+        }
+    }
+
+    /**
+     * 构造HttpRequest
+     *
+     * @param requestUrl    请求URL
+     * @param requestMethod 请求方法
+     * @param contentType   请求体格式
+     * @param headers       请求头
+     * @param queryParams   请求URL参数
+     * @param bodyParams    请求体参数
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    public static HttpUriRequest buildHttpRequest(String requestUrl,
+                                                     YopRequestMethod requestMethod,
+                                                     YopRequestContentType contentType,
+                                                     Map<String, String> headers,
+                                                     Map<String, Object> queryParams,
+                                                     Object bodyParams)
+            throws UnsupportedEncodingException, JsonProcessingException, FileNotFoundException {
+        // 3. 创建请求
+        HttpRequestBase request;
+
+        if (requestMethod == YopRequestMethod.POST) {
+            // POST请求
+            HttpPost post = new HttpPost(requestUrl);
+            if (null != bodyParams) {
+                if (contentType == YopRequestContentType.JSON) {
+                    // application/json格式请求体
+                    StringEntity entity = new StringEntity((String) bodyParams, DEFAULT_ENCODING);
+                    entity.setContentType(contentType.getValue());
+                    post.setEntity(entity);
+                    post.addHeader(CONTENT_TYPE, contentType.getValue());
+                } else if (contentType == YopRequestContentType.MULTIPART_FORM) {
+                    // multipart/form-data格式请求体
+                    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                    builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+                    for (Map.Entry<String, Object> entry : ((Map<String, Object>) bodyParams).entrySet()) {
+                        String name = entry.getKey();
+                        Object value = entry.getValue();
+                        if (value instanceof FileParam) {
+                            // 文件包装类参数
+                            FileParam file = (FileParam) value;
+                            builder.addBinaryBody(name, file.getInputStream(),
+                                    ContentType.DEFAULT_BINARY, file.getFilaName());
+                        } else if (value instanceof File) {
+                            // 文件参数
+                            File file = (File) value;
+                            builder.addBinaryBody(name, new FileInputStream(file), ContentType.DEFAULT_BINARY, file.getName());
+                        } else if (value instanceof InputStream) {
+                            // 流文件参数
+                            builder.addBinaryBody(name, (InputStream) value, ContentType.DEFAULT_BINARY, randomFileName());
+                        } else {
+                            // 普通字符串参数，注意，此处需要urlEncode两次
+                            builder.addTextBody(name, urlEncodeForSign(value.toString()), ContentType.TEXT_PLAIN);
+                        }
+                        post.setEntity(builder.build());
+                    }
+                } else {
+                    // application/x-www-form-urlencoded格式请求体，注意，此处需要urlEncode两次(手动一次+httpclient处理一次)
+                    List<NameValuePair> formParams = new ArrayList<>();
+                    for (Map.Entry<String, Object> entry : ((Map<String, Object>) bodyParams).entrySet()) {
+                        formParams.add(new BasicNameValuePair(entry.getKey(), URLEncoder.encode(entry.getValue().toString(), DEFAULT_ENCODING)));
+                    }
+                    post.setEntity(new UrlEncodedFormEntity(formParams, DEFAULT_ENCODING));
+                    post.addHeader(CONTENT_TYPE, YopRequestContentType.FORM_URL_ENCODE.getValue());
+                }
+            }
+            request = post;
+        } else {
+            // GET请求
+            StringBuilder urlWithParams = new StringBuilder(requestUrl);
+
+            // 添加查询参数
+            if (queryParams != null && !queryParams.isEmpty()) {
+                urlWithParams.append("?");
+                List<String> paramPairs = new ArrayList<>();
+
+                for (Map.Entry<String, Object> entry : queryParams.entrySet()) {
+                    String encodedName = URLEncoder.encode(entry.getKey(), DEFAULT_ENCODING);
+                    // 注意，此处需要urlEncode两次
+                    String encodedValue = URLEncoder.encode(entry.getValue().toString(), DEFAULT_ENCODING);
+                    paramPairs.add(encodedName + "=" + URLEncoder.encode(encodedValue, DEFAULT_ENCODING));
+                }
+
+                urlWithParams.append(String.join("&", paramPairs));
+            }
+
+            request = new HttpGet(urlWithParams.toString());
+            request.addHeader(CONTENT_TYPE, YopRequestContentType.FORM_URL_ENCODE.getValue());
+        }
+
+        // 4. 添加请求头
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            request.addHeader(entry.getKey(), entry.getValue());
+        }
+        return request;
+    }
+
+    private static byte[] generateRandomKey() throws NoSuchAlgorithmException {
+        //实例化
+        KeyGenerator generator = KeyGenerator.getInstance("AES");
+        //设置密钥长度
+        generator.init(128);
+        //生成密钥
+        return generator.generateKey().getEncoded();
+    }
+
+
+    private static Map<String, String> buildAuthHeaders(YopRequestMethod httpMethod,
+                                                        String apiUri,
+                                                        YopRequestContentType contentType,
+                                                        Map<String, Object> queryParams,
+                                                        Object bodyParams,
+                                                        String encryptKey, Set<String> encryptHeaders, Set<String> encryptParams,
+                                                        String yopPublicKey, String isvPrivateKey) throws Exception {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(YOP_SDK_LANGS, "java");
+        headers.put(YOP_SDK_VERSION, "4.0.0");
+        headers.put(YOP_APPKEY, APP_KEY);
+        headers.put(YOP_REQUEST_ID, UUID.randomUUID().toString());
+
+        // 加密头
+        if (null != encryptKey && null != encryptParams) {
+            headers.put(YOP_ENCRYPT, buildEncryptHeader(encryptHeaders, encryptParams, encryptKey, yopPublicKey));
+        }
+
+        // 摘要头
+        headers.put(YOP_CONTENT_SHA256, calculateContentSha256(httpMethod, contentType == YopRequestContentType.JSON, bodyParams));
+
+        // 签名头
+        headers.put(AUTHORIZATION, signRequest(httpMethod, apiUri, contentType, headers, queryParams, isvPrivateKey));
+        return headers;
+    }
+
+    private static String signRequest(YopRequestMethod requestMethod, String requestUri,
+                                      YopRequestContentType contentType,
+                                      Map<String, String> headers,
+                                      Map<String, Object> queryParams,
+                                      String isvPrivateKey) throws Exception {
+        // 1.构造认证字符串
+        String authString = buildAuthString(APP_KEY, 1800);
+
+        // 2.获取规范请求方法
+        String httpRequestMethod = requestMethod.name();
+
+        // 3.获取规范请求URI
+        String canonicalURI = requestUri;
+
+        // 4.获取规范化查询字符串
+        String canonicalQueryString = buildCanonicalQueryString(requestMethod, contentType == YopRequestContentType.JSON,
+                queryParams);
+
+        // 5.获取规范请求头
+        String canonicalHeaders = buildCanonicalHeaders(headers);
+
+        // 6.获取规范请求串
+        StringBuilder canonicalRequest = new StringBuilder()
+                .append(authString)
+                .append("\n")
+                .append(httpRequestMethod)
+                .append("\n")
+                .append(canonicalURI)
+                .append("\n")
+                .append(canonicalQueryString)
+                .append("\n")
+                .append(canonicalHeaders);
+
+
+        // 7.计算签名
+        String signature = urlSafeEncode(encodeBase64(sign(canonicalRequest.toString().getBytes(DEFAULT_ENCODING), isvPrivateKey))) + "$" + "SHA256";
+
+        // 8.构建认证头
+        return buildAuthorizationHeader(authString, String.join(SEMICOLON, HEADERS_TO_SIGN), signature);
+    }
+
+    /**
+     * 构建认证头
+     *
+     * @param authString 认证字符串
+     * @param signedHeaders 已签名的请求头
+     * @param signature 签名结果
+     * @return 认证头值
+     */
+    public static String buildAuthorizationHeader(String authString, String signedHeaders, String signature) {
+        return DEFAULT_AUTH_PREFIX_RSA2048 + " " +
+                authString + SLASH +
+                signedHeaders + SLASH +
+                signature;
+    }
+
+    // 签名计算时至少包含这三个头
+    private static final List<String> HEADERS_TO_SIGN = Arrays.asList(
+            "x-yop-appkey",
+            "x-yop-content-sha256",
+            "x-yop-request-id"
+    );
+
+    /**
+     * 构建规范请求头
+     */
+    private static String buildCanonicalHeaders(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) {
+            return EMPTY;
+        }
+
+        // 1. 转换头名称为小写并排序
+        List<String> canonicalHeaders = new ArrayList<>();
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            String headerName = entry.getKey().toLowerCase().trim();
+            String headerValue = entry.getValue().trim();
+            if (HEADERS_TO_SIGN.contains(headerName)) {
+                canonicalHeaders.add(headerName + ":" + headerValue);
+            }
+        }
+        // 2. 排序
+        Collections.sort(canonicalHeaders);
+
+        // 3. 用\n连接所有签名头
+        return String.join("\n", canonicalHeaders);
+    }
+
+    /**
+     * 构建规范查询字符串
+     *
+     * @param queryParams 请求query参数
+     * @return 规范查询字符串
+     */
+    private static String buildCanonicalQueryString(YopRequestMethod httpMethod,
+                                             boolean isJsonRequest,
+                                             Map<String, Object> queryParams) {
+        // 针对POST请求，且内容类型为form，即application/x-www-form-urlencoded或者multipart/form-data的请求，返回空字符串
+        if (httpMethod == YopRequestMethod.POST && !isJsonRequest) {
+            return EMPTY;
+        }
+        // 参数编码&排序
+        return sortAndEncodeParams(queryParams);
+    }
+
+    public static byte[] sign(byte[] data, String isvPrivateKey) {
+        try {
+            Signature signature = Signature.getInstance(DEFAULT_SIGN_ALG);
+            signature.initSign(string2PrivateKey(isvPrivateKey));
+            signature.update(data);
+            return signature.sign();
+        } catch (Exception e) {
+            throw new RuntimeException("SystemError, Sign Fail, key:" + ISV_PRIVATE_KEY + ", ex:", e);
+        }
+    }
+
+    private static PrivateKey string2PrivateKey(String priKey) {
+        try {
+            return KeyFactory.getInstance(RSA).generatePrivate(
+                    new PKCS8EncodedKeySpec(decodeBase64(priKey)));
+        } catch (Exception e) {
+            throw new RuntimeException("ConfigProblem, IsvPrivateKey ParseFail, value:" + priKey + ", ex:", e);
+        }
+    }
+
+    /**
+     * 构建认证字符串
+     *
+     * @param appKey 应用标识
+     * @param expiredSeconds 过期时间（秒）
+     * @return 认证字符串
+     */
+    public static String buildAuthString(String appKey, int expiredSeconds) {
+        // 1. 协议版本
+        String protocolVersion = DEFAULT_YOP_PROTOCOL_VERSION + SLASH;
+
+        // 2. 应用标识
+        String appKeyPart = appKey + SLASH;
+
+        // 3. ISO8601格式时间戳
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String timestamp = sdf.format(new Date()) + SLASH;
+
+        // 4. 过期时间（秒）
+        String expired = String.valueOf(expiredSeconds);
+
+        // 5. 组合认证字符串
+        return protocolVersion + appKeyPart + timestamp + expired;
+    }
+
+    /**
+     * 计算请求摘要头
+     */
+    private static String calculateContentSha256(YopRequestMethod httpMethod,
+                                                 boolean isJsonRequest,
+                                                 Object bodyParams) {
+        // 针对GET请求，计算为空字符串
+        if (httpMethod == YopRequestMethod.GET) {
+            return sha256ToHex(EMPTY);
+        }
+
+        // 针对POST-JSON格式请求，计算整个json请求体
+        if (isJsonRequest) {
+            return sha256ToHex((String) bodyParams);
+        }
+
+        // 其他格式请求，仅计算非文件类参数
+        Map<String, Object> nonFileParams = new HashMap<>();
+        for (Map.Entry<String, Object> entry : ((Map<String, Object>) bodyParams).entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value != null && !isFileParam(value)) {
+                nonFileParams.put(key, value.toString());
+            }
+        }
+        return sha256ToHex(sortAndEncodeParams(nonFileParams));
+    }
+
+    /**
+     * 参数编码&排序
+     */
+    private static String sortAndEncodeParams(Map<String, Object> params) {
+        if (params == null || params.isEmpty()) {
+            return EMPTY;
+        }
+
+        // 1. 参数排序（按键名ASCII升序）
+        List<String> paramNames = new ArrayList<>(params.keySet());
+        Collections.sort(paramNames);
+
+        // 2. 构建规范查询字符串
+        List<String> queryParts = new ArrayList<>();
+        for (String name : paramNames) {
+            String value = params.get(name).toString();
+            // URL编码参数名和值
+            String encodedName = urlEncodeForSign(name);
+            String encodedValue = urlEncodeForSign(value);
+            queryParts.add(encodedName + "=" + encodedValue);
+        }
+
+        // 3. 用&连接所有参数对
+        return String.join("&", queryParts);
+    }
+
+    /**
+     * URL编码(签名版)
+     */
+    private static String urlEncodeForSign(String value) {
+        try {
+            return URLEncoder.encode(value, DEFAULT_ENCODING)
+                    .replace("+", "%20")
+                    .replace("*", "%2A")
+                    .replace("%7E", "~");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("URL编码失败", e);
+        }
+    }
+
+    private static boolean isFileParam(Object value) {
+        return null != value && (value instanceof File || value instanceof InputStream || value instanceof FileParam);
+    }
+
+    /**
+     * 转json字符串
+     */
+    private static String toJsonString(Object bodyParams) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(bodyParams);
+        } catch (Exception e) {
+            throw new RuntimeException("toJsonString fail", e);
+        }
+    }
+
+    /**
+     * 计算sha256并转16进制字符串
+     */
+    private static String sha256ToHex(String content) {
+        try {
+            MessageDigest md = MessageDigest.getInstance(DEFAULT_DIGEST_ALG);
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(DEFAULT_ENCODING));
+            DigestInputStream digestInputStream = new DigestInputStream(inputStream, md);
+            byte[] buffer = new byte[1024];
+            while (digestInputStream.read(buffer) > -1) {
+            }
+            byte[] digestBytes = digestInputStream.getMessageDigest().digest();
+            return encodeHex(digestBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("sha256 fail", e);
+        }
+    }
+
+    private static final char[] DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    private static String encodeHex(byte[] data) {
+        int l = data.length;
+        char[] out = new char[l << 1];
+        int i = 0;
+
+        for (int j = 0; i < l; ++i) {
+            out[j++] = DIGITS[(240 & data[i]) >>> 4];
+            out[j++] = DIGITS[15 & data[i]];
+        }
+
+        return new String(out);
+    }
+
+    /**
+     * 加密协议头(请求)：
+     * <p>
+     * yop-encrypt-v1/{服务端证书序列号}/{密钥类型(必填)}_{分组模式(必填)}_{填充算法(必填)}/{加密密钥值(必填)}/{IV}{;}{附加信息}/{客户端支持的大参数加密模式(必填)}/{encryptHeaders}/{encryptParams}
+     */
+    public static String buildEncryptHeader(Set<String> encryptHeaders, Set<String> encryptParams,
+                                            String encryptKey, String yopPublicKey) throws Exception {
+        if (null == encryptHeaders) {
+            encryptHeaders = Collections.emptySet();
+        }
+        if (null == encryptParams) {
+            encryptParams = Collections.emptySet();
+        }
+
+        return "yop-encrypt-v1" + SLASH +
+                EMPTY + SLASH + //rsa 为空
+                AES_ENCRYPT_ALG.replace(SLASH, UNDER_LINE) + SLASH +
+                urlSafeEncode(encodeBase64(encryptKey(decodeBase64(encryptKey), string2PublicKey(yopPublicKey)))) + SLASH +
+                EMPTY + SLASH +
+                STREAM + SLASH +
+                String.join(SEMICOLON, encryptHeaders) + SLASH +
+                urlSafeEncode(encodeBase64(String.join(SEMICOLON, encryptParams).getBytes(DEFAULT_ENCODING)));
+    }
+
+    private static byte[] encryptKey(byte[] data, Key key) {
+        Cipher cipher;
+        try {
+            cipher = Cipher.getInstance(RSA_ENCRYPT_ALG);
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+            return cipher.doFinal(data);
+        } catch (Exception e) {
+            throw new RuntimeException("SystemError, Encrypt Fail, key:"
+                    + key + ", cause:" + e.getMessage(), e);
+        }
+    }
+
+    private static String encryptParam(String aesKey, String plain) throws Exception {
+        final Cipher cipher = getInitializedCipher(Cipher.ENCRYPT_MODE, aesKey);
+        return urlSafeEncode(encodeBase64(cipher.doFinal(plain.getBytes(DEFAULT_ENCODING))));
+    }
+
+    private static Cipher getInitializedCipher(int mode, String aesKey) {
+        try {
+            byte[] key = decodeBase64(aesKey);
+            Cipher cipher = Cipher.getInstance(AES_ENCRYPT_ALG);
+            Key secretKey = new SecretKeySpec(key, "AES");
+            cipher.init(mode, secretKey);
+            return cipher;
+        } catch (Throwable throwable) {
+            throw new RuntimeException("error happened when initialize cipher", throwable);
+        }
+    }
+
+    public static PublicKey string2PublicKey(String pubKey) {
+        try {
+            return KeyFactory.getInstance(RSA).generatePublic(
+                    new X509EncodedKeySpec(decodeBase64(pubKey)));
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException("ConfigProblem, YopPublicKey ParseFail, value:" + pubKey + ", ex:", e);
+        }
+    }
+
+    /**
+     * Base64 URL安全替换
+     * 将标准Base64中的'+'替换为'-'，'/'替换为'_'
+     *
+     * @param unSafeBase64Str 标准Base64编码字符串
+     * @return URL安全的Base64编码字符串
+     */
+    public static String urlSafeEncode(String unSafeBase64Str) {
+        if (unSafeBase64Str == null) {
+            return null;
+        }
+        return unSafeBase64Str.replace('+', '-')
+                .replace('/', '_');
+    }
+
+    /**
+     * Base64 URL解码转换
+     * 将URL安全Base64中的'-'替换回'+'，'_'替换回'/'
+     *
+     * @param safeBase64Str URL安全的Base64编码字符串
+     * @return 标准Base64编码字符串
+     */
+    public static String urlSafeDecode(String safeBase64Str) {
+        if (safeBase64Str == null) {
+            return null;
+        }
+        return safeBase64Str.replace('-', '+')
+                .replace('_', '/');
+    }
+
+    /**
+     * Base64 解码(非url安全)
+     *
+     * @param input
+     * @return
+     */
+    public static byte[] decodeBase64(String input) {
+        return Base64.getDecoder().decode(input);
+    }
+
+    /**
+     * Base64 编码(非url安全)
+     *
+     * @param input
+     * @return
+     */
+    public static String encodeBase64(byte[] input) {
+        return Base64.getEncoder().encodeToString(input);
     }
 
     public enum YopRequestMethod {
@@ -957,13 +1359,23 @@ public class YopRsaEncryptExample {
     }
 
     public enum YopRequestType {
+        /**
+         * 普通请求，json返回
+         */
         WEB,
+        /**
+         * 文件下载请求，返回文件流
+         */
         FILE_DOWNLOAD,
+
+        /**
+         * 文件上传请求，返回json
+         */
         MULTI_FILE_UPLOAD,
     }
 
-    private static final String YOP_HTTP_CONTENT_TYPE_JSON = "application/json";
-    private static final String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
+    private static final String YOP_HTTP_CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
+    private static final String YOP_HTTP_CONTENT_TYPE_FORM = "application/x-www-form-urlencoded;charset=UTF-8";
     private static final String YOP_HTTP_CONTENT_TYPE_MULTIPART_FORM = "multipart/form-data";
     private static final String YOP_HTTP_CONTENT_TYPE_STREAM = "application/octet-stream";
     private static final String YOP_HTTP_CONTENT_TYPE_TEXT = "text/plain;charset=UTF-8";
@@ -990,53 +1402,166 @@ public class YopRsaEncryptExample {
         }
     }
 
-    // 附录：jar包依赖情况
-    /**
-     * <dependency>
-     *             <groupId>org.apache.httpcomponents</groupId>
-     *             <artifactId>httpcore</artifactId>
-     *             <version>4.4.13</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>org.apache.httpcomponents</groupId>
-     *             <artifactId>httpclient</artifactId>
-     *             <version>4.5.13</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>org.apache.httpcomponents</groupId>
-     *             <artifactId>httpmime</artifactId>
-     *             <version>4.5.13</version>
-     *         </dependency>
-     *
-     *         <dependency>
-     *             <artifactId>commons-codec</artifactId>
-     *             <groupId>commons-codec</groupId>
-     *             <version>1.10</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>commons-io</groupId>
-     *             <artifactId>commons-io</artifactId>
-     *             <version>2.8.0</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>com.google.guava</groupId>
-     *             <artifactId>guava</artifactId>
-     *             <version>30.0-jre</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>joda-time</groupId>
-     *             <artifactId>joda-time</artifactId>
-     *             <version>2.9.4</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>org.apache.commons</groupId>
-     *             <artifactId>commons-lang3</artifactId>
-     *             <version>3.6</version>
-     *         </dependency>
-     *         <dependency>
-     *             <groupId>com.fasterxml.jackson.core</groupId>
-     *             <artifactId>jackson-databind</artifactId>
-     *             <version>2.13.2</version>
-     *         </dependency>
-     */
+    private static String randomFileName() {
+        return UUID.randomUUID() + ".bin";
+    }
+
+    public static class FileParam implements Serializable {
+        private static final long serialVersionUID = -1L;
+
+        // 文件流
+        private InputStream inputStream;
+
+        // 文件名
+        private String filaName = randomFileName();
+
+        public FileParam(InputStream inputStream) {
+            this.inputStream = inputStream;
+        }
+
+        // 本地文件
+        public FileParam(File file) throws FileNotFoundException {
+            this.inputStream = new FileInputStream(file);
+            this.filaName = file.getName();
+        }
+
+        // 文件流
+        public FileParam(InputStream inputStream, String filaName) {
+            this.inputStream = inputStream;
+            this.filaName = filaName;
+        }
+
+        // 远端文件
+        public FileParam(URL url, String filaName) throws IOException {
+            this.inputStream = url.openStream();
+            this.filaName = filaName;
+        }
+
+        public InputStream getInputStream() {
+            return inputStream;
+        }
+
+        public String getFilaName() {
+            return filaName;
+        }
+    }
+
+    public static class ApiResponse implements Serializable {
+        private static final long serialVersionUID = -1L;
+
+        private int statusCode;
+        private String requestId;
+        private Object rawContent;
+        private boolean success;
+        private Object result;
+        private ApiError error;
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        public void setStatusCode(int statusCode) {
+            this.statusCode = statusCode;
+        }
+
+        public String getRequestId() {
+            return requestId;
+        }
+
+        public void setRequestId(String requestId) {
+            this.requestId = requestId;
+        }
+
+        public Object getRawContent() {
+            return rawContent;
+        }
+
+        public void setRawContent(Object rawContent) {
+            this.rawContent = rawContent;
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public void setSuccess(boolean success) {
+            this.success = success;
+        }
+
+        public Object getResult() {
+            return result;
+        }
+
+        public void setResult(Object result) {
+            this.result = result;
+        }
+
+        public ApiError getError() {
+            return error;
+        }
+
+        public void setError(ApiError error) {
+            this.error = error;
+        }
+
+        @Override
+        public String toString() {
+            return "ApiResponse{" +
+                    "statusCode=" + statusCode +
+                    ", requestId='" + requestId + '\'' +
+                    ", rawContent='" + rawContent + '\'' +
+                    ", success=" + success +
+                    ", result=" + result +
+                    ", error=" + error +
+                    '}';
+        }
+    }
+
+    public static class ApiError implements Serializable {
+        private static final long serialVersionUID = -1L;
+        private String code;
+        private String message;
+        private String subCode;
+        private String subMessage;
+
+        public ApiError() {
+        }
+
+        public ApiError(String code, String message) {
+            this.code = code;
+            this.message = message;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public String getSubCode() {
+            return subCode;
+        }
+
+        public void setSubCode(String subCode) {
+            this.subCode = subCode;
+        }
+
+        public String getSubMessage() {
+            return subMessage;
+        }
+
+        public void setSubMessage(String subMessage) {
+            this.subMessage = subMessage;
+        }
+    }
 }
