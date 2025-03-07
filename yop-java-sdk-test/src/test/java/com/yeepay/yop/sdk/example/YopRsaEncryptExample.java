@@ -893,8 +893,8 @@ public class YopRsaEncryptExample {
                             // 流文件参数
                             builder.addBinaryBody(name, (InputStream) value, ContentType.DEFAULT_BINARY, randomFileName());
                         } else {
-                            // 普通字符串参数，注意，此处需要urlEncode两次
-                            builder.addTextBody(name, urlEncodeForSign(value.toString()), ContentType.TEXT_PLAIN);
+                            // 普通字符串参数，注意，此处urlEncode一次
+                            builder.addTextBody(name, URLEncoder.encode(value.toString(), DEFAULT_ENCODING), ContentType.TEXT_PLAIN);
                         }
                         post.setEntity(builder.build());
                     }
