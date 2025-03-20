@@ -16,6 +16,8 @@ import com.yeepay.yop.sdk.client.metric.event.host.YopHostSuccessEvent;
 import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.exception.YopHttpException;
 import com.yeepay.yop.sdk.exception.YopServiceException;
+import com.yeepay.yop.sdk.exception.io.YopIOException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.BaseResponse;
@@ -90,9 +92,9 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
             throw e;
         } catch (Exception e) {
             ex = e;
-            throw new YopHttpException("Unable to execute HTTP request, requestId:"
+            throw new YopIOException("", e, "Unable to execute HTTP request, requestId:"
                     + request.getRequestId() + ", apiUri:" + request.getResourcePath()
-                    + ", serverHost:" + request.getEndpoint(), e);
+                    + ", serverHost:" + request.getEndpoint());
         } finally {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Analyzed Response: {}, elapsed:{}ms", analyzedResponse,
@@ -267,7 +269,7 @@ public abstract class AbstractYopHttpClient implements YopHttpClient {
     protected  <Input extends BaseRequest> boolean checkForMultiPart(Request<Input> request) throws YopClientException {
         boolean result = request.getMultiPartFiles() != null && request.getMultiPartFiles().size() > 0;
         if (result && !HttpMethodName.POST.equals(request.getHttpMethod())) {
-            throw new YopClientException("ReqParam Illegal, ContentType:multipart/form-data only support Post Request");
+            throw new IllegalParamFormatException("httpMethod", "ReqParam Illegal, ContentType:multipart/form-data only support Post Request");
         }
         return result;
     }

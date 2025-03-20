@@ -4,6 +4,8 @@
  */
 package com.yeepay.yop.sdk.auth.credentials.provider;
 
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.exception.YopClientException;
 
 import java.util.ServiceLoader;
@@ -31,7 +33,7 @@ public class YopPlatformCredentialsProviderRegistry {
 
     public static void registerProvider(YopPlatformCredentialsProvider yopCredentialsProvider) {
         if (yopCredentialsProvider == null) {
-            throw new YopClientException("SetUpProblem, Custom YopPlatformCredentialsProvider IsNull.");
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "SetUpProblem, Custom YopPlatformCredentialsProvider IsNull.");
         }
         CUSTOM_PROVIDER = yopCredentialsProvider;
     }

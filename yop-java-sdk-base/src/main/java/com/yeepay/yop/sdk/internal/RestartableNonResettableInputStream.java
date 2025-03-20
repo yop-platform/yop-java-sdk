@@ -14,6 +14,7 @@ package com.yeepay.yop.sdk.internal;
 
 
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +47,7 @@ public class RestartableNonResettableInputStream extends RestartableInputStream 
             try {
                 count = this.input.read(this.buffer, this.length, bufferSize - this.length);
             } catch (IOException e) {
-                throw new YopClientException("Fail to read data from input.", e);
+                throw new IllegalParamFormatException("InputStream", "Fail to read data from input.", e);
             }
             if (count < 0) {
                 this.eof = true;
@@ -59,7 +60,7 @@ public class RestartableNonResettableInputStream extends RestartableInputStream 
     @Override
     public void restart() {
         if (this.buffer == null) {
-            throw new IllegalStateException("Fail to restart. Input buffer exhausted.");
+            throw new IllegalParamFormatException("InputStream", "Fail to restart. Input buffer exhausted.");
         }
         this.offset = 0;
     }

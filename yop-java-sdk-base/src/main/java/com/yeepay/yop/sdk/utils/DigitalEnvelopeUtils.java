@@ -15,6 +15,8 @@ import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
 import com.yeepay.yop.sdk.exception.VerifySignFailedException;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.DigestAlgEnum;
 import com.yeepay.yop.sdk.security.SymmetricEncryptAlgEnum;
@@ -106,7 +108,7 @@ public class DigitalEnvelopeUtils {
         //分解参数
         String[] args = cipherText.split("\\" + SEPARATOR);
         if (args.length != 4) {
-            throw new RuntimeException("source invalid : " + cipherText);
+            throw new IllegalParamFormatException("cipherText", "source invalid : " + cipherText);
         }
         String encryptedRandomKeyToBase64 = args[0];
         String encryptedDataToBase64 = args[1];
@@ -138,7 +140,7 @@ public class DigitalEnvelopeUtils {
         final YopSignProcessor yopSignProcess = YopSignProcessorFactory.getSignProcessor(SIGNER_MAP.get(digestAlg));
         boolean verifySign = yopSignProcess.verify(sourceData, signToBase64, platformCredentials.getCredential());
         if (!verifySign) {
-            throw new YopClientException("verifySign fail!");
+            throw new IllegalConfigFormatException("yop_public_key", "verifySign fail!");
         }
         //返回源数据
         return sourceData;

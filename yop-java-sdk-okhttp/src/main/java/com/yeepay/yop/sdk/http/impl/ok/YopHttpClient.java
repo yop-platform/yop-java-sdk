@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.http.impl.ok;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.client.ClientConfiguration;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.AbstractYopHttpClient;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.http.YopHttpResponse;
@@ -182,7 +183,7 @@ public class YopHttpClient extends AbstractYopHttpClient {
                     httpRequestBuilder.head();
                     break;
                 default:
-                    throw new YopClientException("ReqParam Illegal, HttpMethod NotSupport, name:" +
+                    throw new IllegalParamFormatException("httpMethod", "ReqParam Illegal, HttpMethod NotSupport, name:" +
                             request.getHttpMethod() + ", request:" + request);
             }
         }

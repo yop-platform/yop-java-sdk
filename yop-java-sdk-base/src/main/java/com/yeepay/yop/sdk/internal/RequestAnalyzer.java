@@ -10,7 +10,8 @@ import com.yeepay.yop.sdk.auth.credentials.YopPKICredentials;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReq;
 import com.yeepay.yop.sdk.base.cache.YopCredentialsCache;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
@@ -50,7 +51,7 @@ public class RequestAnalyzer {
                     , authorizationReq.getCredentialType());
         }
         if (null == credential) {
-            throw new YopClientException("No credentials specified");
+            throw new IllegalConfigFormatException("isv_private_key", "No credentials specified");
         }
         // 缓存最新调用凭证
         YopCredentialsCache.put(provider, env, credential.getAppKey(), credential);
@@ -90,7 +91,7 @@ public class RequestAnalyzer {
         }
         YopEncryptor encryptor = YopEncryptorFactory.getEncryptor(requestConfig.getEncryptAlg());
         if (null == encryptor) {
-            throw new YopClientException("not supported the encryptAlg: " + requestConfig.getEncryptAlg());
+            throw new IllegalParamFormatException("encryptAlg", "not supported the encryptAlg: " + requestConfig.getEncryptAlg());
         }
         return encryptor;
     }

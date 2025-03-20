@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.http.analyzer;
 import com.yeepay.yop.sdk.auth.SignOptions;
 import com.yeepay.yop.sdk.auth.credentials.YopPlatformCredentials;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.http.HttpResponseAnalyzer;
 import com.yeepay.yop.sdk.http.HttpResponseHandleContext;
 import com.yeepay.yop.sdk.model.BaseResponse;
@@ -60,7 +61,7 @@ public class YopSignatureCheckAnalyzer implements HttpResponseAnalyzer {
                                 .withExpirationInSeconds(reqOptions.getExpirationInSeconds())
                                 .withUrlSafe(!StringUtils.containsAny(metadata.getYopSign(), '+', '/', '=')));
             } else {
-                throw new YopClientException("ConfigProblem, YopPlatformCredentials NotFound, appKey:" + context.getAppKey() + ", serialNo:" + metadata.getYopCertSerialNo());
+                throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, YopPlatformCredentials NotFound, appKey:" + context.getAppKey() + ", serialNo:" + metadata.getYopCertSerialNo());
             }
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("response sign verify success, requestId:{}, sign:{}", metadata.getYopRequestId(), metadata.getYopSign());

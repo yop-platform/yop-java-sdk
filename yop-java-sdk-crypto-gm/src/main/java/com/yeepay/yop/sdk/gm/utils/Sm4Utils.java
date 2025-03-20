@@ -5,7 +5,8 @@
 package com.yeepay.yop.sdk.gm.utils;
 
 import com.google.common.base.Charsets;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.apache.commons.lang3.StringUtils;
@@ -53,7 +54,8 @@ public class Sm4Utils {
         try {
             return generateKey(DEFAULT_KEY_SIZE);
         } catch (Exception e) {
-            throw new YopClientException("UnexpectedError, Generate Sm4Key Fail, ex:", e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY,
+                    "UnexpectedError, Generate Sm4Key Fail, ex:", e);
         }
 
     }

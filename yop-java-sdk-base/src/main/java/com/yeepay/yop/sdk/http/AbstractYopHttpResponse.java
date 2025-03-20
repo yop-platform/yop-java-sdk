@@ -6,7 +6,7 @@ package com.yeepay.yop.sdk.http;
 
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
-import com.yeepay.yop.sdk.exception.YopHttpException;
+import com.yeepay.yop.sdk.exception.io.YopIOException;
 import com.yeepay.yop.sdk.utils.DateUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
 import org.apache.commons.io.IOUtils;
@@ -67,7 +67,8 @@ public abstract class AbstractYopHttpResponse implements YopHttpResponse {
             contentStr = IOUtils.toString(this.content, YopConstants.DEFAULT_ENCODING);
             return contentStr;
         } catch (IOException ex) {
-            throw new YopHttpException("ResponseError, Read Content Fail, headers:" + this.headers + ", ex:", ex);
+            throw new YopIOException("ResponseError, Read Content Fail, headers:" + this.headers, ex,
+                    YopIOException.IOExceptionEnum.UNKNOWN);
         } finally {
             StreamUtils.closeQuietly(this.content);
         }

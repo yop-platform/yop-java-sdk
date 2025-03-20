@@ -6,6 +6,7 @@ package com.yeepay.yop.sdk.base.security.cert.parser;
 
 import com.yeepay.yop.sdk.base.security.cert.X509CertSupportFactory;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.utils.FileUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
@@ -40,7 +41,7 @@ public abstract class AbstractYopPublicKeyParser {
         try {
             certStream = FileUtils.getResourceAsStream(certPath);
             if (null == certStream) {
-                throw new YopClientException("ConfigProblem, X509Cert NotFound, path:" + certPath + ", type:" + certType);
+                throw new IllegalConfigFormatException("yop_cert_store", "ConfigProblem, X509Cert NotFound, path:" + certPath + ", type:" + certType);
             }
             return X509CertSupportFactory.getSupport(certType.getValue()).generate(certStream);
         } finally {

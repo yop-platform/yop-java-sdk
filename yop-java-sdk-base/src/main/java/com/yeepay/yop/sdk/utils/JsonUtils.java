@@ -17,7 +17,9 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.constants.ExceptionConstants;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.utils.json.joda.DatetimeModule;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -89,7 +91,7 @@ public class JsonUtils {
         try {
             return writer.writeValueAsString(value);
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new YopClientBizException(ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY, "json", e);
         }
     }
 
@@ -104,7 +106,7 @@ public class JsonUtils {
         try {
             return OBJECT_MAPPER.readValue(json, clazz);
         } catch (Exception e) {
-            throw new YopClientException("Unable to parse Json String.", e);
+            throw new IllegalParamFormatException("json", "Unable to parse Json String.", e);
         }
     }
 
@@ -119,10 +121,8 @@ public class JsonUtils {
     public static <T> T loadFrom(File file, Class<T> clazz) throws IOException {
         try {
             return OBJECT_MAPPER.readValue(file, clazz);
-        } catch (IOException e) {
-            throw e;
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new IllegalParamFormatException(null != file ? file.getName() : "file", "Unable to load json file" ,e);
         }
     }
 
@@ -162,7 +162,7 @@ public class JsonUtils {
             return true;
         }
         if (jsonPaths.size() > 1 && !CollectionUtils.intersection(jsonPaths, JSON_PATH_ROOT).isEmpty()) {
-            throw new YopClientException("illegal json paths:" + jsonPaths);
+            throw new IllegalParamFormatException("jsonPath", "illegal json paths:" + jsonPaths);
         }
         return false;
     }

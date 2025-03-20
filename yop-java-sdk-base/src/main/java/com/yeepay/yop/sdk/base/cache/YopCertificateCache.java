@@ -16,6 +16,7 @@ import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.enums.CertStoreType;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.model.cert.YopPlatformCertQueryResult;
 import com.yeepay.yop.sdk.model.cert.YopPlatformPlainCert;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -101,7 +102,7 @@ public class YopCertificateCache {
         } catch (Exception e) {
             LOGGER.error("error when load sm2 root cert, ex:", e);
         }
-        throw new YopClientException("Config Error, platform sm2 root cert not found, provider:"
+        throw new IllegalConfigFormatException(DEFAULT_CFCA_ROOT_FILE, "Config Error, platform sm2 root cert not found, provider:"
                 + provider + ", env:" + env + ", appKey:" + appKey);
     }
 
@@ -138,7 +139,7 @@ public class YopCertificateCache {
         } catch (Exception e) {
             LOGGER.error("error when load sm2 inter certs, ex:", e);
         }
-        throw new YopClientException("Config Error, platform sm2 inter cert not found, provider:"
+        throw new IllegalConfigFormatException(DEFAULT_YOP_INTER_FILE, "Config Error, platform sm2 inter cert not found, provider:"
                 + provider + ", env:" + env + ", appKey:" + appKey);
     }
 
@@ -151,7 +152,7 @@ public class YopCertificateCache {
                 return cert;
             }
         }
-        throw new YopClientException("Config Error, platform cert not found, provider:"
+        throw new IllegalConfigFormatException("yop_public_key|yop_cert_store", "Config Error, platform cert not found, provider:"
                 + provider + ", env:" + env + ", appKey:" + appKey + ", certType:" + certType + ", certFile:" + certFile);
     }
 
@@ -216,7 +217,7 @@ public class YopCertificateCache {
         } catch (Exception e) {
             LOGGER.warn("error when load yop rsa certs, ex:", e);
         }
-        throw new YopClientException("Config Error, platform rsa certs not found, provider:"
+        throw new IllegalConfigFormatException("yop_public_key", "Config Error, platform rsa certs not found, provider:"
                 + provider + ", env:" + env + ", appKey:" + appKey + ", serialNo:" + serialNo);
     }
 

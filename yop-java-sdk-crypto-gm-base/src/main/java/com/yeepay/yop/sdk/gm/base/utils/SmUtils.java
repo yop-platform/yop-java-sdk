@@ -4,7 +4,7 @@
  */
 package com.yeepay.yop.sdk.gm.base.utils;
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.utils.Encodes;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
@@ -62,7 +62,8 @@ public class SmUtils {
             KeyFactory kf = KeyFactory.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
             return kf.generatePublic(eks);
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, YopPublicKey Convert Fail, value:" + pubKey, e);
+            throw new IllegalConfigFormatException("yop_public_key", "ConfigProblem, YopPublicKey Convert Fail, value:"
+                    + pubKey + ", cause:" + e.getMessage(), e);
         }
     }
 

@@ -3,6 +3,7 @@ package com.yeepay.yop.sdk.service.common.request;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.internal.RestartableInputStream;
 import com.yeepay.yop.sdk.model.BaseRequest;
 import com.yeepay.yop.sdk.model.FileParam;
@@ -167,7 +168,7 @@ public class YopRequest extends BaseRequest {
             baos.flush();
             return RestartableInputStream.wrap(baos.toByteArray());
         } catch (IOException e) {
-            throw new YopClientException("ReqParam Illegal, InputStreamParam Cant Restart, ex:", e);
+            throw new IllegalParamFormatException("InputStream", "ReqParam Illegal, InputStreamParam Cant Restart, ex:", e);
         }
     }
 
@@ -185,7 +186,7 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest setContent(String content) {
         if (StringUtils.isEmpty(content)) {
-            throw new YopClientException("ReqParam Illegal, RequestContent Is Empty");
+            throw new IllegalParamFormatException("content", "ReqParam Illegal, RequestContent Is Empty");
         }
         this.content = content;
         return this;
@@ -207,7 +208,7 @@ public class YopRequest extends BaseRequest {
 
     public YopRequest setStream(InputStream inputStream) {
         if (inputStream == null) {
-            throw new YopClientException("ReqParam Illegal, InputStreamParam IsNull.");
+            throw new IllegalParamFormatException("InputStream", "ReqParam Illegal, InputStreamParam IsNull.");
         }
         this.content = restartStream(inputStream);
         return this;

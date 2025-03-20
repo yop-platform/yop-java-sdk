@@ -5,7 +5,7 @@ import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.base.config.provider.YopFixedSdkConfigProvider;
 import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.file.YopFileSdkConfig;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.utils.BeanUtils;
 import com.yeepay.yop.sdk.utils.JsonUtils;
 import com.yeepay.yop.sdk.utils.StreamUtils;
@@ -145,7 +145,7 @@ public final class YopFileSdkConfigProvider extends YopFixedSdkConfigProvider {
         }
 
         if (null == customSdkConfig) {
-            throw new YopClientException("ConfigProblem, Can't load config, file:" + configFile);
+            throw new IllegalConfigFormatException("yop_sdk_config_xxx.json", "ConfigProblem, Can't load config, file:" + configFile);
         }
 
         return customSdkConfig;

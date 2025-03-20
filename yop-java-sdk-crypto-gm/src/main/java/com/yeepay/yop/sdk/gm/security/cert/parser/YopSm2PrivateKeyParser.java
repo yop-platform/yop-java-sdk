@@ -8,7 +8,7 @@ import com.yeepay.yop.sdk.base.security.cert.parser.AbstractYopPrivateKeyParser;
 import com.yeepay.yop.sdk.base.security.cert.parser.YopCertParser;
 import com.yeepay.yop.sdk.config.provider.file.YopCertConfig;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.gm.base.utils.SmUtils;
 import com.yeepay.yop.sdk.gm.utils.Sm2Utils;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -40,23 +40,25 @@ public class YopSm2PrivateKeyParser extends AbstractYopPrivateKeyParser implemen
     @Override
     public PrivateKey parse(YopCertConfig certConfig) {
         if (null == certConfig.getStoreType()) {
-            throw new YopClientException("ConfigProblem, IsvPrivateKey StoreType IsNull, certConfig:" + certConfig);
+            throw new IllegalConfigFormatException("store_type", "ConfigProblem, IsvPrivateKey StoreType IsNull, certConfig:" + certConfig);
         }
         switch (certConfig.getStoreType()) {
             case STRING:
                 try {
                     return Sm2Utils.string2PrivateKey(certConfig.getValue());
                 } catch (Exception ex) {
-                    throw new YopClientException("ConfigProblem, IsvPrivateKey Value Illegal, certConfig:" + certConfig, ex);
+                    throw new IllegalConfigFormatException("value", "ConfigProblem, IsvPrivateKey Value Illegal, certConfig:"
+                            + certConfig + ", cause:" + ex.getMessage(), ex);
                 }
             case FILE_P12:
                 try {
                     return parsePrivateKey(certConfig.getPassword(), certConfig.getValue());
                 } catch (Exception ex) {
-                    throw new YopClientException("ConfigProblem, IsvPrivateKey Password Illegal, certConfig:" + certConfig, ex);
+                    throw new IllegalConfigFormatException("value", "ConfigProblem, IsvPrivateKey Password Illegal, certConfig:"
+                            + certConfig + ", cause:" + ex.getMessage(), ex);
                 }
             default:
-                throw new YopClientException("ConfigProblem, IsvPrivateKey StoreType NotSupport, certConfig:" + certConfig);
+                throw new IllegalConfigFormatException("store_type", "ConfigProblem, IsvPrivateKey StoreType NotSupport, certConfig:" + certConfig);
         }
     }
 

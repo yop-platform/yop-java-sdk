@@ -7,6 +7,7 @@ package com.yeepay.yop.sdk.service.common.callback.protocol;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.service.common.callback.YopCallbackRequest;
@@ -62,7 +63,7 @@ public class YopCallbackProtocolFactory {
                 params = toParams(request.getParams());
                 break;
             default:
-                throw new YopClientException("unsupported content Type for YopCallback, type:" + request.getContentType());
+                throw new IllegalParamFormatException("contentType", "unsupported content Type for YopCallback, type:" + request.getContentType());
         }
 
         String appKey = params.get("customerIdentification");

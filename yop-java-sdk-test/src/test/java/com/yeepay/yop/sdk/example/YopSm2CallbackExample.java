@@ -5,21 +5,18 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.ASN1Encoding;
-import org.bouncycastle.asn1.ASN1Integer;
-import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.engines.SM2Engine;
-import org.bouncycastle.crypto.params.ECDomainParameters;
-import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
-import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-import org.bouncycastle.crypto.params.ParametersWithID;
+import org.bouncycastle.crypto.params.*;
 import org.bouncycastle.crypto.signers.SM2Signer;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.math.ec.custom.gm.SM2P256V1Curve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,10 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.security.Key;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.Security;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -176,6 +170,98 @@ public class YopSm2CallbackExample {
         // 解密业务参数
         final String bizContent = decryptBizContent(jsonReqBody, decryptedSecretKey, iv);
         LOGGER.info("解密结果：{}", bizContent);
+
+        // 构造应答报文
+//        String respBody = "{\"result\":\"SUCCESS\"}";
+        //HttpServletResponse resp;
+//        resp.addHeader("x-yop-sign", encodeUrlSafeBase64(sign(respBody.getBytes(UTF_8))));
+//        // 注意：此处为测试环境国密证书，生产环境请联系技术支持获取
+//        resp.addHeader("x-yop-sign-serial-no", "4059376239");
+//        resp.setContentType("application/json");
+//        resp.getOutputStream().write(respBody.getBytes(UTF_8));
+    }
+
+    private static byte[] sign(byte[] data, String appKey) {
+        BCECPrivateKey isvPrivateKey = isvPrivateKeyMap.get(appKey);
+        try {
+            ECParameterSpec parameterSpec = isvPrivateKey.getParameters();
+            ECDomainParameters domainParameters = new ECDomainParameters(parameterSpec.getCurve(), parameterSpec.getG(),
+                    parameterSpec.getN(), parameterSpec.getH());
+            ECPrivateKeyParameters priKeyParameters = new ECPrivateKeyParameters(isvPrivateKey.getD(), domainParameters);
+            //der编码后的签名值
+            byte[] derSign = sign(priKeyParameters, null, data);
+
+            //der解码过程
+            ASN1Sequence as = DERSequence.getInstance(derSign);
+            byte[] rBytes = ((ASN1Integer) as.getObjectAt(0)).getValue().toByteArray();
+            byte[] sBytes = ((ASN1Integer) as.getObjectAt(1)).getValue().toByteArray();
+            //由于大数的补0规则，所以可能会出现33个字节的情况，要修正回32个字节
+            rBytes = fixToCurveLengthBytes(rBytes);
+            sBytes = fixToCurveLengthBytes(sBytes);
+            byte[] rawSign = new byte[rBytes.length + sBytes.length];
+            System.arraycopy(rBytes, 0, rawSign, 0, rBytes.length);
+            System.arraycopy(sBytes, 0, rawSign, rBytes.length, sBytes.length);
+            return rawSign;
+        } catch (Exception e) {
+            throw new RuntimeException("SystemError, Sign Fail, key:" + isvPrivateKey + ", ex:", e);
+        }
+    }
+
+    /**
+     * 签名
+     *
+     * @param priKeyParameters 私钥
+     * @param withId           可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
+     * @param srcData          源数据
+     * @return DER编码后的签名值
+     * @throws CryptoException
+     */
+    public static byte[] sign(ECPrivateKeyParameters priKeyParameters, byte[] withId, byte[] srcData)
+            throws CryptoException {
+        SM2Signer signer = new SM2Signer();
+        CipherParameters param;
+        ParametersWithRandom pwr = new ParametersWithRandom(priKeyParameters, new SecureRandom());
+        if (withId != null) {
+            param = new ParametersWithID(pwr, withId);
+        } else {
+            param = pwr;
+        }
+        signer.init(true, param);
+        signer.update(srcData, 0, srcData.length);
+        return signer.generateSignature();
+    }
+
+    public static final SM2P256V1Curve CURVE = new SM2P256V1Curve();
+    public final static BigInteger SM2_ECC_N = CURVE.getOrder();
+    public final static BigInteger SM2_ECC_H = CURVE.getCofactor();
+    public final static BigInteger SM2_ECC_GX = new BigInteger(
+            "32C4AE2C1F1981195F9904466A39C9948FE30BBFF2660BE1715A4589334C74C7", 16);
+    public final static BigInteger SM2_ECC_GY = new BigInteger(
+            "BC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0", 16);
+    public static final ECPoint G_POINT = CURVE.createPoint(SM2_ECC_GX, SM2_ECC_GY);
+    public static final ECDomainParameters DOMAIN_PARAMS = new ECDomainParameters(CURVE, G_POINT,
+            SM2_ECC_N, SM2_ECC_H);
+    public static final int CURVE_LEN = getCurveLength(DOMAIN_PARAMS);
+    public static int getCurveLength(ECDomainParameters domainParams) {
+        return (domainParams.getCurve().getFieldSize() + 7) / 8;
+    }
+
+    private static byte[] fixToCurveLengthBytes(byte[] src) {
+        if (src.length == CURVE_LEN) {
+            return src;
+        }
+
+        byte[] result = new byte[CURVE_LEN];
+        if (src.length > CURVE_LEN) {
+            System.arraycopy(src, src.length - result.length, result, 0, result.length);
+        } else {
+            System.arraycopy(src, 0, result, result.length - src.length, src.length);
+        }
+        return result;
+    }
+
+    private static String encodeUrlSafeBase64(byte[] input) {
+        return Base64.encodeBase64URLSafeString(input);
     }
 
     private static byte[] decryptKey(byte[] encryptedCredentialBytes, BCECPrivateKey isvPrivateKey) {

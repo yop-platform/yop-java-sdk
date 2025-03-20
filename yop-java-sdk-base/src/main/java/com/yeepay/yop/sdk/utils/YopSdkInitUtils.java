@@ -4,6 +4,10 @@
  */
 package com.yeepay.yop.sdk.utils;
 
+import com.yeepay.yop.sdk.service.common.YopClientBuilder;
+import com.yeepay.yop.sdk.service.common.YopClientImpl;
+import com.yeepay.yop.sdk.service.common.request.YopRequest;
+import com.yeepay.yop.sdk.service.common.response.YopResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +65,15 @@ public class YopSdkInitUtils {
             LOGGER.error("spi class load fail, name:{}, loader:{}, ex:", spiClass,
                     Thread.currentThread().getContextClassLoader(), e);
         }
+    }
+
+    public static void main(String[] args) {
+        YopClientImpl yopClient = YopClientBuilder.builder().build();
+        final YopRequest yopRequest = new YopRequest("/rest/v2.0/yop/platform/certs", "GET");
+        yopRequest.getRequestConfig().setAppKey("您的国密appKey");
+        yopRequest.addParameter("certType", "SM2");
+        final YopResponse response = yopClient.request(yopRequest);
+        assert null != response;
     }
 
 }

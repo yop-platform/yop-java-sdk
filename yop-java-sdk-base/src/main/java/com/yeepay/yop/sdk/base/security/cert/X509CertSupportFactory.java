@@ -5,10 +5,12 @@
 package com.yeepay.yop.sdk.base.security.cert;
 
 import com.google.common.collect.Maps;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.YopClientBizException;
 
 import java.util.Map;
 import java.util.ServiceLoader;
+
+import static com.yeepay.yop.sdk.constants.ExceptionConstants.SDK_CONFIG_RUNTIME_DEPENDENCY;
 
 /**
  * title: x509证书支持类工厂<br>
@@ -46,7 +48,7 @@ public class X509CertSupportFactory {
     public static X509CertSupport getSupport(String certType) {
         final X509CertSupport x509CertSupport = X509_CERT_GENERATOR_MAP.get(certType);
         if (null == x509CertSupport) {
-            throw new YopClientException("ConfigProblem, X509CertSupport NotFound, certType:" + certType);
+            throw new YopClientBizException(SDK_CONFIG_RUNTIME_DEPENDENCY, "ConfigProblem, X509CertSupport NotFound, certType:" + certType);
         }
         return x509CertSupport;
     }

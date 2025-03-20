@@ -1,7 +1,7 @@
 package com.yeepay.yop.sdk.inter.utils;
 
 
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.config.IllegalConfigFormatException;
 import com.yeepay.yop.sdk.utils.Encodes;
 
 import java.security.KeyFactory;
@@ -37,7 +37,8 @@ public class RSAKeyUtils {
             return KeyFactory.getInstance(RSA).generatePublic(
                     new X509EncodedKeySpec(Encodes.decodeBase64(pubKey)));
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new YopClientException("ConfigProblem, YopPublicKey ParseFail, value:" + pubKey + ", ex:", e);
+            throw new IllegalConfigFormatException("yop_public_key",
+                    "ConfigProblem, YopPublicKey ParseFail, value:" + pubKey + ", ex:", e);
         }
     }
 
@@ -52,7 +53,8 @@ public class RSAKeyUtils {
             return KeyFactory.getInstance(RSA).generatePrivate(
                     new PKCS8EncodedKeySpec(Encodes.decodeBase64(priKey)));
         } catch (Exception e) {
-            throw new YopClientException("ConfigProblem, IsvPrivateKey ParseFail, value:" + priKey + ", ex:", e);
+            throw new IllegalConfigFormatException("isv_private_key",
+                    "ConfigProblem, IsvPrivateKey ParseFail, value:" + priKey + ", ex:", e);
         }
     }
 

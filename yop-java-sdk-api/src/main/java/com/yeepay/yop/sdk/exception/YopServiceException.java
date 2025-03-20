@@ -10,7 +10,7 @@ package com.yeepay.yop.sdk.exception;
  * about the error and why it occurred. In particular, the errorType field can be used to determine if the caller's
  * request was invalid, or the service encountered an error on the server side while processing it.
  */
-public class YopServiceException extends YopClientException {
+public class YopServiceException extends YopClientException implements YopTracedException {
     private static final long serialVersionUID = 1483785729559154396L;
 
     /**

@@ -18,7 +18,7 @@ import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptProtocol;
 import com.yeepay.yop.sdk.base.security.encrypt.YopEncryptorFactory;
 import com.yeepay.yop.sdk.constants.CharacterConstants;
-import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.http.Headers;
 import com.yeepay.yop.sdk.protocol.AuthenticateProtocolVersion;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 import static com.yeepay.yop.sdk.constants.CharacterConstants.*;
+import static com.yeepay.yop.sdk.http.Headers.YOP_ENCRYPT;
 import static com.yeepay.yop.sdk.utils.HttpUtils.useEmptyAsCanonicalQueryString;
 
 /**
@@ -160,7 +161,7 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
         templateOptions.setCredentialsAlg(certType.getValue());
         YopEncryptProtocol.Inst parsedEncryptProtocol = parseEncryptProtocol(yopEncrypt, yopCredentials, templateOptions);
         if (null == parsedEncryptProtocol) {
-            throw new YopClientException("illegal YopSm2CallbackProtocol, request:" + originRequest);
+            throw new IllegalParamFormatException(YOP_ENCRYPT, "illegal YopSm2CallbackProtocol, request:" + originRequest);
         }
 
         if (LOGGER.isDebugEnabled()) {
@@ -199,10 +200,10 @@ public class YopSm2CallbackProtocol extends AbstractYopCallbackProtocol {
             }
             platformSerialNo = X509CertUtils.parseToHex(platformSerialNo);
             platformServerRoot = request.getPlatformServerRoot();
-            yopEncrypt = headers.get(Headers.YOP_ENCRYPT);
+            yopEncrypt = headers.get(YOP_ENCRYPT);
             yopRequestId = headers.get(Headers.YOP_REQUEST_ID);
         } catch (Exception e) {
-            throw new YopClientException("error initialize YopSm2CallbackProtocol, ex:", e);
+            throw new IllegalParamFormatException("YopCallbackRequest", "error initialize YopSm2CallbackProtocol, ex:", e);
         }
     }
 

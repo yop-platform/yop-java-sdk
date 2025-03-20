@@ -8,6 +8,7 @@ package com.yeepay.yop.sdk.utils.support;
 import com.google.common.collect.Maps;
 import com.yeepay.yop.sdk.auth.credentials.PKICredentialsItem;
 import com.yeepay.yop.sdk.base.auth.signer.process.YopSignProcessorFactory;
+import com.yeepay.yop.sdk.exception.param.IllegalParamFormatException;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 
 import java.security.PrivateKey;
@@ -81,7 +82,7 @@ public final class CashierSupport {
             case "EC":
                 return CertTypeEnum.SM2;
             default:
-                throw new RuntimeException("sign algorithm(" + privateKey.getAlgorithm() + ") not supported");
+                throw new IllegalParamFormatException("PrivateKey", "sign algorithm(" + privateKey.getAlgorithm() + ") not supported");
         }
     }
 
