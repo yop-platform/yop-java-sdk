@@ -76,6 +76,7 @@ public class ClientUtils {
                     .withYosEndpoint(null != clientParams.getYosEndPoint() ? clientParams.getYosEndPoint().toString() : null)
                     .withPreferredEndPoint(clientParams.getPreferredEndPoint())
                     .withPreferredYosEndPoint(clientParams.getPreferredYosEndPoint())
+                    .withEndPointWeightMap(clientParams.getEndPointWeightMap())
                     .withSandboxEndPoint(null != clientParams.getSandboxEndPoint() ? clientParams.getSandboxEndPoint().toString() : null)
                     .build();
         }
