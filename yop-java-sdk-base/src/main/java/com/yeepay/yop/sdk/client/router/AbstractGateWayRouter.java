@@ -40,14 +40,27 @@ abstract public class AbstractGateWayRouter implements GateWayRouter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGateWayRouter.class);
 
+    /**
+     * 记录client的路由信息：主、备
+     */
     protected static final Map<ServerRootSpace, ServerRootRouting> SERVER_ROOT_ROUTING = Maps.newConcurrentMap();
+    /**
+     * 记录所有的serverRoot信息: provider、env、type
+     */
     protected static final Map<URI, Set<ServerRootInfo>> ALL_SERVER_INFOS = Maps.newConcurrentMap();
+
+    /**
+     * 记录被sentinel block的serverRoot信息
+     */
     protected static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
 
     static {
         monitorServerRoot();
     }
 
+    /**
+     * 某个client路由信息
+     */
     protected static class ServerRootRouting {
 
         private Map<ServerRootType, URI> mainServers;
@@ -127,18 +140,11 @@ abstract public class AbstractGateWayRouter implements GateWayRouter {
             throw new YopClientException("Config Error, No ServerRoot Found, type:" + serverRootType);
         }
         final URI oldMain = mainServers.putIfAbsent(serverRootType, serverRoot);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Main ServerRoot Set, value:{}, type:{}", serverRoot, serverRootType);
-        }
+        LOGGER.info("Main ServerRoot Set, value:{}, type:{}", serverRoot, serverRootType);
         if (null != oldMain) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Main ServerRoot Already Set, value:{}", oldMain);
-            }
             if (force) {
                 mainServers.put(serverRootType, serverRoot);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Main ServerRoot Switched, old:{}, new:{}", oldMain, serverRoot);
-                }
+                LOGGER.info("Main ServerRoot Switched, old:{}, new:{}", oldMain, serverRoot);
                 return true;
             }
             return false;
@@ -168,6 +174,9 @@ abstract public class AbstractGateWayRouter implements GateWayRouter {
         }
     }
 
+    /**
+     * 监控sentinel的serverRoot状态变化
+     */
     protected static void monitorServerRoot() {
         // sentinel监控
         EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",

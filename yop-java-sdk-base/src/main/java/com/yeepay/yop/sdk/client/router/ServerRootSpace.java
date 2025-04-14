@@ -129,7 +129,7 @@ public class ServerRootSpace implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(this.provider, this.env, this.serverRoot,
-                this.yosServerRoot, this.sandboxServerRoot, this.preferredEndPoint, this.preferredYosEndPoint);
+                this.yosServerRoot, this.sandboxServerRoot, this.preferredEndPoint, this.preferredYosEndPoint, this.uriWeight);
     }
 
     @Override
@@ -142,7 +142,8 @@ public class ServerRootSpace implements Serializable {
                     Objects.equals(this.yosServerRoot, that.yosServerRoot) &&
                     Objects.equals(this.sandboxServerRoot, that.sandboxServerRoot) &&
                     Objects.equals(this.preferredEndPoint, that.preferredEndPoint) &&
-                    Objects.equals(this.preferredYosEndPoint, that.preferredYosEndPoint);
+                    Objects.equals(this.preferredYosEndPoint, that.preferredYosEndPoint) &&
+                    Objects.equals(this.uriWeight, that.uriWeight);
         }
         return false;
     }

@@ -43,8 +43,55 @@ public class RouteUtilsTest {
 
         // 使用 setScale 来保留两位小数，并选择舍入模式
         BigDecimal result = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+        // 断言结果在 0.28 和 0.32 之间
+        System.out.println(result);
 
-        System.out.println("结果（使用 BigDecimal）: " + result);
+        assert new BigDecimal("0.28").compareTo(result) < 0 && result.compareTo(new BigDecimal("0.32")) < 0;
+    }
 
+    @Test
+    public void testIllegalWeightConfig() throws Exception {
+        ArrayList<RouteUtils.WeightAble<Object>> origin = new ArrayList<>();
+        origin.add(new RouteUtils.WeightAble<>("a", -30));
+        origin.add(new RouteUtils.WeightAble<>("b", 30));
+        origin.add(new RouteUtils.WeightAble<>("c", -40));
+        int sum = 0;
+        int total = 10000;
+        for (int i = 0; i < total; i++) {
+            if (RouteUtils.weightList(origin).get(0).getT().equals("b")) {
+                sum ++;
+            }
+        }
+
+        BigDecimal numerator = new BigDecimal(sum);
+        BigDecimal denominator = new BigDecimal(total);
+
+        // 使用 setScale 来保留两位小数，并选择舍入模式
+        BigDecimal result = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+        System.out.println(result);
+
+        assert new BigDecimal("1.00").compareTo(result) == 0;
+    }
+
+    @Test
+    public void testSingleWeightConfig() throws Exception {
+        ArrayList<RouteUtils.WeightAble<Object>> origin = new ArrayList<>();
+        origin.add(new RouteUtils.WeightAble<>("b", 30));
+        int sum = 0;
+        int total = 10000;
+        for (int i = 0; i < total; i++) {
+            if (RouteUtils.weightList(origin).get(0).getT().equals("b")) {
+                sum ++;
+            }
+        }
+
+        BigDecimal numerator = new BigDecimal(sum);
+        BigDecimal denominator = new BigDecimal(total);
+
+        // 使用 setScale 来保留两位小数，并选择舍入模式
+        BigDecimal result = numerator.divide(denominator, 2, RoundingMode.HALF_UP);
+        System.out.println(result);
+
+        assert new BigDecimal("1.00").compareTo(result) == 0;
     }
 }

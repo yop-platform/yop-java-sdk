@@ -47,6 +47,9 @@ public class RouteUtils {
             Iterator<WeightAble<T>> iterator = tmp.iterator();
             while (iterator.hasNext()) {
                 WeightAble<T> dc = iterator.next();
+                if (dc.getWeight() <= 0) {
+                    continue;
+                }
                 accumulator += dc.getWeight();
                 if (random < accumulator) {
                     choosed = dc;
@@ -54,8 +57,10 @@ public class RouteUtils {
                     break;
                 }
             }
-            tmp.add(0, choosed);
-            return tmp;
+            if (null != choosed) {
+                tmp.add(0, choosed);
+                return tmp;
+            }
         }
         return randomList(origin);
     }
