@@ -101,7 +101,11 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                             .collect(Collectors.toList()) : Collections.emptyList();
         }
         if (MapUtils.isNotEmpty(this.endPointWeightMap)) {
-            weightMap.putAll(endPointWeightMap);
+            endPointWeightMap.forEach((uri, weight) -> {
+                if (weight > 0) {
+                    weightMap.put(uri, weight);
+                }
+            });
         }
         ClientParams clientParams = ClientParams.Builder.builder()
                 .withInner(this.inner)
@@ -138,7 +142,9 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
             URI uri = URI.create(uriWeight[0]);
             try {
                 Integer weight = Integer.valueOf(uriWeight[1]);
-                weightMap.put(uri, weight);
+                if (weight > 0) {
+                    weightMap.put(uri, weight);
+                }
             } catch (Exception e) {
                 LOGGER.warn("parse server root weight error, uri: {}", uriStr);
             }
