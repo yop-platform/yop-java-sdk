@@ -349,7 +349,6 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>2.9.1</version>
                     <configuration>
-                        <aggregate>true</aggregate>
                         <charset>UTF-8</charset>
                         <encoding>UTF-8</encoding>
                         <docencoding>UTF-8</docencoding>
@@ -498,10 +497,11 @@
                     </configuration>
                 </plugin>
 
+                <!-- 签名文件：maven-gpg-plugin插件会调用上文中安装的GnuPG软件，对文件进行签名 -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.5</version>
+                    <version>1.6</version>
                     <executions>
                         <execution>
                             <id>sign-artifacts</id>
@@ -529,25 +529,6 @@
                         <tagNameFormat>v@{project.version}</tagNameFormat>
                         <!--                    <arguments>-DskipTests</arguments>-->
                     </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.12</version>
-                    <extensions>true</extensions>
-                    <configuration>
-                        <serverId>sonatype-nexus-staging</serverId>
-                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                    </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>commons-codec</groupId>
-                            <artifactId>commons-codec</artifactId>
-                            <version>${commons-codec.version}</version>
-                        </dependency>
-                    </dependencies>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -622,9 +603,15 @@
                         <artifactId>maven-release-plugin</artifactId>
                     </plugin>
 
+                    <!-- 需要 settings.xml 使用用户令牌凭据进行配置 -->
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.6.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
