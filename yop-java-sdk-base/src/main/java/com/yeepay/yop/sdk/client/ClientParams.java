@@ -7,6 +7,7 @@ import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 /**
  * title: client参数<br>
@@ -34,6 +35,8 @@ public class ClientParams {
 
     private final List<URI> preferredYosEndPoint;
 
+    private final Map<URI, Integer> endPointWeightMap;
+
     private final URI sandboxEndPoint;
 
     private final ClientConfiguration clientConfiguration;
@@ -49,7 +52,8 @@ public class ClientParams {
     private String clientId;
 
     private ClientParams(boolean inner, String provider,String env,
-                         URI endPoint, URI yosEndPoint, List<URI> preferredEndPoint, List<URI> preferredYosEndPoint, URI sandboxEndPoint,
+                         URI endPoint, URI yosEndPoint, List<URI> preferredEndPoint, List<URI> preferredYosEndPoint,
+                         Map<URI, Integer> endPointWeightMap, URI sandboxEndPoint,
                          ClientConfiguration clientConfiguration,
                          AuthorizationReqRegistry authorizationReqRegistry,
                          YopCredentialsProvider credentialsProvider, YopSdkConfigProvider yopSdkConfigProvider,
@@ -59,6 +63,7 @@ public class ClientParams {
         this.yosEndPoint = yosEndPoint;
         this.preferredEndPoint = preferredEndPoint;
         this.preferredYosEndPoint = preferredYosEndPoint;
+        this.endPointWeightMap = endPointWeightMap;
         this.sandboxEndPoint = sandboxEndPoint;
         this.clientConfiguration = clientConfiguration;
         this.authorizationReqRegistry = authorizationReqRegistry;
@@ -91,6 +96,10 @@ public class ClientParams {
 
     public List<URI> getPreferredYosEndPoint() {
         return preferredYosEndPoint;
+    }
+
+    public Map<URI, Integer> getEndPointWeightMap() {
+        return endPointWeightMap;
     }
 
     public URI getSandboxEndPoint() {
@@ -134,6 +143,7 @@ public class ClientParams {
         private URI yosEndPoint;
         private List<URI> preferredEndPoint;
         private List<URI> preferredYosEndPoint;
+        private Map<URI, Integer> endPointWeightMap;
         private URI sandboxEndPoint;
         private ClientConfiguration clientConfiguration;
         private AuthorizationReqRegistry authorizationReqRegistry;
@@ -183,6 +193,11 @@ public class ClientParams {
             return this;
         }
 
+        public Builder withEndPointWeightMap(Map<URI, Integer> endPointWeightMap) {
+            this.endPointWeightMap = endPointWeightMap;
+            return this;
+        }
+
         public Builder withSandboxEndPoint(URI sandboxEndPoint) {
             this.sandboxEndPoint = sandboxEndPoint;
             return this;
@@ -214,7 +229,7 @@ public class ClientParams {
         }
 
         public ClientParams build() {
-            return new ClientParams(inner, provider, env, endPoint, yosEndPoint, preferredEndPoint, preferredYosEndPoint, sandboxEndPoint,
+            return new ClientParams(inner, provider, env, endPoint, yosEndPoint, preferredEndPoint, preferredYosEndPoint, this.endPointWeightMap, sandboxEndPoint,
                     clientConfiguration, authorizationReqRegistry,
                     credentialsProvider, yopSdkConfigProvider, platformCredentialsProvider);
         }

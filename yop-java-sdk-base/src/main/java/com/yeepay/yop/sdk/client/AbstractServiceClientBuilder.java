@@ -12,11 +12,16 @@ import com.yeepay.yop.sdk.config.YopSdkConfig;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.utils.ClientUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.yeepay.yop.sdk.YopConstants.YOP_DEFAULT_ENV;
@@ -35,6 +40,8 @@ import static com.yeepay.yop.sdk.utils.ClientUtils.computeClientIdSuffix;
  * @since 17/12/1 18:23
  */
 public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServiceClientBuilder, ServiceInterfaceToBuild> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractServiceClientBuilder.class);
 
     private String clientId;
 
@@ -62,6 +69,8 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     private ClientConfiguration clientConfiguration;
 
+    private Map<URI, Integer> endPointWeightMap;
+
     private ServiceInterfaceToBuild clientInst;
 
     public final ServiceInterfaceToBuild build() {
@@ -80,13 +89,23 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
         if (null == clientConfiguration) {
             clientConfiguration = ClientConfigurationSupport.getClientConfiguration(yopSdkConfig);
         }
+        Map<URI, Integer> weightMap = new HashMap<>();
         if (CollectionUtils.isEmpty(preferredEndPoint)) {
             preferredEndPoint = CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredServerRoots()) ?
-                    yopSdkConfig.getPreferredServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
+                    yopSdkConfig.getPreferredServerRoots().stream().map(uriStr -> parseWeightedURI(uriStr, weightMap))
+                                    .collect(Collectors.toList()) : Collections.emptyList();
         }
         if (CollectionUtils.isEmpty(preferredYosEndPoint)) {
             preferredYosEndPoint = CollectionUtils.isNotEmpty(yopSdkConfig.getPreferredYosServerRoots()) ?
-                    yopSdkConfig.getPreferredYosServerRoots().stream().map(URI::create).collect(Collectors.toList()) : Collections.emptyList();
+                    yopSdkConfig.getPreferredYosServerRoots().stream().map(uriStr -> parseWeightedURI(uriStr, weightMap))
+                            .collect(Collectors.toList()) : Collections.emptyList();
+        }
+        if (MapUtils.isNotEmpty(this.endPointWeightMap)) {
+            endPointWeightMap.forEach((uri, weight) -> {
+                if (weight > 0) {
+                    weightMap.put(uri, weight);
+                }
+            });
         }
         ClientParams clientParams = ClientParams.Builder.builder()
                 .withInner(this.inner)
@@ -100,6 +119,7 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
                 .withYosEndPoint(yosEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getYosServerRoot(), YopConstants.DEFAULT_YOS_SERVER_ROOT)) : URI.create(yosEndPoint))
                 .withPreferredEndPoint(preferredEndPoint)
                 .withPreferredYosEndPoint(preferredYosEndPoint)
+                .withEndPointWeightMap(weightMap)
                 .withSandboxEndPoint(sandboxEndPoint == null ? URI.create(StringUtils.defaultIfBlank(yopSdkConfig.getSandboxServerRoot(), YopConstants.DEFAULT_SANDBOX_SERVER_ROOT)) : URI.create(sandboxEndPoint))
                 .withAuthorizationReqRegistry(authorizationReqRegistry())
                 .build();
@@ -114,6 +134,23 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
         this.clientInst = buildClient;
         ClientUtils.cacheClientBuilder(this.clientId, this);
         return buildClient;
+    }
+
+    private URI parseWeightedURI(String uriStr, Map<URI, Integer> weightMap) {
+        if (uriStr.contains(",")) {
+            String[] uriWeight = uriStr.split(",");
+            URI uri = URI.create(uriWeight[0]);
+            try {
+                Integer weight = Integer.valueOf(uriWeight[1]);
+                if (weight > 0) {
+                    weightMap.put(uri, weight);
+                }
+            } catch (Exception e) {
+                LOGGER.warn("parse server root weight error, uri: {}", uriStr);
+            }
+            return uri;
+        }
+        return URI.create(uriStr);
     }
 
     @SuppressWarnings("unchecked")
@@ -207,6 +244,11 @@ public abstract class AbstractServiceClientBuilder<SubClass extends AbstractServ
 
     public SubClass withSandboxEndPoint(String sandboxEndPoint) {
         this.sandboxEndPoint = sandboxEndPoint;
+        return getSubclass();
+    }
+
+    public SubClass withEndPointWeightMap(Map<URI, Integer> endPointWeightMap) {
+        this.endPointWeightMap = endPointWeightMap;
         return getSubclass();
     }
 

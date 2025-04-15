@@ -18,7 +18,7 @@ import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
 import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
-import com.yeepay.yop.sdk.client.router.SimpleGateWayRouter;
+import com.yeepay.yop.sdk.client.router.WeightGateWayRouter;
 import com.yeepay.yop.sdk.client.router.YopRouter;
 import com.yeepay.yop.sdk.config.provider.YopSdkConfigProvider;
 import com.yeepay.yop.sdk.config.provider.file.YopCircuitBreakerConfig;
@@ -104,8 +104,9 @@ public class ClientHandlerImpl implements ClientHandler {
         this.authorizationReqRegistry = handlerParams.getClientParams().getAuthorizationReqRegistry();
         ServerRootSpace serverRootSpace = new ServerRootSpace(provider, env, handlerParams.getClientParams().getEndPoint(),
                 handlerParams.getClientParams().getYosEndPoint(), handlerParams.getClientParams().getPreferredEndPoint(),
-                handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint());
-        this.gateWayRouter = new SimpleGateWayRouter(serverRootSpace);
+                handlerParams.getClientParams().getPreferredYosEndPoint(), handlerParams.getClientParams().getSandboxEndPoint(),
+                handlerParams.getClientParams().getEndPointWeightMap());
+        this.gateWayRouter = new WeightGateWayRouter(serverRootSpace);
         this.clientConfiguration = handlerParams.getClientParams().getClientConfiguration();
         this.client = buildHttpClient(handlerParams);
         this.circuitBreakerConfig = this.clientConfiguration.getCircuitBreakerConfig();
