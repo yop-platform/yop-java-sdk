@@ -72,7 +72,8 @@ public final class CashierSupport {
     // 获取请求收银台的sign
     private static String signature(String plainText, PrivateKey privateKey) {
         CertTypeEnum certType = resolveCertType(privateKey);
-        return YopSignProcessorFactory.getSignProcessor(certType.name()).sign(plainText, new PKICredentialsItem(privateKey, certType));
+        return YopSignProcessorFactory.getSignProcessor(certType.name()).sign(plainText, new PKICredentialsItem(privateKey, certType))
+                + "$" + digestAlgByCertType(certType);
     }
 
     private static CertTypeEnum resolveCertType(PrivateKey privateKey) {
@@ -83,6 +84,17 @@ public final class CashierSupport {
                 return CertTypeEnum.SM2;
             default:
                 throw new IllegalParamFormatException("PrivateKey", "sign algorithm(" + privateKey.getAlgorithm() + ") not supported");
+        }
+    }
+
+    private static String digestAlgByCertType(CertTypeEnum certType) {
+        switch (certType) {
+            case RSA2048:
+                return "SHA256";
+            case SM2:
+                return "SM3";
+            default:
+                throw new RuntimeException("sign algorithm(" + certType + ") not supported");
         }
     }
 
