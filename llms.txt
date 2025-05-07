@@ -1,0 +1,93 @@
+TITLE: Adding YOP SDK Dependency in Maven POM
+DESCRIPTION: Provides the XML snippet for adding the yop-java-sdk dependency to a Maven project's pom.xml file. Specifies the group ID, artifact ID, and version (4.4.0). Requires a Maven project.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_4
+
+LANGUAGE: XML
+CODE:
+```
+<dependency>
+  <groupId>com.yeepay.yop.sdk</groupId>
+  <artifactId>yop-java-sdk</artifactId>
+  <version>4.4.0</version>
+</dependency>
+```
+
+----------------------------------------
+
+TITLE: Adding YOP SDK Dependency in Gradle Build File
+DESCRIPTION: Provides the Groovy snippet for adding the yop-java-sdk dependency to a Gradle project's build file (e.g., build.gradle). Specifies the group, name, and version (4.4.0). Requires a Gradle project.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_5
+
+LANGUAGE: Groovy
+CODE:
+```
+compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.4.0'
+```
+
+----------------------------------------
+
+TITLE: Configuring YOP SDK JVM Args in Application Servers
+DESCRIPTION: Provides examples for setting the -Dyop.sdk.config.file JVM argument in common application servers like Tomcat, Jetty, and WebLogic, showing how to add the argument to their respective startup scripts or configuration files.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_1
+
+LANGUAGE: Shell
+CODE:
+```
+tomcat: 两种方式
+在 $CATALINA_HOME/bin/目录下添加 setenv.sh，在 set env.sh 中添加 JAVA_OPTS="$JAVA_OPTS -Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json"
+在 $CATALINA_HOME/bin/catalina.sh 中直接添加 JAVA_OPTS="$JAVA_OPTS -Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json"
+
+jetty: 在 $jetty_home/bin/jetty.sh 中添加 JAVA_OPTIONS="-Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json"
+
+weblogic: 修改 user_projects\domains\base_domain\bin 下的 startWebLogic.cmd 文件，添加 set JAVA_OPTIONS=% JAVA_OPTIONS % -Dyop.sdk.config.file=file:///D:\workspace..\config\yop_sdk_config_default.json
+```
+
+----------------------------------------
+
+TITLE: Setting YOP SDK Config File Path via JVM Arguments
+DESCRIPTION: Demonstrates how to configure the YOP SDK by specifying the path to the yop_sdk_config_default.json file using the -Dyop.sdk.config.file JVM argument. Provides examples for macOS/Linux and Windows file paths.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_0
+
+LANGUAGE: Shell
+CODE:
+```
+mac/linux:-Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json
+windows:-Dyop.sdk.config.file=file:///D:\workspace..\config\yop_sdk_config_default.json
+```
+
+----------------------------------------
+
+TITLE: Installing YOP SDK to Local Maven Repository
+DESCRIPTION: Explains how to build the SDK and install it into the local Maven repository using the mvn clean install command. This makes the library available for other local projects. Requires Maven installed.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_2
+
+LANGUAGE: Shell
+CODE:
+```
+mvn clean install
+```
+
+----------------------------------------
+
+TITLE: Deploying YOP SDK to Remote Maven Repository
+DESCRIPTION: Describes how to deploy the built SDK artifacts to a configured remote Maven repository using the mvn clean deploy command. Requires Maven and proper repository configuration in settings.xml or pom.xml.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_3
+
+LANGUAGE: Shell
+CODE:
+```
+mvn clean deploy
+```
+
+----------------------------------------
+
+TITLE: Executing YOP SDK Release Process with Maven
+DESCRIPTION: Shows the two-step process for releasing the SDK using the Maven Release Plugin. The first command prepares the release, and the second performs the release by deploying artifacts and tagging the repository. Requires Maven and Git.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_6
+
+LANGUAGE: Shell
+CODE:
+```
+mvn clean -DskipTests release:prepare -Prelease
+mvn release:perform -Prelease
+```
