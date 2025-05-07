@@ -1,93 +1,832 @@
-TITLE: Adding YOP SDK Dependency in Maven POM
-DESCRIPTION: Provides the XML snippet for adding the yop-java-sdk dependency to a Maven project's pom.xml file. Specifies the group ID, artifact ID, and version (4.4.0). Requires a Maven project.
-SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_4
+TITLE: Maven Dependency Configuration
+DESCRIPTION: Adds the YOP Java SDK dependency to a Maven project.  Include this in your pom.xml to use the SDK.  Replace the version with the latest stable release.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_0
 
-LANGUAGE: XML
+LANGUAGE: xml
 CODE:
 ```
 <dependency>
   <groupId>com.yeepay.yop.sdk</groupId>
   <artifactId>yop-java-sdk</artifactId>
-  <version>4.4.0</version>
+  <version>4.4.15</version> <!-- Please replace with the latest stable version -->
 </dependency>
 ```
 
 ----------------------------------------
 
-TITLE: Adding YOP SDK Dependency in Gradle Build File
-DESCRIPTION: Provides the Groovy snippet for adding the yop-java-sdk dependency to a Gradle project's build file (e.g., build.gradle). Specifies the group, name, and version (4.4.0). Requires a Gradle project.
+TITLE: Making API Requests with YOP in Java
+DESCRIPTION: This code snippet demonstrates how to make a basic API request using the YOP Java SDK. It includes setting up the request with the endpoint and method, configuring application and authentication information, building a JSON request body, sending the request, and processing the response. The appKey variable should be replaced with the actual application AppKey.
 SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_5
 
-LANGUAGE: Groovy
+LANGUAGE: Java
 CODE:
 ```
-compile group: 'com.yeepay.yop.sdk', name: 'yop-java-sdk', version: '4.4.0'
+YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test/http-json", "POST");
+
+// Set application information
+String appKey = "app_10085525305"; // Replace with your application AppKey
+request.getRequestConfig().setAppKey(appKey);
+request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+// Set authentication information
+//request.getRequestConfig().setCredentials(new YopPKICredentials(
+//        appKey, new PKICredentialsItem(getPrivateKey(
+//        "YOUR_PRIVATE_KEY_STRING", // Replace with your private key
+//        CertTypeEnum.RSA2048),
+//        CertTypeEnum.RSA2048)));
+
+// Build JSON request body
+Map<String, Object> obj = new HashMap<>();
+Map<String, Object> arg0 = new HashMap<>();
+arg0.put("string", "hello");
+obj.put("arg0", arg0);
+request.setContent(JsonUtils.toJsonString(obj));
+
+// Send request
+YopClient yopClient = YopClientBuilder.builder().build();
+YopResponse response = yopClient.request(request);
+
+// Process response
+if (response != null && response.getResult() != null) {
+    LOGGER.info("API call successful: {}", response.getResult());
+    // Parse response.getResult() according to API documentation
+} else {
+    LOGGER.warn("API call failed: {}", response.getResult());
+}
+} catch (Exception e) {
+    LOGGER.error("API call exception", e);
+}
 ```
 
 ----------------------------------------
 
-TITLE: Configuring YOP SDK JVM Args in Application Servers
-DESCRIPTION: Provides examples for setting the -Dyop.sdk.config.file JVM argument in common application servers like Tomcat, Jetty, and WebLogic, showing how to add the argument to their respective startup scripts or configuration files.
-SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_1
+TITLE: Making API Request with JSON Payload
+DESCRIPTION: This code snippet demonstrates how to make a YOP API request with a JSON payload. It constructs a JSON request body, sets it as the content of the YopRequest, and then sends the request using YopClient. The response is then processed to check for success or failure.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_6
 
-LANGUAGE: Shell
+LANGUAGE: java
 CODE:
 ```
-tomcat: 两种方式
-在 $CATALINA_HOME/bin/目录下添加 setenv.sh，在 set env.sh 中添加 JAVA_OPTS="$JAVA_OPTS -Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json"
-在 $CATALINA_HOME/bin/catalina.sh 中直接添加 JAVA_OPTS="$JAVA_OPTS -Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json"
+            // 构建JSON请求体
+            Map<String, Object> obj = new HashMap<>();
+            Map<String, Object> arg0 = new HashMap<>();
+            arg0.put("string", "你好");
+            obj.put("arg0", arg0);
+            request.setContent(JsonUtils.toJsonString(obj));
 
-jetty: 在 $jetty_home/bin/jetty.sh 中添加 JAVA_OPTIONS="-Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json"
+            // 发送请求
+            YopClient yopClient = YopClientBuilder.builder().build();
+            YopResponse response = yopClient.request(request);
 
-weblogic: 修改 user_projects\domains\base_domain\bin 下的 startWebLogic.cmd 文件，添加 set JAVA_OPTIONS=% JAVA_OPTIONS % -Dyop.sdk.config.file=file:///D:\workspace..\config\yop_sdk_config_default.json
+            // 处理响应
+            if (response != null && response.getResult() != null) {
+                LOGGER.info("API调用成功: {}", response.getResult());
+                // 根据API文档解析 response.getResult()
+            } else {
+                LOGGER.warn("API调用失败: {}", response.getResult());
+            }
 ```
 
 ----------------------------------------
 
-TITLE: Setting YOP SDK Config File Path via JVM Arguments
-DESCRIPTION: Demonstrates how to configure the YOP SDK by specifying the path to the yop_sdk_config_default.json file using the -Dyop.sdk.config.file JVM argument. Provides examples for macOS/Linux and Windows file paths.
-SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_0
-
-LANGUAGE: Shell
-CODE:
-```
-mac/linux:-Dyop.sdk.config.file=file:///home/app/yop_sdk_config_default.json
-windows:-Dyop.sdk.config.file=file:///D:\workspace..\config\yop_sdk_config_default.json
-```
-
-----------------------------------------
-
-TITLE: Installing YOP SDK to Local Maven Repository
-DESCRIPTION: Explains how to build the SDK and install it into the local Maven repository using the mvn clean install command. This makes the library available for other local projects. Requires Maven installed.
+TITLE: YOP SDK Configuration File
+DESCRIPTION: Example configuration file for the YOP SDK.  This file should be placed in the classpath at `config/yop_sdk_config_default.json`.  Replace `YOUR_APP_KEY` and `YOUR_PRIVATE_KEY_STRING` with your actual credentials.
 SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_2
 
-LANGUAGE: Shell
+LANGUAGE: json
 CODE:
 ```
-mvn clean install
+{
+  "app_key": "YOUR_APP_KEY", // Replace with your application AppKey
+  "isv_private_key": { // Application private key configuration
+    "value": "YOUR_PRIVATE_KEY_STRING" // Replace with your application private key string
+  },
+  "yos_server_root": "https://yos.yeepay.com/yop-center", // YOP service address
+  "preferred_server_roots": [
+    "https://openapi.yeepay.com/yop-center"
+  ],
+  "yop_cert_store": {
+    "enable": false,
+    "valid_after_expire_period": 1674727773000
+  },
+  "yop_report": {
+    "enable": true,
+    "enable_success_report": true,
+    "send_interval_ms": 3000,
+    "stat_interval_ms": 5000,
+    "max_queue_size": 500,
+    "max_fail_count": 10,
+    "max_fail_count_per_exception": 5,
+    "max_elapsed_ms": 15000,
+    "max_packet_size": 50
+  },
+  "http_client": {
+    "connect_timeout": 10000, // Connection timeout (milliseconds)
+    "connect_request_timeout": 5000,
+    "read_timeout": 30000 // Read timeout (milliseconds)
+  }
+}
 ```
 
 ----------------------------------------
 
-TITLE: Deploying YOP SDK to Remote Maven Repository
-DESCRIPTION: Describes how to deploy the built SDK artifacts to a configured remote Maven repository using the mvn clean deploy command. Requires Maven and proper repository configuration in settings.xml or pom.xml.
+TITLE: Initializing POST Form Request with YOP SDK in Java
+DESCRIPTION: This code snippet demonstrates how to create and send a POST request with form data using the YOP SDK. It initializes a YopRequest object with the API endpoint and method, sets the application key and security requirements, adds a form parameter, and then sends the request using a YopClient. The response is then processed to check for success or failure.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_4
+
+LANGUAGE: Java
+CODE:
+```
+YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test/http-json", "POST");
+
+// 设置应用信息
+String appKey = "app_10085525305"; // 替换为您的应用AppKey
+request.getRequestConfig().setAppKey(appKey);
+request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+// 添加表单参数
+request.addParameter("string", "你好");
+
+// 发送请求
+YopClient yopClient = YopClientBuilder.builder().build();
+YopResponse response = yopClient.request(request);
+
+// 处理响应
+if (response != null && response.getResult() != null) {
+    LOGGER.info("API调用成功: {}", response.getResult());
+    // 根据API文档解析 response.getResult()
+} else {
+    LOGGER.warn("API调用失败: {}", response.getResult());
+}
+```
+
+----------------------------------------
+
+TITLE: GET Standard Request with YOP SDK
+DESCRIPTION: This code snippet demonstrates how to make a GET request using the YOP SDK. It initializes a YopRequest object with the API endpoint and method, adds a parameter, sets the application key and security requirements, and then sends the request using a YopClient. The response is then processed to check for success or failure.
 SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_3
 
-LANGUAGE: Shell
+LANGUAGE: java
 CODE:
 ```
-mvn clean deploy
+private static void getCommonExample() {
+        try {
+            // Create request object
+            YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
+            request.addParameter("string0", "dsbzb");
+
+            // Set application information
+            String appKey = "app_10085525305"; // Replace with your application AppKey
+            request.getRequestConfig().setAppKey(appKey);
+            request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+            // Set authentication information
+//            request.getRequestConfig().setCredentials(new YopPKICredentials(
+//                    appKey, new PKICredentialsItem(getPrivateKey(
+//                    "YOUR_PRIVATE_KEY_STRING", // Replace with your private key
+//                    CertTypeEnum.RSA2048),
+//                    CertTypeEnum.RSA2048)));
+
+            // Send request
+            YopClient yopClient = YopClientBuilder.builder().build();
+            YopResponse response = yopClient.request(request);
+
+            // Process response
+            if (response != null && response.getResult() != null) {
+                LOGGER.info("API call successful: {}", response.getResult());
+                // Parse response.getResult() according to API documentation
+            } else {
+                LOGGER.warn("API call failed: {}", response.getResult());
+            }
+        } catch (Exception e) {
+            LOGGER.error("API call exception", e);
+        }
+    }
 ```
 
 ----------------------------------------
 
-TITLE: Executing YOP SDK Release Process with Maven
-DESCRIPTION: Shows the two-step process for releasing the SDK using the Maven Release Plugin. The first command prepares the release, and the second performs the release by deploying artifacts and tagging the repository. Requires Maven and Git.
-SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_6
+TITLE: Initializing GET Request with YOP SDK in Java
+DESCRIPTION: This code snippet demonstrates how to create and send a GET request using the YOP SDK. It initializes a YopRequest object with the API endpoint and method, sets the application key and security requirements, adds a parameter, and then sends the request using a YopClient. The response is then processed to check for success or failure.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_3
 
-LANGUAGE: Shell
+LANGUAGE: Java
 CODE:
 ```
-mvn clean -DskipTests release:prepare -Prelease
-mvn release:perform -Prelease
+YopRequest request = new YopRequest("/rest/v1.0/test/product-query/query-for-doc", "GET");
+request.addParameter("string0", "dsbzb");
+
+// 设置应用信息
+String appKey = "app_10085525305"; // 替换为您的应用AppKey
+request.getRequestConfig().setAppKey(appKey);
+request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+// 发送请求
+YopClient yopClient = YopClientBuilder.builder().build();
+YopResponse response = yopClient.request(request);
+
+// 处理响应
+if (response != null && response.getResult() != null) {
+    LOGGER.info("API调用成功: {}", response.getResult());
+    // 根据API文档解析 response.getResult()
+} else {
+    LOGGER.warn("API调用失败: {}", response.getResult());
+}
 ```
+
+----------------------------------------
+
+TITLE: File Download from YOP in Java
+DESCRIPTION: This code snippet demonstrates how to download a file from YOP using the YOP Java SDK. It includes creating a request object, setting the file name as a parameter, setting application and authentication information, sending the request, and processing the response. The appKey variable should be replaced with the actual application AppKey. The downloaded file content is read into a string.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_7
+
+LANGUAGE: Java
+CODE:
+```
+YopRequest request = new YopRequest("/yos/v1.0/test/test/ceph-download", "GET");
+request.addParameter("fileName", "example.txt");
+
+// Set application information
+String appKey = "app_10085525305"; // Replace with your application AppKey
+request.getRequestConfig().setAppKey(appKey);
+request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+// Set authentication information
+//request.getRequestConfig().setCredentials(new YopPKICredentials(
+//        appKey, new PKICredentialsItem(getPrivateKey(
+//        "YOUR_PRIVATE_KEY_STRING", // Replace with your private key
+//        CertTypeEnum.RSA2048),
+//        CertTypeEnum.RSA2048)));
+
+// Send request
+YopClient yopClient = YopClientBuilder.builder().build();
+YosDownloadResponse response = yopClient.download(request);
+
+// Process response
+if (response != null && response.getResult() != null) {
+    downloadInputStream = response.getResult();
+    // Read downloaded file content
+    String fileContent = IOUtils.toString(downloadInputStream, "UTF-8");
+    LOGGER.info("File download successful, content length: {}", fileContent.length());
+```
+
+----------------------------------------
+
+TITLE: File Download from YOP
+DESCRIPTION: This code snippet demonstrates how to download a file from the YOP platform using the YOP Java SDK. It creates a YopRequest, sets the application key and security requirements, adds the filename as a parameter, and then sends the download request using YopClient. The downloaded file content is then read from the YosDownloadInputStream and logged.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_8
+
+LANGUAGE: java
+CODE:
+```
+            // 发送请求
+            YopClient yopClient = YopClientBuilder.builder().build();
+            YosDownloadResponse response = yopClient.download(request);
+
+            // 处理响应
+            if (response != null && response.getResult() != null) {
+                downloadInputStream = response.getResult();
+                // 读取下载的文件内容
+                String fileContent = IOUtils.toString(downloadInputStream, "UTF-8");
+                LOGGER.info("文件下载成功，内容长度: {}", fileContent.length());
+
+                // 实际使用时，可以将文件内容保存到本地文件
+                // Files.write(Paths.get("downloaded-file.txt"), fileContent.getBytes());
+            } else {
+                LOGGER.warn("文件下载失败: {}", response.getResult());
+            }
+```
+
+----------------------------------------
+
+TITLE: File Download Handling in YOP SDK
+DESCRIPTION: This code snippet demonstrates how to handle file downloads using the YOP SDK. It includes logging success or failure, exception handling, and closing the input stream. It uses `StreamUtils.closeQuietly` to ensure the stream is closed even if an exception occurs.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_8
+
+LANGUAGE: Java
+CODE:
+```
+try {
+            if (response.isSuccess()) {
+                InputStream downloadInputStream = response.getInputStream();
+                String fileContent = IOUtils.toString(downloadInputStream, StandardCharsets.UTF_8);
+
+                // In actual use, you can save the file content to a local file
+                // Files.write(Paths.get("downloaded-file.txt"), fileContent.getBytes());
+            } else {
+                LOGGER.warn("File download failed: {}", response.getResult());
+            }
+        } catch (Exception e) {
+            LOGGER.error("File download exception", e);
+        } finally {
+            // Close stream
+            StreamUtils.closeQuietly(downloadInputStream);
+        }
+```
+
+----------------------------------------
+
+TITLE: Get Private Key from String in YOP SDK
+DESCRIPTION: This code snippet shows how to retrieve a private key from a string using the YOP SDK. It configures a `YopCertConfig` object with the private key string, certificate type, and store type, then uses a `YopCertParser` to parse the configuration and return the `PrivateKey` object. It uses `YopCertParserFactory` to get the appropriate parser based on the certificate category and type.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_9
+
+LANGUAGE: Java
+CODE:
+```
+private static PrivateKey getPrivateKey(String priKey, CertTypeEnum certType) {
+        final YopCertConfig yopCertConfig = new YopCertConfig();
+        yopCertConfig.setCertType(certType);
+        yopCertConfig.setValue(priKey);
+        yopCertConfig.setStoreType(CertStoreType.STRING);
+        return (PrivateKey) YopCertParserFactory.getCertParser(YopCertCategory.PRIVATE, certType).parse(yopCertConfig);
+    }
+```
+
+----------------------------------------
+
+TITLE: POST Form Request with YOP SDK
+DESCRIPTION: This code snippet demonstrates how to make a POST form request using the YOP SDK. It initializes a YopRequest object with the API endpoint and method, sets the application key and security requirements, adds a form parameter, and then sends the request using a YopClient. The response is then processed to check for success or failure.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_4
+
+LANGUAGE: java
+CODE:
+```
+private static void postFormExample() {
+        try {
+            // Create request object
+            YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test/http-json", "POST");
+
+            // Set application information
+            String appKey = "app_10085525305"; // Replace with your application AppKey
+            request.getRequestConfig().setAppKey(appKey);
+            request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+            // Set authentication information
+//            request.getRequestConfig().setCredentials(new YopPKICredentials(
+//                    appKey, new PKICredentialsItem(getPrivateKey(
+//                    "YOUR_PRIVATE_KEY_STRING", // Replace with your private key
+//                    CertTypeEnum.RSA2048),
+//                    CertTypeEnum.RSA2048)));
+
+            // Add form parameters
+            request.addParameter("string", "hello");
+
+            // Send request
+            YopClient yopClient = YopClientBuilder.builder().build();
+            YopResponse response = yopClient.request(request);
+
+            // Process response
+            if (response != null && response.getResult() != null) {
+                LOGGER.info("API call successful: {}", response.getResult());
+                // Parse response.getResult() according to API documentation
+            } else {
+                LOGGER.warn("API call failed: {}", response.getResult());
+            }
+        } catch (Exception e) {
+            LOGGER.error("API call exception", e);
+        }
+    }
+```
+
+----------------------------------------
+
+TITLE: Implementing YopHttpClient Interface for Custom HTTP Client in Java
+DESCRIPTION: This snippet describes how to implement a custom HTTP client. Merchants can implement the com.yeepay.yop.sdk.http.YopHttpClient interface to use their own HTTP client implementation with the SDK.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_13
+
+
+
+----------------------------------------
+
+TITLE: File Upload to YOP
+DESCRIPTION: This code snippet demonstrates how to upload a file to the YOP platform using the YOP Java SDK. It creates a YopRequest, sets the application key and security requirements, adds the file to be uploaded as a multipart file, and then sends the upload request using YopClient. The response is then processed to check for success or failure.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_7
+
+LANGUAGE: java
+CODE:
+```
+            // 添加上传文件
+            // 这里使用ClassLoader获取资源文件，实际使用时可以是本地文件路径
+            InputStream fileStream = YopApiDemo.class.getResourceAsStream("/your-file.txt");
+            request.addMultiPartFile("_file", fileStream);
+
+            // 发送请求
+            YopClient yopClient = YopClientBuilder.builder().build();
+            YosUploadResponse response = yopClient.upload(request);
+
+            // 处理响应
+            if (response != null && response.getResult() != null) {
+                LOGGER.info("文件上传成功: {}", response.getResult());
+                // 根据API文档解析 response.getResult()
+            } else {
+                LOGGER.warn("文件上传失败: {}", response.getResult());
+            }
+```
+
+----------------------------------------
+
+TITLE: Implementing Encrypter Interface for HSM Integration in Java
+DESCRIPTION: This snippet describes how to integrate with a Hardware Security Module (HSM). Merchants can implement the com.yeepay.yop.sdk.security.Encrypter interface to delegate encryption operations to their HSM device.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_11
+
+
+
+----------------------------------------
+
+TITLE: File Upload to YOP in Java
+DESCRIPTION: This code snippet demonstrates how to upload a file to YOP using the YOP Java SDK. It includes creating a request object, setting application and authentication information, adding the file to the request, sending the request, and processing the response.  The appKey variable should be replaced with the actual application AppKey. The fileStream is obtained using ClassLoader, but in actual use, it can be a local file path.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_6
+
+LANGUAGE: Java
+CODE:
+```
+YopRequest request = new YopRequest("/rest/v1.0/file/upload", "POST");
+
+// Set application information
+String appKey = "app_10085525305"; // Replace with your application AppKey
+request.getRequestConfig().setAppKey(appKey);
+request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+
+// Set authentication information
+//request.getRequestConfig().setCredentials(new YopPKICredentials(
+//        appKey, new PKICredentialsItem(getPrivateKey(
+//        "YOUR_PRIVATE_KEY_STRING", // Replace with your private key
+//        CertTypeEnum.RSA2048),
+//        CertTypeEnum.RSA2048)));
+
+// Add upload file
+// Here using ClassLoader to get resource file, in actual use it can be a local file path
+InputStream fileStream = YopApiDemo.class.getResourceAsStream("/your-file.txt");
+request.addMultiPartFile("_file", fileStream);
+
+// Send request
+YopClient yopClient = YopClientBuilder.builder().build();
+YosUploadResponse response = yopClient.upload(request);
+
+// Process response
+if (response != null && response.getResult() != null) {
+    LOGGER.info("File upload successful: {}", response.getResult());
+    // Parse response.getResult() according to API documentation
+} else {
+    LOGGER.warn("File upload failed: {}", response.getResult());
+}
+} catch (Exception e) {
+    LOGGER.error("File upload exception", e);
+}
+```
+
+----------------------------------------
+
+TITLE: Implementing Signer Interface for HSM Integration in Java
+DESCRIPTION: This snippet describes how to integrate with a Hardware Security Module (HSM). Merchants can implement the com.yeepay.yop.sdk.security.Signer interface to delegate signing operations to their HSM device.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_12
+
+
+
+----------------------------------------
+
+TITLE: Configuring Domain Weight - Java
+DESCRIPTION: Version 4.4.15 introduces support for configuring domain weights, allowing for more granular control over traffic distribution across multiple domains. This feature enables developers to fine-tune the routing of requests based on domain performance or other criteria.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_0
+
+
+
+----------------------------------------
+
+TITLE: Custom Filename Support for YOS Uploads - Java
+DESCRIPTION: Version 4.4.10 enables support for custom filenames when uploading files to YOS (YOP Object Storage). This feature allows developers to specify the desired filename for uploaded files, providing greater control over file management.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_5
+
+
+
+----------------------------------------
+
+TITLE: JSON Decimal Deserialization Precision Fix - Java
+DESCRIPTION: Version 4.3.2 fixes an issue with JSON decimal deserialization that caused loss of precision for small numbers. The default is now BigDecimal, ensuring that decimal values are accurately represented and processed.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_18
+
+
+
+----------------------------------------
+
+TITLE: Implementing HSM Integration with Signer Interface in Java
+DESCRIPTION: To integrate with a Hardware Security Module (HSM), implement the `com.yeepay.yop.sdk.security.Signer` interface. This enables delegating signing operations to the HSM device. Refer to the SDK documentation for detailed guidance.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_11
+
+LANGUAGE: Java
+CODE:
+```
+com.yeepay.yop.sdk.security.Signer
+```
+
+----------------------------------------
+
+TITLE: Fixing Custom Header Issues - Java
+DESCRIPTION: Version 4.4.14 addresses and resolves issues related to custom headers, ensuring that custom headers are correctly processed and included in requests. This fix improves the flexibility and compatibility of the SDK when dealing with APIs that require specific custom headers.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_1
+
+
+
+----------------------------------------
+
+TITLE: Customizing Credentials with YopCredentialsProvider in Java
+DESCRIPTION: This snippet describes how to customize credential providing for multi-tenant scenarios. Merchants can implement their own logic for loading appKey and private key by extending YopCachedCredentialsProvider or YopFixedCredentialsProvider.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_10
+
+
+
+----------------------------------------
+
+TITLE: Merchant Notification Decryption Tool Fix - Java
+DESCRIPTION: Version 4.4.12 resolves issues with the merchant notification decryption tool, ensuring compatibility across different environments. This fix allows for seamless decryption of notifications, even when calls are made across different environments.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_3
+
+
+
+----------------------------------------
+
+TITLE: Implementing HSM Integration with Encrypter Interface in Java
+DESCRIPTION: To integrate with a Hardware Security Module (HSM), implement the `com.yeepay.yop.sdk.security.Encrypter` interface. This allows delegating encryption operations to the HSM device. Refer to the SDK documentation for detailed guidance.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_10
+
+LANGUAGE: Java
+CODE:
+```
+com.yeepay.yop.sdk.security.Encrypter
+```
+
+----------------------------------------
+
+TITLE: Filename Correction for Uploads - Java
+DESCRIPTION: Version 4.4.4 corrects the filename handling during uploads, ensuring that filenames are properly processed and stored. This fix prevents potential issues with filename encoding or formatting.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_11
+
+
+
+----------------------------------------
+
+TITLE: Multi-Environment Call Support - Java
+DESCRIPTION: Version 4.4.9 introduces support for mixed multi-environment calls, allowing the SDK to seamlessly interact with different environments. This feature simplifies the integration process when dealing with multiple environments.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_6
+
+
+
+----------------------------------------
+
+TITLE: Getting Private Key for YOP Authentication
+DESCRIPTION: This code snippet shows how to retrieve a private key for YOP authentication. It takes the private key string and certificate type as input, configures a YopCertConfig object, and then uses YopCertParserFactory to parse the certificate and return the PrivateKey object.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_9
+
+LANGUAGE: java
+CODE:
+```
+    /**
+     * 获取私钥
+     */
+    private static PrivateKey getPrivateKey(String priKey, CertTypeEnum certType) {
+        final YopCertConfig yopCertConfig = new YopCertConfig();
+        yopCertConfig.setCertType(certType);
+        yopCertConfig.setValue(priKey);
+        yopCertConfig.setStoreType(CertStoreType.STRING);
+        return (PrivateKey) YopCertParserFactory.getCertParser(YopCertCategory.PRIVATE, certType).parse(yopCertConfig);
+    }
+```
+
+----------------------------------------
+
+TITLE: Message Encryption and Decryption Support - Java
+DESCRIPTION: Version 4.3.0 introduces support for message encryption and decryption, providing developers with the ability to protect sensitive data during transmission. This feature enhances the security of the SDK and its applications.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_20
+
+
+
+----------------------------------------
+
+TITLE: Client Reporting Support - Java
+DESCRIPTION: Version 4.4.2 introduces support for client-side reporting, allowing the SDK to collect and report client-side metrics. This feature provides valuable insights into client-side performance and usage patterns.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_13
+
+
+
+----------------------------------------
+
+TITLE: Implementing Custom HTTP Client with YopHttpClient Interface in Java
+DESCRIPTION: To use a custom HTTP client, implement the `com.yeepay.yop.sdk.http.YopHttpClient` interface. This is useful when the default Apache HttpClient or optional OkHttp client does not meet specific needs, such as detailed connection pool management or proxy configuration.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_12
+
+LANGUAGE: Java
+CODE:
+```
+com.yeepay.yop.sdk.http.YopHttpClient
+```
+
+----------------------------------------
+
+TITLE: Multi-Domain Routing and Error Reporting - Java
+DESCRIPTION: Version 4.2.5 introduces support for multi-domain routing and error reporting, allowing the SDK to dynamically route requests across multiple domains and report errors to a central location. This feature enhances the resilience and observability of the SDK.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_23
+
+
+
+----------------------------------------
+
+TITLE: Multi-Domain Routing and Error Reporting (3.3.10) - Java
+DESCRIPTION: Version 3.3.10 introduces support for multi-domain routing and error reporting, allowing the SDK to dynamically route requests across multiple domains and report errors to a central location. This feature enhances the resilience and observability of the SDK.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_45
+
+
+
+----------------------------------------
+
+TITLE: Timestamp Acquisition Inconsistency Fix - Java
+DESCRIPTION: Version 4.1.11 fixes an issue in 4.1.10 where inconsistent timestamp acquisition could lead to gateway signature verification failures. This fix ensures that timestamps are consistently generated and used for signature verification.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_30
+
+
+
+----------------------------------------
+
+TITLE: File Integrity Check Optimization - Java
+DESCRIPTION: Version 3.1.5 optimizes file integrity checks by moving server-side checks to the client-side, improving performance. This optimization reduces the load on the server and improves the overall efficiency of file integrity checks.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_68
+
+
+
+----------------------------------------
+
+TITLE: setValidateAfterInactivity Configuration - Java
+DESCRIPTION: Version 4.1.1 sets setValidateAfterInactivity(3000), configuring the validation interval for inactive connections. This configuration helps to maintain the health of connections and prevent issues caused by long-lived inactive connections.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_38
+
+
+
+----------------------------------------
+
+TITLE: Domain Switching Logic Optimization (4.1.15) - Java
+DESCRIPTION: Version 4.1.15 extracts and optimizes the domain switching logic, making it easier to reuse and extend. This enhancement improves the agility of domain switching, allowing for more responsive adaptation to changing network conditions.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_27
+
+
+
+----------------------------------------
+
+TITLE: YopError and Parameter Handling Improvements - Java
+DESCRIPTION: Version 3.3.1 adds support for docUrl in YopError and ignores unconfigured parameters. These improvements enhance the error reporting capabilities of the SDK and simplify parameter handling.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_51
+
+
+
+----------------------------------------
+
+TITLE: Error Stack Optimization and Time Handling - Java
+DESCRIPTION: Version 3.2.5-RC1 optimizes the error stack, time handling classes, and removes unnecessary parameters from the protocol. These optimizations improve the clarity and efficiency of error reporting and data transmission.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_62
+
+
+
+----------------------------------------
+
+TITLE: YOS Support Fix and Request Address Handling Optimization - Java
+DESCRIPTION: Version 3.1.1 fixes support for YOS and optimizes request address handling. This fix ensures that the SDK properly supports YOS and that request addresses are correctly constructed.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_70
+
+
+
+----------------------------------------
+
+TITLE: SM2 Signature Verification Fix - Java
+DESCRIPTION: Version 4.4.13 includes a fix for SM2 notification signature verification, ensuring the integrity and authenticity of notifications. This version also upgrades Jackson, Tika, and JSON-path to address security vulnerabilities, enhancing the overall security posture of the SDK.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_2
+
+
+
+----------------------------------------
+
+TITLE: SSLContext Re-initialization Fix - Java
+DESCRIPTION: Version 4.0.1 fixes an SSLContext re-initialization issue that was triggered in JDK11. This fix ensures that the SSLContext is properly initialized and maintained, preventing potential SSL connection issues.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_43
+
+
+
+----------------------------------------
+
+TITLE: YopJsonResponseAnalyzer Response Body Validation Fix - Java
+DESCRIPTION: Version 4.2.1 fixes an issue with YopJsonResponseAnalyzer's validation of the response body. This fix ensures that response bodies are correctly validated, preventing potential errors in data processing.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_25
+
+
+
+----------------------------------------
+
+TITLE: Adding Maven Dependency
+DESCRIPTION: Adds the Yop Java SDK dependency to a Maven project. Include this in your pom.xml to use the SDK.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_0
+
+LANGUAGE: xml
+CODE:
+```
+<dependency>
+  <groupId>com.yeepay.yop.sdk</groupId>
+  <artifactId>yop-java-sdk</artifactId>
+  <version>4.4.15</version> <!-- 请替换为最新的稳定版本 -->
+</dependency>
+```
+
+----------------------------------------
+
+TITLE: Sub-Merchant ID Header Addition - Java
+DESCRIPTION: Version 3.2.5-RC1 adds a sub-merchant ID header (x-yop-sub-customer-id). This addition allows for better identification and management of sub-merchants.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_61
+
+
+
+----------------------------------------
+
+TITLE: Sandbox and Client Routing Support - Java
+DESCRIPTION: Version 3.2.3 introduces support for sandbox and client routing. This enhancement allows the SDK to be used in sandbox environments and to route requests to specific clients.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_66
+
+
+
+----------------------------------------
+
+TITLE: Gradle Dependency Configuration
+DESCRIPTION: Adds the YOP Java SDK dependency to a Gradle project.  Include this in your build.gradle file to use the SDK.  Replace the version with the latest stable release.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README.md#_snippet_1
+
+LANGUAGE: groovy
+CODE:
+```
+implementation 'com.yeepay.yop.sdk:yop-java-sdk:4.4.15' // Please replace with the latest stable version
+```
+
+----------------------------------------
+
+TITLE: Multiple Configuration File Support - Java
+DESCRIPTION: Version 4.0.3 introduces support for multiple configuration files, although it has some defects. This feature allows developers to split their configuration across multiple files, but may require additional attention to ensure proper functionality.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_41
+
+
+
+----------------------------------------
+
+TITLE: Scheme Setting Support for Proxy - Java
+DESCRIPTION: Version 3.2.1 introduces support for setting the scheme for proxies. This enhancement allows developers to specify the scheme (e.g., HTTP or HTTPS) to be used when connecting to a proxy server.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_67
+
+
+
+----------------------------------------
+
+TITLE: NPE Fix - Java
+DESCRIPTION: Version 4.0.2 fixes a NullPointerException (NPE) issue. This fix improves the stability and reliability of the SDK by preventing potential null pointer exceptions.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_42
+
+
+
+----------------------------------------
+
+TITLE: HTTP Support Restoration - Java
+DESCRIPTION: Version 4.1.4 restores HTTP support, allowing the SDK to make requests over HTTP. This restoration provides compatibility with environments that do not support HTTPS.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_36
+
+
+
+----------------------------------------
+
+TITLE: 204 and 502 Return Code Handling - Java
+DESCRIPTION: Version 3.2.5 handles 204 and 502 return codes. This handling ensures that these return codes are properly processed and reported.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_65
+
+
+
+----------------------------------------
+
+TITLE: Gradle Dependency Management Support - Java
+DESCRIPTION: Version 3.3.3 introduces support for the Gradle dependency management tool and no longer packages the lib directory. This enhancement simplifies dependency management and reduces the size of the SDK.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_50
+
+
+
+----------------------------------------
+
+TITLE: Initializing POST JSON Request with YOP SDK in Java
+DESCRIPTION: This code snippet demonstrates how to create and send a POST request with JSON data using the YOP SDK. It initializes a YopRequest object with the API endpoint and method, sets the application key and security requirements. The snippet shows the initial setup for a JSON request, but the actual JSON payload and sending of the request are not included in the provided extract.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/README_zh-CN.md#_snippet_5
+
+LANGUAGE: Java
+CODE:
+```
+YopRequest request = new YopRequest("/rest/v1.0/test-wdc/test/http-json", "POST");
+
+// 设置应用信息
+String appKey = "app_10085525305"; // 替换为您的应用AppKey
+request.getRequestConfig().setAppKey(appKey);
+request.getRequestConfig().setSecurityReq("YOP-RSA2048-SHA256");
+```
+
+----------------------------------------
+
+TITLE: Jackson Issue Fix (Cross-border Merchants) - Java
+DESCRIPTION: Version 4.2.6 is based on 4.2.1 and fixes a Jackson issue specifically for cross-border merchants. This fix ensures that Jackson is properly configured and functioning correctly in cross-border scenarios.
+SOURCE: https://github.com/yop-platform/yop-java-sdk/blob/develop/CHANGELOG.md#_snippet_22
