@@ -4,7 +4,6 @@
     <groupId>com.yeepay.yop.sdk</groupId>
     <artifactId>yop-java-sdk-parent</artifactId>
     <packaging>pom</packaging>
-
     <version>4.4.16-SNAPSHOT</version>
 
     <modules>
@@ -578,7 +577,7 @@
         <url>https://github.com/yop-platform/yop-java-sdk</url>
         <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
         <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
-        <tag>v4.4.14</tag>
+        <tag>v4.4.15</tag>
     </scm>
 
     <developers>

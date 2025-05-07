@@ -9,7 +9,6 @@
 
     <artifactId>yop-java-sdk-apache</artifactId>
 
-
     <dependencies>
         <dependency>
             <groupId>com.yeepay.yop.sdk</groupId>
