@@ -1,10 +1,12 @@
 package com.yeepay.yop.sdk.client.router;
 
-import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.yeepay.yop.sdk.YopConstants;
+import com.yeepay.yop.sdk.circuit.CircuitBreakerStateChangeListener;
+import com.yeepay.yop.sdk.circuit.YopCircuitBreaker;
+import com.yeepay.yop.sdk.circuit.YopCircuitBreakerPool;
 import com.yeepay.yop.sdk.client.ClientReporter;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangePayload;
 import com.yeepay.yop.sdk.client.metric.report.host.YopHostStatusChangeReport;
@@ -13,7 +15,6 @@ import com.yeepay.yop.sdk.exception.YopClientException;
 import com.yeepay.yop.sdk.internal.Request;
 import com.yeepay.yop.sdk.invoke.model.UriResource;
 import com.yeepay.yop.sdk.model.YopRequestConfig;
-import com.yeepay.yop.sdk.sentinel.YopSph;
 import com.yeepay.yop.sdk.utils.CheckUtils;
 import com.yeepay.yop.sdk.utils.EnvUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -50,9 +51,9 @@ abstract public class AbstractGateWayRouter implements GateWayRouter {
     protected static final Map<URI, Set<ServerRootInfo>> ALL_SERVER_INFOS = Maps.newConcurrentMap();
 
     /**
-     * 记录被sentinel block的serverRoot信息
+     * 记录被circuit breaker block的serverRoot信息
      */
-    protected static final YopSph.BlockResourcePool BLOCK_SERVER_POOL = new YopSph.BlockResourcePool();
+    protected static final YopCircuitBreakerPool BLOCK_SERVER_POOL = new YopCircuitBreakerPool();
 
     static {
         monitorServerRoot();
@@ -175,33 +176,37 @@ abstract public class AbstractGateWayRouter implements GateWayRouter {
     }
 
     /**
-     * 监控sentinel的serverRoot状态变化
+     * 监控circuit breaker的serverRoot状态变化
      */
     protected static void monitorServerRoot() {
-        // sentinel监控
-        EventObserverRegistry.getInstance().addStateChangeObserver("BLOCKED_SERVERS_CHANGED",
-                (prevState, newState, rule, snapshotValue) -> {
+        // Add circuit breaker state change listener
+        YopCircuitBreaker.addStateChangeListener("BLOCKED_SERVERS_CHANGED", 
+                (prevState, newState, rule) -> {
                     try {
                         final UriResource uriResource = UriResource.parseResourceKey(rule.getResource());
                         final URI serverRoot = uriResource.getResource();
                         LOGGER.info("ServerRoot Block State Changed, serverRoot:{}, old:{}, new:{}, rule:{}",
                                 serverRoot, prevState, newState, rule);
                         Set<ServerRootInfo> serverRootInfos = ALL_SERVER_INFOS.get(serverRoot);
-                        ServerRootInfo choosedServerRootInfo = ServerRootInfo.DEFAULT_INFO;
+                        ServerRootInfo chosenServerRootInfo = ServerRootInfo.DEFAULT_INFO;
                         Set<String> serverTypes = Collections.emptySet();
+                        
                         if (CollectionUtils.isNotEmpty(serverRootInfos)) {
                             serverTypes = Sets.newHashSet();
                             for (ServerRootInfo serverRootInfo : serverRootInfos) {
                                 serverTypes.add(serverRootInfo.getServerRootType().name());
                             }
-                            choosedServerRootInfo = serverRootInfos.iterator().next();
+                            chosenServerRootInfo = serverRootInfos.iterator().next();
                         }
+                        
                         BLOCK_SERVER_POOL.onServerStatusChange(uriResource, prevState, newState, rule, serverTypes);
+                        
                         // 异步上报
                         final YopHostStatusChangeReport report = new YopHostStatusChangeReport(
-                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), rule.toString()));
-                        report.setProvider(choosedServerRootInfo.getProvider());
-                        report.setEnv(choosedServerRootInfo.getEnv());
+                                new YopHostStatusChangePayload(serverRoot.toString(), prevState.name(), newState.name(), 
+                                        rule.toString()));
+                        report.setProvider(chosenServerRootInfo.getProvider());
+                        report.setEnv(chosenServerRootInfo.getEnv());
                         ClientReporter.asyncReportToQueue(report);
                     } catch (Exception e) {
                         LOGGER.warn("UnexpectedError, MonitorServerRoot ex:", e);

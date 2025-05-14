@@ -1,8 +1,5 @@
 package com.yeepay.yop.sdk.client;
 
-import com.alibaba.csp.sentinel.Entry;
-import com.alibaba.csp.sentinel.Tracer;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.google.common.collect.Lists;
 import com.yeepay.yop.sdk.YopConstants;
 import com.yeepay.yop.sdk.auth.credentials.CredentialsItem;
@@ -15,7 +12,9 @@ import com.yeepay.yop.sdk.auth.req.AuthorizationReqRegistry;
 import com.yeepay.yop.sdk.auth.req.AuthorizationReqSupport;
 import com.yeepay.yop.sdk.base.auth.signer.YopSignerFactory;
 import com.yeepay.yop.sdk.base.cache.EncryptOptionsCache;
-import com.yeepay.yop.sdk.base.cache.YopDegradeRuleHelper;
+import com.yeepay.yop.sdk.circuit.CircuitBreakerEntry;
+import com.yeepay.yop.sdk.circuit.CircuitBreakerException;
+import com.yeepay.yop.sdk.circuit.YopCircuitBreakerManager;
 import com.yeepay.yop.sdk.client.router.GateWayRouter;
 import com.yeepay.yop.sdk.client.router.ServerRootSpace;
 import com.yeepay.yop.sdk.client.router.WeightGateWayRouter;
@@ -40,7 +39,6 @@ import com.yeepay.yop.sdk.model.YopRequestConfig;
 import com.yeepay.yop.sdk.security.CertTypeEnum;
 import com.yeepay.yop.sdk.security.encrypt.EncryptOptions;
 import com.yeepay.yop.sdk.security.encrypt.YopEncryptor;
-import com.yeepay.yop.sdk.sentinel.YopSph;
 import com.yeepay.yop.sdk.utils.ClientUtils;
 import com.yeepay.yop.sdk.utils.YopTraceUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -168,7 +166,7 @@ public class ClientHandlerImpl implements ClientHandler {
             if (CollectionUtils.isNotEmpty(serverRootSpace.getPreferredYosEndPoint())) {
                 serverRoots.addAll(serverRootSpace.getPreferredYosEndPoint());
             }
-            YopDegradeRuleHelper.initDegradeRule(serverRoots, circuitBreakerConfig);
+            YopCircuitBreakerManager.initCircuitBreakers(serverRoots, circuitBreakerConfig);
         }
 
         @Override
@@ -177,15 +175,15 @@ public class ClientHandlerImpl implements ClientHandler {
                                                                                                ExecutionContext, AnalyzedException> invoker)
                 throws YopClientException, YopHttpException, YopUnknownException, YopHostException {
 
-            Entry entry = null;
+            CircuitBreakerEntry entry = null;
             boolean successInvoked = false;
             final UriResource uriResource = invoker.getUriResource();
             try {
                 // 请求保留资源时，不再熔断
                 if (!uriResource.isRetained()) {
                     final String resource = uriResource.computeResourceKey();
-                    YopDegradeRuleHelper.addDegradeRule(resource, circuitBreakerConfig);
-                    entry = YopSph.getInstance().entry(resource);
+                    YopCircuitBreakerManager.addCircuitBreaker(resource, circuitBreakerConfig);
+                    entry = YopCircuitBreakerManager.entry(resource);
                 }
                 final Output output = doExecute(request, invoker);
                 successInvoked = true;
@@ -193,7 +191,7 @@ public class ClientHandlerImpl implements ClientHandler {
             } catch (YopClientException | YopHttpException | YopUnknownException ex) {
                 throw ex;
             } catch (Throwable ex) {
-                if (BlockException.isBlockException(ex)) {
+                if (CircuitBreakerException.isCircuitBreakerException(ex)) {
                     final YopHostBlockException hostBlockException = new YopHostBlockException("ServerRoot Blocked, ex:", ex);
                     invoker.addException(invoker.getExceptionAnalyzer().analyze(hostBlockException));
                     throw hostBlockException;
@@ -207,9 +205,10 @@ public class ClientHandlerImpl implements ClientHandler {
                 if (null != entry) {
                     final AnalyzedException lastException = invoker.getLastException();
                     if (!successInvoked && null != lastException && lastException.isNeedDegrade()) {
-                        Tracer.trace(lastException.getException());
+                        entry.exit(lastException.getException());
+                    } else {
+                        entry.exit();
                     }
-                    entry.exit();
                 }
             }
         }
