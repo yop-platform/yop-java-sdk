@@ -4,7 +4,7 @@
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.3.13</version>
+    <version>3.3.14-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
 
