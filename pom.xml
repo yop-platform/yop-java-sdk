@@ -5,9 +5,11 @@
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.3.13</version>
+    <version>3.3.13-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
+    <url>https://github.com/yop-platform/yop-java-sdk</url>
+    <description>本项目用于对接 YOP 上面的 API。</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -152,7 +154,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
+                <version>3.8.0</version>
                 <configuration>
                     <failOnError>true</failOnError>
                     <verbose>true</verbose>
@@ -168,12 +170,47 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
                 <configuration>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <excludes>
+                        <exclude>*.p12</exclude>
+                        <exclude>*.pfx</exclude>
+                        <exclude>config/yop_sdk_config_dev.json</exclude>
+                        <exclude>config/yop_sdk_config_local.json</exclude>
+                        <exclude>config/yop_sdk_config_pro.json</exclude>
+                    </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <configuration>
+                    <charset>UTF-8</charset>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -216,7 +253,8 @@
                                         implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.schemas</resource>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                             <relocations>
                                 <relocation>
@@ -266,31 +304,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <excludes>
-                        <exclude>*.p12</exclude>
-                        <exclude>*.pfx</exclude>
-                        <exclude>cer/*</exclude>
-                        <exclude>config/yop_sdk_config_dev.json</exclude>
-                        <exclude>config/yop_sdk_config_local.json</exclude>
-                        <exclude>config/yop_sdk_config_pro.json</exclude>
-                    </excludes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
@@ -311,43 +324,139 @@
             </plugin>
 
             <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.8.2</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
-                        <id>default-deploy</id>
-                        <phase>deploy</phase>
+                        <id>sign</id>
                         <goals>
-                            <goal>deploy</goal>
+                            <goal>sign</goal>
                         </goals>
-                        <!-- skip默认deploy插件的执行 -->
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
                     </execution>
                     <execution>
-                        <id>deploy-file</id>
-                        <phase>deploy</phase>
+                        <id>verify</id>
                         <goals>
-                            <goal>deploy-file</goal>
+                            <goal>verify</goal>
                         </goals>
-                        <configuration>
-                            <packaging>jar</packaging>
-                            <repositoryId>${project.distributionManagement.repository.id}</repositoryId>
-                            <url>${project.distributionManagement.repository.url}</url>
-                            <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <version>${project.version}</version>
-                            <classifier>yeepay</classifier>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <verbose>true</verbose>
+                    <certs>true</certs>
+                </configuration>
+            </plugin>
+
+            <!-- 签名文件：maven-gpg-plugin插件会调用上文中安装的GnuPG软件，对文件进行签名 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- 这个configuration必须配置，用于gpg非交互式密码输入 -->
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M4</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <arguments>-DskipTests</arguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/yop-platform/yop-java-sdk</url>
+        <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
+        <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
+        <tag>v3.3.13</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>baitao.ji</name>
+            <email>baitao.ji@yeepay.com</email>
+            <organization>Yeepay Inc, Ltd</organization>
+        </developer>
+    </developers>
+
     <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!--                    <plugin>-->
+                    <!--                        <groupId>org.apache.maven.plugins</groupId>-->
+                    <!--                        <artifactId>maven-jarsigner-plugin</artifactId>-->
+                    <!--                    </plugin>-->
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                    </plugin>
+
+                    <!-- 需要 settings.xml 使用用户令牌凭据进行配置 -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.5.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>sonatype-nexus-snapshots</id>
+                    <name>Sonatype Nexus Snapshots Repository</name>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+                </snapshotRepository>
+                <repository>
+                    <id>sonatype-nexus-staging</id>
+                    <name>Sonatype Nexus Release Repository</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+                <!--        <repository>-->
+                <!--            <id>github-staging</id>-->
+                <!--            <name>GitHub OWNER Apache Maven Packages</name>-->
+                <!--            <url>https://maven.pkg.github.com/yop-platform/yop-java-sdk</url>-->
+                <!--        </repository>-->
+            </distributionManagement>
+        </profile>
         <profile>
             <id>default</id>
             <activation>
@@ -400,25 +509,4 @@
             </properties>
         </profile>
     </profiles>
-
-    <!--git 远程仓库配置-->
-    <scm>
-        <!-- kUu7Ca9n4KHkMGyiJSPy -->
-        <connection>scm:git:http://gitlab.yeepay.com/yop/yop-java-sdk-old.git</connection>
-        <url>http://gitlab.yeepay.com/yop/yop-java-sdk-old</url>
-        <developerConnection>scm:git:http://gitlab.yeepay.com/yop/yop-java-sdk-old.git</developerConnection>
-    </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>YeepayReleases</id>
-            <name>Internal Releases</name>
-            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/</url>
-        </repository>
-        <snapshotRepository>
-            <id>YeepaySnapshots</id>
-            <name>Internal Snapshots</name>
-            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-snapshot/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
