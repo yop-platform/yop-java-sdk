@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.yeepay.g3.yop</groupId>
     <artifactId>yop-java-sdk</artifactId>
-    <version>3.3.13</version>
+    <version>3.3.13-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>YOP :: SDK</name>
 
@@ -152,7 +151,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
+                <version>3.8.0</version>
                 <configuration>
                     <failOnError>true</failOnError>
                     <verbose>true</verbose>
@@ -163,16 +162,6 @@
                     <target>${maven.compiler.target}</target>
                     <compilerVersion>${maven.compiler.compilerVersion}</compilerVersion>
                     <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
-                <configuration>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
             </plugin>
 
@@ -208,16 +197,13 @@
                                 </filter>
                             </filters>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.handlers</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>META-INF/spring.schemas</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                             </transformers>
                             <relocations>
                                 <relocation>
@@ -371,7 +357,64 @@
         </plugins>
     </build>
 
+    <scm>
+        <url>https://github.com/yop-platform/yop-java-sdk</url>
+        <connection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</connection>
+        <developerConnection>scm:git:git@github.com:yop-platform/yop-java-sdk.git</developerConnection>
+        <tag>v3.3.13</tag>
+    </scm>
+
     <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!--                    <plugin>-->
+                    <!--                        <groupId>org.apache.maven.plugins</groupId>-->
+                    <!--                        <artifactId>maven-jarsigner-plugin</artifactId>-->
+                    <!--                    </plugin>-->
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                    </plugin>
+
+                    <!-- 需要 settings.xml 使用用户令牌凭据进行配置 -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.5.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>sonatype-nexus-snapshots</id>
+                    <name>Sonatype Nexus Snapshots Repository</name>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+                </snapshotRepository>
+                <repository>
+                    <id>sonatype-nexus-staging</id>
+                    <name>Sonatype Nexus Release Repository</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+                <!--        <repository>-->
+                <!--            <id>github-staging</id>-->
+                <!--            <name>GitHub OWNER Apache Maven Packages</name>-->
+                <!--            <url>https://maven.pkg.github.com/yop-platform/yop-java-sdk</url>-->
+                <!--        </repository>-->
+            </distributionManagement>
+        </profile>
         <profile>
             <id>default</id>
             <activation>
@@ -424,26 +467,4 @@
             </properties>
         </profile>
     </profiles>
-
-    <!--git 远程仓库配置-->
-    <scm>
-        <!-- kUu7Ca9n4KHkMGyiJSPy -->
-        <connection>scm:git:http://gitlab.yeepay.com/yop/yop-java-sdk-old.git</connection>
-        <url>http://gitlab.yeepay.com/yop/yop-java-sdk-old</url>
-        <developerConnection>scm:git:http://gitlab.yeepay.com/yop/yop-java-sdk-old.git</developerConnection>
-        <tag>v3.3.13</tag>
-    </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>YeepayReleases</id>
-            <name>Internal Releases</name>
-            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-release/</url>
-        </repository>
-        <snapshotRepository>
-            <id>YeepaySnapshots</id>
-            <name>Internal Snapshots</name>
-            <url>http://artifact.paas.yp:8000/artifactory/yp3g-subsystem-snapshot/</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
