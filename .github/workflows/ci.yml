@@ -1,0 +1,36 @@
+# 多版本 JDK 下编译并执行单元测试
+# SDK 面向所有商户，运行环境从 JDK8 到最新 LTS 均需可用，此处防止依赖 JDK 内部实现的兼容性问题回归
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    name: JDK ${{ matrix.jdk }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [ 8, 11, 17, 21, 25 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.jdk }}
+          cache: maven
+
+      - name: Test
+        run: mvn -B -pl yop-java-sdk-base -am test -Dsurefire.skip=false
