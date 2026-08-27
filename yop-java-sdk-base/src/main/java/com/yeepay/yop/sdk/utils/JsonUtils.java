@@ -18,6 +18,7 @@ import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import com.yeepay.yop.sdk.exception.YopClientException;
+import com.yeepay.yop.sdk.utils.json.KeepAsRawStringDeserializer;
 import com.yeepay.yop.sdk.utils.json.joda.DatetimeModule;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -131,7 +132,10 @@ public class JsonUtils {
     }
 
     public static void load(String content, Object obj) throws IOException {
-        OBJECT_MAPPER.readerForUpdating(obj).readValue(content);
+        // 透传原始报文，避免KeepAsRawStringDeserializer依赖jackson内部的源对象
+        OBJECT_MAPPER.readerForUpdating(obj)
+                .withAttribute(KeepAsRawStringDeserializer.ATTR_RAW_JSON, content)
+                .readValue(content);
     }
 
     public static <T> T loadFrom(InputStream input, Class<T> clazz)
